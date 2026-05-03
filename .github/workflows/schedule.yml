@@ -98,6 +98,7 @@ jobs:
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          NARRATOR_VOICE: Charon
         run: python main.py ${{ env.LANG }} 2>&1 | tee pipeline_output.txt
 
       # Email notifications disabled temporarily — re-enable after fixing MAIL_PASSWORD

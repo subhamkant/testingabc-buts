@@ -29,8 +29,9 @@ _EDGE_FALLBACK = {
     "hi": "hi-IN-NeerjaNeural",
 }
 
-# Gemini voice — Charon: deep, authoritative, cinematic narrator
-_GEMINI_VOICE = "Charon"
+# Gemini voice — read from .env so it can be changed without code edits
+# Options: Charon (deep/cinematic), Fenrir (strong), Orus (warm), Puck (energetic)
+_GEMINI_VOICE = os.environ.get("NARRATOR_VOICE", "Charon")
 _GEMINI_MODEL = "gemini-2.5-flash-preview-tts"
 
 # SSML prosody for storytelling feel
@@ -202,7 +203,9 @@ async def generate_voiceover(scenes: list, language: str = "en") -> list:
         text = scene["narration"]
         success = False
 
-        # 1 — Gemini TTS (best quality)
+        # 1 — Gemini TTS (best quality) — rate limit: 3 RPM, so pace at 21s apart
+        if i > 0:
+            await asyncio.sleep(21)
         print(f"    Trying Gemini TTS scene {i+1}...")
         success = await asyncio.to_thread(_gemini_tts, text, output_path)
         if success:
