@@ -73,6 +73,20 @@ MOTIVATIONAL_THEMES = [
 ]
 
 
+def _trim_narration(text: str, max_words: int = 40) -> str:
+    """Hard-cap narration at max_words, ending at the last complete sentence."""
+    import re
+    words = text.split()
+    if len(words) <= max_words:
+        return text
+    truncated = " ".join(words[:max_words])
+    # Try to end at last sentence boundary (। ! ? .)
+    match = re.search(r'^(.*[।!?\.])', truncated)
+    if match:
+        return match.group(1).strip()
+    return truncated + "..."
+
+
 def _parse_llm_json(raw: str) -> dict:
     """
     Robust JSON parser for LLM output.
@@ -195,6 +209,11 @@ Rules:
     raw = raw[start:end + 1]
 
     data = _parse_llm_json(raw)
+
+    # Hard-enforce narration length — LLMs ignore word limits in prompts
+    for scene in data.get("scenes", []):
+        scene["narration"] = _trim_narration(scene["narration"])
+
     data["language"] = language
     data["content_type"] = content_type
     data["topic"] = topic
