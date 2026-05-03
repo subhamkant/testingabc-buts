@@ -34,7 +34,6 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # Music is stored in a GitHub Release and cached — not in the repo
       - name: Restore music cache
         id: music-cache
         uses: actions/cache@v4
@@ -44,11 +43,22 @@ jobs:
 
       - name: Download music from GitHub Release
         if: steps.music-cache.outputs.cache-hit != 'true'
+        continue-on-error: true
         run: |
           mkdir -p assets/music
-          gh release download music-tracks --dir assets/music --pattern "*.mp3"
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            "https://api.github.com/repos/${{ github.repository }}/releases/tags/music-tracks" \
+            | python3 -c "
+          import sys, json, urllib.request, os
+          data = json.load(sys.stdin)
+          assets = data.get('assets', [])
+          print(f'Found {len(assets)} music files')
+          for a in assets:
+              url = a['browser_download_url']
+              name = a['name']
+              print(f'Downloading {name}...')
+              urllib.request.urlretrieve(url, f'assets/music/{name}')
+          "
 
       - name: Set up Python 3.11
         uses: actions/setup-python@v5
@@ -81,48 +91,16 @@ jobs:
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
         run: python main.py ${{ env.LANG }} 2>&1 | tee pipeline_output.txt
 
-      - name: Send success email
-        if: success()
-        uses: dawidd6/action-send-mail@v3
-        with:
-          server_address: smtp.gmail.com
-          server_port: 465
-          secure: true
-          username: ${{ secrets.MAIL_USERNAME }}
-          password: ${{ secrets.MAIL_PASSWORD }}
-          subject: "[Vyasa AI] Video uploaded successfully"
-          to: subhamkant.11@gmail.com
-          from: Vyasa AI Bot <${{ secrets.MAIL_USERNAME }}>
-          body: |
-            Your Mahabharata bot just uploaded a new video!
+      # Email notifications disabled temporarily — re-enable after fixing MAIL_PASSWORD
+      # - name: Send success email
+      #   if: success()
+      #   uses: dawidd6/action-send-mail@v3
+      #   ...
 
-            Run: #${{ github.run_number }}
-            Repo: ${{ github.repository }}
-
-            --- Pipeline log ---
-          attachments: pipeline_output.txt
-
-      - name: Send failure email
-        if: failure()
-        uses: dawidd6/action-send-mail@v3
-        with:
-          server_address: smtp.gmail.com
-          server_port: 465
-          secure: true
-          username: ${{ secrets.MAIL_USERNAME }}
-          password: ${{ secrets.MAIL_PASSWORD }}
-          subject: "[Vyasa AI] Pipeline FAILED - Run #${{ github.run_number }}"
-          to: subhamkant.11@gmail.com
-          from: Vyasa AI Bot <${{ secrets.MAIL_USERNAME }}>
-          body: |
-            The Mahabharata bot pipeline failed.
-
-            Run: #${{ github.run_number }}
-            Repo: ${{ github.repository }}
-            Logs: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
-
-            --- Last output ---
-          attachments: pipeline_output.txt
+      # - name: Send failure email
+      #   if: failure()
+      #   uses: dawidd6/action-send-mail@v3
+      #   ...
 
       - name: Commit updated characters.json
         if: always()
