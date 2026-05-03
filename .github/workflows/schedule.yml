@@ -12,7 +12,6 @@ on:
     # Run 4 ->  6:30 PM IST (13:00 UTC)
     - cron: "0 13 * * *"
 
-  # Manual trigger with language choice
   workflow_dispatch:
     inputs:
       language:
@@ -41,8 +40,7 @@ jobs:
           python-version: "3.11"
           cache: pip
 
-      - name: Install FFmpeg
-        run: sudo apt-get install -y ffmpeg
+      # ubuntu-latest already has FFmpeg — no apt-get needed
 
       - name: Install Python dependencies
         run: pip install -r requirements.txt
@@ -83,7 +81,6 @@ jobs:
             Your Mahabharata bot just uploaded a new video!
 
             Run: #${{ github.run_number }}
-            Time: ${{ github.event.head_commit.timestamp || 'scheduled' }}
             Repo: ${{ github.repository }}
 
             --- Pipeline log ---
