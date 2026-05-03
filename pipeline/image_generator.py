@@ -179,9 +179,9 @@ def generate_images(scenes: list) -> list:
             url = _build_url(prompt, seed=i * 137 + j * 31, mood=mood)
 
             success = False
-            for attempt in range(4):
+            for attempt in range(3):
                 try:
-                    resp = requests.get(url, timeout=90)
+                    resp = requests.get(url, timeout=45)
                     if resp.status_code == 200 and len(resp.content) > 5000:
                         with open(output_path, "wb") as f:
                             f.write(resp.content)
@@ -194,7 +194,7 @@ def generate_images(scenes: list) -> list:
                 except Exception as e:
                     print(f"    [!] Scene {i+1} shot {j+1} attempt {attempt+1}: {e}")
 
-                wait = (attempt + 1) * 5
+                wait = (attempt + 1) * 3
                 print(f"    Waiting {wait}s...")
                 time.sleep(wait)
 
@@ -203,7 +203,7 @@ def generate_images(scenes: list) -> list:
                 shot_paths.append(output_path)
                 print(f"    [~] Placeholder for scene {i+1} shot {j+1}")
 
-            time.sleep(2)
+            time.sleep(1)
 
         scene_groups.append(shot_paths)
         print(f"    [OK] Scene {i+1}/{len(scenes)} complete — {len(shot_paths)} shots")
@@ -216,9 +216,9 @@ def generate_thumbnail(thumbnail_prompt: str, output_path: str = "output/thumbna
     os.makedirs("output", exist_ok=True)
     url = _build_url(thumbnail_prompt, seed=9999, width=1280, height=720)
 
-    for attempt in range(4):
+    for attempt in range(3):
         try:
-            resp = requests.get(url, timeout=90)
+            resp = requests.get(url, timeout=45)
             if resp.status_code == 200 and len(resp.content) > 5000:
                 with open(output_path, "wb") as f:
                     f.write(resp.content)
@@ -229,7 +229,7 @@ def generate_thumbnail(thumbnail_prompt: str, output_path: str = "output/thumbna
         except Exception as e:
             print(f"    [!] Thumbnail attempt {attempt+1}: {e}")
 
-        wait = (attempt + 1) * 5
+        wait = (attempt + 1) * 3
         time.sleep(wait)
 
     print(f"    [ERROR] Thumbnail generation failed after 4 attempts")
