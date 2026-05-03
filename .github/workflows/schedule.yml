@@ -50,15 +50,24 @@ jobs:
             "https://api.github.com/repos/${{ github.repository }}/releases/tags/music-tracks" \
             | python3 -c "
           import sys, json, urllib.request, os
+          TOKEN = '${{ secrets.GITHUB_TOKEN }}'
           data = json.load(sys.stdin)
           assets = data.get('assets', [])
           print(f'Found {len(assets)} music files')
           for a in assets:
-              url = a['browser_download_url']
+              api_url = a['url']
               name = a['name']
               print(f'Downloading {name}...')
-              urllib.request.urlretrieve(url, f'assets/music/{name}')
+              req = urllib.request.Request(api_url, headers={
+                  'Authorization': f'token {TOKEN}',
+                  'Accept': 'application/octet-stream'
+              })
+              with urllib.request.urlopen(req) as r, open(f'assets/music/{name}', 'wb') as f:
+                  f.write(r.read())
           "
+
+      - name: Install FFmpeg
+        run: sudo apt-get install -y ffmpeg
 
       - name: Set up Python 3.11
         uses: actions/setup-python@v5

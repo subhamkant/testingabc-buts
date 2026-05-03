@@ -168,7 +168,10 @@ async def _edge_tts(text: str, voice: str, output_path: str, use_ssml: bool = Tr
 
 
 def _normalize_audio(path: str) -> None:
-    """EBU R128 loudness normalization — -16 LUFS, -1.5 dBTP."""
+    """EBU R128 loudness normalization — -16 LUFS, -1.5 dBTP. Skipped if FFmpeg missing."""
+    import shutil
+    if not shutil.which("ffmpeg"):
+        return
     tmp = path + ".norm.mp3"
     result = subprocess.run(
         ["ffmpeg", "-y", "-i", path,
