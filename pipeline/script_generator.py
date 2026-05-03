@@ -176,6 +176,7 @@ Rules:
 - All image_prompt, video_prompt, thumbnail_prompt must ALWAYS be in English
 - Title: under 60 characters, no hashtags
 - Narration: STRICTLY 2-3 short sentences, MAX 35 words, 10-15 seconds when spoken aloud
+- Narration MUST NOT contain any URLs, hashtags (#), @mentions, or social media text
 - Generate 6-8 scenes — total video must be 2 to 2.5 minutes
 - image_prompt: detailed portrait-oriented scene with characters, body language, environment, colour palette
 - video_prompt: cinematic vertical shot description — specific motion, camera, lighting

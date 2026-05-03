@@ -184,6 +184,19 @@ def _normalize_audio(path: str) -> None:
         os.replace(tmp, path)
 
 
+# ── Text sanitizer ────────────────────────────────────────────────────────────
+
+def _clean_narration(text: str) -> str:
+    """Strip URLs, hashtags, @mentions and extra whitespace from narration text."""
+    import re
+    text = re.sub(r'https?://\S+', '', text)          # remove URLs
+    text = re.sub(r'www\.\S+', '', text)               # remove www. links
+    text = re.sub(r'#\w+', '', text)                   # remove #hashtags
+    text = re.sub(r'@\w+', '', text)                   # remove @mentions
+    text = re.sub(r'\s{2,}', ' ', text)                # collapse extra spaces
+    return text.strip()
+
+
 # ── Public API ────────────────────────────────────────────────────────────────
 
 async def generate_voiceover(scenes: list, language: str = "en") -> list:
@@ -200,7 +213,7 @@ async def generate_voiceover(scenes: list, language: str = "en") -> list:
 
     for i, scene in enumerate(scenes):
         output_path = f"temp/audio/scene_{i:02d}.mp3"
-        text = scene["narration"]
+        text = _clean_narration(scene["narration"])
         success = False
 
         # 1 — Gemini TTS (best quality) — rate limit: 3 RPM, so pace at 21s apart
