@@ -380,23 +380,22 @@ def _pick_music_track() -> str:
     """
     Returns a music track path:
     1. BACKGROUND_MUSIC_PATH in .env if set to a real file
-    2. Otherwise picks randomly from all MP3s in assets/
+    2. Otherwise picks randomly from assets/ and assets/music/ (CI cache dir)
     Returns empty string if nothing found.
     """
     pinned = os.environ.get("BACKGROUND_MUSIC_PATH", "").strip()
     if pinned and os.path.exists(pinned):
         return pinned
 
-    assets_dir = "assets"
-    if not os.path.isdir(assets_dir):
-        return ""
+    tracks = []
+    for search_dir in ["assets", "assets/music"]:
+        if os.path.isdir(search_dir):
+            tracks += [
+                os.path.join(search_dir, f)
+                for f in os.listdir(search_dir)
+                if f.lower().endswith(".mp3")
+            ]
 
-    tracks = [
-        os.path.join(assets_dir, f)
-        for f in os.listdir(assets_dir)
-        if f.lower().endswith(".mp3")
-    ]
-    # Exclude the auto-generated drone if real tracks exist
     real_tracks = [t for t in tracks if "bgmusic" not in os.path.basename(t)]
     pool = real_tracks if real_tracks else tracks
     return random.choice(pool) if pool else ""

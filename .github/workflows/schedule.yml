@@ -34,13 +34,29 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      # Music is stored in a GitHub Release and cached — not in the repo
+      - name: Restore music cache
+        id: music-cache
+        uses: actions/cache@v4
+        with:
+          path: assets/music
+          key: music-tracks-v1
+
+      - name: Download music from GitHub Release
+        if: steps.music-cache.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p assets/music
+          gh release download music-tracks --dir assets/music --pattern "*.mp3"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Set up Python 3.11
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
           cache: pip
 
-      # ubuntu-latest already has FFmpeg — no apt-get needed
+      # ubuntu-latest already has FFmpeg — no install needed
 
       - name: Install Python dependencies
         run: pip install -r requirements.txt
