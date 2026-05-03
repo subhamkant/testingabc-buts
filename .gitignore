@@ -1,0 +1,25 @@
+# Sensitive auth files — NEVER commit these
+token.pickle
+token_base64.txt
+client_secrets.json
+client_secrets_1.json
+
+# Generated outputs
+temp/
+output/
+logs/
+video_log_001.txt
+
+# Runtime state
+.env
+scheduled_topics.txt
+
+# Claude Code internal
+.claude/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+venv/
+.venv/

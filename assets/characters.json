@@ -1,0 +1,78 @@
+{
+  "_note": "Visual reference for Mahabharata characters. Injected into image prompts for consistency. Update descriptions as needed.",
+
+  "Krishna": {
+    "visual": "Lord Krishna with radiant dark indigo-blue divine skin glowing with supernatural luminosity, large enchanting lotus eyes, jet-black curly hair crowned with peacock feather (morpankh), wearing vibrant yellow silk dhoti (pitambara), adorned with gold and jeweled ornaments, vaijayanti mala of forest flowers, holding divine flute (bansuri), divine four-armed form sometimes showing, serene enchanting smile, youthful graceful athletic build",
+    "colors": "dark indigo-blue skin, gold ornaments, saffron-yellow clothing, peacock-green feather"
+  },
+
+  "Arjuna": {
+    "visual": "Arjuna the mighty archer, tall and athletic warrior with wheatish golden-brown skin, sharp hawk-like eyes, dark wavy hair, wearing ornate kshatriya armor with gold-trimmed breastplate, jeweled crown, holding the divine bow Gandiva which glows with divine light, quiver of inexhaustible arrows, regal heroic posture, determined courageous expression",
+    "colors": "golden-bronze skin, gleaming silver-gold armor, jeweled crown, white and gold"
+  },
+
+  "Draupadi": {
+    "visual": "Draupadi Panchali, exceptionally beautiful dark-complexioned queen with luminous dark skin, large expressive black lotus eyes, flowing black lustrous hair, wearing royal silk sari in crimson and gold, adorned with exquisite jewelry including necklace earrings bangles, regal dignified proud posture, fierce intelligent eyes that hold both grace and fire, the most beautiful woman of her era",
+    "colors": "dark luminous skin, crimson-gold silk sari, gold ornaments, black flowing hair"
+  },
+
+  "Bhishma": {
+    "visual": "Bhishma Pitamah the grandsire, elderly but powerfully built warrior, commanding presence, silver-white flowing hair and beard, weathered but strong noble face, wearing white and silver armor on the Kurukshetra battlefield, eyes filled with wisdom and sorrow, straight imposing regal posture, holding bow with practiced ease, aura of invincibility and authority",
+    "colors": "white silver hair, white-silver armor, aged noble face, dignified bearing"
+  },
+
+  "Karna": {
+    "visual": "Karna the great warrior, heroically built with natural golden divine armor (kavacha) fused to his chest and golden earrings (kundala) glowing on his ears, golden-bronze radiant skin, sharp strong features, dark intense eyes filled with pride and hidden sorrow, wearing warrior's attire with the natural born golden breastplate, powerful archer's stance, conflicted noble expression",
+    "colors": "golden-bronze radiant skin, divine golden armor glow, red warrior attire"
+  },
+
+  "Yudhishthira": {
+    "visual": "Yudhishthira Dharmaraja the just king, noble and serene face with calm deep eyes, medium build with dignified upright posture, wearing royal white and gold dhoti with royal crown, expression of righteousness and inner peace, holding royal scepter, gentle strong hands, aura of moral authority and calm wisdom",
+    "colors": "white-gold royal attire, serene noble face, dignified bearing"
+  },
+
+  "Duryodhana": {
+    "visual": "Duryodhana the Kaurava prince, tall powerfully built warrior with dark intense piercing eyes, proud arrogant set of the jaw, strong muscular frame, wearing dark royal armor in black and gold, imposing crown, expression of ambition and barely contained anger, commanding menacing presence, elaborate warrior ornaments",
+    "colors": "dark black-gold armor, intense dark eyes, imposing muscular build"
+  },
+
+  "Drona": {
+    "visual": "Dronacharya the master teacher, elderly sage-warrior with long white flowing beard and hair, sharp intelligent eyes that miss nothing, wearing sage's robes over warrior armor, holding bow with master precision, commanding guru's posture, expression of stern authority and deep knowledge, revered disciplined bearing",
+    "colors": "white sage's robes, silver-white hair and beard, austere distinguished look"
+  },
+
+  "Shakuni": {
+    "visual": "Shakuni the cunning minister of Hastinapura, thin wiry frame with calculating eyes that gleam with scheming intelligence, slightly hunched conspiratorial posture, dark robes with subtle patterns, always slightly smiling as if he knows a secret, sharp angular features, dice in hand or nearby, sinister yet charming presence",
+    "colors": "dark robes, calculating gleaming eyes, thin angular sinister features"
+  },
+
+  "Kunti": {
+    "visual": "Queen Kunti the noble mother of Pandavas, dignified graceful middle-aged queen, serene sorrowful eyes carrying the weight of great sacrifice, wearing white widow's sari bordered with gold, dignified motherly posture, gentle strong hands, expression of deep devotion and quiet strength, regal bearing despite hardships",
+    "colors": "white-gold sari, serene dignified face, silver-streaked dark hair"
+  },
+
+  "Dhritarashtra": {
+    "visual": "Dhritarashtra the blind king of Hastinapura, elderly king with closed sightless eyes, strong square face showing suffering and inner conflict, wearing royal robes and crown, hands often outstretched feeling his way or clasped in anguish, blind eyes showing white, conflicted grief-stricken expression, once-powerful frame now aged",
+    "colors": "royal gold robes, blind white eyes, aged powerful build, tragic bearing"
+  },
+
+  "Abhimanyu": {
+    "visual": "Abhimanyu the brave young warrior son of Arjuna, youthful and strikingly handsome with radiant golden complexion like his father Arjuna, bright fearless eyes, energetic athletic young warrior's build, wearing gleaming golden armor, wielding sword and bow with youthful valor, expression of fearless courage and warrior pride",
+    "colors": "golden radiant skin like Arjuna, gleaming armor, youthful bright eyes"
+  },
+
+  "Hanuman": {
+    "visual": "Lord Hanuman the divine monkey devotee of Rama, mighty red-golden form, sitting regally on Arjuna's chariot flag, powerful muscular frame, devotional wise eyes, orange-red fur, divine golden glow, small crown, folded hands in prayer or mighty war posture, expression of divine devotion and power",
+    "colors": "red-orange divine form, golden glow, powerful physique, devotional expression"
+  },
+
+  "Vidura": {
+    "visual": "Vidura the wise minister and half-brother of Dhritarashtra, middle-aged sage-statesman with kind honest eyes, calm wise face, simple but dignified minister's robes, thoughtful scholarly posture, holding scrolls or speaking with earnest honest expression, face radiating integrity and wisdom without ostentation",
+    "colors": "simple white-grey robes, kind honest face, scholarly dignified bearing"
+  },
+
+  "Barbarik": {
+    "visual": "Barbarik the mightiest warrior grandson of Bhima, young warrior with three divine arrows glowing in his quiver, powerful build, fierce yet serene expression, wearing unique warrior attire with divine bow, eyes that see all three phases of the battle simultaneously, otherworldly divine power emanating from his form",
+    "colors": "warrior attire, three glowing divine arrows, powerful divine aura"
+  }
+}
