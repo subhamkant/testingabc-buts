@@ -75,7 +75,7 @@ jobs:
           username: ${{ secrets.MAIL_USERNAME }}
           password: ${{ secrets.MAIL_PASSWORD }}
           subject: "[Vyasa AI] Video uploaded successfully"
-          to: skant@dazos.com
+          to: subhamkant.11@gmail.com
           from: Vyasa AI Bot <${{ secrets.MAIL_USERNAME }}>
           body: |
             Your Mahabharata bot just uploaded a new video!
@@ -97,7 +97,7 @@ jobs:
           username: ${{ secrets.MAIL_USERNAME }}
           password: ${{ secrets.MAIL_PASSWORD }}
           subject: "[Vyasa AI] Pipeline FAILED - Run #${{ github.run_number }}"
-          to: skant@dazos.com
+          to: subhamkant.11@gmail.com
           from: Vyasa AI Bot <${{ secrets.MAIL_USERNAME }}>
           body: |
             The Mahabharata bot pipeline failed.
