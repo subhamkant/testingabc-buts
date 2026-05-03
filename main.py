@@ -23,7 +23,7 @@ load_dotenv()
 
 from pipeline.script_generator import generate_script
 from pipeline.tts_generator import generate_voiceover
-from pipeline.image_generator import generate_images, generate_thumbnail
+from pipeline.image_generator import generate_images, generate_thumbnail, update_characters
 from pipeline.video_assembler import assemble_video, assemble_from_video_clips
 from pipeline.clip_generator import generate_video_clips
 from pipeline.topic_manager import get_next_topic, log_video
@@ -105,6 +105,7 @@ async def run_pipeline(language: str = "en", test_mode: bool = False, test_uploa
         print(f"    Title       : {script['title']}")
         print(f"    Content type: {script['content_type']}")
         print(f"    Scenes      : {len(script['scenes'])}")
+        update_characters(script)
 
         # ── Step 2: Voiceover ─────────────────────────────────────
         print("\nStep 2 — Generating voiceover with Edge TTS...")

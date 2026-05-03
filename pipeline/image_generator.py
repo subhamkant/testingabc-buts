@@ -1,5 +1,6 @@
 import requests
 import os
+import re
 import time
 import json
 from urllib.parse import quote
@@ -55,6 +56,88 @@ def _inject_characters(prompt: str) -> str:
     if injected:
         return prompt + ". CHARACTER DETAILS — " + "; ".join(injected)
     return prompt
+
+
+# Known Mahabharata characters to watch for in scripts
+_KNOWN_NAMES = [
+    "Ashwatthama", "Nakula", "Sahadeva", "Bhima", "Bheema",
+    "Jayadratha", "Gandhari", "Madri", "Subhadra", "Uttara",
+    "Ghatotkacha", "Hidimba", "Jarasandha", "Shishupala",
+    "Sanjaya", "Kripa", "Kritavarma", "Vikarna", "Dushasana",
+    "Satyavati", "Parashurama", "Narada", "Panchali",
+    "Yuyutsu", "Virata", "Drupada", "Dhrishtadyumna",
+    "Shikhandi", "Amba", "Ambika", "Ambalika", "Pandu",
+    "Chitrangada", "Urvashi", "Menaka", "Indra", "Surya",
+]
+
+
+def update_characters(script_data: dict) -> list:
+    """
+    Scans the generated script for Mahabharata characters not yet in
+    characters.json, generates visual descriptions via Gemini, and
+    saves them back to the file. Returns list of newly added names.
+    """
+    if not script_data or "scenes" not in script_data:
+        return []
+
+    all_text = " ".join(
+        scene.get("image_prompt", "") + " " + scene.get("narration", "")
+        for scene in script_data["scenes"]
+    ).lower()
+
+    existing_lower = {k.lower() for k in _CHARACTERS}
+    new_names = [
+        name for name in _KNOWN_NAMES
+        if name.lower() in all_text and name.lower() not in existing_lower
+    ]
+
+    if not new_names:
+        return []
+
+    api_key = os.environ.get("GEMINI_API_KEY", "")
+    if not api_key:
+        return []
+
+    try:
+        import google.generativeai as genai
+        genai.configure(api_key=api_key)
+        model = genai.GenerativeModel("gemini-2.0-flash")
+
+        prompt = (
+            f"Generate visual descriptions for these Mahabharata characters "
+            f"for AI image generation: {new_names}\n\n"
+            "For each character return a JSON object:\n"
+            '{"CharacterName": {"visual": "specific physical appearance under 120 chars", '
+            '"colors": "primary color palette"}}\n'
+            "Be specific: clothing, weapons, jewelry, skin tone, hair style. "
+            "Return valid JSON only, no markdown."
+        )
+
+        resp = model.generate_content(prompt)
+        text = re.sub(r"^```(?:json)?\s*", "", resp.text.strip())
+        text = re.sub(r"\s*```$", "", text)
+        new_data = json.loads(text)
+
+        with open(_CHAR_FILE, encoding="utf-8") as f:
+            existing = json.load(f)
+
+        added = []
+        for name, data in new_data.items():
+            if name not in existing:
+                existing[name] = data
+                _CHARACTERS[name] = data
+                added.append(name)
+
+        if added:
+            with open(_CHAR_FILE, "w", encoding="utf-8") as f:
+                json.dump(existing, f, ensure_ascii=False, indent=2)
+            print(f"    [OK] New characters added to file: {added}")
+
+        return added
+
+    except Exception as e:
+        print(f"    [!] Character auto-update skipped: {e}")
+        return []
 
 
 def _build_url(prompt: str, seed: int, width: int = 768, height: int = 1344, mood: str = "") -> str:
