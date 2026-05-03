@@ -108,13 +108,9 @@ async def run_pipeline(language: str = "en", test_mode: bool = False, test_uploa
         # Append fixed subscribe outro
         outro = {
             "narration": (
-                "ऐसी ही महाभारत की रोमांचक कहानियाँ सुनने के लिए... "
-                "अभी Subscribe करें Vyasa AI को। "
-                "और Bell Icon ज़रूर दबाएँ... ताकि कोई कहानी छूटे नहीं!"
+                "ऐसी कहानियों के लिए... Vyasa AI को Subscribe करें। Bell Icon ज़रूर दबाएँ!"
             ) if language == "hi" else (
-                "For more epic tales from the Mahabharata... "
-                "Subscribe to Vyasa AI right now. "
-                "Hit the bell icon... so you never miss a story!"
+                "For more Mahabharata stories... Subscribe to Vyasa AI. Hit the bell!"
             ),
             "image_prompt": (
                 "Epic Mahabharata collage — Krishna, Arjuna, Karna, Draupadi in golden cinematic light, "

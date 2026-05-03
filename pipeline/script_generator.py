@@ -73,7 +73,7 @@ MOTIVATIONAL_THEMES = [
 ]
 
 
-def _trim_narration(text: str, max_words: int = 40) -> str:
+def _trim_narration(text: str, max_words: int = 20) -> str:
     """Hard-cap narration at max_words, ending at the last complete sentence."""
     import re
     words = text.split()
@@ -164,7 +164,7 @@ def generate_script(language: str = "en", forced_topic: str = None) -> dict:
     prompt = f"""
 You are a master storyteller specialising in the Mahabharata epic.
 
-Create a YouTube video script (2–2.5 minutes, 6–8 scenes) about:
+Create a YouTube Shorts script (45–55 seconds, 3–4 scenes) about:
 TOPIC: "{topic}"
 LANGUAGE: {lang_label}
 STYLE: {style_note}
@@ -176,7 +176,7 @@ Return ONLY valid JSON — no markdown fences, no extra text:
   "tags": ["Mahabharata","महाभारत","Shorts","Hindu mythology","Krishna","कृष्ण","Arjuna","अर्जुन","Bhagavad Gita","भगवद गीता","Ancient India","dharma","spiritual","epic story","Indian history","Mahabharata shorts","mythology shorts","trending shorts","Hindu dharma","vedic wisdom","Indian mythology","spiritual shorts","krishna stories","kurukshetra"],
   "scenes": [
     {{
-      "narration": "Spoken narration in {lang_label} — STRICTLY 2-3 short sentences, maximum 35 words total. Must take 10-15 seconds to speak aloud. Use vivid imagery and dramatic pauses (use '...'). No long sentences.",
+      "narration": "Spoken narration in {lang_label} — STRICTLY 1-2 punchy sentences, maximum 20 words total. Must take 10-12 seconds to speak aloud. Vivid, dramatic, instantly gripping. No long sentences.",
       "image_prompt": "Detailed English image prompt — portrait orientation composition, specific characters, body language, environment, colour palette, and mood",
       "video_prompt": "Cinematic 5-second shot in English — characters in motion, camera movement, environment, lighting, mood. Vertical portrait composition.",
       "mood": "One evocative phrase describing the emotional tone, e.g. 'tense and apocalyptic', 'serene golden dawn', 'grief-stricken and desolate'"
@@ -189,9 +189,10 @@ Rules:
 - All narration must be in {lang_label}
 - All image_prompt, video_prompt, thumbnail_prompt must ALWAYS be in English
 - Title: under 60 characters, no hashtags
-- Narration: STRICTLY 2-3 short sentences, MAX 35 words, 10-15 seconds when spoken aloud
+- Narration: STRICTLY 1-2 sentences, MAX 20 words, 10-12 seconds when spoken aloud
 - Narration MUST NOT contain any URLs, hashtags (#), @mentions, or social media text
-- Generate 6-8 scenes — total video must be 2 to 2.5 minutes
+- Generate exactly 3-4 scenes — total video must be under 55 seconds
+- Title must include #Shorts
 - image_prompt: detailed portrait-oriented scene with characters, body language, environment, colour palette
 - video_prompt: cinematic vertical shot description — specific motion, camera, lighting
 - mood must be 3-6 words in English
