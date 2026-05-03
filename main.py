@@ -104,7 +104,28 @@ async def run_pipeline(language: str = "en", test_mode: bool = False, test_uploa
         print(f"    Topic       : {script['topic']}")
         print(f"    Title       : {script['title']}")
         print(f"    Content type: {script['content_type']}")
-        print(f"    Scenes      : {len(script['scenes'])}")
+
+        # Append fixed subscribe outro
+        outro = {
+            "narration": (
+                "ऐसी ही महाभारत की रोमांचक कहानियाँ सुनने के लिए... "
+                "अभी Subscribe करें Vyasa AI को। "
+                "और Bell Icon ज़रूर दबाएँ... ताकि कोई कहानी छूटे नहीं!"
+            ) if language == "hi" else (
+                "For more epic tales from the Mahabharata... "
+                "Subscribe to Vyasa AI right now. "
+                "Hit the bell icon... so you never miss a story!"
+            ),
+            "image_prompt": (
+                "Epic Mahabharata collage — Krishna, Arjuna, Karna, Draupadi in golden cinematic light, "
+                "bold text 'Subscribe to Vyasa AI' glowing in center, lotus and Om symbol, "
+                "jewel-toned palette, dramatic portrait composition"
+            ),
+            "video_prompt": "Cinematic zoom out from Om symbol to full Mahabharata tableau, golden light rays",
+            "mood": "inspiring and inviting",
+        }
+        script["scenes"].append(outro)
+        print(f"    Scenes      : {len(script['scenes'])} (+ subscribe outro)")
         update_characters(script)
 
         # ── Step 2: Voiceover ─────────────────────────────────────
