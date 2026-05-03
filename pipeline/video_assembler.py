@@ -132,7 +132,7 @@ def _render_image_clip(
         cmd += ["-i", with_audio]
 
     cmd += [
-        "-c:v", "libx264", "-preset", "medium", "-crf", "18",
+        "-c:v", "libx264", "-preset", "fast", "-crf", "23",
         "-pix_fmt", "yuv420p",
         "-t", str(duration),
         "-vf", ",".join(vf_parts),
@@ -149,7 +149,7 @@ def _fallback_image_clip(image_path: str, audio_path: str, output_path: str):
         "ffmpeg", "-y",
         "-loop", "1", "-i", image_path,
         "-i", audio_path,
-        "-c:v", "libx264", "-preset", "medium", "-crf", "18",
+        "-c:v", "libx264", "-preset", "fast", "-crf", "23",
         "-c:a", "aac", "-b:a", "128k",
         "-pix_fmt", "yuv420p", "-shortest",
         "-vf", "scale=1080:1920:force_original_aspect_ratio=increase:flags=lanczos,crop=1080:1920,setsar=1",
@@ -188,7 +188,7 @@ def _join_video_clips(clip_paths: list, durations: list, output_path: str, xfade
         *inputs,
         "-filter_complex", ";".join(filter_parts),
         "-map", "[vout]",
-        "-c:v", "libx264", "-preset", "medium", "-crf", "18",
+        "-c:v", "libx264", "-preset", "fast", "-crf", "23",
         "-pix_fmt", "yuv420p", "-an",
         output_path,
     ], capture_output=True)
@@ -239,7 +239,7 @@ def _make_scene_clip(image_paths, audio_path: str, clip_path: str, duration: flo
             subprocess.run([
                 "ffmpeg", "-y",
                 "-loop", "1", "-framerate", str(FPS), "-i", img,
-                "-c:v", "libx264", "-preset", "medium", "-crf", "18",
+                "-c:v", "libx264", "-preset", "fast", "-crf", "23",
                 "-pix_fmt", "yuv420p", "-t", str(actual_dur), "-an",
                 "-vf", "scale=1080:1920:force_original_aspect_ratio=increase:flags=lanczos,"
                        "crop=1080:1920,setsar=1",
@@ -295,7 +295,7 @@ def _make_video_scene_clip(raw_clip_path: str, audio_path: str, output_path: str
         "-i", audio_path,
         "-filter_complex", f"[0:v]{','.join(vf_parts)}[vout]",
         "-map", "[vout]", "-map", "1:a",
-        "-c:v", "libx264", "-preset", "medium", "-crf", "18",
+        "-c:v", "libx264", "-preset", "fast", "-crf", "23",
         "-c:a", "aac", "-b:a", "128k",
         "-pix_fmt", "yuv420p",
         "-t", str(duration + 0.5), "-shortest",
@@ -307,7 +307,7 @@ def _make_video_scene_clip(raw_clip_path: str, audio_path: str, output_path: str
             "ffmpeg", "-y",
             "-stream_loop", "-1", "-i", raw_clip_path,
             "-i", audio_path,
-            "-c:v", "libx264", "-preset", "medium", "-crf", "18",
+            "-c:v", "libx264", "-preset", "fast", "-crf", "23",
             "-c:a", "aac", "-b:a", "128k",
             "-pix_fmt", "yuv420p", "-shortest",
             "-vf", "scale=1080:1920:force_original_aspect_ratio=increase:flags=lanczos,crop=1080:1920,setsar=1",
@@ -364,7 +364,7 @@ def _write_final_video(clip_paths: list, clip_durations: list, output_path: str)
         "-filter_complex", ";".join(filter_parts),
         "-map", "[vout]",
         "-map", "[aout]",
-        "-c:v", "libx264", "-preset", "medium", "-crf", "18",
+        "-c:v", "libx264", "-preset", "fast", "-crf", "23",
         "-c:a", "aac", "-b:a", "128k",
         "-movflags", "+faststart",
         output_path,
