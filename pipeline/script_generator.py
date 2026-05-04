@@ -141,7 +141,7 @@ def generate_script(language: str = "en", forced_topic: str = None) -> dict:
       title, description, tags, scenes, thumbnail_prompt,
       language, content_type, topic
     """
-    _MOTIVATIONAL_KEYWORDS = ("karma", "dharma", "lesson", "wisdom", "why", "power", "teaching")
+_MOTIVATIONAL_KEYWORDS = ("karma", "dharma", "lesson", "wisdom", "why", "power", "teaching")
 
 if forced_topic:
     topic = forced_topic
