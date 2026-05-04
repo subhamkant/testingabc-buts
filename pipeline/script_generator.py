@@ -162,22 +162,24 @@ def generate_script(language: str = "en", forced_topic: str = None) -> dict:
     )
 
     if language == "hi":
-        language_rules = """CRITICAL LANGUAGE RULES:
-        - Narration must be ONLY in Hindi (Devanagari script)
-        - Do NOT use English words or abbreviations
-        - Do NOT generate meaningless or broken words (like एमएस, ML, etc.)
-        - Do NOT include URLs, references, or metadata
-        - Use simple, natural spoken Hindi
-        - If unsure, generate simpler Hindi — NEVER invent words
-        """
+        language_rules = (
+            "CRITICAL LANGUAGE RULES:\n"
+            "- Narration must be ONLY in Hindi (Devanagari script)\n"
+            "- Do NOT use English words or abbreviations\n"
+            "- Do NOT generate meaningless or broken words (like एमएस, ML, etc.)\n"
+            "- Do NOT include URLs, references, or metadata\n"
+            "- Use simple, natural spoken Hindi\n"
+            "- If unsure, generate simpler Hindi — NEVER invent words\n"
+        )
     else:
-        language_rules = """CRITICAL LANGUAGE RULES:
-        - Narration must be ONLY in clear, natural English
-        - Do NOT mix Hindi or other languages
-        - Do NOT generate abbreviations or broken words
-        - Do NOT include URLs, references, or metadata
-        - Keep sentences simple and conversational
-        """
+        language_rules = (
+            "CRITICAL LANGUAGE RULES:\n"
+            "- Narration must be ONLY in clear, natural English\n"
+            "- Do NOT mix Hindi or other languages\n"
+            "- Do NOT generate abbreviations or broken words\n"
+            "- Do NOT include URLs, references, or metadata\n"
+            "- Keep sentences simple and conversational\n"
+        )
 
     prompt = f"""
 You are a master storyteller specialising in the Mahabharata epic also a professional script generator for YouTube Shorts.
