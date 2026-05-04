@@ -187,13 +187,26 @@ def _normalize_audio(path: str) -> None:
 # ── Text sanitizer ────────────────────────────────────────────────────────────
 
 def _clean_narration(text: str) -> str:
-    """Strip URLs, hashtags, @mentions and extra whitespace from narration text."""
+    """Clean narration text before sending to TTS."""
     import re
-    text = re.sub(r'https?://\S+', '', text)          # remove URLs
-    text = re.sub(r'www\.\S+', '', text)               # remove www. links
-    text = re.sub(r'#\w+', '', text)                   # remove #hashtags
-    text = re.sub(r'@\w+', '', text)                   # remove @mentions
-    text = re.sub(r'\s{2,}', ' ', text)                # collapse extra spaces
+
+    # Remove URLs
+    text = re.sub(r'https?://\S+', '', text)
+    text = re.sub(r'www\.\S+', '', text)
+
+    # Remove hashtags & mentions
+    text = re.sub(r'#\w+', '', text)
+    text = re.sub(r'@\w+', '', text)
+
+    # ❗ NEW: remove English abbreviations (MS, ML, etc.)
+    text = re.sub(r'\b[A-Z]{2,}\b', '', text)
+
+    # ❗ NEW: remove repeated weird tokens (common Gemini bug)
+    text = re.sub(r'(एमएस|एमएल|MS|ML)+', '', text)
+
+    # Normalize spaces
+    text = re.sub(r'\s{2,}', ' ', text)
+
     return text.strip()
 
 
