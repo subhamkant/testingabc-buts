@@ -143,43 +143,43 @@ def generate_script(language: str = "en", forced_topic: str = None) -> dict:
     """
     _MOTIVATIONAL_KEYWORDS = ("karma", "dharma", "lesson", "wisdom", "why", "power", "teaching")
 
-    if forced_topic:
-        topic = forced_topic
-        content_type = (
-            "motivational"
-            if any(kw in forced_topic.lower() for kw in _MOTIVATIONAL_KEYWORDS)
-            else "story"
-        )
-    else:
-        content_type = random.choice(["story", "motivational"])
-        topic = random.choice(STORY_TOPICS if content_type == "story" else MOTIVATIONAL_THEMES)
-
-    lang_label = "Hindi (Devanagari script, natural spoken Hindi)" if language == "hi" else "English"
-    style_note = (
-        "dramatic story narration — immersive, present-tense, emotional"
-        if content_type == "story"
-        else "motivational storytelling — inspiring, wisdom-driven, relatable"
+if forced_topic:
+    topic = forced_topic
+    content_type = (
+        "motivational"
+        if any(kw in forced_topic.lower() for kw in _MOTIVATIONAL_KEYWORDS)
+        else "story"
     )
+else:
+    content_type = random.choice(["story", "motivational"])
+    topic = random.choice(STORY_TOPICS if content_type == "story" else MOTIVATIONAL_THEMES)
 
-    if language == "hi":
-        language_rules = (
-            "CRITICAL LANGUAGE RULES:\n"
-            "- Narration must be ONLY in Hindi (Devanagari script)\n"
-            "- Do NOT use English words or abbreviations\n"
-            "- Do NOT generate meaningless or broken words (like एमएस, ML, etc.)\n"
-            "- Do NOT include URLs, references, or metadata\n"
-            "- Use simple, natural spoken Hindi\n"
-            "- If unsure, generate simpler Hindi — NEVER invent words\n"
-        )
-    else:
-        language_rules = (
-            "CRITICAL LANGUAGE RULES:\n"
-            "- Narration must be ONLY in clear, natural English\n"
-            "- Do NOT mix Hindi or other languages\n"
-            "- Do NOT generate abbreviations or broken words\n"
-            "- Do NOT include URLs, references, or metadata\n"
-            "- Keep sentences simple and conversational\n"
-        )
+lang_label = "Hindi (Devanagari script, natural spoken Hindi)" if language == "hi" else "English"
+style_note = (
+    "dramatic story narration — immersive, present-tense, emotional"
+    if content_type == "story"
+    else "motivational storytelling — inspiring, wisdom-driven, relatable"
+)
+
+if language == "hi":
+    language_rules = (
+        "CRITICAL LANGUAGE RULES:\n"
+        "- Narration must be ONLY in Hindi (Devanagari script)\n"
+        "- Do NOT use English words or abbreviations\n"
+        "- Do NOT generate meaningless or broken words (like एमएस, ML, etc.)\n"
+        "- Do NOT include URLs, references, or metadata\n"
+        "- Use simple, natural spoken Hindi\n"
+        "- If unsure, generate simpler Hindi — NEVER invent words\n"
+    )
+else:
+    language_rules = (
+        "CRITICAL LANGUAGE RULES:\n"
+        "- Narration must be ONLY in clear, natural English\n"
+        "- Do NOT mix Hindi or other languages\n"
+        "- Do NOT generate abbreviations or broken words\n"
+        "- Do NOT include URLs, references, or metadata\n"
+        "- Keep sentences simple and conversational\n"
+    )
 
     prompt = f"""
 You are a master storyteller specialising in the Mahabharata epic also a professional script generator for YouTube Shorts.
