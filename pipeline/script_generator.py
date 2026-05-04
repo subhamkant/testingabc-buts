@@ -161,13 +161,40 @@ def generate_script(language: str = "en", forced_topic: str = None) -> dict:
         else "motivational storytelling — inspiring, wisdom-driven, relatable"
     )
 
+if language == "hi":
+    language_rules = """
+CRITICAL LANGUAGE RULES:
+- Narration must be ONLY in Hindi (Devanagari script)
+- Do NOT use English words or abbreviations
+- Do NOT generate meaningless or broken words (like एमएस, ML, etc.)
+- Use simple, natural spoken Hindi
+"""
+else:
+    language_rules = """
+CRITICAL LANGUAGE RULES:
+- Narration must be ONLY in clear, natural English
+- Do NOT mix Hindi or other languages
+- Do NOT generate abbreviations or broken words
+- Keep sentences simple and conversational
+"""
+
     prompt = f"""
-You are a master storyteller specialising in the Mahabharata epic.
+You are a master storyteller specialising in the Mahabharata epic also a professional script generator for YouTube Shorts.
+
+You must strictly follow all rules and NEVER generate invalid or noisy text.
 
 Create a YouTube Shorts script (45–55 seconds, 3–4 scenes) about:
 TOPIC: "{topic}"
 LANGUAGE: {lang_label}
 STYLE: {style_note}
+{language_rules}
+CRITICAL LANGUAGE RULES (DO NOT VIOLATE):
+- Narration must be ONLY in pure Hindi (Devanagari script)
+- Do NOT use any English words inside narration
+- Do NOT generate abbreviations (like MS, ML, etc.)
+- Do NOT generate meaningless or broken words (like एमएसटीएस, etc.)
+- Do NOT include URLs, references, or metadata
+- If unsure, generate simpler Hindi — NEVER invent words
 
 Return ONLY valid JSON — no markdown fences, no extra text:
 {{
@@ -176,7 +203,7 @@ Return ONLY valid JSON — no markdown fences, no extra text:
   "tags": ["Mahabharata","महाभारत","Shorts","Hindu mythology","Krishna","कृष्ण","Arjuna","अर्जुन","Bhagavad Gita","भगवद गीता","Ancient India","dharma","spiritual","epic story","Indian history","Mahabharata shorts","mythology shorts","trending shorts","Hindu dharma","vedic wisdom","Indian mythology","spiritual shorts","krishna stories","kurukshetra"],
   "scenes": [
     {{
-      "narration": "Spoken narration in {lang_label} — STRICTLY 1-2 punchy sentences, maximum 20 words total. Must take 10-12 seconds to speak aloud. Vivid, dramatic, instantly gripping. No long sentences.",
+      "narration": "Narration strictly in the specified LANGUAGE above — STRICTLY 1-2 punchy sentences, maximum 20 words total. Must take 10-12 seconds to speak aloud. Vivid, dramatic, instantly gripping. No long sentences.",
       "image_prompt": "Detailed English image prompt — portrait orientation composition, specific characters, body language, environment, colour palette, and mood",
       "video_prompt": "Cinematic 5-second shot in English — characters in motion, camera movement, environment, lighting, mood. Vertical portrait composition.",
       "mood": "One evocative phrase describing the emotional tone, e.g. 'tense and apocalyptic', 'serene golden dawn', 'grief-stricken and desolate'"
@@ -192,7 +219,6 @@ Rules:
 - Narration: STRICTLY 1-2 sentences, MAX 20 words, 10-12 seconds when spoken aloud
 - Narration MUST NOT contain any URLs, hashtags (#), @mentions, or social media text
 - Generate exactly 3-4 scenes — total video must be under 55 seconds
-- Title must include #Shorts
 - image_prompt: detailed portrait-oriented scene with characters, body language, environment, colour palette
 - video_prompt: cinematic vertical shot description — specific motion, camera, lighting
 - mood must be 3-6 words in English
