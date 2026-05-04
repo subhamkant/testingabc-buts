@@ -167,7 +167,9 @@ def generate_script(language: str = "en", forced_topic: str = None) -> dict:
     - Narration must be ONLY in Hindi (Devanagari script)
     - Do NOT use English words or abbreviations
     - Do NOT generate meaningless or broken words (like एमएस, ML, etc.)
+    - Do NOT include URLs, references, or metadata
     - Use simple, natural spoken Hindi
+    - If unsure, generate simpler Hindi — NEVER invent words
     """
     else:
         language_rules = """
@@ -175,6 +177,7 @@ def generate_script(language: str = "en", forced_topic: str = None) -> dict:
     - Narration must be ONLY in clear, natural English
     - Do NOT mix Hindi or other languages
     - Do NOT generate abbreviations or broken words
+    - Do NOT include URLs, references, or metadata
     - Keep sentences simple and conversational
     """
 
@@ -188,14 +191,6 @@ TOPIC: "{topic}"
 LANGUAGE: {lang_label}
 STYLE: {style_note}
 {language_rules}
-CRITICAL LANGUAGE RULES (DO NOT VIOLATE):
-- Narration must be ONLY in pure Hindi (Devanagari script)
-- Do NOT use any English words inside narration
-- Do NOT generate abbreviations (like MS, ML, etc.)
-- Do NOT generate meaningless or broken words (like एमएसटीएस, etc.)
-- Do NOT include URLs, references, or metadata
-- If unsure, generate simpler Hindi — NEVER invent words
-
 Return ONLY valid JSON — no markdown fences, no extra text:
 {{
   "title": "Captivating Shorts title under 60 characters — no hashtags in title",
