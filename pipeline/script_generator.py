@@ -162,8 +162,7 @@ def generate_script(language: str = "en", forced_topic: str = None) -> dict:
     )
 
     if language == "hi":
-        language_rules = """
-    CRITICAL LANGUAGE RULES:
+        language_rules = """CRITICAL LANGUAGE RULES:
     - Narration must be ONLY in Hindi (Devanagari script)
     - Do NOT use English words or abbreviations
     - Do NOT generate meaningless or broken words (like एमएस, ML, etc.)
@@ -172,8 +171,7 @@ def generate_script(language: str = "en", forced_topic: str = None) -> dict:
     - If unsure, generate simpler Hindi — NEVER invent words
     """
     else:
-        language_rules = """
-    CRITICAL LANGUAGE RULES:
+        language_rules = """CRITICAL LANGUAGE RULES:
     - Narration must be ONLY in clear, natural English
     - Do NOT mix Hindi or other languages
     - Do NOT generate abbreviations or broken words
