@@ -22,10 +22,14 @@ from dotenv import load_dotenv
 load_dotenv()
 
 from pipeline.script_generator import generate_script
-from pipeline.tts_generator import generate_voiceover
+from pipeline.tts_generator import generate_full_narration
 from pipeline.image_generator import generate_images, generate_thumbnail, update_characters
-from pipeline.video_assembler import assemble_video, assemble_from_video_clips
+from pipeline.video_assembler import (
+    assemble_video_continuous_audio,
+    assemble_from_video_clips_continuous_audio,
+)
 from pipeline.clip_generator import generate_video_clips
+from pipeline.subtitle_generator import apply_subtitles
 from pipeline.topic_manager import get_next_topic, log_video
 from pipeline.youtube_uploader import upload_to_youtube
 
@@ -124,11 +128,14 @@ async def run_pipeline(language: str = "en", test_mode: bool = False, test_uploa
         print(f"    Scenes      : {len(script['scenes'])} (+ subscribe outro)")
         update_characters(script)
 
-        # ── Step 2: Voiceover ─────────────────────────────────────
-        print("\nStep 2 — Generating voiceover with Edge TTS...")
-        audio_files = await generate_voiceover(script["scenes"], language)
+        # ── Step 2: Continuous voiceover (single-pass TTS) ────────
+        # ONE audio file is generated from the concatenated narration so the
+        # voice quality and pacing are identical throughout the video — no
+        # seams between scenes, no half-Gemini / half-Edge mismatches.
+        print("\nStep 2 — Generating continuous voiceover (single-pass TTS)...")
+        audio_path, char_weights = await generate_full_narration(script["scenes"], language)
 
-        if not audio_files:
+        if not audio_path or not os.path.exists(audio_path):
             print("No audio generated. Aborting.")
             return
 
@@ -136,22 +143,24 @@ async def run_pipeline(language: str = "en", test_mode: bool = False, test_uploa
         output_path = _video_output_path(language)
         video_path = None
 
-        _hf_space = os.environ.get("HF_SPACE", "").strip()
-        _ai_clips_available = bool(_hf_space)
+        # AI video clips are tried if ANY provider is configured. clip_generator
+        # internally cascades fal -> replicate -> HF, so even one configured
+        # provider is enough to attempt the AI path.
+        _ai_clips_available = any(
+            os.environ.get(k, "").strip()
+            for k in ("FAL_KEY", "REPLICATE_API_TOKEN", "HF_SPACE")
+        )
 
         if _ai_clips_available:
             try:
-                import gradio_client  # noqa: F401
-            except ImportError:
-                _ai_clips_available = False
-
-        if _ai_clips_available:
-            try:
-                print("\nStep 3 — Generating AI video clips via HuggingFace Spaces...")
+                print("\nStep 3 — Generating AI video clips...")
                 clip_files = await generate_video_clips(script["scenes"])
-                print("\nStep 4 — Assembling video from AI clips...")
-                video_path = assemble_from_video_clips(clip_files, audio_files, script,
-                                                       output_path=output_path)
+                print("\nStep 4 — Assembling video from AI clips with continuous audio...")
+                video_path = assemble_from_video_clips_continuous_audio(
+                    clip_files, audio_path, script,
+                    char_weights=char_weights,
+                    output_path=output_path,
+                )
                 if not os.path.exists(video_path):
                     raise RuntimeError("Assembly produced no output file")
             except Exception as clip_err:
@@ -164,9 +173,22 @@ async def run_pipeline(language: str = "en", test_mode: bool = False, test_uploa
             image_files = generate_images(script["scenes"])
             if script.get("thumbnail_prompt"):
                 generate_thumbnail(script["thumbnail_prompt"])
-            print("\nStep 4 — Assembling video with FFmpeg...")
-            video_path = assemble_video(image_files, audio_files, script,
-                                        output_path=output_path)
+            print("\nStep 4 — Assembling video with continuous audio...")
+            video_path = assemble_video_continuous_audio(
+                image_files, audio_path, script,
+                char_weights=char_weights,
+                output_path=output_path,
+            )
+
+        # ── Step 4b: Burned-in word-level subtitles ───────────────
+        # Run AFTER assembly + polish + music so cinematic effects don't
+        # affect subtitle readability and camera shake doesn't jitter them.
+        if video_path and os.path.exists(video_path):
+            print("\nStep 4b — Burning word-level subtitles via Groq Whisper...")
+            try:
+                apply_subtitles(video_path, audio_path, language)
+            except Exception as sub_err:
+                print(f"    Subtitles failed (non-fatal): {sub_err}")
 
         # ── Step 5: Upload to YouTube ─────────────────────────────
         video_id = None

@@ -141,85 +141,85 @@ def generate_script(language: str = "en", forced_topic: str = None) -> dict:
       title, description, tags, scenes, thumbnail_prompt,
       language, content_type, topic
     """
-_MOTIVATIONAL_KEYWORDS = ("karma", "dharma", "lesson", "wisdom", "why", "power", "teaching")
+    _MOTIVATIONAL_KEYWORDS = ("karma", "dharma", "lesson", "wisdom", "why", "power", "teaching")
 
-if forced_topic:
-    topic = forced_topic
-    content_type = (
-        "motivational"
-        if any(kw in forced_topic.lower() for kw in _MOTIVATIONAL_KEYWORDS)
-        else "story"
-    )
-else:
-    content_type = random.choice(["story", "motivational"])
-    topic = random.choice(STORY_TOPICS if content_type == "story" else MOTIVATIONAL_THEMES)
+    if forced_topic:
+        topic = forced_topic
+        content_type = (
+            "motivational"
+            if any(kw in forced_topic.lower() for kw in _MOTIVATIONAL_KEYWORDS)
+            else "story"
+        )
+    else:
+        content_type = random.choice(["story", "motivational"])
+        topic = random.choice(STORY_TOPICS if content_type == "story" else MOTIVATIONAL_THEMES)
 
-lang_label = "Hindi (Devanagari script, natural spoken Hindi)" if language == "hi" else "English"
-style_note = (
-    "dramatic story narration — immersive, present-tense, emotional"
-    if content_type == "story"
-    else "motivational storytelling — inspiring, wisdom-driven, relatable"
-)
+    lang_label = "Hindi (Devanagari script, natural spoken Hindi)" if language == "hi" else "English"
+    style_note = (
+        "dramatic story narration — immersive, present-tense, emotional"
+        if content_type == "story"
+        else "motivational storytelling — inspiring, wisdom-driven, relatable"
+    )
 
-if language == "hi":
-    language_rules = (
-        "CRITICAL LANGUAGE RULES:\n"
-        "- Narration must be ONLY in Hindi (Devanagari script)\n"
-        "- Do NOT use English words or abbreviations\n"
-        "- Do NOT generate meaningless or broken words (like एमएस, ML, etc.)\n"
-        "- Do NOT include URLs, references, or metadata\n"
-        "- Use simple, natural spoken Hindi\n"
-        "- If unsure, generate simpler Hindi — NEVER invent words\n"
-    )
-else:
-    language_rules = (
-        "CRITICAL LANGUAGE RULES:\n"
-        "- Narration must be ONLY in clear, natural English\n"
-        "- Do NOT mix Hindi or other languages\n"
-        "- Do NOT generate abbreviations or broken words\n"
-        "- Do NOT include URLs, references, or metadata\n"
-        "- Keep sentences simple and conversational\n"
-    )
+    if language == "hi":
+        language_rules = (
+            "CRITICAL LANGUAGE RULES:\n"
+            "- Narration must be ONLY in Hindi (Devanagari script)\n"
+            "- Do NOT use English words or abbreviations\n"
+            "- Do NOT generate meaningless or broken words (like एमएस, ML, etc.)\n"
+            "- Do NOT include URLs, references, or metadata\n"
+            "- Use simple, natural spoken Hindi\n"
+            "- If unsure, generate simpler Hindi — NEVER invent words\n"
+        )
+    else:
+        language_rules = (
+            "CRITICAL LANGUAGE RULES:\n"
+            "- Narration must be ONLY in clear, natural English\n"
+            "- Do NOT mix Hindi or other languages\n"
+            "- Do NOT generate abbreviations or broken words\n"
+            "- Do NOT include URLs, references, or metadata\n"
+            "- Keep sentences simple and conversational\n"
+        )
 
     prompt = f"""
-You are a master storyteller specialising in the Mahabharata epic also a professional script generator for YouTube Shorts.
+    You are a master storyteller specialising in the Mahabharata epic also a professional script generator for YouTube Shorts.
 
-You must strictly follow all rules and NEVER generate invalid or noisy text.
+    You must strictly follow all rules and NEVER generate invalid or noisy text.
 
-Create a YouTube Shorts script (45–55 seconds, 3–4 scenes) about:
-TOPIC: "{topic}"
-LANGUAGE: {lang_label}
-STYLE: {style_note}
-{language_rules}
-Return ONLY valid JSON — no markdown fences, no extra text:
-{{
-  "title": "Captivating Shorts title under 60 characters — no hashtags in title",
-  "description": "Engaging hook sentence that grabs attention in first 2 lines. Then 100-150 words about the story. End with this exact block:\n\n#Shorts #Mahabharata #महाभारत #HinduMythology #Krishna #कृष्ण #BhagavadGita #भगवद_गीता #AncientIndia #EpicStory #Dharma #SpiritualWisdom #IndianMythology #HinduDharma #Arjuna #VedicWisdom #IndianHistory #MythologyShorts #KrishnaStories #trending",
-  "tags": ["Mahabharata","महाभारत","Shorts","Hindu mythology","Krishna","कृष्ण","Arjuna","अर्जुन","Bhagavad Gita","भगवद गीता","Ancient India","dharma","spiritual","epic story","Indian history","Mahabharata shorts","mythology shorts","trending shorts","Hindu dharma","vedic wisdom","Indian mythology","spiritual shorts","krishna stories","kurukshetra"],
-  "scenes": [
+    Create a YouTube Shorts script (45-55 seconds, 3-4 scenes) about:
+    TOPIC: "{topic}"
+    LANGUAGE: {lang_label}
+    STYLE: {style_note}
+    {language_rules}
+    Return ONLY valid JSON — no markdown fences, no extra text:
     {{
-      "narration": "Narration strictly in the specified LANGUAGE above — STRICTLY 1-2 punchy sentences, maximum 20 words total. Must take 10-12 seconds to speak aloud. Vivid, dramatic, instantly gripping. No long sentences.",
-      "image_prompt": "Detailed English image prompt — portrait orientation composition, specific characters, body language, environment, colour palette, and mood",
-      "video_prompt": "Cinematic 5-second shot in English — characters in motion, camera movement, environment, lighting, mood. Vertical portrait composition.",
-      "mood": "One evocative phrase describing the emotional tone, e.g. 'tense and apocalyptic', 'serene golden dawn', 'grief-stricken and desolate'"
+    "title": "Captivating Shorts title under 60 characters — no hashtags in title",
+    "description": "Engaging hook sentence that grabs attention in first 2 lines. Then 100-150 words about the story. End with this exact block:\n\n#Shorts #Mahabharata #महाभारत #HinduMythology #Krishna #कृष्ण #BhagavadGita #भगवद_गीता #AncientIndia #EpicStory #Dharma #SpiritualWisdom #IndianMythology #HinduDharma #Arjuna #VedicWisdom #IndianHistory #MythologyShorts #KrishnaStories #trending",
+    "tags": ["Mahabharata","महाभारत","Shorts","Hindu mythology","Krishna","कृष्ण","Arjuna","अर्जुन","Bhagavad Gita","भगवद गीता","Ancient India","dharma","spiritual","epic story","Indian history","Mahabharata shorts","mythology shorts","trending shorts","Hindu dharma","vedic wisdom","Indian mythology","spiritual shorts","krishna stories","kurukshetra"],
+    "scenes": [
+        {{
+        "narration": "Narration strictly in the specified LANGUAGE above — STRICTLY 1-2 punchy sentences, maximum 20 words total. Must take 10-12 seconds to speak aloud. Vivid, dramatic, instantly gripping. No long sentences.",
+        "image_prompt": "Detailed English image prompt — portrait orientation composition, specific characters, body language, environment, colour palette, and mood",
+        "video_prompt": "Cinematic 5-second shot in English — characters in motion, camera movement, environment, lighting, mood. Vertical portrait composition.",
+        "mood": "One evocative phrase describing the emotional tone, e.g. 'tense and apocalyptic', 'serene golden dawn', 'grief-stricken and desolate'"
+        }}
+    ],
+    "thumbnail_prompt": "Dramatic thumbnail — epic Mahabharata scene, vibrant colours, cinematic, portrait composition"
     }}
-  ],
-  "thumbnail_prompt": "Dramatic thumbnail — epic Mahabharata scene, vibrant colours, cinematic, portrait composition"
-}}
 
-Rules:
-- All narration must be in {lang_label}
-- All image_prompt, video_prompt, thumbnail_prompt must ALWAYS be in English
-- Title: under 60 characters, no hashtags
-- Narration: STRICTLY 1-2 sentences, MAX 20 words, 10-12 seconds when spoken aloud
-- Narration MUST NOT contain any URLs, hashtags (#), @mentions, or social media text
-- Generate exactly 3-4 scenes — total video must be under 55 seconds
-- image_prompt: detailed portrait-oriented scene with characters, body language, environment, colour palette
-- video_prompt: cinematic vertical shot description — specific motion, camera, lighting
-- mood must be 3-6 words in English
-- image_prompt and video_prompt must reference the mood
-- description must end with the exact hashtags listed above
-"""
+    Rules:
+    - All narration must be in {lang_label}
+    - All image_prompt, video_prompt, thumbnail_prompt must ALWAYS be in English
+    - Title: under 60 characters, no hashtags
+    - Narration: STRICTLY 1-2 sentences, MAX 20 words, 10-12 seconds when spoken aloud
+    - Narration MUST NOT contain any URLs, hashtags (#), @mentions, or social media text
+    - Generate exactly 3-4 scenes — total video must be under 55 seconds
+    - image_prompt: detailed portrait-oriented scene with characters, body language, environment, colour palette
+    - video_prompt: cinematic vertical shot description — specific motion, camera, lighting
+    - mood must be 3-6 words in English
+    - image_prompt and video_prompt must reference the mood
+    - description must end with the exact hashtags listed above
+    """
 
     raw = _call_llm(prompt)
 

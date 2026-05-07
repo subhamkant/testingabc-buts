@@ -156,23 +156,29 @@ def _build_url(prompt: str, seed: int, width: int = 768, height: int = 1344, moo
     )
 
 
-def generate_images(scenes: list) -> list:
+def generate_images(scenes: list, single_shot: bool = False) -> list:
     """
-    Generates 3 portrait (1080x1920) images per scene:
-      shot 0 — wide establishing
-      shot 1 — medium
-      shot 2 — dramatic close-up
+    Generates portrait (768x1344) images per scene.
+
+    Default: 3 shots per scene (wide / medium / closeup) for the static-image
+    Ken Burns pipeline.
+
+    With single_shot=True: only the wide-establishing shot is generated. Used
+    when the AI-video pipeline is active — I2V models only need a single
+    first-frame image, so generating 3 wastes time and Pollinations quota.
 
     Returns list[list[str]] — outer index = scene, inner index = shot.
     """
     os.makedirs("temp/images", exist_ok=True)
     scene_groups = []
 
+    angles = _SHOT_ANGLES[:1] if single_shot else _SHOT_ANGLES
+
     for i, scene in enumerate(scenes):
         shot_paths = []
         mood = scene.get("mood", "")
 
-        for j, angle_prefix in enumerate(_SHOT_ANGLES):
+        for j, angle_prefix in enumerate(angles):
             output_path = f"temp/images/scene_{i:02d}_shot_{j:02d}.jpg"
             base_prompt = _inject_characters(scene["image_prompt"])
             prompt = f"{angle_prefix}{base_prompt}"

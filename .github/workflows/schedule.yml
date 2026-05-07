@@ -66,8 +66,57 @@ jobs:
                   f.write(r.read())
           "
 
-      - name: Install FFmpeg
-        run: sudo apt-get install -y ffmpeg
+      - name: Restore cinematic assets cache (LUTs + overlays)
+        id: cinematic-cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            assets/luts
+            assets/overlays
+          key: cinematic-assets-v1
+
+      - name: Download cinematic assets from GitHub Release
+        if: steps.cinematic-cache.outputs.cache-hit != 'true'
+        continue-on-error: true
+        run: |
+          mkdir -p assets/luts assets/overlays/lightleaks assets/overlays/lensflares
+          curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            "https://api.github.com/repos/${{ github.repository }}/releases/tags/cinematic-assets" \
+            | python3 -c "
+          import sys, json, urllib.request, os
+          TOKEN = '${{ secrets.GITHUB_TOKEN }}'
+          data = json.load(sys.stdin)
+          assets = data.get('assets', [])
+          print(f'Found {len(assets)} cinematic asset files')
+          for a in assets:
+              name = a['name']
+              # Route by extension/name into the right subdir
+              if name.endswith('.cube'):
+                  dest = f'assets/luts/{name}'
+              elif 'lensflare' in name.lower() or 'flare' in name.lower():
+                  dest = f'assets/overlays/lensflares/{name}'
+              else:
+                  dest = f'assets/overlays/lightleaks/{name}'
+              print(f'Downloading {name} -> {dest}')
+              req = urllib.request.Request(a['url'], headers={
+                  'Authorization': f'token {TOKEN}',
+                  'Accept': 'application/octet-stream'
+              })
+              with urllib.request.urlopen(req) as r, open(dest, 'wb') as f:
+                  f.write(r.read())
+          " || true
+          # Always run the asset bootstrapper so synthetic LUTs/overlays exist
+          # even if no GitHub Release was uploaded yet
+          python download_assets.py || true
+
+      - name: Install FFmpeg + Devanagari font
+        # fonts-noto-* gives us Devanagari + Latin coverage for burned-in
+        # subtitles. libass picks them up automatically from system fontconfig.
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg fonts-noto-core fonts-noto-cjk \
+            fonts-indic fonts-deva
+          fc-cache -f -v
 
       - name: Set up Python 3.11
         uses: actions/setup-python@v5
@@ -98,7 +147,12 @@ jobs:
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          FAL_KEY: ${{ secrets.FAL_KEY }}
+          REPLICATE_API_TOKEN: ${{ secrets.REPLICATE_API_TOKEN }}
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+          HF_SPACE: ${{ secrets.HF_SPACE }}
           NARRATOR_VOICE: Charon
+          CINEMATIC_FPS: "30"
         run: python main.py ${{ env.LANG }} 2>&1 | tee pipeline_output.txt
 
       # Email notifications disabled temporarily — re-enable after fixing MAIL_PASSWORD

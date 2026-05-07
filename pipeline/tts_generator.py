@@ -1,12 +1,27 @@
 """
 TTS Generator
 =============
-Priority:
-  1. Gemini TTS (gemini-2.5-flash-preview-tts) — state-of-the-art, cinematic Charon voice
-  2. Edge TTS with SSML narration style — dramatic pacing, pauses, lower pitch
-  3. Edge TTS plain fallback
+Priority cascade (each tried in order, first success wins):
+  1. ElevenLabs   (env: ELEVENLABS_API_KEY, ELEVENLABS_VOICE_ID) — most "real person"
+  2. Gemini TTS   (gemini-2.5-flash-preview-tts, cinematic Charon voice)
+  3. Edge TTS SSML narration style — dramatic pacing, pauses, lower pitch
+  4. Edge TTS plain fallback
 
-Gemini TTS returns raw PCM (int16 LE, 24kHz mono) → wrapped in WAV → converted to MP3 by FFmpeg.
+Two public entry points:
+  • generate_full_narration(scenes, language) → (audio_path, char_weights)
+        ONE TTS call for the entire script. Voice quality is identical
+        throughout the video because only one generation happens. The returned
+        char_weights let the video assembler distribute scene clips
+        proportionally to narration length.
+
+  • generate_voiceover(scenes, language) → list[audio_path]
+        LEGACY per-scene generator. Kept for backward compatibility — main.py
+        no longer calls this. Each scene gets its own audio file.
+
+Voice consistency across videos: just keep NARRATOR_VOICE / ELEVENLABS_VOICE_ID
+fixed in .env. Both providers are deterministic for the same voice ID.
+
+Gemini TTS returns raw PCM (int16 LE, 24kHz mono) → wrapped in WAV → MP3 via FFmpeg.
 """
 
 import edge_tts
@@ -15,6 +30,7 @@ import os
 import io
 import wave
 import subprocess
+import requests
 
 
 # ── Voice config ──────────────────────────────────────────────────────────────
@@ -208,6 +224,134 @@ def _clean_narration(text: str) -> str:
     text = re.sub(r'\s{2,}', ' ', text)
 
     return text.strip()
+
+
+# ── ElevenLabs TTS ────────────────────────────────────────────────────────────
+
+# Default voice IDs (overridable via ELEVENLABS_VOICE_ID env). These are
+# stable across all videos so the same narrator voice is used run-to-run.
+_DEFAULT_ELEVENLABS_VOICE = "pNInz6obpgDQGcFmaJgB"  # "Adam" — deep cinematic male
+
+
+def _elevenlabs_tts(text: str, output_mp3: str, language: str = "en") -> bool:
+    """
+    Synthesize via ElevenLabs Multilingual v2 (supports Hindi + English).
+    Returns True on success. The MP3 is normalized in-place via FFmpeg
+    after download so loudness matches the rest of the pipeline.
+    """
+    api_key = os.environ.get("ELEVENLABS_API_KEY", "").strip()
+    if not api_key:
+        return False
+
+    voice_id = os.environ.get("ELEVENLABS_VOICE_ID", "").strip() or _DEFAULT_ELEVENLABS_VOICE
+    model_id = "eleven_multilingual_v2"
+
+    try:
+        url = f"https://api.elevenlabs.io/v1/text-to-speech/{voice_id}"
+        headers = {
+            "xi-api-key": api_key,
+            "Content-Type": "application/json",
+            "Accept": "audio/mpeg",
+        }
+        body = {
+            "text": text,
+            "model_id": model_id,
+            "voice_settings": {
+                "stability": 0.55,
+                "similarity_boost": 0.80,
+                "style": 0.30,
+                "use_speaker_boost": True,
+            },
+        }
+        resp = requests.post(url, headers=headers, json=body, timeout=180)
+        if resp.status_code != 200:
+            print(f"    [ElevenLabs] HTTP {resp.status_code}: {resp.text[:200]}")
+            return False
+        with open(output_mp3, "wb") as f:
+            f.write(resp.content)
+        if os.path.exists(output_mp3) and os.path.getsize(output_mp3) > 1000:
+            _normalize_audio(output_mp3)
+            return True
+        return False
+    except Exception as e:
+        print(f"    [ElevenLabs] {e}")
+        return False
+
+
+# ── Single-pass full narration ────────────────────────────────────────────────
+
+async def generate_full_narration(scenes: list, language: str = "en") -> tuple:
+    """
+    Generate ONE continuous audio file from all scene narrations concatenated.
+
+    Returns (audio_path, char_weights):
+      audio_path     str            — path to the single MP3 file
+      char_weights   list[int]      — per-scene narration char count for the
+                                      video assembler to size scene clips
+                                      proportionally so visuals stay roughly
+                                      in sync with the spoken narrative.
+
+    Provider cascade: ElevenLabs → Gemini Charon → Edge SSML → Edge plain.
+    Once a provider succeeds, the entire video is consistent voice (no
+    half-Gemini / half-Edge seams).
+    """
+    os.makedirs("temp/audio", exist_ok=True)
+
+    # Concatenate per-scene narrations with a sentence delimiter so the model
+    # produces a natural breath / pause between scenes.
+    delim = "। " if language == "hi" else ". "
+
+    cleaned_parts = []
+    char_weights  = []
+    for scene in scenes:
+        text = _clean_narration(scene["narration"])
+        cleaned_parts.append(text)
+        char_weights.append(max(len(text), 1))
+
+    full_text = delim.join(cleaned_parts)
+    print(f"    Full narration: {len(full_text)} chars across {len(scenes)} scene(s)")
+
+    output_path = "temp/audio/narration_full.mp3"
+
+    # 1. ElevenLabs (best, requires ELEVENLABS_API_KEY)
+    if os.environ.get("ELEVENLABS_API_KEY", "").strip():
+        print("    Trying ElevenLabs (most realistic)...")
+        if await asyncio.to_thread(_elevenlabs_tts, full_text, output_path, language):
+            print("    [OK] Full narration via ElevenLabs")
+            return output_path, char_weights
+
+    # 2. Gemini Charon
+    if os.environ.get("GEMINI_API_KEY", "").strip():
+        print("    Trying Gemini TTS (Charon voice)...")
+        if await asyncio.to_thread(_gemini_tts, full_text, output_path):
+            print("    [OK] Full narration via Gemini Charon")
+            return output_path, char_weights
+
+    # 3. Edge TTS SSML
+    voice_pri = _EDGE_VOICES.get(language, _EDGE_VOICES["en"])
+    voice_alt = _EDGE_FALLBACK.get(language, _EDGE_FALLBACK["en"])
+
+    print("    Trying Edge TTS (SSML, primary voice)...")
+    if await _edge_tts(full_text, voice_pri, output_path, use_ssml=True):
+        _normalize_audio(output_path)
+        print("    [OK] Full narration via Edge SSML")
+        return output_path, char_weights
+
+    # 4. Edge TTS fallback voice
+    print("    Trying Edge TTS (SSML, fallback voice)...")
+    if await _edge_tts(full_text, voice_alt, output_path, use_ssml=True):
+        _normalize_audio(output_path)
+        print("    [OK] Full narration via Edge SSML fallback")
+        return output_path, char_weights
+
+    # 5. Plain Edge TTS — last resort
+    print("    Trying Edge TTS (plain)...")
+    if await _edge_tts(full_text, voice_pri, output_path, use_ssml=False):
+        _normalize_audio(output_path)
+        print("    [OK] Full narration via Edge plain")
+        return output_path, char_weights
+
+    raise RuntimeError("All TTS providers failed for full narration")
 
 
 # ── Public API ────────────────────────────────────────────────────────────────

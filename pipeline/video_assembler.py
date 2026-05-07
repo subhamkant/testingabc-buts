@@ -28,8 +28,8 @@ COLOR_GRADE = (
 
 FILM_GRAIN = "noise=alls=14:allf=t+u"
 
-FPS                = 25
-XFADE_DURATION     = 0.6
+FPS                = 30
+XFADE_DURATION     = 0.5
 SUB_XFADE_DURATION = 0.25
 _MIN_SUB_DURATION  = 2.0   # minimum seconds per sub-clip
 
@@ -374,6 +374,148 @@ def _write_final_video(clip_paths: list, clip_durations: list, output_path: str)
         print(f"    [ERROR] Assembly failed:\n{result.stderr.decode()}")
 
 
+# ── Cinematic polish layer (LUT + light-leak overlay + camera shake) ─────────
+
+def _pick_lut() -> str:
+    """Pick a random .cube LUT from assets/luts/. Returns path or empty string."""
+    lut_dir = "assets/luts"
+    if not os.path.isdir(lut_dir):
+        return ""
+    cubes = [
+        os.path.join(lut_dir, f)
+        for f in os.listdir(lut_dir)
+        if f.lower().endswith(".cube")
+    ]
+    return random.choice(cubes) if cubes else ""
+
+
+def _pick_overlay(kind: str = "lightleaks") -> str:
+    """Pick a random overlay MP4 from assets/overlays/<kind>/."""
+    d = f"assets/overlays/{kind}"
+    if not os.path.isdir(d):
+        return ""
+    mp4s = [
+        os.path.join(d, f)
+        for f in os.listdir(d)
+        if f.lower().endswith((".mp4", ".mov"))
+    ]
+    return random.choice(mp4s) if mp4s else ""
+
+
+def _shake_active_expr(boundaries: list, window: float = 0.30) -> str:
+    """
+    FFmpeg expression that evaluates to 1 during a shake window around each
+    scene boundary, 0 elsewhere. Drives the camera-shake offset amplitude.
+    """
+    if not boundaries:
+        return "0"
+    parts = [
+        f"between(t,{(t - 0.10):.2f},{(t + window - 0.10):.2f})"
+        for t in boundaries
+    ]
+    return "(" + "+".join(parts) + ")"
+
+
+def _apply_cinematic_polish(video_path: str, clip_durations: list) -> None:
+    """
+    Final polish pass: camera shake at scene boundaries → 3D LUT grade →
+    light-leak overlay (screen blend) → optional FPS bump. In-place modify.
+
+    Every step degrades gracefully: missing assets / filter errors leave the
+    original file untouched and the pipeline continues.
+    """
+    lut        = _pick_lut()
+    leak       = _pick_overlay("lightleaks")
+    fps_env    = os.environ.get("CINEMATIC_FPS", "").strip()
+    target_fps = int(fps_env) if fps_env.isdigit() else 0
+
+    # Scene-boundary timestamps (where xfades happen in the final timeline)
+    boundaries = []
+    t = 0.0
+    for d in clip_durations[:-1]:
+        t += d - XFADE_DURATION
+        boundaries.append(t)
+
+    if not lut and not leak and not boundaries and not target_fps:
+        return  # nothing to do — quick exit
+
+    print(
+        f"    Polish: LUT={'yes' if lut else 'no'}  "
+        f"leak={'yes' if leak else 'no'}  "
+        f"shake={len(boundaries)} boundaries  "
+        f"fps={target_fps or 'source'}"
+    )
+
+    base_filters = []
+
+    if boundaries:
+        active = _shake_active_expr(boundaries)
+        base_filters.append(
+            f"crop=iw-30:ih-30:"
+            f"'15+15*sin(t*45)*{active}':"
+            f"'15+15*cos(t*38)*{active}'"
+        )
+        # Restore full 1080x1920 after the shake-crop so YouTube Shorts
+        # gets full-resolution output.
+        base_filters.append("scale=1080:1920:flags=lanczos")
+
+    if lut and os.path.exists(lut):
+        lut_ff = lut.replace("\\", "/")  # FFmpeg wants forward slashes everywhere
+        base_filters.append(f"lut3d=file='{lut_ff}'")
+
+    if target_fps in (30, 50, 60):
+        base_filters.append(f"fps={target_fps}")
+
+    polish_out = video_path.replace(".mp4", "_polish.mp4")
+
+    if leak and os.path.exists(leak):
+        v_chain = ",".join(base_filters) if base_filters else "null"
+        filter_complex = (
+            f"[0:v]{v_chain}[base];"
+            f"[1:v]scale=1080:1920:force_original_aspect_ratio=increase:flags=lanczos,"
+            f"crop=1080:1920,format=yuv420p[leak];"
+            f"[base][leak]blend=all_mode=screen:all_opacity=0.25[vout]"
+        )
+        cmd = [
+            "ffmpeg", "-y",
+            "-i", video_path,
+            "-stream_loop", "-1", "-i", leak,
+            "-filter_complex", filter_complex,
+            "-map", "[vout]", "-map", "0:a",
+            "-c:v", "libx264", "-preset", "fast", "-crf", "22",
+            "-c:a", "copy",
+            "-pix_fmt", "yuv420p",
+            "-shortest",
+            "-movflags", "+faststart",
+            polish_out,
+        ]
+    else:
+        if not base_filters:
+            return  # nothing left to do
+        cmd = [
+            "ffmpeg", "-y",
+            "-i", video_path,
+            "-vf", ",".join(base_filters),
+            "-c:v", "libx264", "-preset", "fast", "-crf", "22",
+            "-c:a", "copy",
+            "-pix_fmt", "yuv420p",
+            "-movflags", "+faststart",
+            polish_out,
+        ]
+
+    result = subprocess.run(cmd, capture_output=True)
+    if result.returncode == 0 and os.path.exists(polish_out):
+        os.replace(polish_out, video_path)
+        print("    [OK] Cinematic polish applied")
+    else:
+        if os.path.exists(polish_out):
+            os.remove(polish_out)
+        err = result.stderr.decode("utf-8", errors="replace")[:400] if result.stderr else ""
+        print(f"    [!] Polish failed, keeping un-polished video")
+        if err:
+            print(f"    {err}")
+
+
 # ── Background music with smart ducking ──────────────────────────────────────
 
 def _pick_music_track() -> str:
@@ -473,6 +615,267 @@ def _apply_background_music(output_path: str):
         print("    [!] Music mix failed, continuing without music")
 
 
+# ── Continuous-audio assemblers ──────────────────────────────────────────────
+#
+# Architecture: build per-scene SILENT video clips → concat with xfades into
+# one silent timeline → mux ONE continuous audio over the whole timeline. This
+# gives a single uninterrupted voice track with consistent quality (no scene
+# seams from per-scene TTS generations) while visuals still cut to the beat.
+
+def _make_silent_image_scene_clip(image_paths, output_path: str, duration: float):
+    """Ken Burns over one or more images, silent video output. Mirrors
+    _make_scene_clip but skips the audio muxing step."""
+    import shutil as _sh
+
+    if isinstance(image_paths, str):
+        image_paths = [image_paths]
+
+    n_subs  = len(image_paths)
+    sub_dur = duration / n_subs
+
+    if sub_dur < _MIN_SUB_DURATION:
+        n_subs = max(1, int(duration / _MIN_SUB_DURATION))
+        image_paths = image_paths[:n_subs]
+        sub_dur = duration / n_subs
+
+    motions = random.sample(_MOTION_TYPES, min(n_subs, len(_MOTION_TYPES)))
+    base    = output_path.replace(".mp4", "")
+
+    sub_paths = []
+    sub_durs  = []
+
+    for j in range(n_subs):
+        img        = image_paths[j % len(image_paths)]
+        motion     = motions[j % len(motions)]
+        sub_path   = f"{base}_sub{j}.mp4"
+        actual_dur = sub_dur + SUB_XFADE_DURATION
+
+        ok = _render_image_clip(
+            img, sub_path, actual_dur, motion,
+            fade_in=(j == 0),
+            fade_out=(j == n_subs - 1),
+        )
+        if not ok:
+            subprocess.run([
+                "ffmpeg", "-y",
+                "-loop", "1", "-framerate", str(FPS), "-i", img,
+                "-c:v", "libx264", "-preset", "fast", "-crf", "23",
+                "-pix_fmt", "yuv420p", "-t", str(actual_dur), "-an",
+                "-vf", "scale=1080:1920:force_original_aspect_ratio=increase:flags=lanczos,"
+                       "crop=1080:1920,setsar=1",
+                sub_path,
+            ], capture_output=True)
+
+        sub_paths.append(sub_path)
+        sub_durs.append(actual_dur)
+
+    if n_subs == 1:
+        _sh.move(sub_paths[0], output_path)
+    else:
+        _join_video_clips(sub_paths, sub_durs, output_path, SUB_XFADE_DURATION)
+        for sp in sub_paths:
+            if os.path.exists(sp):
+                os.remove(sp)
+
+
+def _make_silent_video_scene_clip(raw_clip_path: str, output_path: str, duration: float):
+    """Process AI clip into a silent 1080x1920 scaled cinematic clip of the
+    given duration. Loops the source via -stream_loop -1 so short AI clips
+    (e.g. 3.4s) extend to fill longer scenes."""
+    vf_parts = [
+        "scale=1080:1920:force_original_aspect_ratio=increase:flags=lanczos",
+        "crop=1080:1920",
+        COLOR_GRADE,
+        FILM_GRAIN,
+        "fade=t=in:st=0:d=0.4",
+        f"fade=t=out:st={max(duration - 0.4, 0):.2f}:d=0.4",
+        "setsar=1",
+    ]
+    cmd = [
+        "ffmpeg", "-y",
+        "-stream_loop", "-1", "-i", raw_clip_path,
+        "-filter_complex", f"[0:v]{','.join(vf_parts)}[vout]",
+        "-map", "[vout]",
+        "-c:v", "libx264", "-preset", "fast", "-crf", "23",
+        "-pix_fmt", "yuv420p",
+        "-t", str(duration), "-an",
+        output_path,
+    ]
+    result = subprocess.run(cmd, capture_output=True)
+    if result.returncode != 0:
+        subprocess.run([
+            "ffmpeg", "-y",
+            "-stream_loop", "-1", "-i", raw_clip_path,
+            "-c:v", "libx264", "-preset", "fast", "-crf", "23",
+            "-pix_fmt", "yuv420p", "-t", str(duration), "-an",
+            "-vf", "scale=1080:1920:force_original_aspect_ratio=increase:flags=lanczos,"
+                   "crop=1080:1920,setsar=1",
+            output_path,
+        ], capture_output=True)
+
+
+def _build_silent_video_with_xfades(clip_paths: list, durations: list, output_path: str) -> bool:
+    """Concatenate silent video clips with rotating xfade transitions. Final
+    timeline length = sum(durations) - (n-1)*XFADE_DURATION."""
+    if len(clip_paths) == 1:
+        import shutil as _sh
+        _sh.copy2(clip_paths[0], output_path)
+        return True
+
+    inputs = []
+    for cp in clip_paths:
+        inputs += ["-i", cp]
+
+    filter_parts = []
+    accumulated  = 0.0
+    prev_label   = "[0:v]"
+
+    for idx in range(1, len(clip_paths)):
+        accumulated += durations[idx - 1] - XFADE_DURATION
+        is_last      = (idx == len(clip_paths) - 1)
+        out_label    = "[vout]" if is_last else f"[xf{idx}]"
+        transition   = _XFADE_TRANSITIONS[idx % len(_XFADE_TRANSITIONS)]
+        filter_parts.append(
+            f"{prev_label}[{idx}:v]xfade=transition={transition}"
+            f":duration={XFADE_DURATION}:offset={accumulated:.3f}{out_label}"
+        )
+        prev_label = out_label
+
+    result = subprocess.run([
+        "ffmpeg", "-y",
+        *inputs,
+        "-filter_complex", ";".join(filter_parts),
+        "-map", "[vout]",
+        "-c:v", "libx264", "-preset", "fast", "-crf", "23",
+        "-pix_fmt", "yuv420p", "-an",
+        output_path,
+    ], capture_output=True)
+
+    if result.returncode != 0:
+        print(f"    [ERROR] Silent xfade assembly failed:\n{result.stderr.decode()[:400]}")
+        return False
+    return True
+
+
+def _mux_continuous_audio(silent_video: str, audio_path: str, output_path: str) -> bool:
+    """Mux a single audio track over a silent video. Audio drives final length
+    (-shortest cuts the longer stream)."""
+    result = subprocess.run([
+        "ffmpeg", "-y",
+        "-i", silent_video,
+        "-i", audio_path,
+        "-c:v", "copy",
+        "-c:a", "aac", "-b:a", "128k",
+        "-map", "0:v", "-map", "1:a",
+        "-shortest",
+        "-movflags", "+faststart",
+        output_path,
+    ], capture_output=True)
+    if result.returncode != 0:
+        print(f"    [ERROR] Audio mux failed:\n{result.stderr.decode()[:400]}")
+        return False
+    return True
+
+
+def _per_scene_durations(audio_duration: float, char_weights: list, n: int) -> list:
+    """Per-scene clip durations so the final xfaded timeline = audio_duration.
+    Accounts for the (n-1) xfade overlaps. Distributes proportionally to
+    char_weights when provided, otherwise evenly."""
+    target_sum = audio_duration + (n - 1) * XFADE_DURATION
+    if not char_weights or len(char_weights) != n or sum(char_weights) <= 0:
+        return [target_sum / max(n, 1)] * n
+    total_w = sum(char_weights)
+    return [(w / total_w) * target_sum for w in char_weights]
+
+
+def assemble_video_continuous_audio(
+    image_files: list,
+    audio_path: str,
+    script_data: dict,
+    char_weights: list = None,
+    output_path: str = "output/video.mp4",
+) -> str:
+    """Static-image pipeline with ONE continuous audio track. Per-scene
+    Ken Burns clips are sized proportionally to the original narration so
+    visuals stay roughly in step with the spoken story."""
+    os.makedirs("output", exist_ok=True)
+    os.makedirs("temp/clips", exist_ok=True)
+
+    n = len(image_files)
+    audio_duration = get_audio_duration(audio_path)
+    durations = _per_scene_durations(audio_duration, char_weights, n)
+
+    print(f"    Audio duration: {audio_duration:.2f}s  |  scenes: {n}")
+    print(f"    Per-scene clip durations: " +
+          ", ".join(f"{d:.2f}s" for d in durations))
+
+    silent_paths = []
+    for i, (imgs, dur) in enumerate(zip(image_files, durations)):
+        if isinstance(imgs, str):
+            imgs = [imgs]
+        silent_path = f"temp/clips/silent_{i:02d}.mp4"
+        print(f"    Scene {i+1}/{n} silent ({dur:.2f}s, {len(imgs)} shot(s))...")
+        _make_silent_image_scene_clip(imgs, silent_path, dur)
+        silent_paths.append(silent_path)
+
+    silent_full = "temp/clips/silent_full.mp4"
+    if not _build_silent_video_with_xfades(silent_paths, durations, silent_full):
+        return output_path
+    if not _mux_continuous_audio(silent_full, audio_path, output_path):
+        return output_path
+
+    size_mb = os.path.getsize(output_path) / (1024 * 1024)
+    print(f"    [OK] Continuous-audio video -> {output_path} ({size_mb:.1f} MB)")
+
+    _apply_cinematic_polish(output_path, durations)
+    _apply_background_music(output_path)
+
+    return output_path
+
+
+def assemble_from_video_clips_continuous_audio(
+    clip_files: list,
+    audio_path: str,
+    script_data: dict,
+    char_weights: list = None,
+    output_path: str = "output/video.mp4",
+) -> str:
+    """AI-clip pipeline with ONE continuous audio track."""
+    os.makedirs("output", exist_ok=True)
+    os.makedirs("temp/clips", exist_ok=True)
+
+    n = len(clip_files)
+    audio_duration = get_audio_duration(audio_path)
+    durations = _per_scene_durations(audio_duration, char_weights, n)
+
+    print(f"    Audio duration: {audio_duration:.2f}s  |  AI clips: {n}")
+    print(f"    Per-scene clip durations: " +
+          ", ".join(f"{d:.2f}s" for d in durations))
+
+    silent_paths = []
+    for i, (clip, dur) in enumerate(zip(clip_files, durations)):
+        silent_path = f"temp/clips/silent_clip_{i:02d}.mp4"
+        print(f"    AI clip {i+1}/{n} silent ({dur:.2f}s)...")
+        _make_silent_video_scene_clip(clip, silent_path, dur)
+        if not os.path.exists(silent_path):
+            raise RuntimeError(f"Silent AI clip {i+1} missing — FFmpeg produced no output")
+        silent_paths.append(silent_path)
+
+    silent_full = "temp/clips/silent_full.mp4"
+    if not _build_silent_video_with_xfades(silent_paths, durations, silent_full):
+        return output_path
+    if not _mux_continuous_audio(silent_full, audio_path, output_path):
+        return output_path
+
+    size_mb = os.path.getsize(output_path) / (1024 * 1024)
+    print(f"    [OK] Continuous-audio video -> {output_path} ({size_mb:.1f} MB)")
+
+    _apply_cinematic_polish(output_path, durations)
+    _apply_background_music(output_path)
+
+    return output_path
+
+
 # ── Public assemblers ─────────────────────────────────────────────────────────
 
 def assemble_video(
@@ -513,6 +916,7 @@ def assemble_video(
     size_mb = os.path.getsize(output_path) / (1024 * 1024)
     print(f"    [OK] Video assembled -> {output_path}  ({size_mb:.1f} MB)")
 
+    _apply_cinematic_polish(output_path, clip_durations)
     _apply_background_music(output_path)
 
     return output_path
@@ -552,6 +956,7 @@ def assemble_from_video_clips(
     size_mb = os.path.getsize(output_path) / (1024 * 1024)
     print(f"    [OK] Video assembled -> {output_path}  ({size_mb:.1f} MB)")
 
+    _apply_cinematic_polish(output_path, processed_durations)
     _apply_background_music(output_path)
 
     return output_path

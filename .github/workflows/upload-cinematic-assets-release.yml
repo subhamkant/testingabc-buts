@@ -1,0 +1,66 @@
+name: Upload Cinematic Assets to GitHub Release (run once)
+
+# Mirrors upload-music-release.yml. After cloning the repo, run download_assets.py
+# locally (or trigger this workflow), and the resulting LUTs + overlays are
+# uploaded to a Release tagged "cinematic-assets" so schedule.yml can fetch
+# them on each pipeline run.
+
+on:
+  workflow_dispatch:
+
+jobs:
+  upload:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install FFmpeg
+        run: sudo apt-get install -y ffmpeg
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install requests (for download_assets.py)
+        run: pip install requests
+
+      - name: Bootstrap LUTs + overlay files
+        run: python download_assets.py
+
+      - name: List generated assets
+        run: |
+          echo "=== LUTs ==="
+          ls -la assets/luts/        || true
+          echo "=== Light leaks ==="
+          ls -la assets/overlays/lightleaks/  || true
+          echo "=== Lens flares ==="
+          ls -la assets/overlays/lensflares/  || true
+
+      - name: Create release and upload cinematic assets
+        run: |
+          # Collect every file from the three asset directories
+          shopt -s nullglob
+          FILES=(
+            assets/luts/*.cube
+            assets/overlays/lightleaks/*.mp4
+            assets/overlays/lightleaks/*.mov
+            assets/overlays/lensflares/*.mp4
+            assets/overlays/lensflares/*.mov
+          )
+          if [ ${#FILES[@]} -eq 0 ]; then
+            echo "No cinematic assets found — nothing to upload."
+            exit 0
+          fi
+
+          gh release delete cinematic-assets --yes 2>/dev/null || true
+          gh release create cinematic-assets "${FILES[@]}" \
+            --title "Cinematic Assets (LUTs + overlays)" \
+            --notes "LUT .cube files and light-leak / lens-flare MP4 overlays for the Mahabharata Bot polish layer. Do not delete this release — schedule.yml downloads from here."
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
