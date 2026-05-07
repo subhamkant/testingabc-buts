@@ -678,10 +678,47 @@ def _make_silent_image_scene_clip(image_paths, output_path: str, duration: float
                 os.remove(sp)
 
 
+def _make_boomerang_source(raw_clip_path: str, output_path: str) -> bool:
+    """Build a forward+reverse "boomerang" version of the AI clip. Looping a
+    boomerang is visually seamless because the motion at every stitch point
+    matches frame-for-frame — the playhead just changes direction."""
+    cmd = [
+        "ffmpeg", "-y",
+        "-i", raw_clip_path,
+        "-filter_complex", "[0:v]split=2[fwd][rev_in];[rev_in]reverse[rev];[fwd][rev]concat=n=2:v=1:a=0[vout]",
+        "-map", "[vout]",
+        "-c:v", "libx264", "-preset", "fast", "-crf", "20",
+        "-pix_fmt", "yuv420p",
+        "-an",
+        output_path,
+    ]
+    result = subprocess.run(cmd, capture_output=True)
+    return result.returncode == 0 and os.path.exists(output_path)
+
+
 def _make_silent_video_scene_clip(raw_clip_path: str, output_path: str, duration: float):
     """Process AI clip into a silent 1080x1920 scaled cinematic clip of the
-    given duration. Loops the source via -stream_loop -1 so short AI clips
-    (e.g. 3.4s) extend to fill longer scenes."""
+    given duration.
+
+    For long scenes (typically 10-15s) where a 3.4s AI clip would loop 3-4x
+    with visible jump-cuts, we first build a boomerang (forward+reverse)
+    source so each loop transition is frame-matched and seamless. For short
+    scenes that fit within one playback of the source, we skip the boomerang
+    step to save FFmpeg time."""
+
+    # Probe the source clip duration
+    src_dur = get_audio_duration(raw_clip_path) or 3.4
+
+    # Boomerang only when we actually need to loop. If duration <= src_dur,
+    # one straight playback covers the scene.
+    src_for_loop = raw_clip_path
+    boomerang_path = output_path.replace(".mp4", "_boom.mp4")
+    used_boomerang = False
+    if duration > src_dur * 1.05:
+        if _make_boomerang_source(raw_clip_path, boomerang_path):
+            src_for_loop = boomerang_path
+            used_boomerang = True
+
     vf_parts = [
         "scale=1080:1920:force_original_aspect_ratio=increase:flags=lanczos",
         "crop=1080:1920",
@@ -693,7 +730,7 @@ def _make_silent_video_scene_clip(raw_clip_path: str, output_path: str, duration
     ]
     cmd = [
         "ffmpeg", "-y",
-        "-stream_loop", "-1", "-i", raw_clip_path,
+        "-stream_loop", "-1", "-i", src_for_loop,
         "-filter_complex", f"[0:v]{','.join(vf_parts)}[vout]",
         "-map", "[vout]",
         "-c:v", "libx264", "-preset", "fast", "-crf", "23",
@@ -703,15 +740,19 @@ def _make_silent_video_scene_clip(raw_clip_path: str, output_path: str, duration
     ]
     result = subprocess.run(cmd, capture_output=True)
     if result.returncode != 0:
+        # Fallback without color grade / grain
         subprocess.run([
             "ffmpeg", "-y",
-            "-stream_loop", "-1", "-i", raw_clip_path,
+            "-stream_loop", "-1", "-i", src_for_loop,
             "-c:v", "libx264", "-preset", "fast", "-crf", "23",
             "-pix_fmt", "yuv420p", "-t", str(duration), "-an",
             "-vf", "scale=1080:1920:force_original_aspect_ratio=increase:flags=lanczos,"
                    "crop=1080:1920,setsar=1",
             output_path,
         ], capture_output=True)
+
+    if used_boomerang and os.path.exists(boomerang_path):
+        os.remove(boomerang_path)
 
 
 def _build_silent_video_with_xfades(clip_paths: list, durations: list, output_path: str) -> bool:

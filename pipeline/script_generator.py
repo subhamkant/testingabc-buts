@@ -73,8 +73,10 @@ MOTIVATIONAL_THEMES = [
 ]
 
 
-def _trim_narration(text: str, max_words: int = 20) -> str:
-    """Hard-cap narration at max_words, ending at the last complete sentence."""
+def _trim_narration(text: str, max_words: int = 45) -> str:
+    """Hard-cap narration at max_words, ending at the last complete sentence.
+    Long-form videos (60-90s, 5-6 scenes) need 25-40 words per scene; this
+    cap is now generous so natural sentence endings survive."""
     import re
     words = text.split()
     if len(words) <= max_words:
@@ -182,59 +184,131 @@ def generate_script(language: str = "en", forced_topic: str = None) -> dict:
         )
 
     prompt = f"""
-    You are a master storyteller specialising in the Mahabharata epic also a professional script generator for YouTube Shorts.
+    You are a master storyteller specialising in the Mahabharata epic, writing scripts for vertical YouTube videos that retain viewer attention from the first second to the last.
 
     You must strictly follow all rules and NEVER generate invalid or noisy text.
 
-    Create a YouTube Shorts script (45-55 seconds, 3-4 scenes) about:
+    TASK: Create a 60-90 second vertical (9:16) video script with EXACTLY 5 OR 6 scenes about a well-known incident from the Mahabharata.
+
     TOPIC: "{topic}"
     LANGUAGE: {lang_label}
     STYLE: {style_note}
     {language_rules}
-    Return ONLY valid JSON — no markdown fences, no extra text:
+
+    ═══════════════════════════════════════════════════════════════
+    STORY STRUCTURE — THE VIEWER MUST NOT GET BORED
+    ═══════════════════════════════════════════════════════════════
+    Every scene must earn its place. Follow this dramatic arc:
+
+    Scene 1 — HOOK (the most critical 10 seconds of the video):
+        Open with the most shocking, mysterious, or emotionally charged
+        moment of the entire story. Set the stakes immediately. Make the
+        viewer NEED to keep watching to find out what happens.
+
+    Scenes 2-3 — SETUP & RISING TENSION:
+        Establish the characters, the situation, the conflict. Each
+        sentence must build dread, anticipation, or curiosity.
+
+    Scene 4 (and 5 if 6-scene script) — CLIMAX or REVELATION:
+        The dramatic high point. The viewer should feel something —
+        awe, shock, sorrow, vindication. Vivid sensory detail.
+
+    Final scene — RESOLUTION + LESSON:
+        Tie it off cleanly. Leave the viewer with a takeaway, a moral,
+        or an emotional landing that makes the video feel complete.
+
+    Rules for EVERY scene:
+    - Each scene MUST advance the story. No filler. No repetition.
+    - The story must be SELF-CONTAINED — a viewer who has never heard
+      of the Mahabharata understands it fully by the end.
+    - Use vivid, present-tense, sensory language ("the air thickens",
+      "swords clash", "his eyes burn") — not abstract moralizing.
+    - Reference specific characters and visible action in each scene.
+
+    ═══════════════════════════════════════════════════════════════
+    NARRATION LENGTH — CRITICAL
+    ═══════════════════════════════════════════════════════════════
+    EACH scene's narration must be 25-40 words.
+    NEVER write fewer than 25 words per scene — this produces a too-short video.
+    Aim for 30-35 words per scene as the sweet spot.
+    At natural Hindi/English narration pace this gives ~10-13 seconds per scene.
+    Use 2-3 short sentences per scene for natural breathing pauses.
+
+    Total target: 5 scenes × ~33 words = 165 words OR 6 scenes × ~28 words = 168 words.
+    Spoken duration: ~55-75 seconds (a fixed subscribe outro adds ~6s for 60-80s total video).
+
+    ═══════════════════════════════════════════════════════════════
+    OUTPUT — return ONLY valid JSON, no markdown fences, no preamble:
+    ═══════════════════════════════════════════════════════════════
     {{
-    "title": "Captivating Shorts title under 60 characters — no hashtags in title",
-    "description": "Engaging hook sentence that grabs attention in first 2 lines. Then 100-150 words about the story. End with this exact block:\n\n#Shorts #Mahabharata #महाभारत #HinduMythology #Krishna #कृष्ण #BhagavadGita #भगवद_गीता #AncientIndia #EpicStory #Dharma #SpiritualWisdom #IndianMythology #HinduDharma #Arjuna #VedicWisdom #IndianHistory #MythologyShorts #KrishnaStories #trending",
-    "tags": ["Mahabharata","महाभारत","Shorts","Hindu mythology","Krishna","कृष्ण","Arjuna","अर्जुन","Bhagavad Gita","भगवद गीता","Ancient India","dharma","spiritual","epic story","Indian history","Mahabharata shorts","mythology shorts","trending shorts","Hindu dharma","vedic wisdom","Indian mythology","spiritual shorts","krishna stories","kurukshetra"],
-    "scenes": [
+      "title": "Captivating title under 60 characters — no hashtags",
+      "description": "Hook sentence that grabs attention in the first 2 lines. Then 100-150 words about the story. End with this exact hashtag block:\\n\\n#Shorts #Mahabharata #महाभारत #HinduMythology #Krishna #कृष्ण #BhagavadGita #भगवद_गीता #AncientIndia #EpicStory #Dharma #SpiritualWisdom #IndianMythology #HinduDharma #Arjuna #VedicWisdom #IndianHistory #MythologyShorts #KrishnaStories #trending",
+      "tags": ["Mahabharata","महाभारत","Shorts","Hindu mythology","Krishna","कृष्ण","Arjuna","अर्जुन","Bhagavad Gita","भगवद गीता","Ancient India","dharma","spiritual","epic story","Indian history","Mahabharata shorts","mythology shorts","trending shorts","Hindu dharma","vedic wisdom","Indian mythology","spiritual shorts","krishna stories","kurukshetra"],
+      "scenes": [
         {{
-        "narration": "Narration strictly in the specified LANGUAGE above — STRICTLY 1-2 punchy sentences, maximum 20 words total. Must take 10-12 seconds to speak aloud. Vivid, dramatic, instantly gripping. No long sentences.",
-        "image_prompt": "Detailed English image prompt — portrait orientation composition, specific characters, body language, environment, colour palette, and mood",
-        "video_prompt": "Cinematic 5-second shot in English — characters in motion, camera movement, environment, lighting, mood. Vertical portrait composition.",
-        "mood": "One evocative phrase describing the emotional tone, e.g. 'tense and apocalyptic', 'serene golden dawn', 'grief-stricken and desolate'"
+          "narration": "25-40 words in the specified LANGUAGE — vivid, present-tense, dramatic. 2-3 short sentences. ~10-13 seconds spoken.",
+          "image_prompt": "Detailed English prompt — portrait composition, specific characters with body language, environment, colour palette, mood",
+          "video_prompt": "Cinematic 5-second shot in English — characters in subtle motion, camera movement, lighting. Vertical 9:16.",
+          "mood": "3-6 word English emotional tone phrase"
         }}
-    ],
-    "thumbnail_prompt": "Dramatic thumbnail — epic Mahabharata scene, vibrant colours, cinematic, portrait composition"
+      ],
+      "thumbnail_prompt": "Dramatic Mahabharata thumbnail — vibrant colours, cinematic, portrait composition"
     }}
 
-    Rules:
-    - All narration must be in {lang_label}
-    - All image_prompt, video_prompt, thumbnail_prompt must ALWAYS be in English
-    - Title: under 60 characters, no hashtags
-    - Narration: STRICTLY 1-2 sentences, MAX 20 words, 10-12 seconds when spoken aloud
-    - Narration MUST NOT contain any URLs, hashtags (#), @mentions, or social media text
-    - Generate exactly 3-4 scenes — total video must be under 55 seconds
-    - image_prompt: detailed portrait-oriented scene with characters, body language, environment, colour palette
-    - video_prompt: cinematic vertical shot description — specific motion, camera, lighting
-    - mood must be 3-6 words in English
-    - image_prompt and video_prompt must reference the mood
-    - description must end with the exact hashtags listed above
+    HARD RULES — violation makes the script unusable:
+    - All narration MUST be in {lang_label}
+    - All image_prompt, video_prompt, thumbnail_prompt MUST be in English
+    - Title: under 60 characters, no hashtags in title
+    - Narration per scene: 25-40 words, 2-3 sentences, ~10-13 seconds spoken
+    - Narration MUST NOT contain URLs, hashtags (#), @mentions, English in Hindi videos, or any social-media text
+    - Generate EXACTLY 5 OR 6 scenes — never fewer, never more
+    - image_prompt: detailed portrait scene with characters, body language, environment, palette
+    - video_prompt: cinematic vertical shot — specific motion, camera, lighting
+    - mood: 3-6 words in English
+    - image_prompt and video_prompt MUST reference the mood
+    - description MUST end with the exact hashtag block above
     """
 
-    raw = _call_llm(prompt)
+    # Try up to 2 times — if first attempt gives too-short narrations,
+    # re-prompt with a strict reminder appended.
+    data = None
+    for attempt in range(2):
+        full_prompt = prompt
+        if attempt > 0:
+            full_prompt += (
+                "\n\nIMPORTANT REMINDER: your previous response had narrations that were too short. "
+                "Each scene's narration MUST be 25-40 words. Below 25 words is unacceptable. "
+                "Aim for 30-35 words per scene."
+            )
 
-    # Extract the JSON object — handles thinking text, code fences, and preamble
-    start = raw.find("{")
-    end = raw.rfind("}")
-    if start == -1 or end == -1:
-        raise ValueError(f"No JSON object found in LLM response:\n{raw[:300]}")
-    raw = raw[start:end + 1]
+        raw = _call_llm(full_prompt)
 
-    data = _parse_llm_json(raw)
+        # Extract the JSON object — handles thinking text, code fences, and preamble
+        start = raw.find("{")
+        end = raw.rfind("}")
+        if start == -1 or end == -1:
+            raise ValueError(f"No JSON object found in LLM response:\n{raw[:300]}")
+        raw = raw[start:end + 1]
 
-    # Hard-enforce narration length — LLMs ignore word limits in prompts
-    for scene in data.get("scenes", []):
-        scene["narration"] = _trim_narration(scene["narration"])
+        data = _parse_llm_json(raw)
+
+        # Hard-enforce upper bound — LLMs sometimes ignore word limits
+        for scene in data.get("scenes", []):
+            scene["narration"] = _trim_narration(scene["narration"])
+
+        scenes = data.get("scenes", [])
+        word_counts = [len(s["narration"].split()) for s in scenes]
+        avg_words = sum(word_counts) / max(len(word_counts), 1)
+        n_scenes = len(scenes)
+
+        print(f"    Script: {n_scenes} scenes, avg {avg_words:.1f} words/scene "
+              f"(per-scene: {word_counts})")
+
+        # Acceptable if at least 5 scenes AND avg >= 22 words
+        if n_scenes >= 5 and avg_words >= 22:
+            break
+        if attempt == 0:
+            print(f"    [warn] Script too short (need 5+ scenes & 22+ avg words). Re-prompting...")
 
     data["language"] = language
     data["content_type"] = content_type
