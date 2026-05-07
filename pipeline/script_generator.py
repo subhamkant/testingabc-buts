@@ -73,6 +73,87 @@ MOTIVATIONAL_THEMES = [
 ]
 
 
+# Common Hindi/English words that aren't "repetition problems" even when
+# they appear multiple times — articles, pronouns, copulas, common verbs.
+_REPETITION_STOPWORDS = {
+    # Hindi — articles, copulas, postpositions, particles
+    "है", "हैं", "था", "थे", "थी", "हो", "हुआ", "हुई", "होती", "होते",
+    "में", "से", "को", "का", "की", "के", "ने", "और", "एक", "वह", "वे",
+    "यह", "ये", "उस", "उन", "जो", "तो", "ही", "भी", "पर", "लिए",
+    "नहीं", "कर", "करते", "करता", "करती", "किया", "गया", "गई",
+    # Hindi possessive / reflexive pronouns — very common in storytelling
+    "अपने", "अपनी", "अपना", "उनके", "उनकी", "उनका", "उसके", "उसकी", "उसका",
+    "मेरे", "मेरी", "मेरा", "तेरे", "तेरी", "तेरा", "हमारे", "हमारी", "हमारा",
+    # Hindi auxiliary / common verbs
+    "रहे", "रहा", "रही", "लगे", "लगा", "लगी", "जाते", "जाता", "जाती",
+    "देते", "देता", "देती", "लेते", "लेता", "लेती", "होने",
+    # English
+    "the", "a", "an", "is", "are", "was", "were", "be", "been", "being",
+    "of", "to", "in", "on", "at", "for", "with", "and", "or", "but",
+    "he", "she", "it", "they", "his", "her", "their", "this", "that",
+    "as", "by", "from", "into", "than", "then", "so", "if", "not",
+    "have", "has", "had", "do", "does", "did", "will", "would", "can",
+    "could", "may", "one", "two",
+}
+
+
+# Mahabharata character names — both Devanagari and common Romanizations.
+# Allowed to repeat freely because they're typically the subjects of the story
+# and trying to avoid repeating them produces awkward indirection.
+_CHARACTER_NAMES = {
+    # Hindi (Devanagari)
+    "भीष्म", "अर्जुन", "कृष्ण", "द्रोण", "द्रोणाचार्य", "कर्ण", "युधिष्ठिर",
+    "भीम", "नकुल", "सहदेव", "द्रौपदी", "पाण्डव", "पांडव", "कौरव",
+    "दुर्योधन", "दुःशासन", "शकुनि", "धृतराष्ट्र", "गांधारी", "कुंती", "माद्री",
+    "विदुर", "संजय", "अश्वत्थामा", "जरासंध", "शिशुपाल", "एकलव्य", "अभिमन्यु",
+    "उत्तरा", "सुभद्रा", "देवव्रत", "शांतनु", "गंगा", "सत्यवती", "अंबा",
+    "जयद्रथ", "घटोत्कच", "हिडिम्बा", "उलूपी", "विराट", "द्रुपद", "धृष्टद्युम्न",
+    "शिखंडी", "पाण्डु", "पांडु", "व्यास", "नारद", "इन्द्र", "सूर्य",
+    # Romanized
+    "bhishma", "arjuna", "krishna", "drona", "karna", "yudhishthira",
+    "bheema", "bhima", "nakula", "sahadeva", "draupadi", "pandavas",
+    "kauravas", "duryodhana", "dushasana", "shakuni", "dhritarashtra",
+    "gandhari", "kunti", "madri", "vidura", "sanjaya", "ashwatthama",
+    "ekalavya", "abhimanyu", "subhadra", "devavrata", "shantanu",
+    "ganga", "satyavati", "shikhandi", "pandu", "vyasa", "indra", "surya",
+    "krishna's", "arjuna's", "bhishma's",
+    # Places
+    "कुरुक्षेत्र", "हस्तिनापुर", "इंद्रप्रस्थ", "द्वारका", "kurukshetra",
+    "hastinapura", "indraprastha", "dwarka", "ayodhya",
+}
+
+
+def _check_repetition(scenes: list, max_repeats: int = 2, topic: str = "") -> tuple:
+    """
+    Inspect every CONTENT word across all scene narrations. Returns
+    (ok, offenders) where offenders is words appearing > max_repeats times.
+
+    Skips: stopwords, character names, place names, and any word from the
+    topic string (the topic protagonist legitimately repeats).
+    """
+    import re
+
+    # Build a per-call ignore set: stopwords + character names + topic words
+    ignore = set(_REPETITION_STOPWORDS) | {n.lower() for n in _CHARACTER_NAMES}
+    if topic:
+        topic_tokens = re.split(r"[\s,.!?;:'\"()\-—]+", topic.lower())
+        ignore |= {t for t in topic_tokens if len(t) > 2}
+
+    counts = {}
+    for s in scenes:
+        text = (s.get("narration") or "").lower()
+        # Split on whitespace + punctuation (Latin AND Devanagari danda/double-danda)
+        tokens = re.split(r"[\s।॥,.!?;:'\"()\[\]\-—–…]+", text)
+        for w in tokens:
+            w = w.strip()
+            if len(w) <= 2 or w in ignore:
+                continue
+            counts[w] = counts.get(w, 0) + 1
+    offenders = [(w, n) for w, n in counts.items() if n > max_repeats]
+    offenders.sort(key=lambda x: -x[1])
+    return (len(offenders) == 0), offenders
+
+
 def _trim_narration(text: str, max_words: int = 45) -> str:
     """Hard-cap narration at max_words, ending at the last complete sentence.
     Long-form videos (60-90s, 5-6 scenes) need 25-40 words per scene; this
@@ -137,6 +218,79 @@ def _parse_llm_json(raw: str) -> dict:
         raise ValueError(f"Could not parse LLM JSON after cleaning: {e}\n{cleaned[:400]}")
 
 
+def _generate_story_outline(topic: str) -> list:
+    """
+    Pass 1 of two-pass script generation.
+
+    Asks the LLM to commit to 6 SPECIFIC story beats — character names,
+    locations, and concrete actions — before any narration is written.
+    Forcing factual scaffolding upfront stops the LLM from drifting to
+    abstract filler ("a vow that changed everything") in the dramatization
+    step, because it has to USE the specific details it just committed to.
+
+    Returns list of dicts: [{"characters": [...], "location": "...", "action": "..."}, ...]
+    Returns [] on failure (caller falls back to single-pass prompt).
+    """
+    outline_prompt = f"""
+You are a Mahabharata historian. Outline the story of this incident as 6 SPECIFIC dramatic beats:
+
+INCIDENT: "{topic}"
+
+For each beat, provide:
+- characters: list of specific character names appearing in that beat (e.g. "राजा शांतनु", "Devavrata", "Shakuni") — NOT pronouns, NOT generic "the king"
+- location: the specific place or setting (e.g. "यमुना नदी का तट", "Hastinapura royal court", "Kurukshetra battlefield")
+- action: ONE concrete event that happens in this beat — what physically occurs, in 10-15 English words. NOT a feeling, NOT a moral, NOT a meta-statement. A physical action.
+
+Story arc:
+- Beat 1: HOOK — the most dramatic / mysterious moment that opens the story
+- Beats 2-3: setup and rising tension — establish characters and conflict
+- Beat 4-5: climax — the dramatic high point
+- Beat 6: resolution — how it ends, what changes
+
+Return ONLY this JSON, no markdown, no preamble:
+{{
+  "beats": [
+    {{"characters": ["..."], "location": "...", "action": "..."}},
+    ...
+  ]
+}}
+
+Each beat MUST be a different event. No two beats may describe the same action.
+"""
+    try:
+        raw = _call_llm(outline_prompt)
+        start = raw.find("{")
+        end   = raw.rfind("}")
+        if start == -1 or end == -1:
+            return []
+        data = _parse_llm_json(raw[start:end + 1])
+        beats = data.get("beats", [])
+        # Sanity check: at least 5 beats with non-empty fields
+        if len(beats) < 5:
+            return []
+        for b in beats:
+            if not (b.get("characters") and b.get("location") and b.get("action")):
+                return []
+        return beats[:6]
+    except Exception as e:
+        print(f"    [outline] failed: {e}")
+        return []
+
+
+def _format_outline_for_prompt(beats: list) -> str:
+    """Render the outline as a readable scaffold the dramatization pass quotes back."""
+    lines = []
+    for i, b in enumerate(beats, 1):
+        chars = ", ".join(b.get("characters", []))
+        lines.append(
+            f"  Beat {i}:\n"
+            f"    - Characters: {chars}\n"
+            f"    - Location:   {b.get('location', '')}\n"
+            f"    - Action:     {b.get('action', '')}"
+        )
+    return "\n".join(lines)
+
+
 def generate_script(language: str = "en", forced_topic: str = None) -> dict:
     """
     Returns a dict with:
@@ -166,12 +320,16 @@ def generate_script(language: str = "en", forced_topic: str = None) -> dict:
     if language == "hi":
         language_rules = (
             "CRITICAL LANGUAGE RULES:\n"
-            "- Narration must be ONLY in Hindi (Devanagari script)\n"
-            "- Do NOT use English words or abbreviations\n"
-            "- Do NOT generate meaningless or broken words (like एमएस, ML, etc.)\n"
-            "- Do NOT include URLs, references, or metadata\n"
-            "- Use simple, natural spoken Hindi\n"
-            "- If unsure, generate simpler Hindi — NEVER invent words\n"
+            "- Narration must be 100% in Hindi (Devanagari script). NO English words.\n"
+            "- NEVER mix scripts mid-word (e.g. NEVER write 'बेड़ ऑफ़ आरrows' — always\n"
+            "  use the Hindi term, e.g. 'बाण-शय्या' for 'bed of arrows', 'चक्रव्यूह'\n"
+            "  for 'chakravyuha formation', 'सिंहासन' for 'throne').\n"
+            "- If you don't know the Hindi term for a concept, REPHRASE THE SENTENCE\n"
+            "  to avoid it. NEVER fall back to English mid-narration.\n"
+            "- Do NOT generate broken/meaningless words (एमएस, ML, etc.)\n"
+            "- Do NOT include URLs, references, hashtags, or metadata\n"
+            "- Use natural spoken Hindi suited for cinematic storytelling\n"
+            "- If unsure, simplify the sentence — NEVER invent words\n"
         )
     else:
         language_rules = (
@@ -182,6 +340,25 @@ def generate_script(language: str = "en", forced_topic: str = None) -> dict:
             "- Do NOT include URLs, references, or metadata\n"
             "- Keep sentences simple and conversational\n"
         )
+
+    # ── Pass 1: Generate factual outline (specific names, places, actions) ──
+    print(f"    Pass 1: outlining \"{topic}\"...")
+    outline_beats = _generate_story_outline(topic)
+    if outline_beats:
+        outline_block = (
+            "═══════════════════════════════════════════════════════════════\n"
+            "    STORY OUTLINE — YOUR NARRATION MUST USE THESE EXACT DETAILS\n"
+            "═══════════════════════════════════════════════════════════════\n"
+            "You have already committed to this 6-beat outline. Each scene's\n"
+            "narration MUST dramatize the corresponding beat using its specific\n"
+            "characters, location, and action. DO NOT invent abstract content\n"
+            "instead. DO NOT skip any beat. DO NOT collapse two beats into one.\n\n"
+            f"{_format_outline_for_prompt(outline_beats)}\n"
+        )
+        print(f"    Pass 1: outline ready ({len(outline_beats)} beats)")
+    else:
+        outline_block = ""
+        print("    Pass 1: outline failed — falling back to single-pass prompt")
 
     prompt = f"""
     You are a master storyteller specialising in the Mahabharata epic, writing scripts for vertical YouTube videos that retain viewer attention from the first second to the last.
@@ -194,6 +371,8 @@ def generate_script(language: str = "en", forced_topic: str = None) -> dict:
     LANGUAGE: {lang_label}
     STYLE: {style_note}
     {language_rules}
+
+    {outline_block}
 
     ═══════════════════════════════════════════════════════════════
     STORY STRUCTURE — THE VIEWER MUST NOT GET BORED
@@ -224,6 +403,48 @@ def generate_script(language: str = "en", forced_topic: str = None) -> dict:
     - Use vivid, present-tense, sensory language ("the air thickens",
       "swords clash", "his eyes burn") — not abstract moralizing.
     - Reference specific characters and visible action in each scene.
+
+    ═══════════════════════════════════════════════════════════════
+    CONTENT QUALITY — STRICTLY ENFORCED
+    ═══════════════════════════════════════════════════════════════
+    Every sentence must contain a NEW, SPECIFIC, CONCRETE detail —
+    a name, a place, an action, an image. Watch for these traps:
+
+    BANNED PATTERNS (do NOT write narration like this):
+    - Meta-commentary: "this is a story about...", "यह एक ऐसी कहानी है"
+    - Rhetorical questions: "क्या होगा अगर...?", "what would happen if...?"
+    - Generic moralizing: "हमें सिखाती है कि...", "this teaches us..."
+    - Vague abstractions: "consequences", "destiny shaped his future"
+    - Repeating the same noun across sentences (e.g. saying "प्रतिज्ञा" 3 times)
+    - Restating what already happened in different words
+
+    REQUIRED in every scene:
+    - At least ONE specific character name (Shantanu, Satyavati, Devavrata,
+      the fisher king, Ganga, Krishna, Arjuna, Karna — whoever is in this
+      story). Pronouns like "he", "she", "वह" are not enough.
+    - At least ONE specific place, object, or sensory image (the Yamuna's
+      banks, a saffron banner, a quiver of arrows, the sound of a conch).
+    - A concrete ACTION or EVENT, not a feeling or a moral.
+
+    BAD example (do NOT write this — it is filler with one fact):
+        "भीष्म की एक प्रतिज्ञा ने सब कुछ बदल दिया। भीष्म ने प्रतिज्ञा ली जिसने
+         उनके जीवन को बदल दिया। उन्होंने शादी न करने का वचन दिया। यह कहानी
+         हमें सिखाती है कि निर्णय भविष्य को आकार देते हैं।"
+        (Repeats "प्रतिज्ञा" 3 times. Repeats "बदल दिया" 2 times. Last sentence
+         is meta-moralizing. Only one actual story fact.)
+
+    GOOD example (write THIS kind of narration):
+        Scene 1: "यमुना के तट पर राजा शांतनु एक नाविक की पुत्री सत्यवती से
+                  प्रेम करने लगे। पर सत्यवती के पिता ने एक शर्त रखी — सिंहासन
+                  उसके पुत्र को मिले।"
+                  (Specific names: Yamuna, Shantanu, Satyavati. Specific
+                   action: falls in love, demands throne. No filler.)
+
+        Scene 2: "देवव्रत — शांतनु के सबसे प्रिय पुत्र — हस्तिनापुर लौटे और
+                  सच जान गए। उन्होंने सिंहासन का त्याग कर दिया — पर पिता का
+                  सुख अधूरा रहा।"
+                  (New name: Devavrata. New place: Hastinapura. New action:
+                   gives up throne. Stakes raised, no repetition.)
 
     ═══════════════════════════════════════════════════════════════
     NARRATION LENGTH — CRITICAL
@@ -269,17 +490,31 @@ def generate_script(language: str = "en", forced_topic: str = None) -> dict:
     - description MUST end with the exact hashtag block above
     """
 
-    # Try up to 2 times — if first attempt gives too-short narrations,
-    # re-prompt with a strict reminder appended.
+    # Try up to 3 times — if a response fails any quality gate (too short,
+    # too few scenes, or too repetitive), re-prompt with a targeted reminder
+    # appended that names the specific failure.
     data = None
-    for attempt in range(2):
+    last_offenders = []
+    last_short = False
+    for attempt in range(3):
         full_prompt = prompt
         if attempt > 0:
-            full_prompt += (
-                "\n\nIMPORTANT REMINDER: your previous response had narrations that were too short. "
-                "Each scene's narration MUST be 25-40 words. Below 25 words is unacceptable. "
-                "Aim for 30-35 words per scene."
-            )
+            reminders = []
+            if last_short:
+                reminders.append(
+                    "Your previous response had narrations that were too short. "
+                    "Each scene MUST be 25-40 words. Below 25 words is unacceptable."
+                )
+            if last_offenders:
+                offender_str = ", ".join(f"'{w}' ({n}x)" for w, n in last_offenders[:5])
+                reminders.append(
+                    f"Your previous response REPEATED these words too many times: "
+                    f"{offender_str}. Use SYNONYMS. Each sentence must contain a "
+                    f"NEW concrete detail (a different name, place, or action). "
+                    f"DO NOT restate the same fact twice in different words."
+                )
+            if reminders:
+                full_prompt += "\n\nCRITICAL REMINDERS:\n- " + "\n- ".join(reminders)
 
         raw = _call_llm(full_prompt)
 
@@ -301,14 +536,31 @@ def generate_script(language: str = "en", forced_topic: str = None) -> dict:
         avg_words = sum(word_counts) / max(len(word_counts), 1)
         n_scenes = len(scenes)
 
+        last_short = (n_scenes < 5 or avg_words < 22)
+        # Threshold 4: a character at the centre of the story (Bhishma in a
+        # Bhishma video) can appear ~4 times naturally. 5+ times signals that
+        # supporting characters and details are being skipped in favour of
+        # restating the main name. Same threshold for abstract nouns flags
+        # filler like "valor" / "वीरता" appearing 5+ times.
+        rep_ok, last_offenders = _check_repetition(scenes, max_repeats=4, topic=topic)
+
         print(f"    Script: {n_scenes} scenes, avg {avg_words:.1f} words/scene "
               f"(per-scene: {word_counts})")
+        if last_offenders:
+            top = ", ".join(f"{w}×{n}" for w, n in last_offenders[:5])
+            print(f"    [warn] Repetition: {top}")
 
-        # Acceptable if at least 5 scenes AND avg >= 22 words
-        if n_scenes >= 5 and avg_words >= 22:
+        # Acceptable if length OK AND repetition under control
+        if not last_short and rep_ok:
             break
-        if attempt == 0:
-            print(f"    [warn] Script too short (need 5+ scenes & 22+ avg words). Re-prompting...")
+
+        if attempt < 2:
+            why = []
+            if last_short:
+                why.append(f"too short ({n_scenes} scenes / {avg_words:.1f} avg words)")
+            if not rep_ok:
+                why.append(f"{len(last_offenders)} repeated words")
+            print(f"    [retry] {'; '.join(why)}. Re-prompting...")
 
     data["language"] = language
     data["content_type"] = content_type
