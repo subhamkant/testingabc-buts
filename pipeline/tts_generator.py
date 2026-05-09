@@ -233,13 +233,22 @@ def _clean_narration(text: str) -> str:
 _DEFAULT_ELEVENLABS_VOICE = "pNInz6obpgDQGcFmaJgB"  # "Adam" — deep cinematic male
 
 
-def _elevenlabs_tts(text: str, output_mp3: str, language: str = "en") -> bool:
+def _elevenlabs_tts(
+    text: str,
+    output_mp3: str,
+    language: str = "en",
+    api_key: str = "",
+    key_label: str = "ElevenLabs",
+) -> bool:
     """
     Synthesize via ElevenLabs Multilingual v2 (supports Hindi + English).
     Returns True on success. The MP3 is normalized in-place via FFmpeg
     after download so loudness matches the rest of the pipeline.
+
+    `api_key` is passed explicitly so the caller can run a fallback chain
+    (primary key → secondary key) when the primary hits its quota.
+    `key_label` shows up in the log so you can tell which key handled the run.
     """
-    api_key = os.environ.get("ELEVENLABS_API_KEY", "").strip()
     if not api_key:
         return False
 
@@ -265,7 +274,7 @@ def _elevenlabs_tts(text: str, output_mp3: str, language: str = "en") -> bool:
         }
         resp = requests.post(url, headers=headers, json=body, timeout=180)
         if resp.status_code != 200:
-            print(f"    [ElevenLabs] HTTP {resp.status_code}: {resp.text[:200]}")
+            print(f"    [{key_label}] HTTP {resp.status_code}: {resp.text[:200]}")
             return False
         with open(output_mp3, "wb") as f:
             f.write(resp.content)
@@ -274,8 +283,21 @@ def _elevenlabs_tts(text: str, output_mp3: str, language: str = "en") -> bool:
             return True
         return False
     except Exception as e:
-        print(f"    [ElevenLabs] {e}")
+        print(f"    [{key_label}] {e}")
         return False
+
+
+def _elevenlabs_keys() -> list:
+    """
+    Returns the ordered list of ElevenLabs keys to try, with a label per key.
+    Order: primary, then fallback. Empty entries are filtered out so callers
+    don't need to handle them.
+    """
+    candidates = [
+        ("ElevenLabs (primary)",  os.environ.get("ELEVENLABS_API_KEY", "").strip()),
+        ("ElevenLabs (fallback)", os.environ.get("ELEVENLABS_API_KEY_FALLBACK", "").strip()),
+    ]
+    return [(label, key) for label, key in candidates if key]
 
 
 # ── Single-pass full narration ────────────────────────────────────────────────
@@ -313,11 +335,16 @@ async def generate_full_narration(scenes: list, language: str = "en") -> tuple:
 
     output_path = "temp/audio/narration_full.mp3"
 
-    # 1. ElevenLabs (best, requires ELEVENLABS_API_KEY)
-    if os.environ.get("ELEVENLABS_API_KEY", "").strip():
-        print("    Trying ElevenLabs (most realistic)...")
-        if await asyncio.to_thread(_elevenlabs_tts, full_text, output_path, language):
-            print("    [OK] Full narration via ElevenLabs")
+    # 1. ElevenLabs (best, requires ELEVENLABS_API_KEY[_FALLBACK])
+    # Walk both keys in order — falls through on quota errors / 401 / network
+    # failures, so a single dead key doesn't bump us all the way down to Edge.
+    for key_label, key in _elevenlabs_keys():
+        print(f"    Trying {key_label} (most realistic)...")
+        ok = await asyncio.to_thread(
+            _elevenlabs_tts, full_text, output_path, language, key, key_label
+        )
+        if ok:
+            print(f"    [OK] Full narration via {key_label}")
             return output_path, char_weights
 
     # 2. Gemini Charon

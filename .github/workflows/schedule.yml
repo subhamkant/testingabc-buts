@@ -166,6 +166,7 @@ jobs:
           # Charon). Free tier gives ~10k chars/month (~5-7 videos). Falls back
           # silently to Gemini Charon → Edge TTS if the secret is empty.
           ELEVENLABS_API_KEY: ${{ secrets.ELEVENLABS_API_KEY }}
+          ELEVENLABS_API_KEY_FALLBACK: ${{ secrets.ELEVENLABS_API_KEY_FALLBACK }}
           ELEVENLABS_VOICE_ID: ${{ secrets.ELEVENLABS_VOICE_ID }}
           NARRATOR_VOICE: Charon
           CINEMATIC_FPS: "30"
