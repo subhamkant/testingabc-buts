@@ -527,7 +527,10 @@ def _pick_music_track() -> str:
     """
     Returns a music track path:
     1. BACKGROUND_MUSIC_PATH in .env if set to a real file
-    2. Otherwise picks randomly from assets/ and assets/music/ (CI cache dir)
+    2. Otherwise picks from assets/ and assets/music/ (CI cache dir) with the
+       Mahabharata sad-theme title track weighted to 50% (used on ~2 of every
+       4 videos), since it's the most thematically aligned track in the pool.
+       The remaining 50% goes uniformly to the other tracks.
     Returns empty string if nothing found.
     """
     pinned = os.environ.get("BACKGROUND_MUSIC_PATH", "").strip()
@@ -545,7 +548,19 @@ def _pick_music_track() -> str:
 
     real_tracks = [t for t in tracks if "bgmusic" not in os.path.basename(t)]
     pool = real_tracks if real_tracks else tracks
-    return random.choice(pool) if pool else ""
+    if not pool:
+        return ""
+
+    sad_theme = next(
+        (t for t in pool if "sad_theme" in os.path.basename(t).lower()),
+        None,
+    )
+    others = [t for t in pool if t != sad_theme]
+    # 50% weight on the sad theme. Falls through to uniform-random pick when
+    # the theme is missing or when the coin flip lands on the others bucket.
+    if sad_theme and (not others or random.random() < 0.5):
+        return sad_theme
+    return random.choice(others or pool)
 
 
 # YouTube targets -14 LUFS integrated, -1 dBTP true peak. Hitting that gives

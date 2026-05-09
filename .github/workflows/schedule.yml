@@ -43,7 +43,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: assets/music
-          key: music-tracks-v1
+          key: music-tracks-v2
 
       - name: Download music from GitHub Release
         if: steps.music-cache.outputs.cache-hit != 'true'
