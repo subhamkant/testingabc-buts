@@ -528,8 +528,11 @@ async def run_whatif_dual_language(test_mode: bool = False, test_upload: bool = 
                 )
 
         # ── Step 3-5: per-language render + upload ────────────────
+        # English first, Hindi second — English is the primary audience for
+        # the WhatIf series (science/curiosity content travels further in EN).
+        # If anything fails partway, English ships first.
         video_ids = {}
-        for lang in ("hi", "en"):
+        for lang in ("en", "hi"):
             lang_name = "Hindi" if lang == "hi" else "English"
             print(f"\n{'─'*55}\n  Rendering {lang_name} version\n{'─'*55}")
 
