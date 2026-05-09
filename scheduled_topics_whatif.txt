@@ -3,24 +3,30 @@
 # Pipeline picks the first non-comment line, uses it, then removes it.
 # When this file is empty/missing, the pipeline picks a random topic from
 # STORY_TOPICS_WHATIF in pipeline/script_generator.py.
+#
+# NOTE: this file is now COMMITTED back to the repo by the workflow after
+# each run, so consumed topics persist across runs and the same topic
+# isn't re-used. Don't manually edit during a workflow run.
 
-What if humans suddenly disappeared from Earth tomorrow?
 What if Earth had rings like Saturn?
+What if a black hole entered our solar system?
 What if dinosaurs were still alive today?
-What if the Sun disappeared for 24 hours?
-What if gravity on Earth were cut in half?
-What if the Moon were twice as close to Earth?
-What if all the world's oceans dried up overnight?
-What if humans could photosynthesize like plants?
 What if the Earth stopped spinning for one second?
-What if Antarctica's ice sheet melted completely?
+What if all the world's oceans dried up overnight?
+What if Earth's magnetic field flipped tomorrow?
+What if the Moon were twice as close to Earth?
 What if every volcano on Earth erupted at once?
+What if Antarctica's ice sheet melted completely?
+What if gravity on Earth were cut in half?
+What if the Sun disappeared for 24 hours?
+What if humans could photosynthesize like plants?
+What if the Sahara desert turned green again?
+What if every insect on Earth went extinct?
 What if the Amazon rainforest disappeared?
 What if humans had evolved with three eyes?
-What if a black hole entered our solar system?
-What if the Sahara desert turned green again?
-What if Earth's magnetic field flipped tomorrow?
-What if every insect on Earth went extinct?
 What if humans never invented fire?
 What if sleep were no longer necessary for survival?
 What if the Pacific Ocean froze solid?
+# "Humans vanished" was already published 3 times due to the queue-not-persisting bug.
+# Re-queued at the very bottom so it cycles back only after the rest run through.
+What if humans suddenly disappeared from Earth tomorrow?

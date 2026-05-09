@@ -194,17 +194,26 @@ jobs:
       #   uses: dawidd6/action-send-mail@v3
       #   ...
 
-      - name: Commit updated characters.json
+      - name: Commit updated state (characters + topic queues)
         if: always()
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git
-          git add assets/characters.json
+          # Pull latest first to avoid push conflicts when multiple cron runs
+          # finish close together (Mahabharata 4×/day + Krishna + WhatIf).
+          git pull --rebase --autostash origin master || true
+          # Stage all rotating-state files. characters.json gets newly-detected
+          # character visuals appended; scheduled_topics_*.txt has the consumed
+          # topic line removed from the queue. Without committing these back,
+          # every workflow run starts from a fresh checkout and pops the SAME
+          # topic — that's the bug that produced "Humans Vanished Tomorrow"
+          # three days in a row.
+          git add assets/characters.json scheduled_topics_*.txt 2>/dev/null || true
           if git diff --staged --quiet; then
-            echo "No new characters detected."
+            echo "No state changes to commit."
           else
-            git commit -m "Auto-update characters.json [skip ci]"
+            git commit -m "Auto-update pipeline state [skip ci]"
             git push
           fi
 
