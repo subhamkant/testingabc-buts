@@ -123,6 +123,42 @@ _CHARACTER_NAMES = {
 }
 
 
+# Hindi past-tense auxiliaries that stack into the "tha-tha-tha" verbal tic
+# when every sentence ends with one. We allow some — past auxiliary IS valid
+# Hindi narration — but if too many sentences end this way the script reads
+# like a chronological list ("X किया था, Y किया था, Z किया था") rather than
+# cinematic storytelling.
+import re as _re
+_PAST_AUX_END = _re.compile(r"(था|थी|थे|थीं)\s*[।!?\.]?\s*$")
+
+
+def _check_past_aux_tic(scenes: list, threshold: float = 0.35) -> tuple:
+    """
+    Count what fraction of narration sentences (across all scenes) end with a
+    past-auxiliary verb (था/थी/थे/थीं). Returns (ok, ratio, hits, total).
+
+    Hindi-only check. Threshold of 0.35 means up to ~1 in 3 sentences may end
+    that way — anything more is the verbal tic the user flagged.
+    """
+    total = 0
+    hits  = 0
+    for s in scenes:
+        text = (s.get("narration") or "").strip()
+        if not text:
+            continue
+        sentences = [
+            t.strip()
+            for t in _re.split(r"[।!?\.]+", text)
+            if t.strip()
+        ]
+        for sent in sentences:
+            total += 1
+            if _PAST_AUX_END.search(sent):
+                hits += 1
+    ratio = hits / total if total else 0.0
+    return (ratio <= threshold), ratio, hits, total
+
+
 def _check_repetition(scenes: list, max_repeats: int = 2, topic: str = "") -> tuple:
     """
     Inspect every CONTENT word across all scene narrations. Returns
@@ -330,6 +366,57 @@ def generate_script(language: str = "en", forced_topic: str = None) -> dict:
             "- Do NOT include URLs, references, hashtags, or metadata\n"
             "- Use natural spoken Hindi suited for cinematic storytelling\n"
             "- If unsure, simplify the sentence — NEVER invent words\n"
+            "\n"
+            "═══════════════════════════════════════════════════════════════\n"
+            "VERB VARIETY — STOPS THE \"था-था-था\" VERBAL TIC (CRITICAL)\n"
+            "═══════════════════════════════════════════════════════════════\n"
+            "Hindi narration defaults to past-tense auxiliary (किया था, गया था,\n"
+            "हुआ था) — and when EVERY sentence ends with था/थी/थे/थीं, the\n"
+            "voiceover reads as a flat chronological list, not as cinema.\n"
+            "Listeners notice this within 15 seconds and tune out.\n"
+            "\n"
+            "HARD RULE: AT MOST 2 sentences in the entire 5-6 scene script\n"
+            "may end with था/थी/थे/थीं. Every other sentence MUST use one of\n"
+            "the patterns below. (Past auxiliary is fine inside a sentence —\n"
+            "the rule is about how sentences END.)\n"
+            "\n"
+            "USE THESE PATTERNS INSTEAD (mix them — variety = drama):\n"
+            "\n"
+            "1. HISTORICAL PRESENT — most cinematic, oral-tradition style:\n"
+            "      \"द्रौपदी रोती है। कौरव हँसते हैं। महल काँप उठता है।\"\n"
+            "      \"अर्जुन धनुष उठाता है — और चक्रव्यूह में घुस जाता है।\"\n"
+            "      (NOT: \"द्रौपदी रोई थी, कौरव हँसते थे, महल काँपा था\")\n"
+            "\n"
+            "2. SIMPLE PERFECTIVE without था (drop the auxiliary):\n"
+            "      \"भीम ने प्रतिज्ञा ली।\"        (NOT: \"प्रतिज्ञा ली थी\")\n"
+            "      \"शकुनि ने पासे फेंके।\"       (NOT: \"पासे फेंके थे\")\n"
+            "      \"धरती काँप उठी।\"             (NOT: \"काँप उठी थी\")\n"
+            "\n"
+            "3. NOMINALIZATION — turn the action into a noun phrase:\n"
+            "      \"द्रौपदी का अपमान — एक ऐसा क्षण जिसने युद्ध को जन्म दिया।\"\n"
+            "      \"कर्ण की मृत्यु। और सूर्य भी मानो डूब गया।\"\n"
+            "\n"
+            "4. VOCATIVE / EXCLAMATORY — break the rhythm with a beat:\n"
+            "      \"देखो! दुर्योधन की हँसी अब भी गूंजती है।\"\n"
+            "      \"और तभी — एक तीर। एक चीख। एक सन्नाटा।\"\n"
+            "\n"
+            "5. QUESTION / CLIFFHANGER ending — required by curiosity-gap rule:\n"
+            "      \"...पर भीम के मन में अब क्या चल रहा था?\"\n"
+            "      \"...लेकिन कृष्ण मुस्कुरा रहे थे — क्यों?\"\n"
+            "\n"
+            "BAD example (the actual verbal tic — DO NOT WRITE THIS):\n"
+            "    \"द्रौपदी ने विवाह किया था। अर्जुन ने उसे जीता था। शकुनि ने\n"
+            "     धोखा दिया था। पांडवों को निर्वासन मिला था। भीम ने प्रतिज्ञा\n"
+            "     ली थी। पांडवों ने कौरवों को हराया था।\"\n"
+            "    (Six sentences, six था/थी endings — flat, listy, boring.)\n"
+            "\n"
+            "GOOD example (same story, varied verbs — write LIKE THIS):\n"
+            "    \"द्रौपदी का स्वयंवर। अर्जुन धनुष उठाता है — मछली की आँख\n"
+            "     पर निशाना सधता है। पर शकुनि की चाल बाक़ी है। पासे लुढ़कते\n"
+            "     हैं, और पांडव सब कुछ हार जाते हैं। भीम की आँखें जलती हैं —\n"
+            "     वो प्रतिज्ञा करता है: दुःशासन का रक्त ही उसकी प्यास बुझाएगा।\"\n"
+            "    (Mix of present-tense, perfective-without-था, vocative beats.\n"
+            "     Same facts, but it MOVES.)\n"
         )
     else:
         language_rules = (
@@ -536,11 +623,13 @@ def generate_script(language: str = "en", forced_topic: str = None) -> dict:
     """
 
     # Try up to 3 times — if a response fails any quality gate (too short,
-    # too few scenes, or too repetitive), re-prompt with a targeted reminder
-    # appended that names the specific failure.
+    # too few scenes, too repetitive, or "tha-tha-tha" verb tic), re-prompt
+    # with a targeted reminder appended that names the specific failure.
     data = None
     last_offenders = []
-    last_short = False
+    last_short     = False
+    last_tha_tic   = False
+    last_tha_ratio = 0.0
     for attempt in range(3):
         full_prompt = prompt
         if attempt > 0:
@@ -557,6 +646,18 @@ def generate_script(language: str = "en", forced_topic: str = None) -> dict:
                     f"{offender_str}. Use SYNONYMS. Each sentence must contain a "
                     f"NEW concrete detail (a different name, place, or action). "
                     f"DO NOT restate the same fact twice in different words."
+                )
+            if last_tha_tic:
+                reminders.append(
+                    f"Your previous response had the \"था-था-था\" verbal tic — "
+                    f"{int(last_tha_ratio * 100)}% of sentences ended with "
+                    f"था/थी/थे/थीं. AT MOST 2 sentences in the whole script "
+                    f"may end that way. Rewrite using HISTORICAL PRESENT "
+                    f"(\"द्रौपदी रोती है\" not \"रोई थी\"), simple perfective "
+                    f"WITHOUT auxiliary (\"भीम ने प्रतिज्ञा ली\" not \"ली थी\"), "
+                    f"nominalization (\"द्रौपदी का अपमान — एक क्षण...\"), or "
+                    f"exclamatory beats. Mix the patterns. The script must MOVE, "
+                    f"not list events chronologically."
                 )
             if reminders:
                 full_prompt += "\n\nCRITICAL REMINDERS:\n- " + "\n- ".join(reminders)
@@ -589,14 +690,27 @@ def generate_script(language: str = "en", forced_topic: str = None) -> dict:
         # filler like "valor" / "वीरता" appearing 5+ times.
         rep_ok, last_offenders = _check_repetition(scenes, max_repeats=4, topic=topic)
 
+        # Hindi-only "tha-tha-tha" verbal tic check. Threshold 0.35 = at most
+        # ~1 in 3 sentences may end with past auxiliary; otherwise the
+        # narration reads as a chronological list rather than cinema.
+        if language == "hi":
+            tha_ok, last_tha_ratio, tha_hits, tha_total = _check_past_aux_tic(scenes, threshold=0.35)
+            last_tha_tic = not tha_ok
+        else:
+            tha_ok = True
+            last_tha_tic = False
+
         print(f"    Script: {n_scenes} scenes, avg {avg_words:.1f} words/scene "
               f"(per-scene: {word_counts})")
         if last_offenders:
             top = ", ".join(f"{w}×{n}" for w, n in last_offenders[:5])
             print(f"    [warn] Repetition: {top}")
+        if last_tha_tic:
+            print(f"    [warn] Past-aux tic: {tha_hits}/{tha_total} sentences "
+                  f"end with था/थी/थे/थीं ({last_tha_ratio:.0%})")
 
-        # Acceptable if length OK AND repetition under control
-        if not last_short and rep_ok:
+        # Acceptable if length OK AND repetition AND verb-variety all pass
+        if not last_short and rep_ok and tha_ok:
             break
 
         if attempt < 2:
@@ -605,6 +719,8 @@ def generate_script(language: str = "en", forced_topic: str = None) -> dict:
                 why.append(f"too short ({n_scenes} scenes / {avg_words:.1f} avg words)")
             if not rep_ok:
                 why.append(f"{len(last_offenders)} repeated words")
+            if last_tha_tic:
+                why.append(f"था-tic {last_tha_ratio:.0%}")
             print(f"    [retry] {'; '.join(why)}. Re-prompting...")
 
     data["language"] = language
