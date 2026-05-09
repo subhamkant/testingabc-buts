@@ -439,7 +439,28 @@ CONTENT QUALITY
 - NO vague abstractions ("things would change", "consequences would follow").
 - Reference real science where applicable — actual species, distances, timescales, physical laws.
 - 2-3 short sentences per scene for natural breathing pauses.
-- 25-40 words per scene narration (target ~30-35).
+
+═══════════════════════════════════════════════════════════════
+NARRATION LENGTH — CRITICAL (HARD-ENFORCED)
+═══════════════════════════════════════════════════════════════
+EACH scene's narration MUST be 25-40 words. This applies to BOTH the
+English `narration` field AND the Hindi `narration_hi` field per scene.
+Aim for 30-35 words per scene as the sweet spot.
+
+NEVER write fewer than 25 words per scene. Anything under 20 words is
+unusable — it produces a 30-second video that nobody watches. Length is
+not optional.
+
+At natural narration pace, 25-40 words = ~10-13 seconds spoken per scene.
+6 scenes × 30 words ≈ 180 words ≈ 60-75 seconds of audio. THAT is the
+target video length.
+
+Bad scene example (5 words — DO NOT WRITE):
+  "Humans vanish. Cities go silent."
+Good scene example (32 words — WRITE LIKE THIS):
+  "Imagine waking up to silence. Every human is simply gone — eight
+  billion people, vanished overnight. Streetlights stay on. Subway
+  trains roll into empty stations. The cat watches the door, waiting."
 
 ═══════════════════════════════════════════════════════════════
 OUTPUT — return ONLY valid JSON, no markdown fences, no preamble:
@@ -469,31 +490,66 @@ HARD RULES:
 - NO Mahabharata characters, gods, or mythology — this is science/curiosity content
 """
 
-    raw = _call_llm(prompt)
-    start = raw.find("{")
-    end   = raw.rfind("}")
-    if start == -1 or end == -1:
-        raise ValueError(f"No JSON object found in WhatIf LLM response:\n{raw[:300]}")
-    data = _parse_llm_json(raw[start:end + 1])
+    # Retry up to 3 times if the LLM produces too-short narrations.
+    # Average target = 25-40 words/scene; we accept >=22 words/scene as the
+    # floor (gives ~50s+ of audio across 5-6 scenes).
+    data = None
+    last_avg_words = 0.0
+    last_n_scenes  = 0
+    for attempt in range(3):
+        full_prompt = prompt
+        if attempt > 0:
+            full_prompt += (
+                f"\n\nCRITICAL REMINDER: Your previous response had narrations averaging "
+                f"only {last_avg_words:.1f} words per scene across {last_n_scenes} scenes. "
+                f"That's a 30-second stub video, not the 60-90 second Short the prompt "
+                f"asked for. EVERY scene's `narration` AND `narration_hi` MUST be 25-40 "
+                f"words — no exceptions. Do NOT write 1-sentence scenes. Each scene needs "
+                f"2-3 full sentences with concrete sensory and scientific detail. Rewrite."
+            )
 
-    # Hard-trim narrations
-    for scene in data.get("scenes", []):
-        if "narration" in scene:
-            scene["narration"] = _trim_narration(scene["narration"])
-        if "narration_hi" in scene:
-            scene["narration_hi"] = _trim_narration(scene["narration_hi"])
+        raw = _call_llm(full_prompt)
+        start = raw.find("{")
+        end   = raw.rfind("}")
+        if start == -1 or end == -1:
+            raise ValueError(f"No JSON object found in WhatIf LLM response:\n{raw[:300]}")
+        data = _parse_llm_json(raw[start:end + 1])
 
-    # Validate visual_style; fall back to photoreal-3d if LLM picks something off-list
-    vs = data.get("visual_style", "")
-    if vs not in _WHATIF_VISUAL_STYLES:
-        print(f"    [warn] visual_style '{vs}' not recognized — defaulting to photoreal-3d")
-        data["visual_style"] = "photoreal-3d"
+        # Hard-trim narrations (caps at 45 words — we under-shoot, not over-shoot)
+        for scene in data.get("scenes", []):
+            if "narration" in scene:
+                scene["narration"] = _trim_narration(scene["narration"])
+            if "narration_hi" in scene:
+                scene["narration_hi"] = _trim_narration(scene["narration_hi"])
 
-    n_scenes  = len(data.get("scenes", []))
-    word_avg  = (sum(len(s.get("narration", "").split()) for s in data["scenes"]) /
-                 max(n_scenes, 1))
-    print(f"    WhatIf script: {n_scenes} scenes, avg {word_avg:.1f} words/scene, "
-          f"style={data['visual_style']}")
+        # Validate visual_style; fall back to photoreal-3d if LLM picks something off-list
+        vs = data.get("visual_style", "")
+        if vs not in _WHATIF_VISUAL_STYLES:
+            print(f"    [warn] visual_style '{vs}' not recognized — defaulting to photoreal-3d")
+            data["visual_style"] = "photoreal-3d"
+
+        n_scenes = len(data.get("scenes", []))
+        word_avg = (sum(len(s.get("narration", "").split()) for s in data["scenes"]) /
+                    max(n_scenes, 1))
+        # Hindi narration length sanity (visuals are timed by the TTS we render
+        # FIRST — typically Hindi — so under-length Hindi causes the same too-short
+        # video as under-length English).
+        hi_avg = (sum(len(s.get("narration_hi", "").split()) for s in data["scenes"]) /
+                  max(n_scenes, 1)) if dual_language else word_avg
+
+        print(f"    WhatIf script: {n_scenes} scenes, avg {word_avg:.1f} words/scene "
+              f"(hi avg {hi_avg:.1f}), style={data['visual_style']}")
+
+        last_avg_words = word_avg
+        last_n_scenes  = n_scenes
+
+        # Accept if BOTH languages average >= 22 words/scene AND we have >= 5 scenes
+        if word_avg >= 22 and hi_avg >= 22 and n_scenes >= 5:
+            break
+
+        if attempt < 2:
+            print(f"    [retry] too short (en={word_avg:.1f}/scene, hi={hi_avg:.1f}/scene). "
+                  f"Re-prompting...")
 
     data["content_type"] = "whatif"
     data["topic"]        = topic
