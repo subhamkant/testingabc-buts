@@ -84,26 +84,48 @@ def _video_output_path(language: str, series: str = "mahabharata") -> str:
     return f"output/video_{series_tag}{language}_{timestamp}.mp4"
 
 
-def _subscribe_outro(series: str, language: str) -> dict:
+_KRISHNA_LISTENER_VOCATIVE = {
+    # Map the script's `listener` field to the natural Hindi vocative Krishna
+    # would actually use mid-conversation. Default to the bare name when no
+    # special vocative exists. Arjuna's "पार्थ" is the canonical case.
+    "Arjuna":       "पार्थ",
+    "Yudhishthira": "युधिष्ठिर",
+    "Karna":        "कर्ण",
+    "Bhishma":      "पितामह",
+    "Uddhava":      "उद्धव",
+}
+
+
+def _subscribe_outro(series: str, language: str, listener: str = "") -> dict:
     """
     Returns a scene dict for the fixed subscribe-CTA outro. Series-aware so the
     Mahabharata and What If videos don't end with mismatched copy/imagery.
+
+    `listener` is used by the Krishna outro to address the right person (e.g.
+    "उद्धव" when the speech was to Uddhava, not the hardcoded "पार्थ").
     """
     if series == "krishna":
         # First-person Krishna outro — preserves the divine-monologue immersion
         # instead of jarring into a third-person promo voice. Image is a
-        # Krishna+Arjuna two-shot consistent with the rest of the speech.
+        # Krishna + listener two-shot consistent with the rest of the speech.
+        listener_name = (listener or "Arjuna").strip()
+        vocative = _KRISHNA_LISTENER_VOCATIVE.get(listener_name, listener_name)
+
         krishna_image = (
-            "Cinematic two-shot of Krishna and Arjuna in a golden chariot at dusk, "
+            f"Cinematic two-shot of Krishna and {listener_name} at golden hour, "
             "Krishna with peacock-feather crown and blue skin gesturing in mudra, "
-            "Arjuna in armor listening intently, soft text 'Vyasa AI' subtly glowing "
+            f"{listener_name} listening intently, soft text 'Vyasa AI' subtly glowing "
             "in the lower-third like a divine seal, jewel-toned palette of crimson "
             "gold and lapis, illustrated mythology art, ornate background carvings"
         )
-        krishna_video = "Slow push-in on Krishna and Arjuna two-shot, golden light rays, gentle dust motes"
-        # Krishna voicing the CTA in first person — no tonal break.
+        krishna_video = (
+            f"Slow push-in on Krishna and {listener_name} two-shot, "
+            "golden light rays, gentle dust motes"
+        )
+        # Krishna voicing the CTA in first person, addressing the actual
+        # listener of THIS video — no tonal break, no wrong-name jolt.
         narration = (
-            "ऐसी ही और बातें मैं तुमसे कहूँगा पार्थ। "
+            f"ऐसी ही और बातें मैं तुमसे कहूँगा {vocative}। "
             "अगर मेरी वाणी तुम्हारे मन तक पहुँची है, तो Vyasa AI को Subscribe करो।"
         )
         return {
@@ -332,7 +354,7 @@ async def run_krishna_speech(test_mode: bool = False, test_upload: bool = False)
         print(f"    Listener : {script.get('listener', '?')}")
 
         # Krishna-voiced outro — preserves first-person immersion
-        script["scenes"].append(_subscribe_outro("krishna", "hi"))
+        script["scenes"].append(_subscribe_outro("krishna", "hi", script.get("listener", "")))
         print(f"    Scenes   : {len(script['scenes'])} (+ Krishna-voiced outro)")
         update_characters(script)
 

@@ -586,6 +586,20 @@ def _loudnorm_filter(series: str = "mahabharata") -> str:
     return f"loudnorm=I=-14:TP=-1.5:LRA={lra}"
 
 
+# Krishna direct-address builds macro loudness dynamics at the TTS stage via
+# explicit per-scene dB scaling in tts_generator._KRISHNA_PER_SCENE_DB
+# (e.g. peak scene +4 dB, contemplative scene -2 dB). dynaudnorm would pump
+# the quiet scenes back up to match the loud ones — actively undoing what we
+# just engineered. So Krishna runs ONLY loudnorm with a generous LRA=14
+# target that preserves the macro variation we built in.
+#
+# (Earlier iterations tried dynaudnorm here; left out intentionally.)
+def _audio_post_chain(series: str) -> str:
+    """Per-series audio post-processing chain."""
+    parts = [_loudnorm_filter(series), "aresample=48000"]
+    return ",".join(parts)
+
+
 # Kept as the default-series filter for backwards-compatible imports.
 LOUDNORM_FILTER = _loudnorm_filter("mahabharata")
 
@@ -603,21 +617,22 @@ def _finalize_audio_no_music(output_path: str, series: str = "mahabharata"):
     audio up to YouTube's -14 LUFS target and resample to 48 kHz / 192 kbps.
     Without this pass, voice would stay at ~-16 LUFS (the natural TTS level)
     and the audio plays noticeably quieter than competing Shorts.
+    For series=krishna, dynaudnorm runs first to expand dynamic range.
     """
     finalized = output_path.replace(".mp4", "_norm.mp4")
-    loudnorm = _loudnorm_filter(series)
+    audio_chain = _audio_post_chain(series)
     result = subprocess.run([
         "ffmpeg", "-y",
         "-i", output_path,
         "-c:v", "copy",
-        "-af", loudnorm,
+        "-af", audio_chain,
         "-c:a", "aac", "-b:a", "192k", "-ar", "48000",
         "-movflags", "+faststart",
         finalized,
     ], capture_output=True)
     if result.returncode == 0:
         os.replace(finalized, output_path)
-        print(f"    [OK] Audio normalized to -14 LUFS / 48 kHz / 192k ({loudnorm})")
+        print(f"    [OK] Audio normalized ({audio_chain})")
     else:
         if os.path.exists(finalized):
             os.remove(finalized)
@@ -651,10 +666,11 @@ def _apply_background_music(output_path: str, series: str = "mahabharata"):
         video_duration = 9999.0
 
     music_output = output_path.replace(".mp4", "_music.mp4")
-    loudnorm = _loudnorm_filter(series)
+    audio_chain = _audio_post_chain(series)
 
     # volume=0.10 (was 0.32) — music is atmosphere only, should never compete
     # with the narrator's voice. Sidechain ducking drops it further during voice.
+    # audio_chain adds dynaudnorm (krishna only) before loudnorm + aresample.
     duck_filter = (
         f"[0:a]asplit=2[voice_mix][voice_sc];"
         f"[1:a]atrim=0:{video_duration:.3f},asetpts=PTS-STARTPTS,"
@@ -662,7 +678,7 @@ def _apply_background_music(output_path: str, series: str = "mahabharata"):
         f"[music_raw][voice_sc]sidechaincompress="
         f"threshold=0.02:ratio=6:attack=150:release=600:makeup=1[music_ducked];"
         f"[voice_mix][music_ducked]amix=inputs=2:normalize=0,"
-        f"{loudnorm},aresample=48000[aout]"
+        f"{audio_chain}[aout]"
     )
 
     result = subprocess.run([
@@ -679,7 +695,7 @@ def _apply_background_music(output_path: str, series: str = "mahabharata"):
 
     if result.returncode == 0:
         os.replace(music_output, output_path)
-        print(f"    [OK] Music mixed + audio normalized ({loudnorm})")
+        print(f"    [OK] Music mixed + audio normalized ({audio_chain})")
         return
 
     # Flat fallback (no sidechain ducking) — must stay quieter than the ducked
@@ -688,7 +704,7 @@ def _apply_background_music(output_path: str, series: str = "mahabharata"):
         f"[1:a]volume=0.06,"
         f"atrim=0:{video_duration:.3f},asetpts=PTS-STARTPTS[music];"
         f"[0:a][music]amix=inputs=2:normalize=0,"
-        f"{loudnorm},aresample=48000[aout]"
+        f"{audio_chain}[aout]"
     )
     result2 = subprocess.run([
         "ffmpeg", "-y",
@@ -704,7 +720,7 @@ def _apply_background_music(output_path: str, series: str = "mahabharata"):
 
     if result2.returncode == 0:
         os.replace(music_output, output_path)
-        print(f"    [OK] Music mixed (flat fallback) + audio normalized ({loudnorm})")
+        print(f"    [OK] Music mixed (flat fallback) + audio normalized ({audio_chain})")
     else:
         print("    [!] Music mix failed, falling back to voice-only normalization")
         _finalize_audio_no_music(output_path, series=series)

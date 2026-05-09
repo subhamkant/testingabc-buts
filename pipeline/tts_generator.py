@@ -253,41 +253,110 @@ _DEFAULT_VOICE_SETTINGS = {
     "use_speaker_boost": True,
 }
 
+# ── Krishna per-scene voice settings ─────────────────────────────────────────
+# A real human actor varies their delivery scene-by-scene — soft on the
+# contemplative truth, loud on the imperative peak, warm on the blessing. A
+# single ElevenLabs request can't do that — voice_settings are global per call.
+# The fix: send each scene as its own TTS request with its own settings, then
+# concatenate the resulting mp3s. This is what produces real LRA in the
+# output (vs the flat 4.7 LU we measured before).
+#
+# Scene index here is the position in the FINAL scenes list including the
+# appended subscribe outro: 0=opening, 1=hard-truth, 2=imperative-peak,
+# 3=reframe, 4=blessing, 5=outro CTA.
+_KRISHNA_PER_SCENE_SETTINGS = {
+    0: {  # Opening address — contemplative, intimate
+        "stability": 0.40,
+        "similarity_boost": 0.75,
+        "style": 0.45,
+        "use_speaker_boost": True,
+    },
+    1: {  # Hard truth — grounded, certain
+        "stability": 0.40,
+        "similarity_boost": 0.75,
+        "style": 0.50,
+        "use_speaker_boost": True,
+    },
+    2: {  # Imperative peak — maximum dramatic swing (also gets audio tags)
+        "stability": 0.10,
+        "similarity_boost": 0.75,
+        "style": 0.85,
+        "use_speaker_boost": True,
+    },
+    3: {  # Reframe — contemplative again
+        "stability": 0.45,
+        "similarity_boost": 0.75,
+        "style": 0.45,
+        "use_speaker_boost": True,
+    },
+    4: {  # Blessing / charge — warm command
+        "stability": 0.30,
+        "similarity_boost": 0.75,
+        "style": 0.55,
+        "use_speaker_boost": True,
+    },
+    5: {  # Subscribe outro — warm + intimate, slightly more stable
+        "stability": 0.45,
+        "similarity_boost": 0.80,
+        "style": 0.40,
+        "use_speaker_boost": True,
+    },
+}
 
-def _elevenlabs_tts(
-    text: str,
-    output_mp3: str,
-    language: str = "en",
-    api_key: str = "",
-    key_label: str = "ElevenLabs",
-    series: str = "mahabharata",
-) -> bool:
-    """
-    Synthesize via ElevenLabs Multilingual v2 (supports Hindi + English).
-    Returns True on success. The MP3 is normalized in-place via FFmpeg
-    after download so loudness matches the rest of the pipeline.
+# ElevenLabs v3 (alpha) accepts inline emotional tags like [determined] /
+# [intense] / [shouting] that nudge the model toward a specific delivery.
+# We inject these only on Scene 2 (the imperative peak) to push beyond what
+# stability/style alone can produce. v3 may not be enabled on every API key —
+# the per-scene TTS path tries v3 first, falls back to eleven_multilingual_v2
+# without tags if v3 returns 403/404.
+_KRISHNA_PEAK_TAG_PREFIX = "[determined] [intense] "
 
-    `api_key` is passed explicitly so the caller can run a fallback chain
-    (primary key → secondary key) when the primary hits its quota.
-    `key_label` shows up in the log so you can tell which key handled the run.
-    `series` selects both the per-series voice ID
-    (ELEVENLABS_VOICE_ID_<SERIES>) AND per-series voice_settings — Krishna
-    direct-address gets a more emotional / less stable delivery, others stay
-    stable.
-    """
-    if not api_key:
-        return False
+# Per-scene loudness offsets (in dB) applied at concat time. This is the
+# DETERMINISTIC source of macro dynamic range — ElevenLabs voice_settings
+# vary expressiveness within a scene but produce nearly-flat overall loudness
+# scene-to-scene. Hand-scaling each scene to a target dB level is the only
+# reliable way to make the imperative peak feel LOUDER than the contemplative
+# opening. ~6 dB total spread across scenes contributes ~6 LU to LRA.
+_KRISHNA_PER_SCENE_DB = {
+    0: -1.0,  # Opening — slightly softer, intimate
+    1:  0.0,  # Hard truth — baseline
+    2: +4.0,  # IMPERATIVE PEAK — loudest
+    3: -2.0,  # Reframe — quietest, contemplative
+    4: +1.0,  # Blessing / charge — warm, slightly elevated
+    5: -1.0,  # Outro CTA — intimate again
+}
 
-    # Per-series voice override: ELEVENLABS_VOICE_ID_KRISHNA, _MAHABHARATA, etc.
-    # Falls back to the generic ELEVENLABS_VOICE_ID, then the hardcoded default.
-    voice_id = (
+
+def _resolve_voice_id(series: str) -> str:
+    """Pick the right ElevenLabs voice_id for a given series."""
+    return (
         os.environ.get(f"ELEVENLABS_VOICE_ID_{series.upper()}", "").strip()
         or os.environ.get("ELEVENLABS_VOICE_ID", "").strip()
         or _DEFAULT_ELEVENLABS_VOICE
     )
-    model_id = "eleven_multilingual_v2"
-    voice_settings = _VOICE_SETTINGS_BY_SERIES.get(series, _DEFAULT_VOICE_SETTINGS)
 
+
+def _post_elevenlabs(
+    text: str,
+    output_mp3: str,
+    api_key: str,
+    voice_id: str,
+    model_id: str,
+    voice_settings: dict,
+    key_label: str,
+    normalize: bool = True,
+) -> tuple:
+    """
+    Single ElevenLabs synthesis call. Returns (ok, status_code).
+    Caller decides how to interpret status_code (e.g. fall back to a
+    different model on 403/404).
+
+    `normalize=False` skips the per-call EBU R128 normalization. CRITICAL
+    for the per-scene Krishna flow — if each scene gets independently
+    normalized to -16 LUFS, all the per-scene voice_settings work is wasted
+    because the loudness variation between scenes is wiped out. Caller
+    runs the normalization once on the concatenated final audio instead.
+    """
     try:
         url = f"https://api.elevenlabs.io/v1/text-to-speech/{voice_id}"
         headers = {
@@ -302,17 +371,76 @@ def _elevenlabs_tts(
         }
         resp = requests.post(url, headers=headers, json=body, timeout=180)
         if resp.status_code != 200:
-            print(f"    [{key_label}] HTTP {resp.status_code}: {resp.text[:200]}")
-            return False
+            print(f"    [{key_label}/{model_id}] HTTP {resp.status_code}: {resp.text[:200]}")
+            return False, resp.status_code
         with open(output_mp3, "wb") as f:
             f.write(resp.content)
         if os.path.exists(output_mp3) and os.path.getsize(output_mp3) > 1000:
-            _normalize_audio(output_mp3)
-            return True
-        return False
+            if normalize:
+                _normalize_audio(output_mp3)
+            return True, 200
+        return False, 0
     except Exception as e:
-        print(f"    [{key_label}] {e}")
+        print(f"    [{key_label}/{model_id}] {e}")
+        return False, 0
+
+
+def _elevenlabs_tts(
+    text: str,
+    output_mp3: str,
+    language: str = "en",
+    api_key: str = "",
+    key_label: str = "ElevenLabs",
+    series: str = "mahabharata",
+    voice_settings: dict = None,
+    try_v3: bool = False,
+    normalize: bool = True,
+) -> bool:
+    """
+    Single-call ElevenLabs TTS used by the standard (non-per-scene) flow and
+    by the per-scene Krishna flow's individual scene calls.
+
+    `voice_settings` overrides the per-series default settings — used by the
+    Krishna per-scene flow to vary delivery scene-by-scene (contemplative
+    Scene 1, dramatic peak Scene 3, warm blessing Scene 5, etc.).
+
+    `try_v3=True` first attempts the eleven_v3 model (alpha — has emotional
+    audio-tag support). Falls back to eleven_multilingual_v2 if v3 returns
+    a 4xx (typically 403/404 for keys without v3 access).
+
+    `normalize=False` (passed by the per-scene Krishna flow) keeps each
+    scene's natural loudness so dramatic-peak scenes come out louder than
+    contemplative ones. The default True matches the existing single-call
+    behaviour.
+
+    Returns True on success.
+    """
+    if not api_key:
         return False
+
+    voice_id = _resolve_voice_id(series)
+    settings = voice_settings or _VOICE_SETTINGS_BY_SERIES.get(series, _DEFAULT_VOICE_SETTINGS)
+
+    if try_v3:
+        ok, code = _post_elevenlabs(
+            text, output_mp3, api_key, voice_id, "eleven_v3",
+            settings, key_label, normalize,
+        )
+        if ok:
+            return True
+        # v3 unavailable / not authorized → fall through to v2 (silent retry)
+        if code in (400, 401, 403, 404):
+            pass
+        elif code == 200:
+            return True  # already returned
+        else:
+            return False  # other error — don't retry on a different model
+
+    ok, _ = _post_elevenlabs(
+        text, output_mp3, api_key, voice_id, "eleven_multilingual_v2",
+        settings, key_label, normalize,
+    )
+    return ok
 
 
 def _elevenlabs_keys() -> list:
@@ -326,6 +454,197 @@ def _elevenlabs_keys() -> list:
         ("ElevenLabs (fallback)", os.environ.get("ELEVENLABS_API_KEY_FALLBACK", "").strip()),
     ]
     return [(label, key) for label, key in candidates if key]
+
+
+# ── Per-scene Krishna TTS ────────────────────────────────────────────────────
+
+def _concat_audio_files(
+    input_paths: list,
+    output_path: str,
+    gap_s: float = 0.4,
+    db_offsets: list = None,
+) -> bool:
+    """
+    Concatenate per-scene MP3 files into one continuous track with a brief
+    silence between scenes. The silence creates a natural breath / pause
+    boundary the way a real narrator would breathe between scenes.
+
+    `db_offsets`, if provided, must be a list of dB scaling values (one per
+    input). Each scene gets `volume={dB}dB` applied before concat, which is
+    the deterministic source of macro loudness dynamics. Without this, the
+    output LRA is whatever ElevenLabs naturally produces — typically 2-3 LU
+    even with per-scene voice_settings variation.
+
+    Returns True on success.
+    """
+    import subprocess as _sp
+    if not input_paths:
+        return False
+
+    n = len(input_paths)
+    inputs = []
+    for p in input_paths:
+        inputs += ["-i", p]
+    # Single silent source re-used for inter-scene gaps
+    silence_idx = n
+    inputs += [
+        "-f", "lavfi",
+        "-t", f"{gap_s:.2f}",
+        "-i", "anullsrc=channel_layout=stereo:sample_rate=44100",
+    ]
+
+    # Build the filter graph: optionally apply per-scene volume,
+    # then concat with silence-glue between scenes.
+    pre_parts = []
+    concat_inputs = []
+    for i in range(n):
+        if db_offsets and i < len(db_offsets) and db_offsets[i] != 0.0:
+            db = db_offsets[i]
+            sign = "" if db >= 0 else "-"
+            pre_parts.append(f"[{i}:a]volume={sign}{abs(db):.2f}dB[v{i}]")
+            concat_inputs.append(f"[v{i}]")
+        else:
+            concat_inputs.append(f"[{i}:a]")
+
+    parts = []
+    for i in range(n):
+        parts.append(concat_inputs[i])
+        if i < n - 1:
+            parts.append(f"[{silence_idx}:a]")
+    concat_part = "".join(parts) + f"concat=n={2 * n - 1}:v=0:a=1[aout]"
+
+    filter_complex = ";".join(pre_parts + [concat_part]) if pre_parts else concat_part
+
+    cmd = [
+        "ffmpeg", "-y",
+        *inputs,
+        "-filter_complex", filter_complex,
+        "-map", "[aout]",
+        "-c:a", "libmp3lame", "-b:a", "192k",
+        output_path,
+    ]
+    result = _sp.run(cmd, capture_output=True)
+    if result.returncode != 0:
+        err = result.stderr.decode("utf-8", errors="replace")[-400:] if result.stderr else ""
+        print(f"    [concat] failed: {err}")
+        return False
+    return os.path.exists(output_path)
+
+
+def _krishna_scene_text(text: str, scene_idx: int) -> str:
+    """
+    Inject ElevenLabs v3 audio tags for the imperative-peak scene (index 2).
+    Other scenes return text unchanged. Tags are interpreted by v3 only —
+    if we fall back to multilingual_v2, the tags become inert and the LLM
+    pronounces them as text… so we strip them on the v2 retry path.
+    """
+    if scene_idx == 2 and text:
+        return _KRISHNA_PEAK_TAG_PREFIX + text
+    return text
+
+
+_TAG_PATTERN = None
+def _strip_audio_tags(text: str) -> str:
+    """Remove [tag] markers — used when falling back to a model that
+    doesn't speak ElevenLabs v3 audio tags."""
+    global _TAG_PATTERN
+    if _TAG_PATTERN is None:
+        import re
+        _TAG_PATTERN = re.compile(r"\[[a-zA-Z _]+\]\s*")
+    return _TAG_PATTERN.sub("", text).strip()
+
+
+async def _generate_per_scene_krishna_tts(
+    scenes: list,
+    output_path: str,
+    language: str = "hi",
+) -> bool:
+    """
+    Generate one TTS request per scene with per-scene voice_settings, then
+    concatenate the resulting mp3s into one continuous track. This is what
+    produces real LRA in the output — each scene has its own dynamic
+    character (contemplative Scene 1, dramatic peak Scene 3, warm Scene 5).
+
+    Tries ElevenLabs v3 (with audio tags on the peak scene) first per scene;
+    falls back to eleven_multilingual_v2 with tags stripped if v3 fails.
+
+    Returns True on success. False means the per-scene path itself failed —
+    caller can fall back to a single-call generation.
+    """
+    keys = _elevenlabs_keys()
+    if not keys:
+        return False
+    primary_label, primary_key = keys[0]
+
+    os.makedirs("temp/audio/krishna_scenes", exist_ok=True)
+    scene_paths = []
+
+    for i, scene in enumerate(scenes):
+        text = _clean_narration(scene["narration"])
+        if not text:
+            continue
+
+        settings = _KRISHNA_PER_SCENE_SETTINGS.get(
+            i,
+            _VOICE_SETTINGS_BY_SERIES.get("krishna", _DEFAULT_VOICE_SETTINGS),
+        )
+        scene_path = f"temp/audio/krishna_scenes/scene_{i:02d}.mp3"
+
+        # First attempt: v3 with audio tags on the peak scene
+        v3_text = _krishna_scene_text(text, i)
+        ok = await asyncio.to_thread(
+            _elevenlabs_tts,
+            v3_text, scene_path, language,
+            primary_key, f"{primary_label}/scene{i}",
+            "krishna", settings, True, False,  # try_v3=True, normalize=False
+        )
+        if ok and os.path.exists(scene_path):
+            scene_paths.append(scene_path)
+            print(f"    [OK] Krishna scene {i+1}/{len(scenes)} via ElevenLabs (settings: stab={settings['stability']:.2f}, style={settings['style']:.2f})")
+            continue
+
+        # Retry on the same scene with tags stripped + v2 model only
+        clean = _strip_audio_tags(text)
+        ok = await asyncio.to_thread(
+            _elevenlabs_tts,
+            clean, scene_path, language,
+            primary_key, f"{primary_label}/scene{i}/v2",
+            "krishna", settings, False, False,  # no v3, no normalize
+        )
+        if ok and os.path.exists(scene_path):
+            scene_paths.append(scene_path)
+            print(f"    [OK] Krishna scene {i+1}/{len(scenes)} via v2 fallback")
+            continue
+
+        # Try the fallback key on this scene before giving up
+        if len(keys) > 1:
+            fallback_label, fallback_key = keys[1]
+            ok = await asyncio.to_thread(
+                _elevenlabs_tts,
+                clean, scene_path, language,
+                fallback_key, f"{fallback_label}/scene{i}/v2",
+                "krishna", settings, False,
+            )
+            if ok and os.path.exists(scene_path):
+                scene_paths.append(scene_path)
+                print(f"    [OK] Krishna scene {i+1}/{len(scenes)} via fallback key")
+                continue
+
+        # All ElevenLabs attempts on this scene failed — abort and let the
+        # caller fall back to a single-call generation.
+        print(f"    [!] Krishna scene {i+1} failed on all ElevenLabs paths")
+        return False
+
+    if len(scene_paths) != len(scenes):
+        print(f"    [!] Per-scene TTS produced {len(scene_paths)}/{len(scenes)} scenes")
+        return False
+
+    # Concatenate per-scene mp3s into one continuous track, applying per-scene
+    # volume offsets so the imperative peak comes through louder than the
+    # contemplative passages — the deterministic source of macro dynamics.
+    db_offsets = [_KRISHNA_PER_SCENE_DB.get(i, 0.0) for i in range(len(scene_paths))]
+    print(f"    Concatenating {len(scene_paths)} scene mp3s with 0.4s gaps + per-scene dB offsets {db_offsets}...")
+    return _concat_audio_files(scene_paths, output_path, gap_s=0.4, db_offsets=db_offsets)
 
 
 # ── Single-pass full narration ────────────────────────────────────────────────
@@ -371,6 +690,20 @@ async def generate_full_narration(
     print(f"    Full narration: {len(full_text)} chars across {len(scenes)} scene(s)")
 
     output_path = "temp/audio/narration_full.mp3"
+
+    # ── 0. Krishna per-scene TTS (only when an ElevenLabs key is set) ──
+    # Each scene gets its own ElevenLabs request with per-scene voice_settings
+    # — contemplative for Scenes 1/2/4, dramatic peak for Scene 3, warm
+    # blessing for Scene 5. This is what produces real LRA in the output.
+    # If the per-scene path fails for any reason we fall through to the
+    # standard single-call path below.
+    if series == "krishna" and _elevenlabs_keys():
+        print(f"    Krishna mode — per-scene TTS with per-scene voice settings...")
+        ok = await _generate_per_scene_krishna_tts(scenes, output_path, language)
+        if ok:
+            print(f"    [OK] Krishna per-scene narration -> {output_path}")
+            return output_path, char_weights
+        print("    [!] Per-scene Krishna TTS failed — falling back to single-call mode")
 
     # 1. ElevenLabs (best, requires ELEVENLABS_API_KEY[_FALLBACK])
     # Walk both keys in order — falls through on quota errors / 401 / network
