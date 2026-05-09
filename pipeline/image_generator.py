@@ -3,6 +3,8 @@ import os
 import re
 import time
 import json
+import base64
+import io
 from urllib.parse import quote
 
 # Style suffix — photorealistic FLUX renders produce sharp crisp details
@@ -16,10 +18,15 @@ STYLE_SUFFIX = (
     "sharp focus throughout, no blur, no motion blur"
 )
 
-# Negative prompt — suppresses blurry/low-quality outputs
+# Negative prompt — suppresses blurry/low-quality outputs and FLUX-schnell's
+# known anatomy weaknesses (especially hands and fingers).
 _NEGATIVE = (
     "blurry,blur,out of focus,low quality,pixelated,distorted,"
-    "ugly,bad anatomy,watermark,text,logo,duplicate,deformed"
+    "ugly,bad anatomy,watermark,text,logo,duplicate,deformed,"
+    "extra fingers,six fingers,seven fingers,too many fingers,"
+    "mutated hands,malformed hands,fused fingers,missing fingers,"
+    "extra limbs,extra arms,malformed limbs,disfigured,"
+    "asymmetric eyes,cross-eyed,bad proportions"
 )
 
 # 3 compositional angles per scene — gives genuine visual variety
@@ -140,20 +147,136 @@ def update_characters(script_data: dict) -> list:
         return []
 
 
-def _build_url(prompt: str, seed: int, width: int = 768, height: int = 1344, mood: str = "") -> str:
-    """
-    Default 768×1344 — optimal 9:16 size for FLUX.
-    Thumbnail overrides to 1280×720. Ken Burns upscales to 1080×1920.
-    """
+def _build_full_prompt(prompt: str, mood: str = "") -> str:
     mood_prefix = f"{mood}, " if mood else ""
-    full_prompt = f"{mood_prefix}{prompt}, {STYLE_SUFFIX}"
-    encoded  = quote(full_prompt)
+    return f"{mood_prefix}{prompt}, {STYLE_SUFFIX}"
+
+
+# ── Provider cascade ─────────────────────────────────────────────────────────
+# Order: Hugging Face FLUX-schnell -> Cloudflare FLUX-schnell -> Pollinations.
+# Each provider returns raw image bytes or raises. First success wins.
+# Free-tier only — no paid keys involved.
+
+_HF_MODEL = "black-forest-labs/FLUX.1-schnell"
+# HF migrated from api-inference.huggingface.co to the inference router.
+_HF_URL   = f"https://router.huggingface.co/hf-inference/models/{_HF_MODEL}"
+_MIN_BYTES = 5000   # below this, treat response as a corrupted/empty image
+
+
+def _ensure_dims(img_bytes: bytes, width: int, height: int) -> bytes:
+    """If the returned image isn't the requested size, resize via Pillow."""
+    try:
+        from PIL import Image
+        img = Image.open(io.BytesIO(img_bytes))
+        if img.size == (width, height):
+            return img_bytes
+        # Cover-fit: fill target then center-crop to avoid letterboxing
+        src_w, src_h = img.size
+        scale = max(width / src_w, height / src_h)
+        new_w, new_h = int(src_w * scale + 0.5), int(src_h * scale + 0.5)
+        img = img.resize((new_w, new_h), Image.LANCZOS)
+        left = (new_w - width)  // 2
+        top  = (new_h - height) // 2
+        img = img.crop((left, top, left + width, top + height))
+        if img.mode != "RGB":
+            img = img.convert("RGB")
+        out = io.BytesIO()
+        img.save(out, format="JPEG", quality=92)
+        return out.getvalue()
+    except Exception:
+        return img_bytes
+
+
+def _gen_hf(prompt: str, seed: int, width: int, height: int) -> bytes:
+    token = os.environ.get("HF_TOKEN", "").strip()
+    if not token:
+        raise RuntimeError("HF_TOKEN not set")
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Accept": "image/jpeg",
+        "x-wait-for-model": "true",
+    }
+    body = {
+        "inputs": prompt,
+        "parameters": {
+            "width": width,
+            "height": height,
+            "num_inference_steps": 4,
+            "seed": seed,
+            "negative_prompt": _NEGATIVE,
+        },
+    }
+    resp = requests.post(_HF_URL, headers=headers, json=body, timeout=60)
+    if resp.status_code != 200 or len(resp.content) < _MIN_BYTES:
+        raise RuntimeError(f"hf status={resp.status_code} bytes={len(resp.content)}")
+    ctype = resp.headers.get("content-type", "")
+    if not ctype.startswith("image/"):
+        raise RuntimeError(f"hf non-image response: {ctype}")
+    return _ensure_dims(resp.content, width, height)
+
+
+def _gen_cloudflare(prompt: str, seed: int, width: int, height: int) -> bytes:
+    token = os.environ.get("CLOUDFLARE_API_TOKEN", "").strip()
+    account_id = os.environ.get("CLOUDFLARE_ACCOUNT_ID", "").strip()
+    if not (token and account_id):
+        raise RuntimeError("CLOUDFLARE_API_TOKEN/ACCOUNT_ID not set")
+    url = (
+        f"https://api.cloudflare.com/client/v4/accounts/{account_id}"
+        f"/ai/run/@cf/black-forest-labs/flux-1-schnell"
+    )
+    headers = {"Authorization": f"Bearer {token}"}
+    # steps=8 is the free-tier max for flux-schnell; 4 is faster but produces
+    # more anatomy errors (extra fingers, malformed hands). 8 is the quality cap.
+    body = {"prompt": prompt, "steps": 8, "seed": seed, "negative_prompt": _NEGATIVE}
+    resp = requests.post(url, headers=headers, json=body, timeout=60)
+    if resp.status_code != 200:
+        raise RuntimeError(f"cloudflare status={resp.status_code}")
+    data = resp.json()
+    if not data.get("success"):
+        raise RuntimeError(f"cloudflare success=false: {data.get('errors')}")
+    img_b64 = data.get("result", {}).get("image", "")
+    if not img_b64:
+        raise RuntimeError("cloudflare missing result.image")
+    raw = base64.b64decode(img_b64)
+    if len(raw) < _MIN_BYTES:
+        raise RuntimeError(f"cloudflare bytes={len(raw)}")
+    return _ensure_dims(raw, width, height)
+
+
+def _gen_pollinations(prompt: str, seed: int, width: int, height: int) -> bytes:
+    encoded  = quote(prompt)
     negative = quote(_NEGATIVE)
-    return (
+    url = (
         f"https://image.pollinations.ai/prompt/{encoded}"
         f"?width={width}&height={height}&seed={seed}"
         f"&model=flux-realism&nologo=true&enhance=true&negative={negative}"
     )
+    resp = requests.get(url, timeout=45)
+    if resp.status_code != 200 or len(resp.content) < _MIN_BYTES:
+        raise RuntimeError(f"pollinations status={resp.status_code} bytes={len(resp.content)}")
+    return resp.content
+
+
+def generate_image_bytes(prompt: str, seed: int, width: int, height: int, mood: str = "") -> tuple[bytes, str]:
+    """
+    Tries HF -> Cloudflare -> Pollinations until one returns a usable image.
+    Returns (image_bytes, provider_name). Raises only if all three fail.
+    """
+    full_prompt = _build_full_prompt(prompt, mood)
+    providers = [
+        ("hf-flux-schnell",         lambda: _gen_hf(full_prompt, seed, width, height)),
+        ("cloudflare-flux-schnell", lambda: _gen_cloudflare(full_prompt, seed, width, height)),
+        ("pollinations-flux-realism", lambda: _gen_pollinations(full_prompt, seed, width, height)),
+    ]
+    last_err = None
+    for name, fn in providers:
+        try:
+            data = fn()
+            return data, name
+        except Exception as e:
+            last_err = f"{name}: {e}"
+            continue
+    raise RuntimeError(f"all image providers failed; last={last_err}")
 
 
 def generate_images(scenes: list, single_shot: bool = False) -> list:
@@ -189,21 +312,20 @@ def generate_images(scenes: list, single_shot: bool = False) -> list:
             output_path = f"temp/images/scene_{i:02d}_shot_{j:02d}.jpg"
             base_prompt = _inject_characters(scene["image_prompt"])
             prompt = f"{angle_prefix}{base_prompt}"
-            url = _build_url(prompt, seed=i * 137 + j * 31, mood=mood)
+            seed = i * 137 + j * 31
 
             success = False
             for attempt in range(3):
                 try:
-                    resp = requests.get(url, timeout=45)
-                    if resp.status_code == 200 and len(resp.content) > 5000:
-                        with open(output_path, "wb") as f:
-                            f.write(resp.content)
-                        shot_paths.append(output_path)
-                        print(f"    [OK] Scene {i+1} shot {j+1}/3")
-                        success = True
-                        break
-                    else:
-                        print(f"    [!] Scene {i+1} shot {j+1} attempt {attempt+1}: status {resp.status_code}")
+                    img_bytes, provider = generate_image_bytes(
+                        prompt, seed=seed, width=768, height=1344, mood=mood
+                    )
+                    with open(output_path, "wb") as f:
+                        f.write(img_bytes)
+                    shot_paths.append(output_path)
+                    print(f"    [OK] Scene {i+1} shot {j+1}/{len(scene_angles)} via {provider}")
+                    success = True
+                    break
                 except Exception as e:
                     print(f"    [!] Scene {i+1} shot {j+1} attempt {attempt+1}: {e}")
 
@@ -227,18 +349,16 @@ def generate_images(scenes: list, single_shot: bool = False) -> list:
 def generate_thumbnail(thumbnail_prompt: str, output_path: str = "output/thumbnail.jpg") -> str:
     """Generates a 1280x720 thumbnail (YouTube native size — landscape)."""
     os.makedirs("output", exist_ok=True)
-    url = _build_url(thumbnail_prompt, seed=9999, width=1280, height=720)
 
     for attempt in range(3):
         try:
-            resp = requests.get(url, timeout=45)
-            if resp.status_code == 200 and len(resp.content) > 5000:
-                with open(output_path, "wb") as f:
-                    f.write(resp.content)
-                print(f"    [OK] Thumbnail generated")
-                return output_path
-            else:
-                print(f"    [!] Thumbnail attempt {attempt+1}: status {resp.status_code}")
+            img_bytes, provider = generate_image_bytes(
+                thumbnail_prompt, seed=9999, width=1280, height=720
+            )
+            with open(output_path, "wb") as f:
+                f.write(img_bytes)
+            print(f"    [OK] Thumbnail generated via {provider}")
+            return output_path
         except Exception as e:
             print(f"    [!] Thumbnail attempt {attempt+1}: {e}")
 
