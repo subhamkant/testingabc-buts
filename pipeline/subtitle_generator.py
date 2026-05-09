@@ -100,10 +100,69 @@ def _groq_transcribe_words(audio_path: str, language: str) -> list:
             end   = w.get("end")
             if word and start is not None and end is not None and end > start:
                 cleaned.append({"word": word, "start": float(start), "end": float(end)})
-        return cleaned
+        return _correct_brand_transcripts(cleaned)
     except Exception as e:
         print(f"    [subs] Groq Whisper error: {e}")
         return []
+
+
+# ── Brand transcript corrections ─────────────────────────────────────────────
+# Whisper isn't trained on "Vyasa" so it phonetically transcribes the brand as
+# "Vyyas" (or "Vyas") and the spoken letters "AI" as "Al" / "AL". Without this
+# pass, the burned-in subtitle for the subscribe outro reads "Subscribe to
+# Vyyas Al" — embarrassing for a brand that appears in every video.
+
+# Direct word-level fixes (case-insensitive, applied to any matching token).
+_DIRECT_FIXES = {
+    "vyyas":   "Vyasa",
+    "vyaas":   "Vyasa",
+    "viyas":   "Vyasa",
+    "viyasa":  "Vyasa",
+    "vayasa":  "Vyasa",
+}
+
+
+def _correct_brand_transcripts(words: list) -> list:
+    """
+    Run two passes over Whisper word output:
+      1. Per-word direct fixes (Vyyas/Vyas → Vyasa, etc.)
+      2. Contextual fix: a token "Al" / "AL" immediately after "Vyasa"
+         becomes "AI" (the spoken brand "Vyasa AI", not the proper name).
+    Punctuation attached to the token is preserved.
+    """
+    if not words:
+        return words
+
+    import re as _re
+
+    def _fix_token(token: str) -> str:
+        # Strip leading/trailing punctuation for matching, restore on output
+        m = _re.match(r"^([\W_]*)(.*?)([\W_]*)$", token, flags=_re.UNICODE)
+        if not m:
+            return token
+        lead, core, trail = m.group(1), m.group(2), m.group(3)
+        if not core:
+            return token
+        replacement = _DIRECT_FIXES.get(core.lower())
+        if replacement is not None:
+            return f"{lead}{replacement}{trail}"
+        return token
+
+    # Pass 1: direct per-word fixes
+    for w in words:
+        w["word"] = _fix_token(w["word"])
+
+    # Pass 2: contextual "Vyasa Al" → "Vyasa AI"
+    for i in range(len(words) - 1):
+        cur = words[i]["word"].strip(",.!?:;")
+        nxt = words[i + 1]
+        nxt_core = nxt["word"].strip(",.!?:;")
+        if cur == "Vyasa" and nxt_core in ("Al", "AL", "al"):
+            # Preserve any trailing punctuation on the next token
+            trail = nxt["word"][len(nxt_core):]
+            nxt["word"] = "AI" + trail
+
+    return words
 
 
 # ── Word grouping ─────────────────────────────────────────────────────────────

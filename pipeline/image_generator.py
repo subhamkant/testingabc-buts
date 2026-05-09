@@ -7,30 +7,30 @@ import base64
 import io
 from urllib.parse import quote
 
-# Mahabharata style suffix — illustrated mythology art (Amar Chitra Katha /
-# modern anime-cinematic mythology), NOT photoreal. The illustrated path wins
-# on three axes for short-form mythology content: (1) stylistic consistency
-# tolerates AI inconsistencies that photoreal exposes as uncanny actor faces,
-# (2) viewers associate this look with mythology storytelling (ACK shipped
-# 100M+ copies in this exact style), (3) FLUX renders ornate Indian temple
-# architecture far more reliably as illustrated art than as photoreal sets.
+# Mahabharata style suffix — photorealistic cinematic period film aesthetic.
+# Picture a Sanjay Leela Bhansali / Bollywood epic, not a comic book. The earlier
+# Amar Chitra Katha + cel-shaded path produced beautiful but visibly-illustrated
+# frames; viewers compared the photoreal WhatIf nature-doc output and asked for
+# the Mahabharata to match. We keep the architecture, lighting, and jewel-tone
+# palette (those work in any medium) but flip the medium back to photographic.
 #
 # WhatIf series uses a different per-style suffix from _WHATIF_STYLE_SUFFIXES
 # based on the script's visual_style — this Mahabharata suffix does not apply.
 STYLE_SUFFIX = (
-    "highly detailed traditional Indian mythology illustration, "
-    "Amar Chitra Katha style mixed with modern anime-cinematic mythology art, "
-    "hand-painted cel-shaded look with crisp linework and soft painterly shading, "
+    "hyper-detailed photorealistic cinematic photography, ancient India epic Mahabharata, "
+    "Sanjay Leela Bhansali period-film aesthetic, real human faces with naturalistic "
+    "skin texture and crystal-clear features, ultra-sharp 8K resolution, "
     "ornate Hindu temple-palace architecture in the background — carved sandstone "
     "pillars, hanging brass oil lamps, lotus reliefs, stone deity carvings, "
     "patterned floor tiles, multiple planes of architectural depth, "
-    "dramatic warm directional sunlight streaming through carved arches, "
-    "jewel-toned saturated palette of gold, crimson, deep emerald, lapis blue, "
-    "ornate gold jewelry and rich silk garments with visible embroidery, "
-    "cinematic storybook composition, rule of thirds, hero character in sharp focus, "
-    "expressive facial emotion, ancient India epic Mahabharata atmosphere, "
-    "consistent character design, sharp focus throughout, no photographic look, "
-    "no 3D render look, no plastic skin, no realistic photo"
+    "dramatic warm directional sunlight streaming through carved arches with volumetric god rays, "
+    "jewel-toned palette of gold, crimson, deep emerald, lapis blue, "
+    "intricate gold jewelry textures clearly visible, rich silk garments with embroidery detail, "
+    "shallow depth of field, hero character in sharp focus, "
+    "expressive facial emotion, cinematic composition, rule of thirds, "
+    "inspired by Raja Ravi Varma paintings rendered as live-action film, "
+    "consistent character design, sharp focus, no blur, no motion blur, "
+    "no cartoon, no anime, no cel shading, no comic book illustration"
 )
 
 # WhatIf series style suffixes — picked by `script["visual_style"]`. Mahabharata
@@ -106,7 +106,11 @@ def _inject_characters(prompt: str) -> str:
     prompt_lower = prompt.lower()
     for name, data in _CHARACTERS.items():
         if name.lower() in prompt_lower:
-            visual = data.get("visual", "")[:120]
+            # 250 char cap — enough for skin/eyes/clothing/jewelry/posture
+            # without drowning the scene-specific prompt. The earlier 120 cap
+            # produced one-line descriptors that the strong style suffix
+            # routinely overpowered.
+            visual = data.get("visual", "")[:250]
             injected.append(visual)
     if injected:
         return prompt + ". CHARACTER DETAILS — " + "; ".join(injected)
