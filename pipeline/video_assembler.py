@@ -436,8 +436,9 @@ def _apply_cinematic_polish(video_path: str, clip_durations: list) -> None:
         t += d - XFADE_DURATION
         boundaries.append(t)
 
-    if not lut and not leak and not boundaries and not target_fps:
-        return  # nothing to do — quick exit
+    # No early-exit: even with no LUT/leak/shake/fps target, the unsharp +
+    # lower-CRF re-encode is worth running on its own (better YouTube
+    # transcode tier).
 
     print(
         f"    Polish: LUT={'yes' if lut else 'no'}  "
@@ -466,6 +467,10 @@ def _apply_cinematic_polish(video_path: str, clip_durations: list) -> None:
     if target_fps in (30, 50, 60):
         base_filters.append(f"fps={target_fps}")
 
+    # Always end the chain with unsharp — this is the apparent-detail boost
+    # that nudges YouTube's transcoder to keep us on a 1080p tier.
+    base_filters.append(UNSHARP_FILTER)
+
     polish_out = video_path.replace(".mp4", "_polish.mp4")
 
     if leak and os.path.exists(leak):
@@ -482,7 +487,7 @@ def _apply_cinematic_polish(video_path: str, clip_durations: list) -> None:
             "-stream_loop", "-1", "-i", leak,
             "-filter_complex", filter_complex,
             "-map", "[vout]", "-map", "0:a",
-            "-c:v", "libx264", "-preset", "fast", "-crf", "22",
+            "-c:v", "libx264", "-preset", "medium", "-crf", "19",
             "-c:a", "copy",
             "-pix_fmt", "yuv420p",
             "-shortest",
@@ -490,13 +495,13 @@ def _apply_cinematic_polish(video_path: str, clip_durations: list) -> None:
             polish_out,
         ]
     else:
-        if not base_filters:
-            return  # nothing left to do
+        # base_filters always has at least UNSHARP_FILTER appended above, so
+        # the chain is never empty — no early return needed here.
         cmd = [
             "ffmpeg", "-y",
             "-i", video_path,
             "-vf", ",".join(base_filters),
-            "-c:v", "libx264", "-preset", "fast", "-crf", "22",
+            "-c:v", "libx264", "-preset", "medium", "-crf", "19",
             "-c:a", "copy",
             "-pix_fmt", "yuv420p",
             "-movflags", "+faststart",
@@ -543,13 +548,57 @@ def _pick_music_track() -> str:
     return random.choice(pool) if pool else ""
 
 
+# YouTube targets -14 LUFS integrated, -1 dBTP true peak. Hitting that gives
+# parity with every other Short in the feed; falling short means YouTube
+# attenuates competing videos but plays ours at our (quieter) authored level —
+# perceived as "weak" audio, which correlates with higher swipe-away rates.
+LOUDNORM_FILTER = "loudnorm=I=-14:TP=-1.5:LRA=7"
+
+# Mild unsharp pass applied during the polish re-encode. AI-generated video
+# clips upscaled with lanczos to 1080×1920 lack the high-frequency detail that
+# YouTube's transcoder uses to decide whether to serve a 1080p tier. Adding
+# unsharp restores apparent detail and helps avoid the "downgraded to 720p"
+# fate the user's recent video suffered (served as 712×1280 by YT).
+UNSHARP_FILTER = "unsharp=5:5:0.6:5:5:0.0"
+
+
+def _finalize_audio_no_music(output_path: str):
+    """
+    When no background music track is found, we still need to bring the voice
+    audio up to YouTube's -14 LUFS target and resample to 48 kHz / 192 kbps.
+    Without this pass, voice would stay at ~-16 LUFS (the natural TTS level)
+    and the audio plays noticeably quieter than competing Shorts.
+    """
+    finalized = output_path.replace(".mp4", "_norm.mp4")
+    result = subprocess.run([
+        "ffmpeg", "-y",
+        "-i", output_path,
+        "-c:v", "copy",
+        "-af", LOUDNORM_FILTER,
+        "-c:a", "aac", "-b:a", "192k", "-ar", "48000",
+        "-movflags", "+faststart",
+        finalized,
+    ], capture_output=True)
+    if result.returncode == 0:
+        os.replace(finalized, output_path)
+        print("    [OK] Audio normalized to -14 LUFS / 48 kHz / 192 kbps (no music)")
+    else:
+        if os.path.exists(finalized):
+            os.remove(finalized)
+        print("    [!] Audio finalization failed, keeping original audio")
+
+
 def _apply_background_music(output_path: str):
     """
     Mixes a randomly selected background track at ~18% volume with
-    sidechain ducking during voiceover. Silently skipped if no tracks found.
+    sidechain ducking during voiceover. The final audio is also loudness-
+    normalized to YouTube's -14 LUFS target and resampled to 48 kHz / 192k AAC.
+    If no music track is available, voice is still normalized via
+    _finalize_audio_no_music.
     """
     music_path = _pick_music_track()
     if not music_path:
+        _finalize_audio_no_music(output_path)
         return
 
     print(f"    Music: {os.path.basename(music_path)}")
@@ -571,7 +620,8 @@ def _apply_background_music(output_path: str):
         f"volume=0.18[music_raw];"
         f"[music_raw][voice_sc]sidechaincompress="
         f"threshold=0.02:ratio=6:attack=150:release=600:makeup=1[music_ducked];"
-        f"[voice_mix][music_ducked]amix=inputs=2:normalize=0[aout]"
+        f"[voice_mix][music_ducked]amix=inputs=2:normalize=0,"
+        f"{LOUDNORM_FILTER},aresample=48000[aout]"
     )
 
     result = subprocess.run([
@@ -581,20 +631,21 @@ def _apply_background_music(output_path: str):
         "-filter_complex", duck_filter,
         "-map", "0:v", "-map", "[aout]",
         "-c:v", "copy",
-        "-c:a", "aac", "-b:a", "128k",
+        "-c:a", "aac", "-b:a", "192k", "-ar", "48000",
         "-movflags", "+faststart",
         music_output,
     ], capture_output=True)
 
     if result.returncode == 0:
         os.replace(music_output, output_path)
-        print("    [OK] Background music mixed — smart ducking active")
+        print("    [OK] Music mixed + audio normalized to -14 LUFS / 48 kHz / 192k")
         return
 
     flat_filter = (
         f"[1:a]volume=0.08,"
         f"atrim=0:{video_duration:.3f},asetpts=PTS-STARTPTS[music];"
-        "[0:a][music]amix=inputs=2:normalize=0[aout]"
+        f"[0:a][music]amix=inputs=2:normalize=0,"
+        f"{LOUDNORM_FILTER},aresample=48000[aout]"
     )
     result2 = subprocess.run([
         "ffmpeg", "-y",
@@ -603,16 +654,17 @@ def _apply_background_music(output_path: str):
         "-filter_complex", flat_filter,
         "-map", "0:v", "-map", "[aout]",
         "-c:v", "copy",
-        "-c:a", "aac", "-b:a", "128k",
+        "-c:a", "aac", "-b:a", "192k", "-ar", "48000",
         "-movflags", "+faststart",
         music_output,
     ], capture_output=True)
 
     if result2.returncode == 0:
         os.replace(music_output, output_path)
-        print("    [OK] Background music mixed at 8%")
+        print("    [OK] Music mixed at 8% + audio normalized to -14 LUFS")
     else:
-        print("    [!] Music mix failed, continuing without music")
+        print("    [!] Music mix failed, falling back to voice-only normalization")
+        _finalize_audio_no_music(output_path)
 
 
 # ── Continuous-audio assemblers ──────────────────────────────────────────────
