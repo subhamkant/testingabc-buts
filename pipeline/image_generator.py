@@ -7,17 +7,30 @@ import base64
 import io
 from urllib.parse import quote
 
-# Mahabharata style suffix — photorealistic FLUX renders produce sharp crisp details.
-# This is mythological / epic-Indian style. WhatIf series uses a different per-style
-# suffix selected from _WHATIF_STYLE_SUFFIXES based on the script's visual_style.
+# Mahabharata style suffix — illustrated mythology art (Amar Chitra Katha /
+# modern anime-cinematic mythology), NOT photoreal. The illustrated path wins
+# on three axes for short-form mythology content: (1) stylistic consistency
+# tolerates AI inconsistencies that photoreal exposes as uncanny actor faces,
+# (2) viewers associate this look with mythology storytelling (ACK shipped
+# 100M+ copies in this exact style), (3) FLUX renders ornate Indian temple
+# architecture far more reliably as illustrated art than as photoreal sets.
+#
+# WhatIf series uses a different per-style suffix from _WHATIF_STYLE_SUFFIXES
+# based on the script's visual_style — this Mahabharata suffix does not apply.
 STYLE_SUFFIX = (
-    "hyper-detailed photorealistic digital art, ancient Indian epic Mahabharata, "
-    "ultra-sharp 8K resolution, crystal-clear facial features, "
-    "intricate gold jewelry textures clearly visible, rich silk fabric details, "
-    "dramatic cinematic lighting with golden volumetric rays, "
-    "jewel-toned palette of gold crimson lapis and emerald, "
-    "inspired by Raja Ravi Varma paintings but photorealistic, "
-    "sharp focus throughout, no blur, no motion blur"
+    "highly detailed traditional Indian mythology illustration, "
+    "Amar Chitra Katha style mixed with modern anime-cinematic mythology art, "
+    "hand-painted cel-shaded look with crisp linework and soft painterly shading, "
+    "ornate Hindu temple-palace architecture in the background — carved sandstone "
+    "pillars, hanging brass oil lamps, lotus reliefs, stone deity carvings, "
+    "patterned floor tiles, multiple planes of architectural depth, "
+    "dramatic warm directional sunlight streaming through carved arches, "
+    "jewel-toned saturated palette of gold, crimson, deep emerald, lapis blue, "
+    "ornate gold jewelry and rich silk garments with visible embroidery, "
+    "cinematic storybook composition, rule of thirds, hero character in sharp focus, "
+    "expressive facial emotion, ancient India epic Mahabharata atmosphere, "
+    "consistent character design, sharp focus throughout, no photographic look, "
+    "no 3D render look, no plastic skin, no realistic photo"
 )
 
 # WhatIf series style suffixes — picked by `script["visual_style"]`. Mahabharata

@@ -776,6 +776,47 @@ def generate_script(
     Spoken duration: ~55-75 seconds (a fixed subscribe outro adds ~6s for 60-80s total video).
 
     ═══════════════════════════════════════════════════════════════
+    IMAGE PROMPT QUALITY — RICH BACKGROUNDS ARE NON-NEGOTIABLE
+    ═══════════════════════════════════════════════════════════════
+    The image style is illustrated Indian mythology art (Amar Chitra Katha
+    / anime-cinematic mythology). Sparse "person on plain background" prompts
+    produce empty, amateur-looking renders. Every image_prompt MUST describe
+    the BACKGROUND with at least 3 specific architectural / environmental
+    elements drawn from this palette:
+
+      • Architecture: carved sandstone pillars, marble columns with lotus
+        capitals, latticework jharokha windows, vaulted carved arches,
+        ornate temple gopurams, palace courtyard, royal throne room
+      • Lighting/atmosphere: brass oil lamps in wall niches, hanging diyas,
+        sunbeams through carved screens, dawn light through arches, dusk
+        torchlight, smoke from a homa fire, mist over a river ghat
+      • Decor / props: lotus motif floor tiles, stone deity reliefs,
+        carved peacock screens, flowing silk drapes, brass vessels, a
+        royal canopy, scattered marigold petals, sacred geometry murals
+      • Natural settings (when relevant): banyan tree grove, Yamuna river
+        bank, Himalayan ridge, Kurukshetra battlefield with banners,
+        ashram clearing, lotus pond, palace gardens
+
+    EVERY image_prompt MUST follow this structure (in English):
+        [shot type] of [specific named character(s)] in [body language /
+        emotion], [foreground action or pose], in [specific environment],
+        background contains [≥3 specific elements from the palette above],
+        [lighting style], [mood adjective], [palette: jewel-toned colours]
+
+    GOOD example:
+        "Wide shot of Devavrata kneeling on the river bank of the Yamuna,
+         hands raised in solemn vow, his father Shantanu watching from a
+         boat in the foreground; background contains carved sandstone steps
+         leading down to the water, a temple gopuram on the far bank,
+         hanging brass diyas catching the dusk light; warm golden hour
+         lighting, mood reverent and bittersweet, jewel-toned palette of
+         saffron-crimson-emerald."
+
+    BAD example (do NOT write this — vague, empty background):
+        "Devavrata taking a vow in front of his father, dramatic lighting."
+        (no environment, no background elements, no specific palette)
+
+    ═══════════════════════════════════════════════════════════════
     OUTPUT — return ONLY valid JSON, no markdown fences, no preamble:
     ═══════════════════════════════════════════════════════════════
     {{
@@ -785,7 +826,7 @@ def generate_script(
       "scenes": [
         {{
           "narration": "25-40 words in the specified LANGUAGE — vivid, present-tense, dramatic. 2-3 short sentences. ~10-13 seconds spoken.",
-          "image_prompt": "Detailed English prompt — portrait composition, specific characters with body language, environment, colour palette, mood",
+          "image_prompt": "Detailed English prompt following the [shot type] of [character(s)] in [emotion/action], in [environment], background contains [≥3 specific architectural/environmental elements: carved pillars, oil lamps, lotus reliefs, etc], [lighting], [mood], jewel-toned palette",
           "video_prompt": "Cinematic 5-second shot in English — characters in subtle motion, camera movement, lighting. Vertical 9:16.",
           "mood": "3-6 word English emotional tone phrase"
         }}
@@ -805,7 +846,11 @@ def generate_script(
     - Every scene EXCEPT the last MUST end with a forward-pulling line
       (question, "...but"/"...लेकिन" tension, or unresolved threat). The
       final scene is the only one that may close with resolution.
-    - image_prompt: detailed portrait scene with characters, body language, environment, palette
+    - image_prompt: MUST follow the [shot] of [character] in [emotion],
+      in [environment], background contains [≥3 specific elements from the
+      palette above], [lighting], [mood], jewel-toned palette structure.
+      Vague empty backgrounds are unacceptable. The background carries
+      half the visual storytelling.
     - video_prompt: cinematic vertical shot — specific motion, camera, lighting
     - mood: 3-6 words in English
     - image_prompt and video_prompt MUST reference the mood
