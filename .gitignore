@@ -1,3 +1,6 @@
+# Downloaded YouTube videos at repo root (used for review only)
+/*.mp4
+
 # Sensitive auth files — NEVER commit these
 token.pickle
 token_base64.txt

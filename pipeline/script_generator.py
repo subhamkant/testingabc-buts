@@ -379,10 +379,30 @@ def generate_script(language: str = "en", forced_topic: str = None) -> dict:
     ═══════════════════════════════════════════════════════════════
     Every scene must earn its place. Follow this dramatic arc:
 
-    Scene 1 — HOOK (the most critical 10 seconds of the video):
-        Open with the most shocking, mysterious, or emotionally charged
-        moment of the entire story. Set the stakes immediately. Make the
-        viewer NEED to keep watching to find out what happens.
+    Scene 1 — HOOK (the FIRST 1.5 SECONDS decide if the viewer swipes):
+        On YouTube Shorts, 70% of viewers swipe in the first 2 seconds.
+        Scene 1's FIRST SENTENCE must be a scroll-stopper. It MUST follow
+        ONE of these three proven patterns — choose whichever fits the topic:
+
+        PATTERN A — SHOCKING-FACT HOOK:
+          A jarring, specific, hard-to-believe fact stated as truth.
+          Hindi:   "भीष्म ने 58 दिनों तक बाणों की शय्या पर मौत का इंतज़ार किया।"
+          English: "Bhishma waited 58 days on a bed of arrows for death to come."
+
+        PATTERN B — QUESTION HOOK:
+          A direct, personal question that demands an answer.
+          Hindi:   "क्या आप जानते हैं कि अर्जुन ने अपने ही गुरु की हत्या की थी?"
+          English: "Did you know Arjuna killed his own teacher in cold blood?"
+
+        PATTERN C — CLIFFHANGER HOOK:
+          A vivid mid-action image that ends with "...लेकिन" / "...but" tension.
+          Hindi:   "जब द्रौपदी की साड़ी खींची गई, महल में सिर्फ एक आदमी हँस रहा था..."
+          English: "As they tore at Draupadi's saree, only one man in the hall laughed..."
+
+        DO NOT open scene 1 with a setup line ("In ancient times...",
+        "यह कहानी है..."). DO NOT open with a meta-statement. The first
+        sentence must be the hook itself, naming a specific person and
+        something dramatic that happened to them.
 
     Scenes 2-3 — SETUP & RISING TENSION:
         Establish the characters, the situation, the conflict. Each
@@ -395,6 +415,26 @@ def generate_script(language: str = "en", forced_topic: str = None) -> dict:
     Final scene — RESOLUTION + LESSON:
         Tie it off cleanly. Leave the viewer with a takeaway, a moral,
         or an emotional landing that makes the video feel complete.
+
+    ═══════════════════════════════════════════════════════════════
+    CURIOSITY GAP — STOPS MID-VIDEO SWIPES (CRITICAL)
+    ═══════════════════════════════════════════════════════════════
+    Every scene EXCEPT the last MUST end with a forward-pulling line —
+    a question, an unresolved threat, or an "...but" / "...लेकिन" beat
+    that makes the viewer NEED to see the next scene. This is the single
+    biggest retention lever between scenes 2-5.
+
+    GOOD scene endings (do this):
+        "...पर उसकी असली गलती अभी आगे थी।"
+        "...लेकिन कृष्ण मुस्कुरा रहे थे।"
+        "...but no one knew what waited in the dark forest."
+        "...and then the conch fell silent."
+
+    BAD scene endings (avoid):
+        "...इस तरह वह वीर बन गया।"        (closes the loop — viewer swipes)
+        "...this is how he became great."  (closure = drop-off)
+
+    The FINAL scene is the only one that may end with closure or a moral.
 
     Rules for EVERY scene:
     - Each scene MUST advance the story. No filler. No repetition.
@@ -483,6 +523,11 @@ def generate_script(language: str = "en", forced_topic: str = None) -> dict:
     - Narration per scene: 25-40 words, 2-3 sentences, ~10-13 seconds spoken
     - Narration MUST NOT contain URLs, hashtags (#), @mentions, English in Hindi videos, or any social-media text
     - Generate EXACTLY 5 OR 6 scenes — never fewer, never more
+    - Scene 1's FIRST sentence MUST be a hook in pattern A, B, or C above —
+      no setup lines, no "this is the story of...", no meta-narration
+    - Every scene EXCEPT the last MUST end with a forward-pulling line
+      (question, "...but"/"...लेकिन" tension, or unresolved threat). The
+      final scene is the only one that may close with resolution.
     - image_prompt: detailed portrait scene with characters, body language, environment, palette
     - video_prompt: cinematic vertical shot — specific motion, camera, lighting
     - mood: 3-6 words in English

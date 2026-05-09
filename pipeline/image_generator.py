@@ -178,7 +178,14 @@ def generate_images(scenes: list, single_shot: bool = False) -> list:
         shot_paths = []
         mood = scene.get("mood", "")
 
-        for j, angle_prefix in enumerate(angles):
+        # Hook scene gets a dramatic close-up first frame in single-shot mode.
+        # On Shorts the first frame is what stops the swipe; a face mid-emotion
+        # outperforms a wide establishing shot for first-frame retention.
+        scene_angles = angles
+        if single_shot and i == 0:
+            scene_angles = ["dramatic close-up on face mid-emotion, "]
+
+        for j, angle_prefix in enumerate(scene_angles):
             output_path = f"temp/images/scene_{i:02d}_shot_{j:02d}.jpg"
             base_prompt = _inject_characters(scene["image_prompt"])
             prompt = f"{angle_prefix}{base_prompt}"
