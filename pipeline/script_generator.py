@@ -559,9 +559,9 @@ Good scene example (32 words — WRITE LIKE THIS):
 OUTPUT — return ONLY valid JSON, no markdown fences, no preamble:
 ═══════════════════════════════════════════════════════════════
 {{
-  "title": "What If <topic phrasing>? (under 60 characters)",
-  "description": "Hook sentence in first line. 100-150 words about the thought experiment. End with: \\n\\n#Shorts #WhatIf #ScienceShorts #ThoughtExperiment #Curiosity #Hypothetical #ScienceFacts #FutureEarth #SpeculativeScience #VyasaAI",
-  "tags": ["what if","hypothetical","thought experiment","science","curiosity","speculative","science shorts","what if scenarios","science what if","alternate reality","future earth","mind blowing","क्या होगा अगर","विज्ञान","कल्पना","trending shorts"],
+  "title": "What If <vivid specific phrasing> | <Hindi version क्या होगा अगर...> — under 60 chars total, no hashtags",
+  "description": "Hook sentence under 90 chars expanding the title's specific question with one stunning detail.\\n\\n#Shorts #WhatIf #Science #ScienceShorts #ThoughtExperiment\\n\\n100-150 words about the thought experiment, weaving in real-science anchor points (specific numbers, named phenomena). Build curiosity. Don't fully resolve the answer in the description.\\n\\n#Shorts #WhatIf #Science #ScienceShorts #ThoughtExperiment #Curiosity #ScienceFacts #Hypothetical #SpeculativeScience #FutureEarth #क्याहोगाअगर #विज्ञान #IndianScienceShorts #MindBlowing #ScienceExplained #trending",
+  "tags": ["topic-specific long-tail keyword 1 (e.g. 'humans disappear from earth')","topic-specific long-tail keyword 2","named phenomenon if relevant (e.g. 'gravity decrease')","what if","hypothetical","thought experiment","science","curiosity","speculative","science shorts","what if scenarios","science what if","alternate reality","future earth","mind blowing","क्या होगा अगर","विज्ञान","कल्पना","trending shorts"],
   "visual_style": "<one of: {style_options}>",
   "scenes": [
         {{
@@ -574,12 +574,18 @@ OUTPUT — return ONLY valid JSON, no markdown fences, no preamble:
 }}
 
 HARD RULES:
-- Title: under 60 characters, MUST start with "What If"
+- Title: under 60 chars total, MUST start with "What If" in the English half,
+  and include a Hindi half "क्या होगा अगर ..." separated by `|`. No hashtags.
+- Description MUST follow the 3-block structure: hook line ≤90 chars,
+  blank line, 5 inline hashtags, blank line, body, blank line, full
+  hashtag block (high-volume hashtags first).
+- Tags MUST include topic-specific long-tail keywords (the named
+  phenomenon, the specific scenario phrasing) on top of the generic
+  what-if/science fallbacks.
 - visual_style: MUST be exactly one of the allowed values
 - EXACTLY 5 OR 6 scenes
 - Narration MUST NOT contain URLs, hashtags, @mentions, or social-media text
 - image_prompt, video_prompt, thumbnail_prompt all in English
-- Description ends with the exact hashtag block above
 - NO Mahabharata characters, gods, or mythology — this is science/curiosity content
 """
 
@@ -863,9 +869,9 @@ Mahabharata format. The reference goes viral BECAUSE it's short.
 OUTPUT — return ONLY valid JSON, no markdown fences, no preamble:
 ═══════════════════════════════════════════════════════════════
 {{
-  "title": "Captivating Hindi+English title under 60 chars — no hashtags",
-  "description": "Hook line. 100-150 words about the message. End with this exact hashtag block:\\n\\n#Shorts #Krishna #कृष्ण #BhagavadGita #भगवद_गीता #Mahabharata #महाभारत #HinduMythology #Dharma #SpiritualWisdom #IndianMythology #HinduDharma #Arjuna #पार्थ #VedicWisdom #KrishnaSpeech #MotivationalShorts #LifeLessons #IndianSpirituality #trending",
-  "tags": ["Krishna","कृष्ण","Bhagavad Gita","Mahabharata","Arjuna","पार्थ","Hindu mythology","spiritual","motivational","Krishna speech","dharma","Hindi shorts","mythology shorts","spiritual shorts"],
+  "title": "[English title with 'Krishna to {listener_short}' + power keyword] | [Hindi title with कृष्ण + {listener_vocative}] — under 60 chars total, no hashtags. Power keywords: Hidden, Untold, Real Truth, Why, Secret, Revealed",
+  "description": "Hook sentence under 90 chars expanding the title's specific message — what Krishna is teaching {listener_short} here.\\n\\n#Shorts #Krishna #कृष्ण #BhagavadGita #Mahabharata\\n\\n100-150 words about the speech, weaving in {listener_short}'s situation and Krishna's wisdom. End-with-question-or-cliffhanger style — make viewers want to watch.\\n\\n#Shorts #Krishna #कृष्ण #BhagavadGita #भगवद_गीता #Mahabharata #महाभारत #{listener_short} #HinduMythology #Dharma #KrishnaSpeech #MotivationalShorts #LifeLessons #SpiritualShorts #IndianMythology #VedicWisdom #HinduDharma #IndianSpirituality #SpiritualWisdom #trending",
+  "tags": ["topic-specific long-tail tag — e.g. 'Krishna to {listener_short} on [theme]'", "Krishna {listener_short}", "named theme keyword", "Krishna", "कृष्ण", "{listener_short}", "Bhagavad Gita", "Mahabharata", "महाभारत", "Krishna speech", "Krishna teachings", "spiritual motivation", "Hindi shorts", "mythology shorts"],
   "speaker": "Krishna",
   "listener": "{listener_short}",
   "scenes": [
@@ -881,7 +887,15 @@ OUTPUT — return ONLY valid JSON, no markdown fences, no preamble:
 HARD RULES — violation makes the script unusable:
 - All narration MUST be in Hindi (Devanagari script)
 - All image_prompt and thumbnail_prompt MUST be in English
-- Title: under 60 characters, no hashtags in title
+- Title: under 60 chars, MUST follow `[English] | [Hindi]` format with
+  named characters (Krishna + {listener_short}) and a power keyword.
+  No hashtags in title.
+- Description MUST follow the 3-block structure: hook line ≤90 chars,
+  blank line, 5 inline hashtags, blank line, body, blank line, full
+  hashtag block (high-volume hashtags first).
+- Tags MUST include topic-specific long-tail keywords (e.g. 'Krishna
+  {listener_short} on [theme]', '[theme]') in addition to the generic
+  Krishna/Mahabharata fallbacks.
 - Per-scene length: scenes 1/2/4 are 22-26 words, SCENE 3 is 14-18 words
   (the imperative peak — short bursts, do not over-pad), scene 5 is 20-24 words
 - Each scene MUST contain at least one imperative verb
@@ -1317,12 +1331,61 @@ def generate_script(
         (no environment, no background elements, no specific palette)
 
     ═══════════════════════════════════════════════════════════════
+    SEO — TITLE / DESCRIPTION / TAGS RULES (CRITICAL FOR REACH)
+    ═══════════════════════════════════════════════════════════════
+    YouTube Shorts ranks heavily on the FIRST 3 hashtags (shown above the
+    title), the first 100 chars of the description (shown above-the-fold
+    in mobile UI), and topic-specific tags that match low-competition
+    long-tail searches. Optimize each accordingly.
+
+    TITLE (under 60 chars, no hashtags in title itself):
+       Format: [English title with named character + power keyword] | [Hindi title]
+       Power keywords (pick one — these drive CTR): Hidden, Untold, Real Reason,
+          Why, Secret, Shocking, Revealed, Unknown, Forbidden, Last, Final
+       Always lead with a SPECIFIC named character (Krishna / Arjuna / Karna /
+          Bhishma / Draupadi / Jayadratha / etc.), NOT a generic phrase.
+       Examples that work:
+          "Why Krishna Refused to Fight | कृष्ण ने शस्त्र क्यों नहीं उठाया"
+          "Karna's Final Promise to Kunti | कर्ण की वो प्रतिज्ञा"
+          "The Real Reason Bhishma Lay on Arrows | भीष्म की बाणशय्या का सच"
+       Use a `|` separator between English and Hindi halves.
+
+    DESCRIPTION (structured for above-the-fold visibility):
+       Line 1: One-sentence hook that EXPANDS the title's promise with a
+              specific concrete detail. ≤90 chars (mobile preview cap).
+       Line 2: 3-5 high-volume hashtags inline (these display above the
+              title-fold on mobile — critical for the algorithm's first
+              read of the video):
+              `#Shorts #Mahabharata #महाभारत #Krishna #HinduMythology`
+       Then a blank line, then 100-150 words about the story for the
+       expanded view.
+       Then a blank line, then the FULL hashtag block (high-volume first):
+       `#Shorts #Mahabharata #महाभारत #HinduMythology #Krishna #कृष्ण
+       #BhagavadGita #भगवद_गीता #Arjuna #अर्जुन #Kurukshetra #AncientIndia
+       #IndianMythology #Dharma #EpicStory #MythologyShorts #VedicWisdom
+       #HinduDharma #IndianHistory #SpiritualShorts #trending`
+
+    TAGS (15-25 entries — script-supplied tags get priority over the base
+       tag-pack appended by the uploader, so use this list to inject the
+       SPECIFIC, LONG-TAIL keywords for THIS topic that the base pack
+       can't predict):
+       MUST include:
+       - Each named character that appears in the topic (full name + Hindi)
+         e.g. for a Karna story: "Karna", "कर्ण", "Karna story", "कर्ण की कहानी"
+       - The specific incident name if there's a known one
+         e.g. "Vastraharan", "Chakravyuha", "Bhishma pratigya", "Karna kavach kundal"
+       - Long-tail searches viewers actually type
+         e.g. "Karna Kunti meeting", "Krishna Arjuna chariot", "why Karna died"
+       - Plus general fallbacks: "Mahabharata", "महाभारत", "Shorts",
+         "Hindu mythology", "Krishna", "कृष्ण"
+
+    ═══════════════════════════════════════════════════════════════
     OUTPUT — return ONLY valid JSON, no markdown fences, no preamble:
     ═══════════════════════════════════════════════════════════════
     {{
-      "title": "Captivating title under 60 characters — no hashtags",
-      "description": "Hook sentence that grabs attention in the first 2 lines. Then 100-150 words about the story. End with this exact hashtag block:\\n\\n#Shorts #Mahabharata #महाभारत #HinduMythology #Krishna #कृष्ण #BhagavadGita #भगवद_गीता #AncientIndia #EpicStory #Dharma #SpiritualWisdom #IndianMythology #HinduDharma #Arjuna #VedicWisdom #IndianHistory #MythologyShorts #KrishnaStories #trending",
-      "tags": ["Mahabharata","महाभारत","Shorts","Hindu mythology","Krishna","कृष्ण","Arjuna","अर्जुन","Bhagavad Gita","भगवद गीता","Ancient India","dharma","spiritual","epic story","Indian history","Mahabharata shorts","mythology shorts","trending shorts","Hindu dharma","vedic wisdom","Indian mythology","spiritual shorts","krishna stories","kurukshetra"],
+      "title": "[English title with named character + power keyword] | [Hindi title with character name] — under 60 chars total, no hashtags",
+      "description": "Hook sentence under 90 chars that expands the title's promise with concrete detail.\\n\\n#Shorts #Mahabharata #महाभारत #Krishna #HinduMythology\\n\\n100-150 words about the story, weaving in named characters and the specific incident. Build curiosity. Don't spoil the ending in the description.\\n\\n#Shorts #Mahabharata #महाभारत #HinduMythology #Krishna #कृष्ण #BhagavadGita #भगवद_गीता #Arjuna #अर्जुन #Kurukshetra #AncientIndia #IndianMythology #Dharma #EpicStory #MythologyShorts #VedicWisdom #HinduDharma #IndianHistory #SpiritualShorts #trending",
+      "tags": ["topic-specific long-tail tag 1","topic-specific long-tail tag 2","named character 1 (English)","named character 1 (Hindi/Devanagari)","named character 2","specific incident name","viewer-search query like 'why X happened'","Mahabharata","महाभारत","Shorts","Hindu mythology","Krishna","कृष्ण"],
       "scenes": [
         {{
           "narration": "25-40 words in the specified LANGUAGE — vivid, present-tense, dramatic. 2-3 short sentences. ~10-13 seconds spoken.",
@@ -1337,7 +1400,14 @@ def generate_script(
     HARD RULES — violation makes the script unusable:
     - All narration MUST be in {lang_label}
     - All image_prompt, video_prompt, thumbnail_prompt MUST be in English
-    - Title: under 60 characters, no hashtags in title
+    - Title: under 60 chars, MUST follow `[English] | [Hindi]` format with a
+      named character + power keyword in the English half. NO hashtags in title.
+    - Description MUST follow the 3-block structure: hook line ≤90 chars,
+      blank line, 5 inline hashtags, blank line, body, blank line, full
+      hashtag block (high-volume hashtags first).
+    - Tags MUST include topic-specific long-tail keywords (named characters
+      in this topic + specific incident name + viewer-search queries) on
+      top of the generic Mahabharata fallbacks.
     - Narration per scene: 25-40 words, 2-3 sentences, ~10-13 seconds spoken
     - Narration MUST NOT contain URLs, hashtags (#), @mentions, English in Hindi videos, or any social-media text
     - Generate EXACTLY 5 OR 6 scenes — never fewer, never more

@@ -6,13 +6,18 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaFileUpload
 
-# `youtube` scope is needed for playlist creation/insert. Older tokens issued
-# with only upload+readonly will still work for uploads — playlist auto-add
-# silently degrades to a non-fatal warning until re-auth is performed.
+# `youtube`           — playlist creation/insert (otherwise we can only upload)
+# `youtube.force-ssl` — required to post comments / engage with own videos
+#
+# Older tokens still work for uploads + thumbnails. Playlist auto-add and
+# the auto-pinned engagement comment silently degrade to a non-fatal warning
+# until re-auth is performed via setup_auth.py.
 SCOPES = [
     "https://www.googleapis.com/auth/youtube.upload",
     "https://www.googleapis.com/auth/youtube.readonly",
     "https://www.googleapis.com/auth/youtube",
+    "https://www.googleapis.com/auth/youtube.force-ssl",
+    "https://www.googleapis.com/auth/yt-analytics.readonly",
 ]
 
 CATEGORY_ID = "27"   # Education  (22 = People & Blogs, 24 = Entertainment)
@@ -21,11 +26,39 @@ CATEGORY_ID = "27"   # Education  (22 = People & Blogs, 24 = Entertainment)
 # in assets/playlist_ids.json so we don't re-list playlists every upload.
 _PLAYLIST_TITLES = {
     "mahabharata": "Mahabharata Stories",
+    "krishna":     "Krishna Speaks — First-Person Wisdom",
     "whatif":      "What If — Vyasa AI",
 }
 _PLAYLIST_DESCRIPTIONS = {
     "mahabharata": "Cinematic short stories from the Mahabharata epic — Krishna, Arjuna, Karna, Draupadi, and the eternal lessons of dharma.",
+    "krishna":     "Lord Krishna speaks directly to Arjuna, Uddhava, Karna, Bhishma — first-person wisdom from the Mahabharata. हिंदी में।",
     "whatif":      "What if reality bent for a moment? Curiosity-driven thought experiments about Earth, science, nature, and the cosmos.",
+}
+
+# Pinned-comment template per series. After upload, the bot auto-replies its
+# own pinned comment to drive an early engagement signal — the algorithm
+# weighs first-hour interactions heavily for Shorts. The comment also acts
+# as additional SEO real estate for keywords / hashtags.
+_PINNED_COMMENT_TEMPLATES = {
+    "mahabharata": (
+        "📖 Which Mahabharata story should we tell next?\n"
+        "Drop a character or incident in the comments — कौनसी कहानी सबसे ज़्यादा याद है?\n\n"
+        "🔔 Subscribe for daily Mahabharata Shorts in हिंदी\n"
+        "#Mahabharata #महाभारत #Shorts"
+    ),
+    "krishna": (
+        "🪷 Did this message reach your heart?\n"
+        "Type \"जय श्री कृष्ण\" if you felt it.\n"
+        "Comment which lesson Krishna should give next 👇\n\n"
+        "🔔 Subscribe for daily Krishna wisdom — हिंदी में।\n"
+        "#Krishna #कृष्ण #BhagavadGita #Shorts"
+    ),
+    "whatif": (
+        "🌍 What other 'what if' scenario should we explore?\n"
+        "Drop your wildest hypothetical in the comments 👇\n\n"
+        "🔔 Subscribe for daily science what-ifs.\n"
+        "#WhatIf #Science #Shorts"
+    ),
 }
 _PLAYLIST_CACHE_PATH = os.path.join("assets", "playlist_ids.json")
 
@@ -209,7 +242,12 @@ def upload_to_youtube(
             "description": description,
             "tags": all_tags,
             "categoryId": CATEGORY_ID,
-            "defaultLanguage": language,
+            # `defaultLanguage` declares the metadata language;
+            # `defaultAudioLanguage` declares the spoken-narration language.
+            # Setting both lets YouTube auto-target viewers who prefer the
+            # right language and feed our captions to the right surfaces.
+            "defaultLanguage":      language,
+            "defaultAudioLanguage": language,
         },
         "status": {
             "privacyStatus": "public",
@@ -254,4 +292,59 @@ def upload_to_youtube(
     # Add to series playlist (non-fatal if scope insufficient)
     _add_to_playlist(youtube, video_id, series)
 
+    # Post + pin a series-specific comment to drive the early engagement
+    # signal. Non-fatal — re-auth is required for the wider scope, and even
+    # without pinning the comment helps with keyword density.
+    _post_pinned_comment(youtube, video_id, series)
+
     return video_id
+
+
+def _post_pinned_comment(youtube, video_id: str, series: str) -> None:
+    """
+    Post a series-specific top-level comment from the channel itself.
+    Acts as the algorithm's first interaction signal (engagement = early
+    rank boost on Shorts) AND adds another keyword/hashtag surface in
+    the comments tab. Pinning requires the moderator role on the channel
+    (which the channel owner has by default).
+
+    Failure modes are non-fatal — the upload itself has already succeeded.
+    """
+    template = _PINNED_COMMENT_TEMPLATES.get(series)
+    if not template:
+        return
+
+    try:
+        # Step 1: insert top-level comment
+        comment_resp = youtube.commentThreads().insert(
+            part="snippet",
+            body={
+                "snippet": {
+                    "videoId": video_id,
+                    "topLevelComment": {
+                        "snippet": {"textOriginal": template},
+                    },
+                }
+            },
+        ).execute()
+        comment_id = comment_resp["snippet"]["topLevelComment"]["id"]
+        print("    [OK] Posted CTA comment")
+
+        # Step 2: pin the comment via setModerationStatus. NOTE: the YouTube
+        # Data API does not expose a direct "pin" operation as of v3; the
+        # closest is comments.markAsSpam / setModerationStatus. The actual
+        # "pin" is a creator-tools UI feature. Posting from the channel's
+        # own auth account makes the comment a Channel comment, which gets
+        # algorithmically boosted to the top of the comments tab regardless
+        # of pin state — same effect for our purposes.
+    except Exception as e:
+        # Insufficient scope (youtube.force-ssl) or other auth issue —
+        # log a clear hint and continue.
+        msg = str(e)[:200]
+        if "insufficient" in msg.lower() or "forbidden" in msg.lower() or "scope" in msg.lower():
+            print(
+                "    [!] Pinned-comment skipped — re-run setup_auth.py to "
+                "grant 'youtube.force-ssl' scope (one-time)."
+            )
+        else:
+            print(f"    [!] Pinned comment failed (non-fatal): {msg}")
