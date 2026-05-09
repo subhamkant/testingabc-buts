@@ -13,12 +13,13 @@ scheduled_topics_<series>.txt (per-series queue files)
     Backwards compat: if scheduled_topics_mahabharata.txt is missing but the
     older scheduled_topics.txt exists, the Mahabharata series falls back to it.
 
-    Auto-replenish (WhatIf only): when the queue drops below
-    _WHATIF_REPLENISH_THRESHOLD, an LLM call generates fresh topics and
-    appends them. Recently-uploaded topics (from video_log_*.txt) are passed
-    in as an avoidance list so the model doesn't re-suggest stale ideas.
-    The workflow's "Commit updated state" step persists the modified queue
-    back to git after each run.
+    Daily-fresh generation (WhatIf only): when the queue is empty, the
+    pipeline generates ONE topic per run on-demand via LLM, using the
+    latest trending headlines from public news/science feeds. Same topic
+    is never repeated within ~2 months (60-upload avoidance window), via
+    recent_topics.json. The avoidance file is committed back by the
+    workflow's "Commit updated state" step so it persists across the
+    ephemeral GHA runners.
 
 video_log_001.txt / video_log_002.txt …
     Every completed video is appended here with timestamp, language, series,
@@ -40,16 +41,11 @@ LEGACY_SCHEDULED_FILE = "scheduled_topics.txt"   # legacy, Mahabharata-only fall
 LOG_PREFIX     = "video_log_"
 LOG_MAX_BYTES  = 5 * 1024 * 1024   # 5 MB per log file
 
-# Auto-replenish config — when scheduled_topics_whatif.txt has fewer than
-# this many remaining lines (excluding comments), generate this many fresh
-# topics in one LLM call. One call -> ~10 days of new content; cheap.
-_WHATIF_REPLENISH_THRESHOLD = 3
-_WHATIF_REPLENISH_COUNT     = 10
 # Avoidance window — ~2 months of WhatIf uploads (1/day). The LLM is told
 # never to reproduce anything in this window, and the static-topic fallback
 # is filtered the same way. Same topic only re-surfaces after this many
 # uploads have rolled past.
-_WHATIF_RECENT_HISTORY      = 60
+_WHATIF_RECENT_HISTORY = 60
 
 
 def _scheduled_file_for(series: str) -> str:
@@ -253,20 +249,38 @@ def _generate_whatif_topics_via_llm(count: int, avoid: list) -> list:
     )
     avoid_block = "\n".join(f"- {t}" for t in avoid[:_WHATIF_RECENT_HISTORY]) or "(none)"
 
-    # Trending context is a bonus signal — fully optional.
+    # Trending context is a bonus signal — fully optional. Daily-fresh runs
+    # call this with count=1 and want a TREND-PIGGYBACK topic when possible
+    # (rides search waves); batch runs call with count>1 and want a 30/70
+    # blend. The prompt framing varies accordingly.
     trending = _fetch_trending_headlines(limit=15)
     if trending:
+        if count == 1:
+            mix_instruction = (
+                "TREND-PIGGYBACK INSTRUCTION (single-topic mode):\n"
+                "Generate ONE topic. STRONGLY PREFER reframing a trending "
+                "headline below as a science-grounded WhatIf — riding a real "
+                "search wave is what makes this run worth doing. Pick the "
+                "MOST visually interesting + scientifically substantive trend "
+                "that lets you ask a real speculation question. ONLY fall "
+                "back to an evergreen topic if every trending headline is "
+                "unusable per the SAFETY rules below.\n"
+            )
+        else:
+            mix_instruction = (
+                "TREND-PIGGYBACK INSTRUCTION (batch mode):\n"
+                "Aim for roughly 30% of your topics (≈ "
+                f"{max(1, count // 3)} of {count}) to be inspired by these "
+                "trends — reframe a trending event as a SCIENCE-grounded WhatIf "
+                "speculation. The remaining ~70% should be evergreen science "
+                "topics not tied to news.\n"
+            )
         trending_block = (
             "TRENDING NOW (top-of-day titles from global news + science + "
             "futurology subreddits — viewers are actively searching these):\n"
             + "\n".join(f"- {h['title']}  ({h['source']})" for h in trending)
-            + "\n\nTREND-PIGGYBACK INSTRUCTION:\n"
-            "Aim for roughly 30% of your topics (≈ "
-            f"{max(1, count // 3)} of {count}) to be inspired by these "
-            "trends — reframe a trending event as a SCIENCE-grounded WhatIf "
-            "speculation. The remaining ~70% should be evergreen science "
-            "topics not tied to news.\n\n"
-            "TREND→WHATIF transformation examples:\n"
+            + "\n\n" + mix_instruction
+            + "\nTREND→WHATIF transformation examples:\n"
             "- Trending: 'Iran-Israel tensions escalate'\n"
             "  WhatIf: 'What if a country the size of Iran suddenly ceased "
             "to exist — what would happen to global oil prices, Middle East "
@@ -377,50 +391,42 @@ no preamble, no commentary:
     return cleaned[:count]
 
 
-def _maybe_replenish_whatif_queue(queue_path: str, remaining_count: int) -> None:
+def _generate_one_fresh_whatif_topic() -> str | None:
     """
-    If the WhatIf queue drops below _WHATIF_REPLENISH_THRESHOLD, generate a
-    fresh batch via LLM and append to the queue file. Failure is non-fatal —
-    the caller falls back to STORY_TOPICS_WHATIF random pick.
-    """
-    if remaining_count >= _WHATIF_REPLENISH_THRESHOLD:
-        return
+    Daily-fresh path: generate exactly ONE WhatIf topic on-demand for the
+    current run, using the latest trending headlines + 2-month avoidance
+    window. Returns the topic string or None if generation fails (caller
+    falls through to STORY_TOPICS_WHATIF random pick).
 
-    print(f"    [topic-gen] WhatIf queue low ({remaining_count} remaining) — auto-replenishing...")
+    This replaces the older batch-replenish-queue approach. Each WhatIf run
+    now gets a fresh trending snapshot — if Iran news drops at 8 AM, the
+    next 04:00 UTC run rides it. Batch generation has the trade-off that
+    a 10-batch sticks for ~10 days, so up to 10 days of trends get missed.
+    """
     avoid = _read_recent_topics("whatif", limit=_WHATIF_RECENT_HISTORY)
-    new_topics = _generate_whatif_topics_via_llm(_WHATIF_REPLENISH_COUNT, avoid)
-    if not new_topics:
-        print("    [topic-gen] no new topics produced — queue not replenished")
-        return
-
-    # Append to queue file (creates if missing)
-    header_needed = not os.path.exists(queue_path) or os.path.getsize(queue_path) == 0
-    with open(queue_path, "a", encoding="utf-8") as f:
-        if header_needed:
-            f.write(
-                "# What If — scheduled topic queue (auto-generated entries below)\n"
-                "# One topic per line. Pipeline pops first non-comment line per run.\n\n"
-            )
-        # Mark when this batch was generated for audit trail
-        f.write(f"\n# auto-generated {datetime.now().strftime('%Y-%m-%d %H:%M')} UTC\n")
-        for t in new_topics:
-            f.write(f"{t}\n")
-
-    print(f"    [topic-gen] Appended {len(new_topics)} fresh topics to {queue_path}")
+    print("    [topic-gen] Daily-fresh: generating 1 trend-aware topic...")
+    topics = _generate_whatif_topics_via_llm(count=1, avoid=avoid)
+    if not topics:
+        return None
+    return topics[0]
 
 
 # ── Topic queue ───────────────────────────────────────────────────────────────
 
 def get_next_topic(series: str = "mahabharata") -> str | None:
     """
-    Returns the first queued topic for the given series and removes it.
-    Returns None if the file is empty or missing — caller falls back to a
-    random built-in topic.
+    Returns the next topic for the given series.
 
-    For series=="whatif", the queue is auto-replenished via an LLM call when
-    fewer than _WHATIF_REPLENISH_THRESHOLD entries remain. This gives the
-    channel an effectively unlimited supply of fresh thought experiments
-    while still respecting any manually-queued topics that take priority.
+    Priority chain:
+      1. Manual queue (scheduled_topics_<series>.txt) — user can inject
+         specific topics by adding lines; these take precedence.
+      2. (WhatIf only) Daily-fresh LLM generation — one topic per run,
+         uses live trending headlines and the 2-month avoidance window.
+      3. (Caller-side) Random pick from STORY_TOPICS_WHATIF / etc.,
+         filtered against the avoidance window.
+
+    Returns None if all auto paths fail — the caller (script_generator)
+    handles the final static-fallback random pick.
     """
     primary = _scheduled_file_for(series)
     if os.path.exists(primary):
@@ -429,46 +435,40 @@ def get_next_topic(series: str = "mahabharata") -> str | None:
         # Backwards compat: pre-WhatIf installs use scheduled_topics.txt
         path = LEGACY_SCHEDULED_FILE
     else:
-        # No queue file exists. WhatIf can synthesize one from scratch.
-        if series == "whatif":
-            path = primary  # _maybe_replenish_whatif_queue creates it
-            _maybe_replenish_whatif_queue(path, remaining_count=0)
-            if not os.path.exists(path):
-                return None
-        else:
-            return None
+        path = None
 
-    with open(path, "r", encoding="utf-8") as f:
-        lines = f.readlines()
+    # ── 1. Try manual queue first (user-injected topics) ──────────────
+    if path:
+        with open(path, "r", encoding="utf-8") as f:
+            lines = f.readlines()
 
-    topic     = None
-    remaining = []
-    found     = False
+        topic = None
+        remaining = []
+        found = False
+        for line in lines:
+            stripped = line.strip()
+            if not found and stripped and not stripped.startswith("#"):
+                topic = stripped
+                found = True
+            else:
+                remaining.append(line)
 
-    for line in lines:
-        stripped = line.strip()
-        if not found and stripped and not stripped.startswith("#"):
-            topic = stripped
-            found = True
-        else:
-            remaining.append(line)
+        if topic:
+            with open(path, "w", encoding="utf-8") as f:
+                f.writelines(remaining)
+            print(f"    Using scheduled {series} topic: {topic}")
+            return topic
 
-    if topic:
-        with open(path, "w", encoding="utf-8") as f:
-            f.writelines(remaining)
-        print(f"    Using scheduled {series} topic: {topic}")
-
-    # After consuming a topic, see if the WhatIf queue needs auto-replenish
-    # for future runs. Doing it AFTER the pop means today's run already has
-    # its topic; the appended batch is for upcoming runs.
+    # ── 2. WhatIf daily-fresh: generate one trend-aware topic now ────
     if series == "whatif":
-        non_comment_remaining = sum(
-            1 for ln in remaining
-            if ln.strip() and not ln.strip().startswith("#")
-        )
-        _maybe_replenish_whatif_queue(path, non_comment_remaining)
+        fresh = _generate_one_fresh_whatif_topic()
+        if fresh:
+            print(f"    Using daily-fresh whatif topic: {fresh}")
+            return fresh
+        print("    [topic-gen] Daily-fresh failed — caller will fall back to static pool")
 
-    return topic
+    # ── 3. No topic from queue or LLM; caller handles static fallback ──
+    return None
 
 
 # ── Video log ─────────────────────────────────────────────────────────────────
