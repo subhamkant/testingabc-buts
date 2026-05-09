@@ -78,9 +78,80 @@ def cleanup_temp():
     os.makedirs("output", exist_ok=True)
 
 
-def _video_output_path(language: str) -> str:
+def _video_output_path(language: str, series: str = "mahabharata") -> str:
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    return f"output/video_{language}_{timestamp}.mp4"
+    series_tag = "" if series == "mahabharata" else f"{series}_"
+    return f"output/video_{series_tag}{language}_{timestamp}.mp4"
+
+
+def _subscribe_outro(series: str, language: str) -> dict:
+    """
+    Returns a scene dict for the fixed subscribe-CTA outro. Series-aware so the
+    Mahabharata and What If videos don't end with mismatched copy/imagery.
+    """
+    if series == "whatif":
+        whatif_image = (
+            "Vyasa AI logo card — bold cinematic lettering 'Subscribe to Vyasa AI', "
+            "starfield background with subtle nebula, deep blue and gold palette, "
+            "9:16 portrait composition, modern science-curiosity aesthetic, "
+            "clean readable text, no clutter"
+        )
+        whatif_video = "Slow zoom on Vyasa AI logo card with starfield parallax and golden glow"
+        if language == "hi":
+            narration = (
+                "ऐसी रोचक कहानियों के लिए... Vyasa AI को Subscribe करें — "
+                "समय और अंतरिक्ष के पार की कहानियाँ!"
+            )
+        else:
+            narration = (
+                "For more thought experiments... Subscribe to Vyasa AI — "
+                "stories and curiosities from across time and space."
+            )
+        return {
+            "narration":    narration,
+            "image_prompt": whatif_image,
+            "video_prompt": whatif_video,
+            "mood":         "inviting and curious",
+        }
+
+    # Mahabharata (default)
+    maha_image = (
+        "Epic Mahabharata collage — Krishna, Arjuna, Karna, Draupadi in golden cinematic light, "
+        "bold text 'Subscribe to Vyasa AI' glowing in center, lotus and Om symbol, "
+        "jewel-toned palette, dramatic portrait composition"
+    )
+    maha_video = "Cinematic zoom out from Om symbol to full Mahabharata tableau, golden light rays"
+    if language == "hi":
+        narration = "ऐसी कहानियों के लिए... Vyasa AI को Subscribe करें। Bell Icon ज़रूर दबाएँ!"
+    else:
+        narration = "For more Mahabharata stories... Subscribe to Vyasa AI. Hit the bell!"
+    return {
+        "narration":    narration,
+        "image_prompt": maha_image,
+        "video_prompt": maha_video,
+        "mood":         "inspiring and inviting",
+    }
+
+
+def _build_lang_script(dual_script: dict, language: str) -> dict:
+    """
+    Convert a dual-language WhatIf script into a single-language copy by
+    selecting `narration_hi` or `narration` per scene and writing it to the
+    common `narration` field that downstream pipeline stages expect.
+    """
+    out = dict(dual_script)
+    out["scenes"] = []
+    for scene in dual_script["scenes"]:
+        narration = scene.get("narration_hi", "") if language == "hi" else scene.get("narration", "")
+        # Build a clean per-scene copy keeping only the fields downstream needs
+        out["scenes"].append({
+            "narration":    narration,
+            "image_prompt": scene.get("image_prompt", ""),
+            "video_prompt": scene.get("video_prompt", ""),
+            "mood":         scene.get("mood", ""),
+        })
+    out["language"] = language
+    return out
 
 
 # ── Pipeline ──────────────────────────────────────────────────────────────────
@@ -98,8 +169,8 @@ async def run_pipeline(language: str = "en", test_mode: bool = False, test_uploa
     try:
         # ── Step 1: Generate Script ───────────────────────────────
         print("Step 1 — Generating script with Gemini...")
-        scheduled_topic = get_next_topic()
-        script = generate_script(language, forced_topic=scheduled_topic)
+        scheduled_topic = get_next_topic("mahabharata")
+        script = generate_script(language, forced_topic=scheduled_topic, series="mahabharata")
 
         if test_mode or test_upload:
             script["scenes"] = script["scenes"][:1]
@@ -110,21 +181,7 @@ async def run_pipeline(language: str = "en", test_mode: bool = False, test_uploa
         print(f"    Content type: {script['content_type']}")
 
         # Append fixed subscribe outro
-        outro = {
-            "narration": (
-                "ऐसी कहानियों के लिए... Vyasa AI को Subscribe करें। Bell Icon ज़रूर दबाएँ!"
-            ) if language == "hi" else (
-                "For more Mahabharata stories... Subscribe to Vyasa AI. Hit the bell!"
-            ),
-            "image_prompt": (
-                "Epic Mahabharata collage — Krishna, Arjuna, Karna, Draupadi in golden cinematic light, "
-                "bold text 'Subscribe to Vyasa AI' glowing in center, lotus and Om symbol, "
-                "jewel-toned palette, dramatic portrait composition"
-            ),
-            "video_prompt": "Cinematic zoom out from Om symbol to full Mahabharata tableau, golden light rays",
-            "mood": "inspiring and inviting",
-        }
-        script["scenes"].append(outro)
+        script["scenes"].append(_subscribe_outro("mahabharata", language))
         print(f"    Scenes      : {len(script['scenes'])} (+ subscribe outro)")
         update_characters(script)
 
@@ -169,10 +226,10 @@ async def run_pipeline(language: str = "en", test_mode: bool = False, test_uploa
                 video_path = None
 
         if video_path is None:
-            print("\nStep 3 — Generating images with Pollinations.ai...")
-            image_files = generate_images(script["scenes"])
+            print("\nStep 3 — Generating images via free cascade (HF -> Cloudflare -> Pollinations)...")
+            image_files = generate_images(script["scenes"], series="mahabharata")
             if script.get("thumbnail_prompt"):
-                generate_thumbnail(script["thumbnail_prompt"])
+                generate_thumbnail(script["thumbnail_prompt"], series="mahabharata")
             print("\nStep 4 — Assembling video with continuous audio...")
             video_path = assemble_video_continuous_audio(
                 image_files, audio_path, script,
@@ -198,6 +255,7 @@ async def run_pipeline(language: str = "en", test_mode: bool = False, test_uploa
                 video_id = upload_to_youtube(
                     video_path, script, language,
                     thumbnail_path="output/thumbnail.jpg",
+                    series="mahabharata",
                 )
             except Exception as yt_err:
                 print(f"    YouTube upload failed: {yt_err}")
@@ -216,6 +274,156 @@ async def run_pipeline(language: str = "en", test_mode: bool = False, test_uploa
         cleanup_temp()
 
 
+# ── What If — dual-language orchestrator ─────────────────────────────────────
+
+async def run_whatif_dual_language(test_mode: bool = False, test_upload: bool = False):
+    """
+    What If pipeline: generates ONE script with both English and Hindi
+    narration per scene, generates visuals ONCE, then renders + uploads two
+    videos (HI and EN) sharing identical visuals. Two YouTube uploads, one
+    set of image/clip generations — ~50% cheaper than two separate runs.
+    """
+    mode_tag = " [TEST-UPLOAD - 1 scene]" if test_upload else (" [TEST - 1 scene]" if test_mode else "")
+    print(f"\n{'='*55}")
+    print(f"  Vyasa AI What If  |  Hindi + English{mode_tag}")
+    print(f"{'='*55}\n")
+
+    cleanup_temp()
+
+    try:
+        # ── Step 1: ONE dual-language script ──────────────────────
+        print("Step 1 — Generating dual-language What If script...")
+        scheduled_topic = get_next_topic("whatif")
+        dual_script = generate_script(
+            language="dual",
+            forced_topic=scheduled_topic,
+            series="whatif",
+            dual_language=True,
+        )
+
+        if test_mode or test_upload:
+            dual_script["scenes"] = dual_script["scenes"][:1]
+            print("    [test] Capped to 1 scene")
+
+        print(f"    Topic       : {dual_script['topic']}")
+        print(f"    Title       : {dual_script['title']}")
+        print(f"    Visual style: {dual_script.get('visual_style', 'photoreal-3d')}")
+
+        # Append series-aware bilingual outro
+        outro_en = _subscribe_outro("whatif", "en")
+        outro_hi = _subscribe_outro("whatif", "hi")
+        dual_script["scenes"].append({
+            "narration":    outro_en["narration"],
+            "narration_hi": outro_hi["narration"],
+            "image_prompt": outro_en["image_prompt"],
+            "video_prompt": outro_en["video_prompt"],
+            "mood":         outro_en["mood"],
+        })
+        print(f"    Scenes      : {len(dual_script['scenes'])} (+ subscribe outro)")
+        # NOTE: skipping update_characters — Mahabharata-specific.
+
+        # ── Step 2: Generate visuals ONCE ─────────────────────────
+        # Using the dual script's scenes (each has both narrations) is fine —
+        # the visual generators only read image_prompt / video_prompt.
+        visual_style = dual_script.get("visual_style", "photoreal-3d")
+        clip_files = None
+        image_files = None
+
+        _ai_clips_available = any(
+            os.environ.get(k, "").strip()
+            for k in ("FAL_KEY", "REPLICATE_API_TOKEN", "HF_SPACE")
+        )
+        if _ai_clips_available:
+            try:
+                print("\nStep 2 — Generating shared AI video clips...")
+                clip_files = await generate_video_clips(dual_script["scenes"])
+            except Exception as clip_err:
+                print(f"\n    AI clips failed: {clip_err}")
+                print("    Falling back to static images...")
+                clip_files = None
+
+        if clip_files is None:
+            print("\nStep 2 — Generating shared images via free cascade...")
+            image_files = generate_images(
+                dual_script["scenes"], series="whatif", visual_style=visual_style,
+            )
+            if dual_script.get("thumbnail_prompt"):
+                generate_thumbnail(
+                    dual_script["thumbnail_prompt"],
+                    series="whatif", visual_style=visual_style,
+                )
+
+        # ── Step 3-5: per-language render + upload ────────────────
+        video_ids = {}
+        for lang in ("hi", "en"):
+            lang_name = "Hindi" if lang == "hi" else "English"
+            print(f"\n{'─'*55}\n  Rendering {lang_name} version\n{'─'*55}")
+
+            lang_script = _build_lang_script(dual_script, lang)
+            output_path = _video_output_path(lang, series="whatif")
+
+            # TTS for this language
+            print(f"\nStep 3a [{lang}] — TTS...")
+            audio_path, char_weights = await generate_full_narration(
+                lang_script["scenes"], lang
+            )
+            if not audio_path or not os.path.exists(audio_path):
+                print(f"    [!] No audio generated for {lang}, skipping")
+                continue
+
+            # Assemble using SHARED visuals
+            print(f"\nStep 3b [{lang}] — Assembling video...")
+            try:
+                if clip_files:
+                    video_path = assemble_from_video_clips_continuous_audio(
+                        clip_files, audio_path, lang_script,
+                        char_weights=char_weights,
+                        output_path=output_path,
+                    )
+                else:
+                    video_path = assemble_video_continuous_audio(
+                        image_files, audio_path, lang_script,
+                        char_weights=char_weights,
+                        output_path=output_path,
+                    )
+            except Exception as a_err:
+                print(f"    [!] Assembly failed for {lang}: {a_err}")
+                continue
+
+            # Subtitles
+            if video_path and os.path.exists(video_path):
+                print(f"\nStep 3c [{lang}] — Subtitles...")
+                try:
+                    apply_subtitles(video_path, audio_path, lang)
+                except Exception as sub_err:
+                    print(f"    Subtitles failed (non-fatal): {sub_err}")
+
+            # Upload
+            video_id = None
+            if (not test_mode or test_upload) and os.path.exists("client_secrets.json"):
+                try:
+                    print(f"\nStep 3d [{lang}] — Uploading to YouTube...")
+                    video_id = upload_to_youtube(
+                        video_path, lang_script, lang,
+                        thumbnail_path="output/thumbnail.jpg",
+                        series="whatif",
+                    )
+                    video_ids[lang] = video_id
+                except Exception as yt_err:
+                    print(f"    YouTube upload failed: {yt_err}")
+
+            log_video(video_path, lang_script, lang)
+
+        # ── Done ──────────────────────────────────────────────────
+        print(f"\n{'='*55}\nWhat If Pipeline complete!\n{'='*55}")
+        for lang, vid in video_ids.items():
+            print(f"    {lang.upper()} -> https://youtube.com/watch?v={vid}")
+        print()
+
+    finally:
+        cleanup_temp()
+
+
 # ── Entry point ───────────────────────────────────────────────────────────────
 
 if __name__ == "__main__":
@@ -224,14 +432,22 @@ if __name__ == "__main__":
     test_upload = "--test-upload" in args
     args = [a for a in args if a not in ("--test", "--test-upload")]
 
-    lang = args[0] if args else "hi"
-    if lang not in ("en", "hi"):
-        print("Usage: python main.py [en|hi] [--test | --test-upload]")
-        sys.exit(1)
+    target = args[0] if args else "hi"
 
-    log_file = _setup_logging(lang, test_mode or test_upload)
-    try:
-        asyncio.run(run_pipeline(lang, test_mode, test_upload))
-    finally:
-        sys.stdout = sys.stdout._stream
-        log_file.close()
+    if target == "whatif":
+        log_file = _setup_logging("whatif", test_mode or test_upload)
+        try:
+            asyncio.run(run_whatif_dual_language(test_mode, test_upload))
+        finally:
+            sys.stdout = sys.stdout._stream
+            log_file.close()
+    elif target in ("en", "hi"):
+        log_file = _setup_logging(target, test_mode or test_upload)
+        try:
+            asyncio.run(run_pipeline(target, test_mode, test_upload))
+        finally:
+            sys.stdout = sys.stdout._stream
+            log_file.close()
+    else:
+        print("Usage: python main.py [en|hi|whatif] [--test | --test-upload]")
+        sys.exit(1)

@@ -2,7 +2,7 @@ name: Mahabharata YouTube Bot
 
 on:
   schedule:
-    # All runs in Hindi — 4x per day (IST times)
+    # ── Mahabharata Hindi — 4x/day ──────────────────────────
     # Run 1 -> 12:30 AM IST (19:00 UTC previous day)
     - cron: "0 19 * * *"
     # Run 2 ->  6:30 AM IST (01:00 UTC)
@@ -11,17 +11,21 @@ on:
     - cron: "0 7 * * *"
     # Run 4 ->  6:30 PM IST (13:00 UTC)
     - cron: "0 13 * * *"
+    # ── What If dual-language — 1x/day (= 2 uploads, fits 10k API quota) ──
+    # Run 5 ->  9:30 AM IST (04:00 UTC) — generates HI + EN sharing visuals
+    - cron: "0 4 * * *"
 
   workflow_dispatch:
     inputs:
-      language:
-        description: "Language to generate (en / hi)"
+      target:
+        description: "What to generate (hi / en / whatif)"
         required: true
         default: "hi"
         type: choice
         options:
           - hi
           - en
+          - whatif
 
 jobs:
   generate-and-upload:
@@ -135,12 +139,16 @@ jobs:
       - name: Restore client_secrets.json
         run: echo '${{ secrets.YOUTUBE_CLIENT_SECRETS }}' > client_secrets.json
 
-      - name: Determine language for this run
+      - name: Determine target for this run
         run: |
+          # Manual dispatch: use the chosen target.
+          # Scheduled: route by cron expression — 04:00 UTC = whatif, others = hi.
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            echo "LANG=${{ inputs.language }}" >> $GITHUB_ENV
+            echo "TARGET=${{ inputs.target }}" >> $GITHUB_ENV
+          elif [ "${{ github.event.schedule }}" = "0 4 * * *" ]; then
+            echo "TARGET=whatif" >> $GITHUB_ENV
           else
-            echo "LANG=hi" >> $GITHUB_ENV
+            echo "TARGET=hi" >> $GITHUB_ENV
           fi
 
       - name: Run pipeline
@@ -155,7 +163,7 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           NARRATOR_VOICE: Charon
           CINEMATIC_FPS: "30"
-        run: python main.py ${{ env.LANG }} 2>&1 | tee pipeline_output.txt
+        run: python main.py ${{ env.TARGET }} 2>&1 | tee pipeline_output.txt
 
       # Email notifications disabled temporarily — re-enable after fixing MAIL_PASSWORD
       # - name: Send success email

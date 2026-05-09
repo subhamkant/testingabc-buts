@@ -24,6 +24,10 @@ from googleapiclient.discovery import build
 SCOPES = [
     "https://www.googleapis.com/auth/youtube.upload",
     "https://www.googleapis.com/auth/youtube.readonly",
+    # `youtube` scope is needed for playlist creation/insert (used to auto-add
+    # uploads to per-series playlists). Re-run this script and update the
+    # YOUTUBE_TOKEN_B64 secret to grant it.
+    "https://www.googleapis.com/auth/youtube",
 ]
 
 

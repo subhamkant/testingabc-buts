@@ -7,7 +7,9 @@ import base64
 import io
 from urllib.parse import quote
 
-# Style suffix — photorealistic FLUX renders produce sharp crisp details
+# Mahabharata style suffix — photorealistic FLUX renders produce sharp crisp details.
+# This is mythological / epic-Indian style. WhatIf series uses a different per-style
+# suffix selected from _WHATIF_STYLE_SUFFIXES based on the script's visual_style.
 STYLE_SUFFIX = (
     "hyper-detailed photorealistic digital art, ancient Indian epic Mahabharata, "
     "ultra-sharp 8K resolution, crystal-clear facial features, "
@@ -17,6 +19,39 @@ STYLE_SUFFIX = (
     "inspired by Raja Ravi Varma paintings but photorealistic, "
     "sharp focus throughout, no blur, no motion blur"
 )
+
+# WhatIf series style suffixes — picked by `script["visual_style"]`. Mahabharata
+# style does NOT apply to WhatIf scripts; the LLM picks the most suitable style
+# per topic (e.g. dinosaurs -> nature-doc, black hole -> sci-fi-cinematic).
+_WHATIF_STYLE_SUFFIXES = {
+    "photoreal-3d": (
+        "photorealistic 3D render, octane render quality, cinematic lighting, "
+        "sharp 8K detail, scientific illustration accuracy, "
+        "studio depth of field, volumetric atmosphere"
+    ),
+    "nature-doc": (
+        "BBC nature documentary cinematography, golden hour lighting, "
+        "telephoto lens compression, naturalistic colour palette, "
+        "shallow depth of field, ultra-sharp 8K detail"
+    ),
+    "sci-fi-cinematic": (
+        "Denis Villeneuve sci-fi aesthetic, Roger Deakins lighting, "
+        "anamorphic widescreen feel, atmospheric haze, dramatic silhouettes, "
+        "muted tonal palette, cinematic 8K detail"
+    ),
+    "illustrated": (
+        "polished concept art digital illustration, ArtStation trending, "
+        "painterly brush detail, vivid colour palette, dramatic composition, "
+        "sharp readable subjects"
+    ),
+}
+
+
+def _resolve_style_suffix(series: str, visual_style: str) -> str:
+    """Return the right style suffix for the series + visual_style."""
+    if series == "whatif":
+        return _WHATIF_STYLE_SUFFIXES.get(visual_style, _WHATIF_STYLE_SUFFIXES["photoreal-3d"])
+    return STYLE_SUFFIX
 
 # Negative prompt — suppresses blurry/low-quality outputs and FLUX-schnell's
 # known anatomy weaknesses (especially hands and fingers).
@@ -147,9 +182,9 @@ def update_characters(script_data: dict) -> list:
         return []
 
 
-def _build_full_prompt(prompt: str, mood: str = "") -> str:
+def _build_full_prompt(prompt: str, mood: str = "", style_suffix: str = STYLE_SUFFIX) -> str:
     mood_prefix = f"{mood}, " if mood else ""
-    return f"{mood_prefix}{prompt}, {STYLE_SUFFIX}"
+    return f"{mood_prefix}{prompt}, {style_suffix}"
 
 
 # ── Provider cascade ─────────────────────────────────────────────────────────
@@ -257,12 +292,12 @@ def _gen_pollinations(prompt: str, seed: int, width: int, height: int) -> bytes:
     return resp.content
 
 
-def generate_image_bytes(prompt: str, seed: int, width: int, height: int, mood: str = "") -> tuple[bytes, str]:
+def generate_image_bytes(prompt: str, seed: int, width: int, height: int, mood: str = "", style_suffix: str = STYLE_SUFFIX) -> tuple[bytes, str]:
     """
     Tries HF -> Cloudflare -> Pollinations until one returns a usable image.
     Returns (image_bytes, provider_name). Raises only if all three fail.
     """
-    full_prompt = _build_full_prompt(prompt, mood)
+    full_prompt = _build_full_prompt(prompt, mood, style_suffix=style_suffix)
     providers = [
         ("hf-flux-schnell",         lambda: _gen_hf(full_prompt, seed, width, height)),
         ("cloudflare-flux-schnell", lambda: _gen_cloudflare(full_prompt, seed, width, height)),
@@ -279,7 +314,7 @@ def generate_image_bytes(prompt: str, seed: int, width: int, height: int, mood: 
     raise RuntimeError(f"all image providers failed; last={last_err}")
 
 
-def generate_images(scenes: list, single_shot: bool = False) -> list:
+def generate_images(scenes: list, single_shot: bool = False, series: str = "mahabharata", visual_style: str = "") -> list:
     """
     Generates portrait (768x1344) images per scene.
 
@@ -290,12 +325,16 @@ def generate_images(scenes: list, single_shot: bool = False) -> list:
     when the AI-video pipeline is active — I2V models only need a single
     first-frame image, so generating 3 wastes time and Pollinations quota.
 
+    series + visual_style select the style suffix and skip Mahabharata-specific
+    character injection when generating WhatIf imagery.
+
     Returns list[list[str]] — outer index = scene, inner index = shot.
     """
     os.makedirs("temp/images", exist_ok=True)
     scene_groups = []
 
     angles = _SHOT_ANGLES[:1] if single_shot else _SHOT_ANGLES
+    style_suffix = _resolve_style_suffix(series, visual_style)
 
     for i, scene in enumerate(scenes):
         shot_paths = []
@@ -310,7 +349,9 @@ def generate_images(scenes: list, single_shot: bool = False) -> list:
 
         for j, angle_prefix in enumerate(scene_angles):
             output_path = f"temp/images/scene_{i:02d}_shot_{j:02d}.jpg"
-            base_prompt = _inject_characters(scene["image_prompt"])
+            # Character injection is Mahabharata-specific (Krishna/Arjuna/etc.
+            # visual descriptors); skip it for WhatIf science content.
+            base_prompt = scene["image_prompt"] if series == "whatif" else _inject_characters(scene["image_prompt"])
             prompt = f"{angle_prefix}{base_prompt}"
             seed = i * 137 + j * 31
 
@@ -318,7 +359,8 @@ def generate_images(scenes: list, single_shot: bool = False) -> list:
             for attempt in range(3):
                 try:
                     img_bytes, provider = generate_image_bytes(
-                        prompt, seed=seed, width=768, height=1344, mood=mood
+                        prompt, seed=seed, width=768, height=1344, mood=mood,
+                        style_suffix=style_suffix,
                     )
                     with open(output_path, "wb") as f:
                         f.write(img_bytes)
@@ -346,14 +388,16 @@ def generate_images(scenes: list, single_shot: bool = False) -> list:
     return scene_groups
 
 
-def generate_thumbnail(thumbnail_prompt: str, output_path: str = "output/thumbnail.jpg") -> str:
+def generate_thumbnail(thumbnail_prompt: str, output_path: str = "output/thumbnail.jpg", series: str = "mahabharata", visual_style: str = "") -> str:
     """Generates a 1280x720 thumbnail (YouTube native size — landscape)."""
     os.makedirs("output", exist_ok=True)
+    style_suffix = _resolve_style_suffix(series, visual_style)
 
     for attempt in range(3):
         try:
             img_bytes, provider = generate_image_bytes(
-                thumbnail_prompt, seed=9999, width=1280, height=720
+                thumbnail_prompt, seed=9999, width=1280, height=720,
+                style_suffix=style_suffix,
             )
             with open(output_path, "wb") as f:
                 f.write(img_bytes)

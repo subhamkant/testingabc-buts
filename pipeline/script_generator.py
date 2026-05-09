@@ -72,6 +72,32 @@ MOTIVATIONAL_THEMES = [
     "What Vidura told Dhritarashtra that could have prevented the war",
 ]
 
+# ── What If Topics — science / nature / civilization hypotheticals ────────────
+# These are curiosity-driven thought experiments grounded in plausible science.
+# Used by the "whatif" series — completely separate from Mahabharata content.
+STORY_TOPICS_WHATIF = [
+    "What if humans suddenly disappeared from Earth tomorrow?",
+    "What if Earth had rings like Saturn?",
+    "What if dinosaurs were still alive today?",
+    "What if the Sun disappeared for 24 hours?",
+    "What if gravity on Earth were cut in half?",
+    "What if the Moon were twice as close to Earth?",
+    "What if all the world's oceans dried up overnight?",
+    "What if humans could photosynthesize like plants?",
+    "What if the Earth stopped spinning for one second?",
+    "What if Antarctica's ice sheet melted completely?",
+    "What if every volcano on Earth erupted at once?",
+    "What if the Amazon rainforest disappeared?",
+    "What if humans had evolved with three eyes?",
+    "What if a black hole entered our solar system?",
+    "What if the Sahara desert turned green again?",
+    "What if Earth's magnetic field flipped tomorrow?",
+    "What if every insect on Earth went extinct?",
+    "What if the Pacific Ocean froze solid?",
+    "What if humans never invented fire?",
+    "What if sleep were no longer necessary for survival?",
+]
+
 
 # Common Hindi/English words that aren't "repetition problems" even when
 # they appear multiple times — articles, pronouns, copulas, common verbs.
@@ -327,12 +353,176 @@ def _format_outline_for_prompt(beats: list) -> str:
     return "\n".join(lines)
 
 
-def generate_script(language: str = "en", forced_topic: str = None) -> dict:
+# ── What If series — science/curiosity hypotheticals ────────────────────────
+# Completely separate flow from Mahabharata: different topic pool, prompt
+# template, tags, and (when dual_language=True) outputs both English and Hindi
+# narration per scene in a single LLM call so visuals can be shared across
+# both language renders.
+
+_WHATIF_VISUAL_STYLES = {
+    "photoreal-3d":     "photorealistic 3D render, octane, cinematic lighting, sharp 8K detail, scientific accuracy",
+    "nature-doc":       "BBC nature documentary cinematography, golden hour, telephoto lens, naturalistic lighting",
+    "sci-fi-cinematic": "Denis Villeneuve sci-fi aesthetic, Roger Deakins lighting, anamorphic widescreen feel, atmospheric haze",
+    "illustrated":      "polished concept art digital illustration, ArtStation trending, painterly detail",
+}
+
+
+def _generate_whatif_script(forced_topic: str = None, dual_language: bool = True) -> dict:
+    """
+    Generates a 'What If' thought-experiment script.
+
+    When dual_language=True (default for production), returns scenes with BOTH
+    English `narration` and Hindi `narration_hi` so the orchestrator can render
+    two videos sharing identical visuals.
+    """
+    topic = forced_topic or random.choice(STORY_TOPICS_WHATIF)
+
+    if dual_language:
+        narration_block = (
+            '          "narration": "25-40 words in clear, natural ENGLISH — curious, vivid, present-tense",\n'
+            '          "narration_hi": "25-40 words in natural spoken HINDI (Devanagari script). Same content as English narration but read naturally — NOT a literal word-for-word translation.",\n'
+        )
+        lang_note = "Each scene has BOTH English (narration) AND Hindi (narration_hi) versions of the same idea."
+    else:
+        narration_block = (
+            '          "narration": "25-40 words in clear, natural ENGLISH — curious, vivid, present-tense",\n'
+        )
+        lang_note = "Narration is in English."
+
+    style_options = ", ".join(f'"{k}"' for k in _WHATIF_VISUAL_STYLES.keys())
+
+    prompt = f"""
+You are a science communicator writing a 60-90 second "What If" thought-experiment for YouTube Shorts.
+
+TOPIC: "{topic}"
+
+TASK: Create a vertical (9:16) video script with EXACTLY 5 OR 6 scenes that imagines this hypothetical scenario plausibly.
+
+VOICE & TONE:
+- Curious, wonder-driven, "imagine this for a moment" energy
+- Plausible — speculate from real science, nature, history, or physics. NOT fantasy.
+- Cinematic — paint vivid mental images the viewer can see
+- NOT devotional, NOT mythological, NOT epic-poem style — this is curiosity/science content
+- Conversational, like a smart friend explaining something fascinating
+
+VISUAL STYLE: Pick ONE that fits this topic best (output it in the JSON):
+  {style_options}
+  Every scene's image_prompt MUST be visually consistent with that one chosen style.
+
+LANGUAGE: {lang_note}
+
+═══════════════════════════════════════════════════════════════
+STRUCTURE — RETENTION ON SHORTS
+═══════════════════════════════════════════════════════════════
+Scene 1 — HOOK (the first 1.5 seconds decide if the viewer swipes):
+   Open with the question itself, framed dramatically. Examples:
+     "Imagine waking up tomorrow — and every human is gone."
+     "What if Earth had rings like Saturn? You wouldn't sleep tonight."
+   DO NOT open with "In this video..." or "Today we explore..." — get straight into the scenario.
+
+Scenes 2-3 — SETUP & ESCALATION:
+   Walk through the immediate consequences in vivid, concrete detail.
+   Each scene reveals a new layer the viewer didn't expect.
+
+Scene 4 (and 5 if 6-scene) — PEAK CONSEQUENCE:
+   The single most striking implication. The "wait, what?" moment.
+
+Final scene — RESOLUTION + REFLECTION:
+   Land it. Tie back to something the viewer can feel about their own world.
+   This scene MAY end with closure — every other scene must end with a hook
+   forward (a question, a "...but", or an unresolved threat).
+
+═══════════════════════════════════════════════════════════════
+CONTENT QUALITY
+═══════════════════════════════════════════════════════════════
+- Every sentence must contain a NEW concrete detail (a specific number, place, organism, mechanism, timescale).
+- NO vague abstractions ("things would change", "consequences would follow").
+- Reference real science where applicable — actual species, distances, timescales, physical laws.
+- 2-3 short sentences per scene for natural breathing pauses.
+- 25-40 words per scene narration (target ~30-35).
+
+═══════════════════════════════════════════════════════════════
+OUTPUT — return ONLY valid JSON, no markdown fences, no preamble:
+═══════════════════════════════════════════════════════════════
+{{
+  "title": "What If <topic phrasing>? (under 60 characters)",
+  "description": "Hook sentence in first line. 100-150 words about the thought experiment. End with: \\n\\n#Shorts #WhatIf #ScienceShorts #ThoughtExperiment #Curiosity #Hypothetical #ScienceFacts #FutureEarth #SpeculativeScience #VyasaAI",
+  "tags": ["what if","hypothetical","thought experiment","science","curiosity","speculative","science shorts","what if scenarios","science what if","alternate reality","future earth","mind blowing","क्या होगा अगर","विज्ञान","कल्पना","trending shorts"],
+  "visual_style": "<one of: {style_options}>",
+  "scenes": [
+        {{
+{narration_block}          "image_prompt": "Detailed English prompt — portrait 9:16 composition, specific subjects, environment, lighting. Must visually match the chosen visual_style.",
+          "video_prompt": "Cinematic 5-second shot in English — subjects in subtle motion, camera movement, lighting. Vertical 9:16. Matches visual_style.",
+          "mood": "3-6 word English emotional tone phrase"
+        }}
+  ],
+  "thumbnail_prompt": "Bold curiosity-driven thumbnail in the chosen visual_style — vivid, specific, attention-stopping at small size"
+}}
+
+HARD RULES:
+- Title: under 60 characters, MUST start with "What If"
+- visual_style: MUST be exactly one of the allowed values
+- EXACTLY 5 OR 6 scenes
+- Narration MUST NOT contain URLs, hashtags, @mentions, or social-media text
+- image_prompt, video_prompt, thumbnail_prompt all in English
+- Description ends with the exact hashtag block above
+- NO Mahabharata characters, gods, or mythology — this is science/curiosity content
+"""
+
+    raw = _call_llm(prompt)
+    start = raw.find("{")
+    end   = raw.rfind("}")
+    if start == -1 or end == -1:
+        raise ValueError(f"No JSON object found in WhatIf LLM response:\n{raw[:300]}")
+    data = _parse_llm_json(raw[start:end + 1])
+
+    # Hard-trim narrations
+    for scene in data.get("scenes", []):
+        if "narration" in scene:
+            scene["narration"] = _trim_narration(scene["narration"])
+        if "narration_hi" in scene:
+            scene["narration_hi"] = _trim_narration(scene["narration_hi"])
+
+    # Validate visual_style; fall back to photoreal-3d if LLM picks something off-list
+    vs = data.get("visual_style", "")
+    if vs not in _WHATIF_VISUAL_STYLES:
+        print(f"    [warn] visual_style '{vs}' not recognized — defaulting to photoreal-3d")
+        data["visual_style"] = "photoreal-3d"
+
+    n_scenes  = len(data.get("scenes", []))
+    word_avg  = (sum(len(s.get("narration", "").split()) for s in data["scenes"]) /
+                 max(n_scenes, 1))
+    print(f"    WhatIf script: {n_scenes} scenes, avg {word_avg:.1f} words/scene, "
+          f"style={data['visual_style']}")
+
+    data["content_type"] = "whatif"
+    data["topic"]        = topic
+    data["series"]       = "whatif"
+    return data
+
+
+def generate_script(
+    language: str = "en",
+    forced_topic: str = None,
+    series: str = "mahabharata",
+    dual_language: bool = False,
+) -> dict:
     """
     Returns a dict with:
       title, description, tags, scenes, thumbnail_prompt,
-      language, content_type, topic
+      language, content_type, topic, series
+
+    For series="whatif", routes to the WhatIf flow. The Mahabharata flow
+    (default) is unchanged — language/forced_topic still work as before.
     """
+    if series == "whatif":
+        data = _generate_whatif_script(
+            forced_topic=forced_topic,
+            dual_language=dual_language,
+        )
+        data["language"] = "dual" if dual_language else language
+        return data
+
     _MOTIVATIONAL_KEYWORDS = ("karma", "dharma", "lesson", "wisdom", "why", "power", "teaching")
 
     if forced_topic:
@@ -726,4 +916,5 @@ def generate_script(language: str = "en", forced_topic: str = None) -> dict:
     data["language"] = language
     data["content_type"] = content_type
     data["topic"] = topic
+    data["series"] = "mahabharata"
     return data
