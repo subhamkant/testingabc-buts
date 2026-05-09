@@ -7,30 +7,37 @@ import base64
 import io
 from urllib.parse import quote
 
-# Mahabharata style suffix — photorealistic cinematic period film aesthetic.
-# Picture a Sanjay Leela Bhansali / Bollywood epic, not a comic book. The earlier
-# Amar Chitra Katha + cel-shaded path produced beautiful but visibly-illustrated
-# frames; viewers compared the photoreal WhatIf nature-doc output and asked for
-# the Mahabharata to match. We keep the architecture, lighting, and jewel-tone
-# palette (those work in any medium) but flip the medium back to photographic.
+# Mahabharata style suffix — photorealistic cinematic period film aesthetic
+# tuned for NATURAL color and skin tones. Earlier iterations went too far in
+# either direction:
+#   - "Amar Chitra Katha cel-shaded" → cartoonish (Anger's Fire-style)
+#   - heavy "warm Bhansali" + saturated jewel tones → magenta/pink wash on
+#     everything (the "भीम और दुर्योधन" upload — purple skin, pink sky)
+# This sweet spot leans on the Star Bharat Mahabharat live-action / Baahubali
+# reference: photoreal, ornate, jewel-toned BUT with accurate skin and
+# balanced color. Explicitly bans color casts in the negative cues.
 #
 # WhatIf series uses a different per-style suffix from _WHATIF_STYLE_SUFFIXES
 # based on the script's visual_style — this Mahabharata suffix does not apply.
 STYLE_SUFFIX = (
-    "hyper-detailed photorealistic cinematic photography, ancient India epic Mahabharata, "
-    "Sanjay Leela Bhansali period-film aesthetic, real human faces with naturalistic "
-    "skin texture and crystal-clear features, ultra-sharp 8K resolution, "
+    "photorealistic cinematic film still, ancient India epic Mahabharata, "
+    "Star Bharat Mahabharat live-action / Baahubali period-film aesthetic, "
+    "real human faces with natural skin tones and accurate skin texture, "
+    "balanced cinematic color grading — neutral whites, true skin colors, "
+    "ultra-sharp 8K resolution, "
     "ornate Hindu temple-palace architecture in the background — carved sandstone "
     "pillars, hanging brass oil lamps, lotus reliefs, stone deity carvings, "
     "patterned floor tiles, multiple planes of architectural depth, "
-    "dramatic warm directional sunlight streaming through carved arches with volumetric god rays, "
-    "jewel-toned palette of gold, crimson, deep emerald, lapis blue, "
-    "intricate gold jewelry textures clearly visible, rich silk garments with embroidery detail, "
-    "shallow depth of field, hero character in sharp focus, "
-    "expressive facial emotion, cinematic composition, rule of thirds, "
-    "inspired by Raja Ravi Varma paintings rendered as live-action film, "
-    "consistent character design, sharp focus, no blur, no motion blur, "
-    "no cartoon, no anime, no cel shading, no comic book illustration"
+    "directional cinematic lighting through carved arches, soft volumetric haze, "
+    "rich jewel-toned palette of gold, crimson, deep emerald, lapis blue — "
+    "but applied as accent colors over natural background tones, NOT as a "
+    "global color wash across the whole frame, "
+    "intricate gold jewelry detail and rich silk garments with visible embroidery, "
+    "shallow depth of field, hero character in sharp focus, expressive facial emotion, "
+    "cinematic composition, rule of thirds, inspired by Raja Ravi Varma paintings "
+    "rendered as live-action film, consistent character design, sharp focus, "
+    "no cartoon, no anime, no cel shading, no comic book illustration, "
+    "no magenta cast, no pink cast, no purple skin, no over-saturated wash"
 )
 
 # WhatIf series style suffixes — picked by `script["visual_style"]`. Mahabharata
@@ -66,15 +73,19 @@ def _resolve_style_suffix(series: str, visual_style: str) -> str:
         return _WHATIF_STYLE_SUFFIXES.get(visual_style, _WHATIF_STYLE_SUFFIXES["photoreal-3d"])
     return STYLE_SUFFIX
 
-# Negative prompt — suppresses blurry/low-quality outputs and FLUX-schnell's
-# known anatomy weaknesses (especially hands and fingers).
+# Negative prompt — suppresses blurry/low-quality outputs, FLUX-schnell's
+# known anatomy weaknesses (hands/fingers), AND the heavy magenta/pink wash
+# that older STYLE_SUFFIX iterations produced.
 _NEGATIVE = (
     "blurry,blur,out of focus,low quality,pixelated,distorted,"
     "ugly,bad anatomy,watermark,text,logo,duplicate,deformed,"
     "extra fingers,six fingers,seven fingers,too many fingers,"
     "mutated hands,malformed hands,fused fingers,missing fingers,"
     "extra limbs,extra arms,malformed limbs,disfigured,"
-    "asymmetric eyes,cross-eyed,bad proportions"
+    "asymmetric eyes,cross-eyed,bad proportions,"
+    "magenta cast,pink cast,purple skin,over-saturated,"
+    "color wash,monochrome filter,sepia overlay,"
+    "cartoon,anime,cel shaded,illustration,drawing"
 )
 
 # 3 compositional angles per scene — gives genuine visual variety

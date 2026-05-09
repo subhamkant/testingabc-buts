@@ -19,10 +19,14 @@ _MOTION_TYPES = [
 
 _XFADE_TRANSITIONS = ["dissolve", "fade", "wipeleft", "wiperight"]
 
-# Warm cinematic grade
+# Cinematic grade — gentle warm bias only. The previous version pulled blues
+# and greens down hard (b: 0.5→0.44, g: 0.5→0.50→0.96 ceiling) which, stacked
+# on top of FLUX's already-warm jewel-tone palette, produced a heavy magenta/
+# pink cast across faces and backgrounds (visible in the "भीम और दुर्योधन"
+# upload). Lighter curves keep the warm cinematic feel without the wash.
 COLOR_GRADE = (
-    "curves=r='0/0.04 0.5/0.56 1/1':g='0/0.02 0.5/0.50 1/0.96':b='0/0 0.5/0.44 1/0.90',"
-    "eq=contrast=1.08:saturation=1.22:brightness=0.015,"
+    "curves=r='0/0.02 0.5/0.53 1/1':g='0/0.01 0.5/0.51 1/0.98':b='0/0 0.5/0.48 1/0.96',"
+    "eq=contrast=1.05:saturation=1.10:brightness=0.01,"
     "vignette=angle=PI/4"
 )
 

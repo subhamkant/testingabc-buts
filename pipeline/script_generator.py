@@ -36,6 +36,7 @@ def _call_llm(prompt: str) -> str:
 
 # ── Story Topics — well-known Mahabharata incidents ───────────────────────────
 STORY_TOPICS = [
+    # ── Core canonical incidents (original set) ─────────────────────────────
     "The Kurukshetra war begins — conches blow and armies clash",
     "Krishna reveals the Bhagavad Gita to the trembling Arjuna",
     "Draupadi's vastraharan — her divine cry saved by Krishna",
@@ -54,8 +55,37 @@ STORY_TOPICS = [
     "Ashwatthama's revenge — the massacre of sleeping warriors",
     "Gandhari's curse destroys Krishna's entire Yadava clan",
     "The Pandavas' final journey — one by one they fall in the Himalayas",
-    "Karnas's reunion with Kunti — the secret she kept for decades",
+    "Karna's reunion with Kunti — the secret she kept for decades",
     "Drona teaches archery — Arjuna sees only the eye of the bird",
+
+    # ── YouTube-suggested topics (expanded reach into lesser-known incidents)
+    # Curated from algorithm-recommended Mahabharata search terms — these are
+    # what viewers are actively searching for but few channels cover well.
+    "Krishna creates a fake sunset to trap Jayadratha — Arjuna's vengeance fulfilled",
+    "Jayadratha's lone stand against the entire Pandava army on day 13",
+    "Jayadratha's severed head lands in his father's meditative lap — a curse fulfilled",
+    "Krishna offers Karna the throne before the war — and Karna refuses, sealing his fate",
+    "Bhishma faces Amba reborn as Shikhandi — the curse that ends an unstoppable warrior",
+    "Gandhari blindfolds herself for Dhritarashtra — and never sees her hundred sons",
+    "Aravan offers his life so the Pandavas can win — a one-day marriage to Mohini",
+    "Sahadeva sees every future moment — but is cursed to never warn anyone",
+    "Ashwatthama's immortality becomes his eternal punishment after the war",
+    "Krishna beheads Shishupala with the Sudarshan — exactly 100 sins counted",
+    "Kunti hides Karna's identity from her own sons — until the night before war",
+    "Barbarika's three arrows could end the war in one breath — Krishna asks for his head",
+    "Parshurama curses Karna — the moment Karna forgets his weapons in battle",
+    "Balarama refuses to fight at Kurukshetra — chooses a pilgrimage instead",
+    "Vidura warns Dhritarashtra — and the blind king refuses to listen, again and again",
+    "Yudhishthira answers the Yaksha's questions — the test that revives his brothers",
+    "Shikhandi appears on the battlefield — and Bhishma lays down his bow",
+    "Arjuna's silent grief after Abhimanyu's death — and the vow that consumed him",
+    "The forgotten warriors who delayed Arjuna so Jayadratha could survive",
+    "Nakula's silent mastery — the most beautiful warrior of the Mahabharata",
+    "The hidden conversation between Bhishma and Amba — a tragic cosmic destiny",
+    "Krishna's celestial mechanics — orchestrating the premature sunset",
+    "Why Drona broke his own teaching for one student — Arjuna's unspoken privilege",
+    "Bhima vows to drink Dushasana's blood — and keeps his word at Kurukshetra",
+    "The night before the war — Karna learns the truth from Kunti and accepts his fate",
 ]
 
 # ── Motivational Themes ───────────────────────────────────────────────────────
