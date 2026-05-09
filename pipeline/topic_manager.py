@@ -1,5 +1,5 @@
 """
-Topic Manager — scheduled topic queue + video activity log.
+Topic Manager — scheduled topic queue + video activity log + LLM auto-replenish.
 
 scheduled_topics_<series>.txt (per-series queue files)
     One topic per line. Lines starting with # are comments.
@@ -13,22 +13,264 @@ scheduled_topics_<series>.txt (per-series queue files)
     Backwards compat: if scheduled_topics_mahabharata.txt is missing but the
     older scheduled_topics.txt exists, the Mahabharata series falls back to it.
 
+    Auto-replenish (WhatIf only): when the queue drops below
+    _WHATIF_REPLENISH_THRESHOLD, an LLM call generates fresh topics and
+    appends them. Recently-uploaded topics (from video_log_*.txt) are passed
+    in as an avoidance list so the model doesn't re-suggest stale ideas.
+    The workflow's "Commit updated state" step persists the modified queue
+    back to git after each run.
+
 video_log_001.txt / video_log_002.txt …
     Every completed video is appended here with timestamp, language, series,
     and metadata. A new file is created automatically when the current one
     exceeds 5 MB.
 """
 
+import glob
+import json
 import os
+import random
+import re
 from datetime import datetime
 
 LEGACY_SCHEDULED_FILE = "scheduled_topics.txt"   # legacy, Mahabharata-only fallback
 LOG_PREFIX     = "video_log_"
 LOG_MAX_BYTES  = 5 * 1024 * 1024   # 5 MB per log file
 
+# Auto-replenish config — when scheduled_topics_whatif.txt has fewer than
+# this many remaining lines (excluding comments), generate this many fresh
+# topics in one LLM call. One call -> ~10 days of new content; cheap.
+_WHATIF_REPLENISH_THRESHOLD = 3
+_WHATIF_REPLENISH_COUNT     = 10
+# Avoidance window — ~2 months of WhatIf uploads (1/day). The LLM is told
+# never to reproduce anything in this window, and the static-topic fallback
+# is filtered the same way. Same topic only re-surfaces after this many
+# uploads have rolled past.
+_WHATIF_RECENT_HISTORY      = 60
+
 
 def _scheduled_file_for(series: str) -> str:
     return f"scheduled_topics_{series}.txt"
+
+
+# ── Recent-topic history (for LLM avoidance) ─────────────────────────────────
+
+# Compact tracked file recording recently-used topics per series. Designed to
+# be small (~few KB), committed back by the workflow's state-persistence step
+# so avoidance survives across ephemeral GHA runners. video_log_*.txt files
+# are gitignored and thus useless for cross-run avoidance — this file is the
+# durable source of truth.
+_RECENT_TOPICS_PATH = "recent_topics.json"
+_RECENT_TOPICS_KEEP = 120   # cap entries per series — keeps file small
+
+
+def _load_recent_topics_db() -> dict:
+    if not os.path.exists(_RECENT_TOPICS_PATH):
+        return {}
+    try:
+        with open(_RECENT_TOPICS_PATH, encoding="utf-8") as f:
+            return json.load(f)
+    except Exception:
+        return {}
+
+
+def _save_recent_topics_db(db: dict) -> None:
+    try:
+        with open(_RECENT_TOPICS_PATH, "w", encoding="utf-8") as f:
+            json.dump(db, f, ensure_ascii=False, indent=2)
+    except Exception as e:
+        print(f"    [recent-topics] save failed: {e}")
+
+
+def record_used_topic(series: str, topic: str) -> None:
+    """
+    Append `topic` to the recent-topics database for `series`. Called from
+    log_video on every successful upload so the avoidance list grows.
+    Capped at _RECENT_TOPICS_KEEP entries per series (oldest dropped).
+    """
+    if not topic or not series:
+        return
+    db = _load_recent_topics_db()
+    bucket = db.setdefault(series, [])
+    bucket.append({
+        "topic": topic,
+        "ts":    datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+    })
+    # Trim — keep newest _RECENT_TOPICS_KEEP entries
+    if len(bucket) > _RECENT_TOPICS_KEEP:
+        db[series] = bucket[-_RECENT_TOPICS_KEEP:]
+    _save_recent_topics_db(db)
+
+
+def _read_recent_topics(series: str, limit: int = 60) -> list:
+    """
+    Return the most recent `limit` topic strings used for `series` from the
+    tracked recent_topics.json. Newest first. Backed by the durable JSON
+    file (committed across runs) — NOT the gitignored video_log_*.txt.
+    """
+    db = _load_recent_topics_db()
+    bucket = db.get(series, [])
+    # Newest first
+    topics = [entry["topic"] for entry in reversed(bucket) if entry.get("topic")]
+    return topics[:limit]
+
+
+# ── LLM topic generator ──────────────────────────────────────────────────────
+
+# Diverse seed categories the LLM samples from when generating WhatIf topics.
+# Picking a few each call prevents one-domain spam (e.g. all "what if planets
+# moved" topics) and forces variety across runs.
+_WHATIF_SEED_CATEGORIES = [
+    "astronomy / cosmology",
+    "Earth geology / tectonics",
+    "global climate / weather",
+    "biology / evolution / extinction",
+    "physics / fundamental forces",
+    "human consciousness / cognition",
+    "civilization / human history",
+    "future technology / AI",
+    "ocean / hydrosphere",
+    "atmosphere / breathable air",
+    "geography / continents",
+    "speed of time / relativity",
+    "human anatomy / biology limits",
+    "agriculture / food chain",
+]
+
+
+def _generate_whatif_topics_via_llm(count: int, avoid: list) -> list:
+    """
+    Use the existing Groq+Gemini LLM cascade (lazy-imported from
+    script_generator to avoid import cycles) to generate `count` fresh
+    WhatIf topics, avoiding any string-similarity duplicates of `avoid`.
+
+    Returns a list of topic strings, possibly empty if the LLM fails.
+    """
+    try:
+        from pipeline.script_generator import _call_llm
+    except Exception as e:
+        print(f"    [topic-gen] _call_llm unavailable: {e}")
+        return []
+
+    seeds = random.sample(
+        _WHATIF_SEED_CATEGORIES,
+        min(5, len(_WHATIF_SEED_CATEGORIES)),
+    )
+    avoid_block = "\n".join(f"- {t}" for t in avoid[:_WHATIF_RECENT_HISTORY]) or "(none)"
+
+    prompt = f"""
+You are generating WhatIf topics for a YouTube Shorts channel. Each topic
+becomes a 60-second curiosity-driven thought experiment grounded in real
+science (NOT fantasy / mythology / magic).
+
+Generate EXACTLY {count} topics that are:
+- Genuinely thought-provoking — the viewer should want to know the answer
+- Scientifically plausible — speculation grounded in physics, biology,
+  astronomy, geology, climate, anatomy, or human civilization. NOT
+  supernatural, not "what if magic existed".
+- Specific and visualizable — not abstract philosophy
+- Distinct from each other (no two near-duplicates in this batch)
+- Distinct from the AVOID LIST below — that list is roughly the last
+  2 months of uploads. Do not regenerate ANY topic in the same theme as
+  anything in that list, even with different phrasing. If the avoid list
+  has "What if Earth's gravity halved", do not produce "What if gravity
+  weakened on Earth" — pick a totally different domain.
+
+CATEGORIES TO DRAW FROM (sample broadly across these — don't all come
+from the same one):
+{chr(10).join(f"- {c}" for c in seeds)}
+
+EXAMPLE GOOD TOPICS (use this style — concrete, single-clause, ends with "?"):
+- What if Earth had two moons of equal size?
+- What if oxygen levels doubled overnight?
+- What if humans only needed 2 hours of sleep?
+- What if the Pacific Ocean evaporated in one day?
+- What if every plant produced light at night?
+
+EXAMPLE BAD TOPICS (avoid these patterns):
+- "What if magic was real?"  (not science)
+- "What if you could fly?"   (too generic, not specific)
+- "What if life had meaning?" (abstract philosophy, no visual)
+
+AVOID LIST — do NOT generate near-duplicates of any of these:
+{avoid_block}
+
+OUTPUT FORMAT — return ONLY a JSON array of strings, no markdown fences,
+no preamble, no commentary:
+[
+  "What if ...?",
+  "What if ...?",
+  ...
+]
+"""
+
+    try:
+        raw = _call_llm(prompt)
+    except Exception as e:
+        print(f"    [topic-gen] LLM call failed: {e}")
+        return []
+
+    # Extract JSON array from response (LLM may wrap in markdown fences)
+    start = raw.find("[")
+    end   = raw.rfind("]")
+    if start == -1 or end == -1:
+        print("    [topic-gen] no JSON array in response")
+        return []
+    try:
+        topics = json.loads(raw[start:end + 1])
+    except json.JSONDecodeError as e:
+        print(f"    [topic-gen] JSON parse failed: {e}")
+        return []
+
+    # Sanity: each must be a non-empty string starting with What if/What If
+    cleaned = []
+    avoid_lc = {a.lower().strip() for a in avoid}
+    for t in topics:
+        if not isinstance(t, str):
+            continue
+        t = t.strip().rstrip(",")
+        if not t or len(t) > 200:
+            continue
+        if not t.lower().startswith("what if"):
+            continue
+        if t.lower() in avoid_lc:
+            continue
+        cleaned.append(t)
+
+    print(f"    [topic-gen] LLM produced {len(cleaned)}/{count} usable topics")
+    return cleaned[:count]
+
+
+def _maybe_replenish_whatif_queue(queue_path: str, remaining_count: int) -> None:
+    """
+    If the WhatIf queue drops below _WHATIF_REPLENISH_THRESHOLD, generate a
+    fresh batch via LLM and append to the queue file. Failure is non-fatal —
+    the caller falls back to STORY_TOPICS_WHATIF random pick.
+    """
+    if remaining_count >= _WHATIF_REPLENISH_THRESHOLD:
+        return
+
+    print(f"    [topic-gen] WhatIf queue low ({remaining_count} remaining) — auto-replenishing...")
+    avoid = _read_recent_topics("whatif", limit=_WHATIF_RECENT_HISTORY)
+    new_topics = _generate_whatif_topics_via_llm(_WHATIF_REPLENISH_COUNT, avoid)
+    if not new_topics:
+        print("    [topic-gen] no new topics produced — queue not replenished")
+        return
+
+    # Append to queue file (creates if missing)
+    header_needed = not os.path.exists(queue_path) or os.path.getsize(queue_path) == 0
+    with open(queue_path, "a", encoding="utf-8") as f:
+        if header_needed:
+            f.write(
+                "# What If — scheduled topic queue (auto-generated entries below)\n"
+                "# One topic per line. Pipeline pops first non-comment line per run.\n\n"
+            )
+        # Mark when this batch was generated for audit trail
+        f.write(f"\n# auto-generated {datetime.now().strftime('%Y-%m-%d %H:%M')} UTC\n")
+        for t in new_topics:
+            f.write(f"{t}\n")
+
+    print(f"    [topic-gen] Appended {len(new_topics)} fresh topics to {queue_path}")
 
 
 # ── Topic queue ───────────────────────────────────────────────────────────────
@@ -38,6 +280,11 @@ def get_next_topic(series: str = "mahabharata") -> str | None:
     Returns the first queued topic for the given series and removes it.
     Returns None if the file is empty or missing — caller falls back to a
     random built-in topic.
+
+    For series=="whatif", the queue is auto-replenished via an LLM call when
+    fewer than _WHATIF_REPLENISH_THRESHOLD entries remain. This gives the
+    channel an effectively unlimited supply of fresh thought experiments
+    while still respecting any manually-queued topics that take priority.
     """
     primary = _scheduled_file_for(series)
     if os.path.exists(primary):
@@ -46,7 +293,14 @@ def get_next_topic(series: str = "mahabharata") -> str | None:
         # Backwards compat: pre-WhatIf installs use scheduled_topics.txt
         path = LEGACY_SCHEDULED_FILE
     else:
-        return None
+        # No queue file exists. WhatIf can synthesize one from scratch.
+        if series == "whatif":
+            path = primary  # _maybe_replenish_whatif_queue creates it
+            _maybe_replenish_whatif_queue(path, remaining_count=0)
+            if not os.path.exists(path):
+                return None
+        else:
+            return None
 
     with open(path, "r", encoding="utf-8") as f:
         lines = f.readlines()
@@ -68,6 +322,16 @@ def get_next_topic(series: str = "mahabharata") -> str | None:
             f.writelines(remaining)
         print(f"    Using scheduled {series} topic: {topic}")
 
+    # After consuming a topic, see if the WhatIf queue needs auto-replenish
+    # for future runs. Doing it AFTER the pop means today's run already has
+    # its topic; the appended batch is for upcoming runs.
+    if series == "whatif":
+        non_comment_remaining = sum(
+            1 for ln in remaining
+            if ln.strip() and not ln.strip().startswith("#")
+        )
+        _maybe_replenish_whatif_queue(path, non_comment_remaining)
+
     return topic
 
 
@@ -86,18 +350,21 @@ def _current_log_path() -> str:
 
 
 def log_video(video_path: str, script_data: dict, language: str) -> None:
-    """Appends a completed-video entry to the rolling log file."""
+    """Appends a completed-video entry to the rolling log file AND records
+    the topic into the tracked recent_topics.json so cross-run avoidance
+    works (rolling log is gitignored and thus discarded between runs)."""
     log_path  = _current_log_path()
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     scenes    = script_data.get("scenes", [])
     series    = script_data.get("series", "mahabharata")
+    topic     = script_data.get("topic", "")
 
     entry = (
         f"[{timestamp}]\n"
         f"  Series   : {series}\n"
         f"  Language : {language}\n"
         f"  Title    : {script_data.get('title', 'N/A')}\n"
-        f"  Topic    : {script_data.get('topic', 'N/A')}\n"
+        f"  Topic    : {topic or 'N/A'}\n"
         f"  Type     : {script_data.get('content_type', 'N/A')}\n"
         f"  Scenes   : {len(scenes)}\n"
         f"  File     : {video_path}\n"
@@ -106,5 +373,13 @@ def log_video(video_path: str, script_data: dict, language: str) -> None:
 
     with open(log_path, "a", encoding="utf-8") as f:
         f.write(entry)
+
+    # Persist topic into the cross-run avoidance database (small JSON,
+    # tracked in git, committed back by the workflow). For dual-language
+    # WhatIf runs this is called twice — once per language — but we only
+    # want one entry per generation. log_video is called once per video
+    # upload though, so for dual-language we'd get 2 entries with the same
+    # topic. That's harmless (the avoidance set dedups via lowercase).
+    record_used_topic(series, topic)
 
     print(f"    Logged -> {log_path}")

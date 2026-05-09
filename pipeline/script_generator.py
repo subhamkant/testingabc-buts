@@ -468,7 +468,23 @@ def _generate_whatif_script(forced_topic: str = None, dual_language: bool = True
     English `narration` and Hindi `narration_hi` so the orchestrator can render
     two videos sharing identical visuals.
     """
-    topic = forced_topic or random.choice(STORY_TOPICS_WHATIF)
+    if forced_topic:
+        topic = forced_topic
+    else:
+        # Last-resort fallback when the topic queue is empty AND the LLM
+        # auto-replenish in topic_manager has failed (rate-limited or
+        # offline). Filter STORY_TOPICS_WHATIF against the recent-uploads
+        # avoidance window so we never re-publish a topic from the last
+        # ~2 months even on the failure path.
+        from pipeline.topic_manager import _read_recent_topics, _WHATIF_RECENT_HISTORY
+        recent = {t.lower() for t in _read_recent_topics("whatif", limit=_WHATIF_RECENT_HISTORY)}
+        eligible = [t for t in STORY_TOPICS_WHATIF if t.lower() not in recent]
+        if not eligible:
+            # All static topics used recently — accept any (oldest-recent
+            # cycles back) rather than fail the run.
+            eligible = list(STORY_TOPICS_WHATIF)
+            print("    [whatif] all built-in topics used in last 2 months — allowing repeat")
+        topic = random.choice(eligible)
 
     if dual_language:
         narration_block = (

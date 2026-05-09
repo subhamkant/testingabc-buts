@@ -205,11 +205,12 @@ jobs:
           git pull --rebase --autostash origin master || true
           # Stage all rotating-state files. characters.json gets newly-detected
           # character visuals appended; scheduled_topics_*.txt has the consumed
-          # topic line removed from the queue. Without committing these back,
-          # every workflow run starts from a fresh checkout and pops the SAME
-          # topic — that's the bug that produced "Humans Vanished Tomorrow"
-          # three days in a row.
-          git add assets/characters.json scheduled_topics_*.txt 2>/dev/null || true
+          # topic line removed from the queue (and may have LLM-replenished
+          # topics appended); recent_topics.json grows with the just-uploaded
+          # topic so future runs avoid duplicates within the ~2-month window.
+          # Without committing these back, every workflow run starts from a
+          # fresh checkout and the avoidance/queue state is lost.
+          git add assets/characters.json scheduled_topics_*.txt recent_topics.json 2>/dev/null || true
           if git diff --staged --quiet; then
             echo "No state changes to commit."
           else
