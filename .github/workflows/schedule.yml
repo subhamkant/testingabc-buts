@@ -161,6 +161,12 @@ jobs:
           HF_SPACE: ${{ secrets.HF_SPACE }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          # ElevenLabs is the first tier of the TTS cascade — when set, every
+          # video uses the premium voice (dramatically more human than Edge or
+          # Charon). Free tier gives ~10k chars/month (~5-7 videos). Falls back
+          # silently to Gemini Charon → Edge TTS if the secret is empty.
+          ELEVENLABS_API_KEY: ${{ secrets.ELEVENLABS_API_KEY }}
+          ELEVENLABS_VOICE_ID: ${{ secrets.ELEVENLABS_VOICE_ID }}
           NARRATOR_VOICE: Charon
           CINEMATIC_FPS: "30"
         run: python main.py ${{ env.TARGET }} 2>&1 | tee pipeline_output.txt
