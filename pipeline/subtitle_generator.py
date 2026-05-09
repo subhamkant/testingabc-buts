@@ -1,7 +1,7 @@
 """
 Subtitle Generator
 ==================
-Word-level karaoke captions burned into the final video.
+Word-level captions burned into the final video.
 
 Pipeline:
   1. Send the full-narration audio to Groq Whisper (whisper-large-v3) with
@@ -9,14 +9,20 @@ Pipeline:
      as the script generator (14,400 RPD).
   2. Group words into 1-2 word "cards" so on-screen text is readable on a
      phone in 1 second.
-  3. Write an ASS subtitle file with a snappy scale pop-in animation per card.
-  4. Burn into video via FFmpeg's `subtitles` filter.
+  3. Render each card as an RGBA PNG using HarfBuzz (uharfbuzz) shaping +
+     freetype glyph rasterization. This bypasses FFmpeg's libass/drawtext
+     text path, which on the gyan.dev Windows build silently skips Indic
+     complex shaping (i-mātrās misplaced, conjuncts not forming).
+  4. Overlay each PNG onto the video for its time window, with fade in/out.
 
 The whole thing is gated by the BURN_SUBTITLES env var (default "1"). Failures
 are silently swallowed — the video is never lost over a subtitle issue.
 """
 
 import os
+import glob
+import shutil
+import subprocess
 import requests
 
 
@@ -35,18 +41,23 @@ FONT_SIZE      = 88                       # large for phone readability
 OUTLINE_PX     = 6                        # thick outline
 SHADOW_PX      = 2
 
-# Vertical position from bottom — ASS MarginV. 1080x1920 portrait.
-# 600 puts the caption band roughly at 70% screen height (lower-third feel).
+# Bundled font — required because some FFmpeg builds and many systems lack a
+# proper Devanagari font with full Indic OpenType tables. Shipping our own
+# guarantees consistent rendering across machines.
+FONT_PATH      = os.path.join(
+    os.path.dirname(__file__), "..", "assets", "fonts", "NotoSansDevanagari-Bold.ttf"
+)
+
+# Vertical position from bottom — equivalent to ASS MarginV. 1080x1920 portrait.
+# 520 puts the caption band roughly at 70% screen height (lower-third feel).
 MARGIN_V       = 520
-MARGIN_LR      = 80                       # side margins to keep words centered
 
 WORDS_PER_CARD = 2                        # 1-2 short words per card; 1 if word > 6 chars
 
-# Pop-in animation timings (ms)
-FADE_IN_MS     = 60
-SCALE_UP_MS    = 140
-SCALE_DOWN_MS  = 220
-HOLD_AFTER_MS  = 60                       # extra hang time after word's end
+# Per-card timing
+FADE_IN_S      = 0.06
+FADE_OUT_S     = 0.08
+HOLD_AFTER_S   = 0.06                     # extra hang time after word's end
 
 
 # ── Groq Whisper ──────────────────────────────────────────────────────────────
@@ -128,112 +139,156 @@ def _group_into_cards(words: list, max_words: int = WORDS_PER_CARD) -> list:
     return cards
 
 
-# ── ASS file writer ───────────────────────────────────────────────────────────
+# ── PNG card rendering ────────────────────────────────────────────────────────
 
-def _ass_time(seconds: float) -> str:
-    """Format seconds as ASS time string H:MM:SS.cc (centiseconds)."""
-    if seconds < 0:
-        seconds = 0
-    h  = int(seconds // 3600)
-    m  = int((seconds % 3600) // 60)
-    s  = int(seconds % 60)
-    cs = int((seconds - int(seconds)) * 100)
-    return f"{h}:{m:02d}:{s:02d}.{cs:02d}"
-
-
-def _ass_escape(text: str) -> str:
-    """Escape characters that have meaning in ASS dialogue lines."""
-    return (text
-            .replace("\\", "\\\\")
-            .replace("{", "\\{")
-            .replace("}", "\\}")
-            .replace("\n", "\\N"))
-
-
-def write_ass_subtitles(cards: list, output_path: str) -> bool:
+def _render_card_pngs(cards: list, out_dir: str) -> list:
     """
-    Write an ASS file with one Dialogue line per card. Each card has a
-    fade-in + scale pop-in animation for snappy, readable phone captions.
+    Render each card to an RGBA PNG using HarfBuzz shaping. Returns a list of
+    dicts: [{path, start, end, width, height}, ...]. Files outside FFmpeg's
+    overlay-friendly path or with rendering failures are skipped (caller
+    treats an empty list as "no subtitles").
+    """
+    from pipeline.text_renderer import render_text_card
+
+    # ASS used &H0000FFFF (yellow) as primary fill, &H00000000 black outline,
+    # &H80000000 (50% black) as backing. Translating to RGBA tuples:
+    fill_rgba    = (255, 230, 0, 255)   # bright phone-readable yellow
+    outline_rgba = (0, 0, 0, 255)
+    shadow_rgba  = (0, 0, 0, 160)
+
+    os.makedirs(out_dir, exist_ok=True)
+    rendered = []
+    for i, c in enumerate(cards):
+        try:
+            img = render_text_card(
+                c["text"],
+                font_path=FONT_PATH,
+                font_size=FONT_SIZE,
+                fill=fill_rgba,
+                outline=outline_rgba,
+                outline_px=OUTLINE_PX,
+                shadow=shadow_rgba,
+                shadow_offset=(SHADOW_PX, SHADOW_PX),
+            )
+        except Exception as e:
+            print(f"    [subs] card {i} render failed: {e}")
+            continue
+
+        path = os.path.join(out_dir, f"card_{i:03d}.png")
+        img.save(path, "PNG")
+        w, h = img.size
+        rendered.append({
+            "path":  path,
+            "start": float(c["start"]),
+            "end":   float(c["end"]) + HOLD_AFTER_S,
+            "w":     w,
+            "h":     h,
+        })
+    return rendered
+
+
+# ── FFmpeg PNG overlay burn ───────────────────────────────────────────────────
+
+# How many PNG overlays to chain into a single FFmpeg invocation. Going too
+# wide creates a huge filter graph that's slow to compile; chunking keeps each
+# pass fast and isolates failures.
+_OVERLAY_CHUNK = 24
+
+
+def _build_overlay_filter(cards: list, target_h: int) -> str:
+    """
+    Build an FFmpeg filter_complex that overlays each PNG card on the video,
+    centered horizontally, at a fixed vertical position MARGIN_V from the
+    bottom. Each overlay is gated to its [start, end] window with fade in/out.
+    """
+    parts = ["[0:v]format=yuva420p[v0]"]
+    prev = "[v0]"
+
+    for idx, c in enumerate(cards, start=1):
+        dur = max(c["end"] - c["start"], 0.05)
+        fade_out_st = max(dur - FADE_OUT_S, 0.0)
+        # Per-card alpha animation: fade in, hold, fade out
+        parts.append(
+            f"[{idx}:v]format=rgba,"
+            f"fade=t=in:st=0:d={FADE_IN_S:.3f}:alpha=1,"
+            f"fade=t=out:st={fade_out_st:.3f}:d={FADE_OUT_S:.3f}:alpha=1"
+            f"[c{idx}]"
+        )
+        out_label = f"[v{idx}]" if idx < len(cards) else "[vout]"
+        # Vertical position: MARGIN_V from the bottom, top edge of card
+        y_expr = f"H-{MARGIN_V}-h"
+        parts.append(
+            f"{prev}[c{idx}]overlay="
+            f"x=(W-w)/2:y={y_expr}"
+            f":enable='between(t,{c['start']:.3f},{c['end']:.3f})'"
+            f"{out_label}"
+        )
+        prev = out_label
+
+    return ";".join(parts)
+
+
+def _burn_chunk(video_path: str, cards: list, output_path: str) -> bool:
+    """Run a single FFmpeg pass overlaying up to _OVERLAY_CHUNK cards."""
+    inputs = ["-i", video_path]
+    for c in cards:
+        inputs += ["-loop", "1", "-t", f"{(c['end'] - c['start']) + 0.1:.3f}", "-i", c["path"]]
+
+    filter_complex = _build_overlay_filter(cards, target_h=1920)
+
+    cmd = [
+        "ffmpeg", "-y",
+        *inputs,
+        "-filter_complex", filter_complex,
+        "-map", "[vout]",
+        "-map", "0:a?",
+        "-c:v", "libx264", "-preset", "fast", "-crf", "20",
+        "-c:a", "copy",
+        "-pix_fmt", "yuv420p",
+        "-movflags", "+faststart",
+        output_path,
+    ]
+    result = subprocess.run(cmd, capture_output=True)
+    if result.returncode != 0:
+        err = result.stderr.decode("utf-8", errors="replace")[-800:] if result.stderr else ""
+        print(f"    [subs] overlay pass failed:\n    {err}")
+        if os.path.exists(output_path):
+            os.remove(output_path)
+        return False
+    return True
+
+
+def _burn_subtitles_overlay(video_path: str, cards: list) -> bool:
+    """
+    Overlay every card PNG onto the video. Big card lists are processed in
+    chunks of _OVERLAY_CHUNK so each FFmpeg filter graph stays manageable.
     """
     if not cards:
         return False
 
-    header = f"""[Script Info]
-ScriptType: v4.00+
-PlayResX: 1080
-PlayResY: 1920
-ScaledBorderAndShadow: yes
-WrapStyle: 0
-YCbCr Matrix: TV.709
+    work_path = video_path
+    tmp_paths = []
 
-[V4+ Styles]
-Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
-Style: Default,{FONT_NAME},{FONT_SIZE},{PRIMARY_COLOR},{SECONDARY},{OUTLINE_COLOR},{BACK_COLOR},-1,0,0,0,100,100,0,0,1,{OUTLINE_PX},{SHADOW_PX},2,{MARGIN_LR},{MARGIN_LR},{MARGIN_V},1
+    chunks = [cards[i:i + _OVERLAY_CHUNK] for i in range(0, len(cards), _OVERLAY_CHUNK)]
+    for ci, chunk in enumerate(chunks):
+        out_path = video_path.replace(".mp4", f"_subs_pass{ci}.mp4")
+        ok = _burn_chunk(work_path, chunk, out_path)
+        if not ok:
+            for p in tmp_paths:
+                if os.path.exists(p):
+                    os.remove(p)
+            return False
+        # The next chunk reads from this pass's output. Keep tmp around so we
+        # can clean up only after the whole sequence succeeds.
+        tmp_paths.append(out_path)
+        work_path = out_path
 
-[Events]
-Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
-"""
-
-    events = []
-    for c in cards:
-        start_s = c["start"]
-        end_s   = c["end"] + HOLD_AFTER_MS / 1000
-        start   = _ass_time(start_s)
-        end     = _ass_time(end_s)
-
-        # Pop-in: fade(80,60), scale 0%→115% over 140ms, then 115%→100% over 220ms
-        anim = (
-            f"{{\\fad({FADE_IN_MS},{HOLD_AFTER_MS})"
-            f"\\t(0,{SCALE_UP_MS},\\fscx115\\fscy115)"
-            f"\\t({SCALE_UP_MS},{SCALE_UP_MS + SCALE_DOWN_MS},\\fscx100\\fscy100)}}"
-        )
-        text = anim + _ass_escape(c["text"])
-        events.append(
-            f"Dialogue: 0,{start},{end},Default,,0,0,0,,{text}"
-        )
-
-    with open(output_path, "w", encoding="utf-8") as f:
-        f.write(header + "\n".join(events) + "\n")
-
-    return True
-
-
-# ── FFmpeg burn ───────────────────────────────────────────────────────────────
-
-def _burn_subtitles(video_path: str, ass_path: str) -> bool:
-    """
-    Burn the ASS subtitles into the video in-place via FFmpeg.
-
-    libass needs the subtitle file path with forward slashes and (on Windows)
-    no drive-letter colon, so we use a relative path from CWD.
-    """
-    import subprocess
-
-    # FFmpeg subtitles filter wants escaped colons and forward slashes.
-    # Easiest workaround: pass a relative path from the working directory.
-    rel = os.path.relpath(ass_path).replace("\\", "/")
-    # Colons inside the filter argument also need escaping
-    safe = rel.replace(":", "\\:").replace("'", "\\'")
-
-    out = video_path.replace(".mp4", "_subs.mp4")
-    cmd = [
-        "ffmpeg", "-y",
-        "-i", video_path,
-        "-vf", f"subtitles='{safe}'",
-        "-c:v", "libx264", "-preset", "fast", "-crf", "22",
-        "-c:a", "copy",
-        "-pix_fmt", "yuv420p",
-        "-movflags", "+faststart",
-        out,
-    ]
-    result = subprocess.run(cmd, capture_output=True)
-    if result.returncode != 0:
-        err = result.stderr.decode("utf-8", errors="replace")[:500] if result.stderr else ""
-        print(f"    [subs] FFmpeg burn failed:\n    {err}")
-        if os.path.exists(out):
-            os.remove(out)
-        return False
-    os.replace(out, video_path)
+    # Replace the original video with the final pass, clean intermediates
+    final = tmp_paths[-1]
+    os.replace(final, video_path)
+    for p in tmp_paths[:-1]:
+        if os.path.exists(p):
+            os.remove(p)
     return True
 
 
@@ -264,14 +319,24 @@ def apply_subtitles(video_path: str, audio_path: str, language: str = "hi") -> b
     cards = _group_into_cards(words, max_words=WORDS_PER_CARD)
     print(f"    Grouped into {len(cards)} subtitle cards")
 
-    os.makedirs("temp/subs", exist_ok=True)
-    ass_path = "temp/subs/captions.ass"
-    if not write_ass_subtitles(cards, ass_path):
-        print("    [subs] ASS write failed — skipping")
+    if not os.path.exists(FONT_PATH):
+        print(f"    [subs] font missing at {FONT_PATH} — skipping")
         return False
 
-    print("    Burning subtitles into video...")
-    if not _burn_subtitles(video_path, ass_path):
+    # Clean any prior PNGs to avoid mixing cards across runs
+    cards_dir = "temp/subs/cards"
+    if os.path.isdir(cards_dir):
+        shutil.rmtree(cards_dir, ignore_errors=True)
+
+    print("    Rendering subtitle cards via HarfBuzz shaping...")
+    rendered = _render_card_pngs(cards, cards_dir)
+    if not rendered:
+        print("    [subs] no cards rendered — skipping")
+        return False
+    print(f"    Rendered {len(rendered)} card PNGs")
+
+    print("    Overlaying subtitles onto video...")
+    if not _burn_subtitles_overlay(video_path, rendered):
         return False
 
     print("    [OK] Subtitles burned into video")
