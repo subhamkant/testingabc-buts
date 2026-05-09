@@ -13,6 +13,10 @@ output/
 logs/
 video_log_001.txt
 
+# Runtime caches (regenerable, no point committing)
+trending_cache.json
+temp/trending_cache.json
+
 # Runtime state
 .env
 scheduled_topics.txt

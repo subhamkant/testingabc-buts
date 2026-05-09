@@ -31,7 +31,10 @@ import json
 import os
 import random
 import re
+import time
 from datetime import datetime
+
+import requests
 
 LEGACY_SCHEDULED_FILE = "scheduled_topics.txt"   # legacy, Mahabharata-only fallback
 LOG_PREFIX     = "video_log_"
@@ -115,6 +118,94 @@ def _read_recent_topics(series: str, limit: int = 60) -> list:
     return topics[:limit]
 
 
+# ── Trending headlines (for trend-aware WhatIf topic generation) ────────────
+
+# Cache trending headlines for ~6h so we don't hammer Reddit on every run.
+# This file is gitignored — purely runtime cache, no point committing.
+_TRENDING_CACHE_PATH = "temp/trending_cache.json"
+_TRENDING_CACHE_TTL_S = 6 * 3600
+
+# Subreddits chosen for: global signal, science alignment, future-speculation
+# fit. r/worldnews + r/science are the news anchors; r/Futurology and r/space
+# bias toward speculative/scientific framings; r/todayilearned surfaces
+# evergreen factoids that often spark good "what if" reframes.
+_TRENDING_SUBREDDITS = (
+    "worldnews",
+    "science",
+    "Futurology",
+    "space",
+    "todayilearned",
+)
+
+
+def _load_trending_cache() -> list:
+    if not os.path.exists(_TRENDING_CACHE_PATH):
+        return []
+    try:
+        with open(_TRENDING_CACHE_PATH, encoding="utf-8") as f:
+            payload = json.load(f)
+        if time.time() - payload.get("ts", 0) > _TRENDING_CACHE_TTL_S:
+            return []
+        return payload.get("headlines", [])
+    except Exception:
+        return []
+
+
+def _save_trending_cache(headlines: list) -> None:
+    os.makedirs(os.path.dirname(_TRENDING_CACHE_PATH), exist_ok=True)
+    try:
+        with open(_TRENDING_CACHE_PATH, "w", encoding="utf-8") as f:
+            json.dump({"ts": time.time(), "headlines": headlines}, f, ensure_ascii=False)
+    except Exception:
+        pass
+
+
+def _fetch_trending_headlines(limit: int = 15) -> list:
+    """
+    Pull top-of-the-day post titles from a curated set of public Reddit JSON
+    endpoints. No auth required (User-Agent header is enough). Cached for ~6h.
+
+    Returns list of {"title": str, "source": str} dicts. Soft-fails to empty
+    list on any network/parse error — trending context is a *bonus* signal,
+    NEVER a blocker for topic generation.
+    """
+    cached = _load_trending_cache()
+    if cached:
+        return cached[:limit]
+
+    headlines = []
+    seen_titles = set()
+    for sub in _TRENDING_SUBREDDITS:
+        try:
+            url = f"https://www.reddit.com/r/{sub}/top.json?limit=8&t=day"
+            resp = requests.get(
+                url,
+                headers={"User-Agent": "vyasa-ai-trending-fetch/1.0"},
+                timeout=10,
+            )
+            if resp.status_code != 200:
+                continue
+            data = resp.json()
+            for child in data.get("data", {}).get("children", []):
+                title = (child.get("data") or {}).get("title", "").strip()
+                if not title or len(title) < 20 or len(title) > 220:
+                    continue
+                key = title.lower()[:80]
+                if key in seen_titles:
+                    continue
+                seen_titles.add(key)
+                headlines.append({"title": title, "source": f"r/{sub}"})
+        except Exception as e:
+            print(f"    [trending] r/{sub} fetch failed (non-fatal): {str(e)[:80]}")
+            continue
+
+    headlines = headlines[:limit]
+    if headlines:
+        _save_trending_cache(headlines)
+        print(f"    [trending] fetched {len(headlines)} headlines from {len(_TRENDING_SUBREDDITS)} subs")
+    return headlines
+
+
 # ── LLM topic generator ──────────────────────────────────────────────────────
 
 # Diverse seed categories the LLM samples from when generating WhatIf topics.
@@ -144,7 +235,11 @@ def _generate_whatif_topics_via_llm(count: int, avoid: list) -> list:
     script_generator to avoid import cycles) to generate `count` fresh
     WhatIf topics, avoiding any string-similarity duplicates of `avoid`.
 
-    Returns a list of topic strings, possibly empty if the LLM fails.
+    Pulls live trending headlines and asks the LLM to reframe ~30% of
+    its output as trend-piggyback WhatIfs (rides search waves the
+    audience is already on) while keeping ~70% as evergreen science
+    speculation. Returns a list of topic strings, possibly empty if
+    the LLM fails.
     """
     try:
         from pipeline.script_generator import _call_llm
@@ -157,6 +252,46 @@ def _generate_whatif_topics_via_llm(count: int, avoid: list) -> list:
         min(5, len(_WHATIF_SEED_CATEGORIES)),
     )
     avoid_block = "\n".join(f"- {t}" for t in avoid[:_WHATIF_RECENT_HISTORY]) or "(none)"
+
+    # Trending context is a bonus signal — fully optional.
+    trending = _fetch_trending_headlines(limit=15)
+    if trending:
+        trending_block = (
+            "TRENDING NOW (top-of-day titles from global news + science + "
+            "futurology subreddits — viewers are actively searching these):\n"
+            + "\n".join(f"- {h['title']}  ({h['source']})" for h in trending)
+            + "\n\nTREND-PIGGYBACK INSTRUCTION:\n"
+            "Aim for roughly 30% of your topics (≈ "
+            f"{max(1, count // 3)} of {count}) to be inspired by these "
+            "trends — reframe a trending event as a SCIENCE-grounded WhatIf "
+            "speculation. The remaining ~70% should be evergreen science "
+            "topics not tied to news.\n\n"
+            "TREND→WHATIF transformation examples:\n"
+            "- Trending: 'Iran-Israel tensions escalate'\n"
+            "  WhatIf: 'What if a country the size of Iran suddenly ceased "
+            "to exist — what would happen to global oil prices, Middle East "
+            "geography, and the 80M people who'd need somewhere to go?'\n"
+            "- Trending: 'Asteroid 2024-XX flies past Earth at 1.2 lunar distances'\n"
+            "  WhatIf: 'What if asteroid 2024-XX had hit the Pacific Ocean "
+            "instead — how big would the tsunami be, and which coastlines vanish?'\n"
+            "- Trending: 'New Marvel/Christopher Nolan film announced'\n"
+            "  WhatIf: 'What if real-world physics matched the universe of "
+            "<film> — how long could a human survive in that environment?'\n"
+            "- Trending: 'AI passes new benchmark / new chip released'\n"
+            "  WhatIf: 'What if AI got 1000× faster overnight — which jobs "
+            "vanish in the first 24 hours, and what new ones appear?'\n\n"
+            "SAFETY: SKIP any trending headline that involves:\n"
+            "- Active war casualties / atrocities (the geographic counterfactual "
+            "  is OK — see Iran example above; specific living-people violence "
+            "  is not)\n"
+            "- Direct named-political-figure attacks\n"
+            "- Medical advice claims\n"
+            "- Religious / ethnic flashpoints\n"
+            "If a trend is risky, just skip it and use other trends or fully "
+            "evergreen topics. Do not flag the skip — silently move on.\n"
+        )
+    else:
+        trending_block = ""
 
     prompt = f"""
 You are generating WhatIf topics for a YouTube Shorts channel. Each topic
@@ -195,6 +330,7 @@ EXAMPLE BAD TOPICS (avoid these patterns):
 AVOID LIST — do NOT generate near-duplicates of any of these:
 {avoid_block}
 
+{trending_block}
 OUTPUT FORMAT — return ONLY a JSON array of strings, no markdown fences,
 no preamble, no commentary:
 [
