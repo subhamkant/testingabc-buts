@@ -89,6 +89,30 @@ def _subscribe_outro(series: str, language: str) -> dict:
     Returns a scene dict for the fixed subscribe-CTA outro. Series-aware so the
     Mahabharata and What If videos don't end with mismatched copy/imagery.
     """
+    if series == "krishna":
+        # First-person Krishna outro — preserves the divine-monologue immersion
+        # instead of jarring into a third-person promo voice. Image is a
+        # Krishna+Arjuna two-shot consistent with the rest of the speech.
+        krishna_image = (
+            "Cinematic two-shot of Krishna and Arjuna in a golden chariot at dusk, "
+            "Krishna with peacock-feather crown and blue skin gesturing in mudra, "
+            "Arjuna in armor listening intently, soft text 'Vyasa AI' subtly glowing "
+            "in the lower-third like a divine seal, jewel-toned palette of crimson "
+            "gold and lapis, illustrated mythology art, ornate background carvings"
+        )
+        krishna_video = "Slow push-in on Krishna and Arjuna two-shot, golden light rays, gentle dust motes"
+        # Krishna voicing the CTA in first person — no tonal break.
+        narration = (
+            "ऐसी ही और बातें मैं तुमसे कहूँगा पार्थ। "
+            "अगर मेरी वाणी तुम्हारे मन तक पहुँची है, तो Vyasa AI को Subscribe करो।"
+        )
+        return {
+            "narration":    narration,
+            "image_prompt": krishna_image,
+            "video_prompt": krishna_video,
+            "mood":         "divine and intimate",
+        }
+
     if series == "whatif":
         whatif_image = (
             "Vyasa AI logo card — bold cinematic lettering 'Subscribe to Vyasa AI', "
@@ -274,6 +298,132 @@ async def run_pipeline(language: str = "en", test_mode: bool = False, test_uploa
         cleanup_temp()
 
 
+# ── Krishna direct-address pipeline ──────────────────────────────────────────
+
+async def run_krishna_speech(test_mode: bool = False, test_upload: bool = False):
+    """
+    Krishna direct-address pipeline: 30-45 second Hindi-only Short where
+    Krishna speaks in first person to a named listener (Arjuna ~60% / others
+    rotate). Mirrors run_pipeline structure with series="krishna" threaded
+    through script generation, TTS (per-series voice override), image
+    generation (Krishna+listener two-shot prompts), and the upload step.
+    """
+    mode_tag = " [TEST-UPLOAD - 1 scene]" if test_upload else (" [TEST - 1 scene]" if test_mode else "")
+
+    print(f"\n{'='*55}")
+    print(f"  Krishna Direct Address  |  Hindi{mode_tag}")
+    print(f"{'='*55}\n")
+
+    cleanup_temp()
+
+    try:
+        # ── Step 1: Generate Krishna speech script ────────────────
+        print("Step 1 — Generating Krishna direct-address script...")
+        scheduled_topic = get_next_topic("krishna")
+        script = generate_script(language="hi", forced_topic=scheduled_topic, series="krishna")
+
+        if test_mode or test_upload:
+            script["scenes"] = script["scenes"][:1]
+            print("    [test] Capped to 1 scene")
+
+        print(f"    Topic    : {script['topic']}")
+        print(f"    Title    : {script['title']}")
+        print(f"    Speaker  : {script.get('speaker', 'Krishna')}")
+        print(f"    Listener : {script.get('listener', '?')}")
+
+        # Krishna-voiced outro — preserves first-person immersion
+        script["scenes"].append(_subscribe_outro("krishna", "hi"))
+        print(f"    Scenes   : {len(script['scenes'])} (+ Krishna-voiced outro)")
+        update_characters(script)
+
+        # ── Step 2: Continuous voiceover (single-pass TTS) ────────
+        # series="krishna" picks ELEVENLABS_VOICE_ID_KRISHNA if set, else
+        # falls back to the default narrator voice.
+        print("\nStep 2 — Generating continuous voiceover (series=krishna)...")
+        audio_path, char_weights = await generate_full_narration(
+            script["scenes"], language="hi", series="krishna"
+        )
+
+        if not audio_path or not os.path.exists(audio_path):
+            print("No audio generated. Aborting.")
+            return
+
+        # ── Steps 3 & 4: AI clips → assembly, or static-image fallback ──
+        output_path = _video_output_path("hi", series="krishna")
+        video_path = None
+
+        _ai_clips_available = any(
+            os.environ.get(k, "").strip()
+            for k in ("FAL_KEY", "REPLICATE_API_TOKEN", "HF_SPACE")
+        )
+
+        if _ai_clips_available:
+            try:
+                print("\nStep 3 — Generating AI video clips...")
+                clip_files = await generate_video_clips(script["scenes"])
+                print("\nStep 4 — Assembling video from AI clips with continuous audio...")
+                video_path = assemble_from_video_clips_continuous_audio(
+                    clip_files, audio_path, script,
+                    char_weights=char_weights,
+                    output_path=output_path,
+                )
+                if not os.path.exists(video_path):
+                    raise RuntimeError("Assembly produced no output file")
+            except Exception as clip_err:
+                print(f"\n    AI clips failed: {clip_err}")
+                print("    Falling back to static images...")
+                video_path = None
+
+        if video_path is None:
+            print("\nStep 3 — Generating images (Krishna+listener two-shots)...")
+            # series="krishna" reuses the Mahabharata illustrated style suffix
+            # (no separate suffix needed) — _inject_characters auto-injects
+            # Krishna and the listener's visuals when their names appear.
+            image_files = generate_images(script["scenes"], series="krishna")
+            if script.get("thumbnail_prompt"):
+                generate_thumbnail(script["thumbnail_prompt"], series="krishna")
+            print("\nStep 4 — Assembling video with continuous audio...")
+            video_path = assemble_video_continuous_audio(
+                image_files, audio_path, script,
+                char_weights=char_weights,
+                output_path=output_path,
+            )
+
+        # ── Step 4b: Burned-in word-level subtitles ───────────────
+        if video_path and os.path.exists(video_path):
+            print("\nStep 4b — Burning word-level subtitles via Groq Whisper...")
+            try:
+                apply_subtitles(video_path, audio_path, "hi")
+            except Exception as sub_err:
+                print(f"    Subtitles failed (non-fatal): {sub_err}")
+
+        # ── Step 5: Upload to YouTube ─────────────────────────────
+        video_id = None
+        if (not test_mode or test_upload) and os.path.exists("client_secrets.json"):
+            try:
+                print("\nStep 5 — Uploading to YouTube...")
+                video_id = upload_to_youtube(
+                    video_path, script, "hi",
+                    thumbnail_path="output/thumbnail.jpg",
+                    series="krishna",
+                )
+            except Exception as yt_err:
+                print(f"    YouTube upload failed: {yt_err}")
+
+        # ── Done ──────────────────────────────────────────────────
+        log_video(video_path, script, "hi")
+        print(f"\nPipeline complete!")
+        print(f"    Video saved -> {video_path}")
+        if video_id:
+            print(f"    YouTube    -> https://youtube.com/watch?v={video_id}")
+        if os.path.exists("output/thumbnail.jpg"):
+            print(f"    Thumbnail  -> output/thumbnail.jpg")
+        print()
+
+    finally:
+        cleanup_temp()
+
+
 # ── What If — dual-language orchestrator ─────────────────────────────────────
 
 async def run_whatif_dual_language(test_mode: bool = False, test_upload: bool = False):
@@ -441,6 +591,13 @@ if __name__ == "__main__":
         finally:
             sys.stdout = sys.stdout._stream
             log_file.close()
+    elif target == "krishna":
+        log_file = _setup_logging("krishna", test_mode or test_upload)
+        try:
+            asyncio.run(run_krishna_speech(test_mode, test_upload))
+        finally:
+            sys.stdout = sys.stdout._stream
+            log_file.close()
     elif target in ("en", "hi"):
         log_file = _setup_logging(target, test_mode or test_upload)
         try:
@@ -449,5 +606,5 @@ if __name__ == "__main__":
             sys.stdout = sys.stdout._stream
             log_file.close()
     else:
-        print("Usage: python main.py [en|hi|whatif] [--test | --test-upload]")
+        print("Usage: python main.py [en|hi|whatif|krishna] [--test | --test-upload]")
         sys.exit(1)

@@ -2,14 +2,15 @@ name: Mahabharata YouTube Bot
 
 on:
   schedule:
-    # ── Mahabharata Hindi — 4x/day ──────────────────────────
+    # ── Mahabharata Hindi — 3x/day (4th slot is now Krishna direct address) ──
     # Run 1 -> 12:30 AM IST (19:00 UTC previous day)
     - cron: "0 19 * * *"
     # Run 2 ->  6:30 AM IST (01:00 UTC)
     - cron: "0 1 * * *"
     # Run 3 -> 12:30 PM IST (07:00 UTC)
     - cron: "0 7 * * *"
-    # Run 4 ->  6:30 PM IST (13:00 UTC)
+    # ── Krishna direct-address — 1x/day (replaces former Mahabharata slot 4) ──
+    # Run 4 ->  6:30 PM IST (13:00 UTC) — first-person Krishna speech (Hindi)
     - cron: "0 13 * * *"
     # ── What If dual-language — 1x/day (= 2 uploads, fits 10k API quota) ──
     # Run 5 ->  9:30 AM IST (04:00 UTC) — generates HI + EN sharing visuals
@@ -18,7 +19,7 @@ on:
   workflow_dispatch:
     inputs:
       target:
-        description: "What to generate (hi / en / whatif)"
+        description: "What to generate (hi / en / whatif / krishna)"
         required: true
         default: "hi"
         type: choice
@@ -26,6 +27,7 @@ on:
           - hi
           - en
           - whatif
+          - krishna
 
 jobs:
   generate-and-upload:
@@ -142,11 +144,16 @@ jobs:
       - name: Determine target for this run
         run: |
           # Manual dispatch: use the chosen target.
-          # Scheduled: route by cron expression — 04:00 UTC = whatif, others = hi.
+          # Scheduled: route by cron expression —
+          #   04:00 UTC = whatif (dual-language)
+          #   13:00 UTC = krishna (first-person direct address)
+          #   others    = hi (standard Mahabharata)
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             echo "TARGET=${{ inputs.target }}" >> $GITHUB_ENV
           elif [ "${{ github.event.schedule }}" = "0 4 * * *" ]; then
             echo "TARGET=whatif" >> $GITHUB_ENV
+          elif [ "${{ github.event.schedule }}" = "0 13 * * *" ]; then
+            echo "TARGET=krishna" >> $GITHUB_ENV
           else
             echo "TARGET=hi" >> $GITHUB_ENV
           fi
@@ -168,6 +175,10 @@ jobs:
           ELEVENLABS_API_KEY: ${{ secrets.ELEVENLABS_API_KEY }}
           ELEVENLABS_API_KEY_FALLBACK: ${{ secrets.ELEVENLABS_API_KEY_FALLBACK }}
           ELEVENLABS_VOICE_ID: ${{ secrets.ELEVENLABS_VOICE_ID }}
+          # Per-series voice override for Krishna direct-address videos. When
+          # set, the 13:00 UTC slot uses this voice (e.g. a deep / divine
+          # ElevenLabs voice). Falls back to ELEVENLABS_VOICE_ID if empty.
+          ELEVENLABS_VOICE_ID_KRISHNA: ${{ secrets.ELEVENLABS_VOICE_ID_KRISHNA }}
           NARRATOR_VOICE: Charon
           CINEMATIC_FPS: "30"
         run: python main.py ${{ env.TARGET }} 2>&1 | tee pipeline_output.txt

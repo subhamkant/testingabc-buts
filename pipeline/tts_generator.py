@@ -239,6 +239,7 @@ def _elevenlabs_tts(
     language: str = "en",
     api_key: str = "",
     key_label: str = "ElevenLabs",
+    series: str = "mahabharata",
 ) -> bool:
     """
     Synthesize via ElevenLabs Multilingual v2 (supports Hindi + English).
@@ -248,11 +249,19 @@ def _elevenlabs_tts(
     `api_key` is passed explicitly so the caller can run a fallback chain
     (primary key → secondary key) when the primary hits its quota.
     `key_label` shows up in the log so you can tell which key handled the run.
+    `series` lets us pick a series-specific voice (e.g. a deep/divine voice
+    for Krishna direct-address) via ELEVENLABS_VOICE_ID_<SERIES> env vars.
     """
     if not api_key:
         return False
 
-    voice_id = os.environ.get("ELEVENLABS_VOICE_ID", "").strip() or _DEFAULT_ELEVENLABS_VOICE
+    # Per-series voice override: ELEVENLABS_VOICE_ID_KRISHNA, _MAHABHARATA, etc.
+    # Falls back to the generic ELEVENLABS_VOICE_ID, then the hardcoded default.
+    voice_id = (
+        os.environ.get(f"ELEVENLABS_VOICE_ID_{series.upper()}", "").strip()
+        or os.environ.get("ELEVENLABS_VOICE_ID", "").strip()
+        or _DEFAULT_ELEVENLABS_VOICE
+    )
     model_id = "eleven_multilingual_v2"
 
     try:
@@ -302,7 +311,11 @@ def _elevenlabs_keys() -> list:
 
 # ── Single-pass full narration ────────────────────────────────────────────────
 
-async def generate_full_narration(scenes: list, language: str = "en") -> tuple:
+async def generate_full_narration(
+    scenes: list,
+    language: str = "en",
+    series: str = "mahabharata",
+) -> tuple:
     """
     Generate ONE continuous audio file from all scene narrations concatenated.
 
@@ -312,6 +325,11 @@ async def generate_full_narration(scenes: list, language: str = "en") -> tuple:
                                       video assembler to size scene clips
                                       proportionally so visuals stay roughly
                                       in sync with the spoken narrative.
+
+    `series` selects a per-series ElevenLabs voice override
+    (ELEVENLABS_VOICE_ID_<SERIES>) so the Krishna direct-address format can
+    use a distinct divine voice while the standard Mahabharata flow keeps
+    the default narrator.
 
     Provider cascade: ElevenLabs → Gemini Charon → Edge SSML → Edge plain.
     Once a provider succeeds, the entire video is consistent voice (no
@@ -341,10 +359,10 @@ async def generate_full_narration(scenes: list, language: str = "en") -> tuple:
     for key_label, key in _elevenlabs_keys():
         print(f"    Trying {key_label} (most realistic)...")
         ok = await asyncio.to_thread(
-            _elevenlabs_tts, full_text, output_path, language, key, key_label
+            _elevenlabs_tts, full_text, output_path, language, key, key_label, series
         )
         if ok:
-            print(f"    [OK] Full narration via {key_label}")
+            print(f"    [OK] Full narration via {key_label} ({series})")
             return output_path, char_weights
 
     # 2. Gemini Charon

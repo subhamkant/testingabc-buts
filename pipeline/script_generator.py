@@ -72,6 +72,39 @@ MOTIVATIONAL_THEMES = [
     "What Vidura told Dhritarashtra that could have prevented the war",
 ]
 
+# ── Krishna Direct-Address Series ─────────────────────────────────────────────
+# First-person motivational speeches where Krishna addresses a named listener
+# directly ("देखो पार्थ...", "मैं तुमसे एक सच कहता हूँ..."). Replaces 1 of 4
+# daily Mahabharata slots. Single voice (Krishna's), 30-45s, 5 scenes.
+#
+# Listeners pool — Arjuna appears 3 times so the natural random draw lands on
+# him ~60% of the time (most recognizable archetype, broadest reach). Other
+# listeners (Karna, Bhishma, Yudhishthira, Uddhava) provide variety so themes
+# can repeat across listeners without feeling stale.
+KRISHNA_LISTENERS = [
+    "Arjuna (पार्थ)", "Arjuna (पार्थ)", "Arjuna (पार्थ)",  # ~60% weight
+    "Yudhishthira",
+    "Karna",
+    "Bhishma",
+    "Uddhava",
+]
+
+KRISHNA_THEMES = [
+    "Responsibility — chosen ones don't get easy paths",
+    "Detached action — do the work, release the fruit",
+    "Fear of failure is louder than failure itself",
+    "Silence and exhaustion are part of the road",
+    "Why doubt visits the strongest the night before victory",
+    "Duty above bloodline",
+    "Anger is a fire that burns the holder first",
+    "The strength to forgive is greater than the strength to fight",
+    "Why the mind is the battlefield, not Kurukshetra",
+    "When everyone abandons you, dharma still walks beside you",
+    "Action without ego — the secret of a free man",
+    "Why surrender is not weakness but the highest strength",
+]
+
+
 # ── What If Topics — science / nature / civilization hypotheticals ────────────
 # These are curiosity-driven thought experiments grounded in plausible science.
 # Used by the "whatif" series — completely separate from Mahabharata content.
@@ -110,6 +143,10 @@ _REPETITION_STOPWORDS = {
     # Hindi possessive / reflexive pronouns — very common in storytelling
     "अपने", "अपनी", "अपना", "उनके", "उनकी", "उनका", "उसके", "उसकी", "उसका",
     "मेरे", "मेरी", "मेरा", "तेरे", "तेरी", "तेरा", "हमारे", "हमारी", "हमारा",
+    # Hindi 1st/2nd-person pronouns — saturate Krishna direct-address speeches
+    # ("मैं तुमसे कहता हूँ...") and shouldn't be flagged as repetition.
+    "मैं", "मैंने", "मुझे", "मुझको", "मुझसे",
+    "तुम", "तुम्हें", "तुम्हारे", "तुम्हारी", "तुम्हारा", "तुमसे", "तुमको",
     # Hindi auxiliary / common verbs
     "रहे", "रहा", "रही", "लगे", "लगा", "लगी", "जाते", "जाता", "जाती",
     "देते", "देता", "देती", "लेते", "लेता", "लेती", "होने",
@@ -183,6 +220,32 @@ def _check_past_aux_tic(scenes: list, threshold: float = 0.35) -> tuple:
                 hits += 1
     ratio = hits / total if total else 0.0
     return (ratio <= threshold), ratio, hits, total
+
+
+# Krishna direct-address mode requires first-person markers (मैं/मैंने) or
+# vocative markers (तुम/पार्थ/देखो/सुनो) in the narration. If a scene drops to
+# third-person ("कृष्ण ने अर्जुन से कहा..."), the immersion breaks and the
+# whole format reads like a regular Mahabharata story instead of a divine
+# monologue.
+_FIRST_PERSON_MARKERS = _re.compile(
+    r"मैं|मैंने|तुम|तुम्हें|तुम्हारे|तुम्हारी|तुम्हारा|पार्थ|अर्जुन|देखो|सुनो"
+)
+
+
+def _check_first_person(scenes: list, min_hits: int = 3) -> tuple:
+    """
+    For Krishna direct-address scripts: returns (ok, hits, total) where hits
+    is the count of scenes containing at least one first-person/vocative
+    marker. min_hits=3 of 5 scenes (60%) keeps the format honest while
+    tolerating one or two narrative-bridge scenes that lean exposition.
+    """
+    total = len(scenes)
+    hits = 0
+    for s in scenes:
+        text = s.get("narration") or ""
+        if _FIRST_PERSON_MARKERS.search(text):
+            hits += 1
+    return (hits >= min_hits), hits, total
 
 
 def _check_repetition(scenes: list, max_repeats: int = 2, topic: str = "") -> tuple:
@@ -557,6 +620,273 @@ HARD RULES:
     return data
 
 
+# ── Krishna direct-address generator ──────────────────────────────────────────
+
+# Reference cadence anchor — pasted verbatim into the prompt so the LLM mirrors
+# the rhythm of real Krishna direct-address content. This exact line is from
+# a high-performing reference Short the user analyzed.
+_KRISHNA_REFERENCE_LINE = (
+    "अगर तुम्हें अपनी घर की हालत बदलने के लिए चुना गया है तो पार्थ, "
+    "मत सोचना की जिन्दगी आसान होगी, क्योंकि आसान रास्ते कभी "
+    "जिम्मेदारियाँ नहीं उठाते। तुम्हारे हिस्से थकान आएगी, खामोशी आएगी, "
+    "और कई बार अकेलापन भी।"
+)
+
+
+def _generate_krishna_script(forced_topic: str = None) -> dict:
+    """
+    Generate a 30-45 second first-person Krishna direct-address script.
+
+    Krishna speaks in first person to a named listener (Arjuna ~60% / others
+    rotate). Output schema mirrors the Mahabharata script with two extra
+    fields: 'speaker' and 'listener'. Always Hindi-only; no English variant.
+
+    Quality gates:
+      - 5 scenes (hard-cap, not 5-or-6 like Mahabharata mode)
+      - 28-32 words/scene → 140-160 words → 30-45s spoken
+      - First-person/vocative markers in ≥3 of 5 scenes (_check_first_person)
+      - Repetition under control (_check_repetition, max 4)
+      - past-aux-tic detector intentionally bypassed (irrelevant in first
+        person — Krishna naturally ends sentences with है/हूँ/हो/होगा)
+    """
+    topic = forced_topic or random.choice(KRISHNA_THEMES)
+    listener = random.choice(KRISHNA_LISTENERS)
+    listener_short = listener.split(" (")[0]  # "Arjuna (पार्थ)" -> "Arjuna"
+    listener_vocative = (
+        listener.split("(")[1].rstrip(")")
+        if "(" in listener else listener
+    )
+
+    prompt = f"""
+You are writing a 30-45 second YouTube Short where Lord Krishna speaks in
+first person directly to {listener}. EXACTLY 5 scenes. Hindi only.
+
+THEME: "{topic}"
+SPEAKER: Krishna (first person — मैं / मैंने)
+LISTENER: {listener_short} (address as "{listener_vocative}", and also as
+तुम / तुम्हें / तुम्हारे)
+
+REFERENCE CADENCE (mirror this rhythm and intimacy — DO NOT copy the words):
+"{_KRISHNA_REFERENCE_LINE}"
+
+═══════════════════════════════════════════════════════════════
+VOICE & TONE — DIVINE FIRST PERSON
+═══════════════════════════════════════════════════════════════
+- Krishna speaking, calm, certain, divine — never preachy, never lecturing.
+- Use "मैं", "मैंने", "मैं तुमसे कहता हूँ", "मेरी बात सुनो"
+- Address the listener directly: "तुम", "तुम्हें", "तुम्हारे", and by
+  name "{listener_vocative}" at least once per scene.
+- Tone: like an older friend, not a guru. Knowing, gentle, unwavering.
+- NO third-person narration ("कृष्ण ने कहा...") — that breaks immersion.
+
+═══════════════════════════════════════════════════════════════
+HOOK — SCENE 1's FIRST SENTENCE MUST BE A DIRECT VOCATIVE
+═══════════════════════════════════════════════════════════════
+The first 1.5 seconds decide if the viewer swipes. Open with ONE of these
+patterns (NOT a third-person setup):
+
+PATTERN A — vocative + truth claim:
+   "देखो {listener_vocative}, मैं तुमसे एक सच कहता हूँ..."
+   "{listener_vocative}, सुनो — जो मैं अब कहूँगा वह तुम्हारी ज़िंदगी बदल देगा..."
+
+PATTERN B — conditional address:
+   "अगर तुम्हें... चुना गया है तो {listener_vocative}, मत सोचना की..."
+   "अगर तुम मुझसे पूछोगे क्या सच है {listener_vocative}, तो मैं कहूँगा..."
+
+PATTERN C — direct question to the listener:
+   "क्या तुम जानते हो {listener_vocative}, सबसे बड़ा युद्ध कौनसा है?"
+   "क्यों डरते हो {listener_vocative}? तुम्हारा डर सच नहीं है।"
+
+DO NOT open Scene 1 with: "यह कहानी है...", "एक बार...", "कृष्ण ने...", or
+any third-person setup line.
+
+═══════════════════════════════════════════════════════════════
+CURIOSITY-GAP — STOPS MID-VIDEO SWIPES
+═══════════════════════════════════════════════════════════════
+Every scene EXCEPT the last MUST end with a forward-pulling line:
+   "...पर सुनो {listener_vocative}, अभी एक बात और है।"
+   "...लेकिन यह तो शुरुआत है।"
+   "...क्या तुम तैयार हो उसके लिए?"
+
+The FINAL (5th) scene is the only one that may close with a blessing or
+charge ("...और यही तुम्हारा धर्म है {listener_vocative}।").
+
+═══════════════════════════════════════════════════════════════
+DRAMATIC ARC — 5 SCENES
+═══════════════════════════════════════════════════════════════
+Scene 1 — OPENING ADDRESS (the hook above)
+Scene 2 — THE HARD TRUTH: name what {listener_short} doesn't want to hear
+Scene 3 — THE COST / TEST: what {listener_short} will lose or face
+Scene 4 — THE REFRAME: what this all actually MEANS, the deeper lesson
+Scene 5 — BLESSING / CHARGE: final command, blessing, or seal of trust
+
+Every scene MUST advance the speech. No filler. No restating.
+
+═══════════════════════════════════════════════════════════════
+HINDI VERB RULES — END SENTENCES IN PRESENT/FUTURE
+═══════════════════════════════════════════════════════════════
+End sentences with है / हूँ / हो / होगा / आएगा / सुनो / देखो / जानो.
+AT MOST 1 sentence in the entire script may end with था / थी / थे / थीं.
+
+GOOD endings: "...मैं तुम्हें सच कहता हूँ।" / "...तुम्हें यह सहना होगा।"
+              "...देखो {listener_vocative}।" / "...क्या यह तुम्हें मंज़ूर है?"
+BAD endings (avoid): "...उसने ऐसा किया था।" / "...वह कहीं चला गया था।"
+
+═══════════════════════════════════════════════════════════════
+IMAGE PROMPT QUALITY — KRISHNA + LISTENER TWO-SHOT
+═══════════════════════════════════════════════════════════════
+Every image_prompt MUST show Krishna AND {listener_short} together in a
+single frame (a two-shot). Settings to draw from:
+  • Chariot mid-battle, Krishna at the reins, {listener_short} beside him
+  • Battlefield edge under stormy/golden sky, conch in background
+  • Palace courtyard with carved sandstone pillars, brass oil lamps
+  • Forest ashram clearing with peacock screens and lotus pond
+  • Yamuna river bank at dawn / dusk
+
+Krishna iconography: blue skin, peacock-feather crown, yellow silk
+dhoti, lotus mudra hand gesture. {listener_short}: appropriate to the
+character (Arjuna in Pandava armor with quiver, etc.).
+
+EVERY image_prompt MUST follow this structure (in English):
+   [shot type] of Krishna and {listener_short} in [setting], Krishna
+   [body language: gesturing, looking down, hand raised in mudra...],
+   {listener_short} [body language: kneeling, listening, head bowed...],
+   background contains [≥3 specific elements: carved pillars, brass
+   diyas, lotus reliefs, etc.], [lighting], [mood], jewel-toned palette.
+
+═══════════════════════════════════════════════════════════════
+NARRATION LENGTH
+═══════════════════════════════════════════════════════════════
+EACH scene's narration must be 28-32 words.
+Total: 5 scenes × ~30 words = ~150 words → ~30-45 seconds spoken.
+
+═══════════════════════════════════════════════════════════════
+OUTPUT — return ONLY valid JSON, no markdown fences, no preamble:
+═══════════════════════════════════════════════════════════════
+{{
+  "title": "Captivating Hindi+English title under 60 chars — no hashtags",
+  "description": "Hook line. 100-150 words about the message. End with this exact hashtag block:\\n\\n#Shorts #Krishna #कृष्ण #BhagavadGita #भगवद_गीता #Mahabharata #महाभारत #HinduMythology #Dharma #SpiritualWisdom #IndianMythology #HinduDharma #Arjuna #पार्थ #VedicWisdom #KrishnaSpeech #MotivationalShorts #LifeLessons #IndianSpirituality #trending",
+  "tags": ["Krishna","कृष्ण","Bhagavad Gita","Mahabharata","Arjuna","पार्थ","Hindu mythology","spiritual","motivational","Krishna speech","dharma","Hindi shorts","mythology shorts","spiritual shorts"],
+  "speaker": "Krishna",
+  "listener": "{listener_short}",
+  "scenes": [
+    {{
+      "narration": "28-32 words in Hindi (Devanagari) — Krishna in first person, addressing {listener_vocative} directly. Vivid, intimate, divine tone.",
+      "image_prompt": "[shot] of Krishna and {listener_short} in [setting], Krishna [gesture/mudra], {listener_short} [pose/emotion], background contains [≥3 specific elements], [lighting], [mood], jewel-toned palette",
+      "mood": "3-6 word English emotional tone phrase"
+    }}
+  ],
+  "thumbnail_prompt": "Dramatic two-shot of Krishna and {listener_short}, Krishna's hand raised in mudra, {listener_short} listening intently, cinematic warm lighting, vibrant illustrated mythology art style"
+}}
+
+HARD RULES — violation makes the script unusable:
+- All narration MUST be in Hindi (Devanagari script)
+- All image_prompt and thumbnail_prompt MUST be in English
+- Title: under 60 characters, no hashtags in title
+- Narration per scene: 28-32 words, ~6-9 seconds spoken
+- Generate EXACTLY 5 scenes — never 4, never 6
+- speaker MUST equal "Krishna"
+- listener MUST equal "{listener_short}"
+- Scene 1's FIRST sentence MUST be a vocative hook (pattern A, B, or C above)
+- Every scene EXCEPT the 5th MUST end with a forward-pulling line
+- AT MOST 1 sentence in the whole script may end with था/थी/थे/थीं
+- Every image_prompt MUST be a Krishna + {listener_short} two-shot with ≥3 background elements
+- Narration MUST NOT contain URLs, hashtags (#), @mentions, English words, or social-media text
+"""
+
+    # Up to 3 attempts. Quality gates: scene count, word count, repetition,
+    # first-person markers. We deliberately skip _check_past_aux_tic — the
+    # rule above already caps past-aux endings at 1 in the prompt itself,
+    # and the detector is calibrated for third-person where the tic floods
+    # at >35%.
+    data            = None
+    last_offenders  = []
+    last_short      = False
+    last_fp_low     = False
+    last_fp_hits    = 0
+    last_fp_total   = 0
+    for attempt in range(3):
+        full_prompt = prompt
+        if attempt > 0:
+            reminders = []
+            if last_short:
+                reminders.append(
+                    "Your previous response had narrations that were too short. "
+                    "Each scene MUST be 28-32 words. Below 25 words is unacceptable. "
+                    "You MUST produce EXACTLY 5 scenes."
+                )
+            if last_offenders:
+                offender_str = ", ".join(f"'{w}' ({n}x)" for w, n in last_offenders[:5])
+                reminders.append(
+                    f"Your previous response REPEATED these words too many times: "
+                    f"{offender_str}. Use SYNONYMS. Each sentence must contain a "
+                    f"NEW concrete idea or image."
+                )
+            if last_fp_low:
+                reminders.append(
+                    f"Your previous response was not in first person — only "
+                    f"{last_fp_hits} of {last_fp_total} scenes contained "
+                    f"first-person/vocative markers (मैं / तुम / पार्थ / देखो / सुनो). "
+                    f"This MUST be a Krishna direct-address speech. EVERY scene "
+                    f"must contain at least one of: मैं, मैंने, तुम, तुम्हें, "
+                    f"तुम्हारे, {listener_vocative}, देखो, सुनो. Rewrite all 5 "
+                    f"scenes in Krishna's first-person voice."
+                )
+            if reminders:
+                full_prompt += "\n\nCRITICAL REMINDERS:\n- " + "\n- ".join(reminders)
+
+        raw = _call_llm(full_prompt)
+
+        start = raw.find("{")
+        end   = raw.rfind("}")
+        if start == -1 or end == -1:
+            raise ValueError(f"No JSON object found in Krishna LLM response:\n{raw[:300]}")
+        data = _parse_llm_json(raw[start:end + 1])
+
+        # Hard-trim narrations
+        for scene in data.get("scenes", []):
+            scene["narration"] = _trim_narration(scene["narration"])
+
+        scenes      = data.get("scenes", [])
+        word_counts = [len(s["narration"].split()) for s in scenes]
+        avg_words   = sum(word_counts) / max(len(word_counts), 1)
+        n_scenes    = len(scenes)
+
+        last_short = (n_scenes != 5 or avg_words < 24)
+        rep_ok, last_offenders = _check_repetition(scenes, max_repeats=4, topic=topic)
+        fp_ok, last_fp_hits, last_fp_total = _check_first_person(scenes, min_hits=3)
+        last_fp_low = not fp_ok
+
+        print(f"    Krishna script: {n_scenes} scenes, avg {avg_words:.1f} words/scene, "
+              f"first-person {last_fp_hits}/{last_fp_total}")
+        if last_offenders:
+            top = ", ".join(f"{w}×{n}" for w, n in last_offenders[:5])
+            print(f"    [warn] Repetition: {top}")
+        if last_fp_low:
+            print(f"    [warn] First-person markers low ({last_fp_hits}/{last_fp_total})")
+
+        if not last_short and rep_ok and fp_ok:
+            break
+
+        if attempt < 2:
+            why = []
+            if last_short:
+                why.append(f"length issue ({n_scenes} scenes / {avg_words:.1f} avg)")
+            if not rep_ok:
+                why.append(f"{len(last_offenders)} repeated words")
+            if last_fp_low:
+                why.append(f"first-person low ({last_fp_hits}/{last_fp_total})")
+            print(f"    [retry] {'; '.join(why)}. Re-prompting...")
+
+    data["language"]     = "hi"
+    data["content_type"] = "krishna_speech"
+    data["topic"]        = topic
+    data["series"]       = "krishna"
+    data["speaker"]      = "Krishna"
+    data["listener"]     = listener_short
+    return data
+
+
 def generate_script(
     language: str = "en",
     forced_topic: str = None,
@@ -578,6 +908,9 @@ def generate_script(
         )
         data["language"] = "dual" if dual_language else language
         return data
+
+    if series == "krishna":
+        return _generate_krishna_script(forced_topic=forced_topic)
 
     _MOTIVATIONAL_KEYWORDS = ("karma", "dharma", "lesson", "wisdom", "why", "power", "teaching")
 
