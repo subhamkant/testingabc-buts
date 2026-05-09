@@ -567,7 +567,27 @@ def _pick_music_track() -> str:
 # parity with every other Short in the feed; falling short means YouTube
 # attenuates competing videos but plays ours at our (quieter) authored level —
 # perceived as "weak" audio, which correlates with higher swipe-away rates.
-LOUDNORM_FILTER = "loudnorm=I=-14:TP=-1.5:LRA=7"
+#
+# LRA target varies by content type:
+#   - Mahabharata third-person narration: LRA=7. Compressed dynamics keep the
+#     voice consistent over BG music — fine for a story narrator.
+#   - Krishna direct-address: LRA=14. The whole format depends on emotional
+#     dynamics — soft contemplative passages then commanding peaks like
+#     "उठो पार्थ!". A reference Sourabh-Jain/Sumedh-Mudgalkar Krishna track
+#     measured at 14.5 LU; ours at LRA=7 was 1.8 LU and felt monotone.
+_LOUDNORM_LRA_BY_SERIES = {
+    "krishna": 14,
+}
+_DEFAULT_LRA = 7
+
+
+def _loudnorm_filter(series: str = "mahabharata") -> str:
+    lra = _LOUDNORM_LRA_BY_SERIES.get(series, _DEFAULT_LRA)
+    return f"loudnorm=I=-14:TP=-1.5:LRA={lra}"
+
+
+# Kept as the default-series filter for backwards-compatible imports.
+LOUDNORM_FILTER = _loudnorm_filter("mahabharata")
 
 # Mild unsharp pass applied during the polish re-encode. AI-generated video
 # clips upscaled with lanczos to 1080×1920 lack the high-frequency detail that
@@ -577,7 +597,7 @@ LOUDNORM_FILTER = "loudnorm=I=-14:TP=-1.5:LRA=7"
 UNSHARP_FILTER = "unsharp=5:5:0.6:5:5:0.0"
 
 
-def _finalize_audio_no_music(output_path: str):
+def _finalize_audio_no_music(output_path: str, series: str = "mahabharata"):
     """
     When no background music track is found, we still need to bring the voice
     audio up to YouTube's -14 LUFS target and resample to 48 kHz / 192 kbps.
@@ -585,37 +605,38 @@ def _finalize_audio_no_music(output_path: str):
     and the audio plays noticeably quieter than competing Shorts.
     """
     finalized = output_path.replace(".mp4", "_norm.mp4")
+    loudnorm = _loudnorm_filter(series)
     result = subprocess.run([
         "ffmpeg", "-y",
         "-i", output_path,
         "-c:v", "copy",
-        "-af", LOUDNORM_FILTER,
+        "-af", loudnorm,
         "-c:a", "aac", "-b:a", "192k", "-ar", "48000",
         "-movflags", "+faststart",
         finalized,
     ], capture_output=True)
     if result.returncode == 0:
         os.replace(finalized, output_path)
-        print("    [OK] Audio normalized to -14 LUFS / 48 kHz / 192 kbps (no music)")
+        print(f"    [OK] Audio normalized to -14 LUFS / 48 kHz / 192k ({loudnorm})")
     else:
         if os.path.exists(finalized):
             os.remove(finalized)
         print("    [!] Audio finalization failed, keeping original audio")
 
 
-def _apply_background_music(output_path: str):
+def _apply_background_music(output_path: str, series: str = "mahabharata"):
     """
-    Mixes a randomly selected background track at ~32% base volume with
-    sidechain ducking during voiceover (the duck still drops the music well
-    under the voice during narration, but quiet passages and outro now have
-    more presence). The final audio is loudness-normalized to YouTube's -14
-    LUFS target and resampled to 48 kHz / 192k AAC.
+    Mixes a randomly selected background track at 10% base volume with
+    sidechain ducking during voiceover. Light by design — the BG music is
+    atmosphere only and should never compete with the narrator's voice. The
+    final audio is loudness-normalized to YouTube's -14 LUFS target with a
+    series-aware LRA (krishna=14 to preserve emotional dynamics, others=7).
     If no music track is available, voice is still normalized via
     _finalize_audio_no_music.
     """
     music_path = _pick_music_track()
     if not music_path:
-        _finalize_audio_no_music(output_path)
+        _finalize_audio_no_music(output_path, series=series)
         return
 
     print(f"    Music: {os.path.basename(music_path)}")
@@ -630,18 +651,18 @@ def _apply_background_music(output_path: str):
         video_duration = 9999.0
 
     music_output = output_path.replace(".mp4", "_music.mp4")
+    loudnorm = _loudnorm_filter(series)
 
-    # volume=0.32 (was 0.18) — music is louder during quiet/non-narration
-    # passages. Sidechain ducking still drops it during voice so narration
-    # stays clear (ratio=6 unchanged).
+    # volume=0.10 (was 0.32) — music is atmosphere only, should never compete
+    # with the narrator's voice. Sidechain ducking drops it further during voice.
     duck_filter = (
         f"[0:a]asplit=2[voice_mix][voice_sc];"
         f"[1:a]atrim=0:{video_duration:.3f},asetpts=PTS-STARTPTS,"
-        f"volume=0.32[music_raw];"
+        f"volume=0.10[music_raw];"
         f"[music_raw][voice_sc]sidechaincompress="
         f"threshold=0.02:ratio=6:attack=150:release=600:makeup=1[music_ducked];"
         f"[voice_mix][music_ducked]amix=inputs=2:normalize=0,"
-        f"{LOUDNORM_FILTER},aresample=48000[aout]"
+        f"{loudnorm},aresample=48000[aout]"
     )
 
     result = subprocess.run([
@@ -658,16 +679,16 @@ def _apply_background_music(output_path: str):
 
     if result.returncode == 0:
         os.replace(music_output, output_path)
-        print("    [OK] Music mixed + audio normalized to -14 LUFS / 48 kHz / 192k")
+        print(f"    [OK] Music mixed + audio normalized ({loudnorm})")
         return
 
     # Flat fallback (no sidechain ducking) — must stay quieter than the ducked
     # path because there's no auto-attenuation when voice plays.
     flat_filter = (
-        f"[1:a]volume=0.15,"
+        f"[1:a]volume=0.06,"
         f"atrim=0:{video_duration:.3f},asetpts=PTS-STARTPTS[music];"
         f"[0:a][music]amix=inputs=2:normalize=0,"
-        f"{LOUDNORM_FILTER},aresample=48000[aout]"
+        f"{loudnorm},aresample=48000[aout]"
     )
     result2 = subprocess.run([
         "ffmpeg", "-y",
@@ -683,10 +704,10 @@ def _apply_background_music(output_path: str):
 
     if result2.returncode == 0:
         os.replace(music_output, output_path)
-        print("    [OK] Music mixed (flat fallback) + audio normalized to -14 LUFS")
+        print(f"    [OK] Music mixed (flat fallback) + audio normalized ({loudnorm})")
     else:
         print("    [!] Music mix failed, falling back to voice-only normalization")
-        _finalize_audio_no_music(output_path)
+        _finalize_audio_no_music(output_path, series=series)
 
 
 # ── Continuous-audio assemblers ──────────────────────────────────────────────
@@ -909,10 +930,14 @@ def assemble_video_continuous_audio(
     script_data: dict,
     char_weights: list = None,
     output_path: str = "output/video.mp4",
+    series: str = "mahabharata",
 ) -> str:
     """Static-image pipeline with ONE continuous audio track. Per-scene
     Ken Burns clips are sized proportionally to the original narration so
-    visuals stay roughly in step with the spoken story."""
+    visuals stay roughly in step with the spoken story.
+
+    `series` controls per-series audio finalization (krishna gets LRA=14
+    to preserve emotional dynamic range; others use LRA=7)."""
     os.makedirs("output", exist_ok=True)
     os.makedirs("temp/clips", exist_ok=True)
 
@@ -943,7 +968,7 @@ def assemble_video_continuous_audio(
     print(f"    [OK] Continuous-audio video -> {output_path} ({size_mb:.1f} MB)")
 
     _apply_cinematic_polish(output_path, durations)
-    _apply_background_music(output_path)
+    _apply_background_music(output_path, series=series)
 
     return output_path
 
@@ -954,8 +979,10 @@ def assemble_from_video_clips_continuous_audio(
     script_data: dict,
     char_weights: list = None,
     output_path: str = "output/video.mp4",
+    series: str = "mahabharata",
 ) -> str:
-    """AI-clip pipeline with ONE continuous audio track."""
+    """AI-clip pipeline with ONE continuous audio track. `series` selects
+    per-series audio dynamics (LRA=14 for krishna, LRA=7 default)."""
     os.makedirs("output", exist_ok=True)
     os.makedirs("temp/clips", exist_ok=True)
 
@@ -986,7 +1013,7 @@ def assemble_from_video_clips_continuous_audio(
     print(f"    [OK] Continuous-audio video -> {output_path} ({size_mb:.1f} MB)")
 
     _apply_cinematic_polish(output_path, durations)
-    _apply_background_music(output_path)
+    _apply_background_music(output_path, series=series)
 
     return output_path
 

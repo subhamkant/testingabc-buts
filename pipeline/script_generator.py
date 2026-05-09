@@ -165,7 +165,7 @@ _REPETITION_STOPWORDS = {
 # and trying to avoid repeating them produces awkward indirection.
 _CHARACTER_NAMES = {
     # Hindi (Devanagari)
-    "भीष्म", "अर्जुन", "कृष्ण", "द्रोण", "द्रोणाचार्य", "कर्ण", "युधिष्ठिर",
+    "भीष्म", "अर्जुन", "पार्थ", "कृष्ण", "द्रोण", "द्रोणाचार्य", "कर्ण", "युधिष्ठिर",
     "भीम", "नकुल", "सहदेव", "द्रौपदी", "पाण्डव", "पांडव", "कौरव",
     "दुर्योधन", "दुःशासन", "शकुनि", "धृतराष्ट्र", "गांधारी", "कुंती", "माद्री",
     "विदुर", "संजय", "अश्वत्थामा", "जरासंध", "शिशुपाल", "एकलव्य", "अभिमन्यु",
@@ -179,7 +179,7 @@ _CHARACTER_NAMES = {
     "gandhari", "kunti", "madri", "vidura", "sanjaya", "ashwatthama",
     "ekalavya", "abhimanyu", "subhadra", "devavrata", "shantanu",
     "ganga", "satyavati", "shikhandi", "pandu", "vyasa", "indra", "surya",
-    "krishna's", "arjuna's", "bhishma's",
+    "partha", "krishna's", "arjuna's", "bhishma's",
     # Places
     "कुरुक्षेत्र", "हस्तिनापुर", "इंद्रप्रस्थ", "द्वारका", "kurukshetra",
     "hastinapura", "indraprastha", "dwarka", "ayodhya",
@@ -622,14 +622,22 @@ HARD RULES:
 
 # ── Krishna direct-address generator ──────────────────────────────────────────
 
-# Reference cadence anchor — pasted verbatim into the prompt so the LLM mirrors
-# the rhythm of real Krishna direct-address content. This exact line is from
-# a high-performing reference Short the user analyzed.
-_KRISHNA_REFERENCE_LINE = (
+# Reference cadence anchors — pasted verbatim into the prompt so the LLM
+# mirrors the rhythm of real Krishna direct-address content.
+#
+# CONTEMPLATIVE anchor (longer, soft passages):
+_KRISHNA_REFERENCE_CONTEMPLATIVE = (
     "अगर तुम्हें अपनी घर की हालत बदलने के लिए चुना गया है तो पार्थ, "
     "मत सोचना की जिन्दगी आसान होगी, क्योंकि आसान रास्ते कभी "
     "जिम्मेदारियाँ नहीं उठाते। तुम्हारे हिस्से थकान आएगी, खामोशी आएगी, "
     "और कई बार अकेलापन भी।"
+)
+
+# IMPERATIVE anchor (short commanding bursts — the emotional peak Sourabh
+# Jain/Sumedh Mudgalkar style that makes Krishna content go viral):
+_KRISHNA_REFERENCE_IMPERATIVE = (
+    "उठो पार्थ! शस्त्र उठाओ! कर्म करो। धर्म की रक्षा करो। "
+    "जय और पराजय को मुझ पर छोड़ दो। मैं तुम्हारे साथ हूँ।"
 )
 
 
@@ -666,18 +674,65 @@ SPEAKER: Krishna (first person — मैं / मैंने)
 LISTENER: {listener_short} (address as "{listener_vocative}", and also as
 तुम / तुम्हें / तुम्हारे)
 
-REFERENCE CADENCE (mirror this rhythm and intimacy — DO NOT copy the words):
-"{_KRISHNA_REFERENCE_LINE}"
+REFERENCE CADENCE — mirror BOTH rhythms (DO NOT copy the words):
+
+CONTEMPLATIVE anchor (softer scenes — used in Scene 1 setup, Scene 4 reframe):
+"{_KRISHNA_REFERENCE_CONTEMPLATIVE}"
+
+IMPERATIVE anchor (commanding peak — used in Scene 3, the emotional climax):
+"{_KRISHNA_REFERENCE_IMPERATIVE}"
 
 ═══════════════════════════════════════════════════════════════
-VOICE & TONE — DIVINE FIRST PERSON
+VOICE & TONE — DIVINE FIRST PERSON, COMMANDING NOT LECTURING
 ═══════════════════════════════════════════════════════════════
-- Krishna speaking, calm, certain, divine — never preachy, never lecturing.
+- Krishna speaking — calm, certain, divine. Like a battlefield commander
+  who happens to be God, NOT a sermon-giving guru.
 - Use "मैं", "मैंने", "मैं तुमसे कहता हूँ", "मेरी बात सुनो"
-- Address the listener directly: "तुम", "तुम्हें", "तुम्हारे", and by
-  name "{listener_vocative}" at least once per scene.
-- Tone: like an older friend, not a guru. Knowing, gentle, unwavering.
-- NO third-person narration ("कृष्ण ने कहा...") — that breaks immersion.
+- Address the listener directly: "तुम", "तुम्हें", "तुम्हारे", and call them
+  by name "{listener_vocative}" 2-3 times across the script (especially in
+  the imperative peak scene — repeating the vocative is the rhythm device).
+- NO third-person narration ("कृष्ण ने कहा...") — breaks immersion.
+
+═══════════════════════════════════════════════════════════════
+SENTENCE STYLE — SHORT IMPERATIVE BURSTS, NOT COMPOUND PHILOSOPHY
+═══════════════════════════════════════════════════════════════
+This is the difference between sermon and command. The reference channels
+that go viral on Krishna-direct-address use SHORT IMPERATIVE SENTENCES,
+not 20-word compound philosophical statements.
+
+REQUIRED in every scene:
+- AT LEAST ONE imperative verb: करो / उठो / सुनो / देखो / जानो / त्यागो /
+  मानो / लड़ो / चलो / रोको / छोड़ो / उठाओ / पाओ / बनो.
+- AT LEAST 2 short sentences (3-7 words each) per scene — punchy beats.
+- Compound clauses are fine but KEEP THEM RARE — at most 1 long sentence
+  per scene, sandwiched between short ones.
+
+GOOD pattern (mix short imperatives with one richer line):
+   "उठो पार्थ। शस्त्र उठाओ। यह क्रोध तुम्हारा शत्रु है, मित्र नहीं।
+    इसे पहचानो। इसे त्यागो।"
+   (5 sentences, only 1 is compound. Vocative repeated. Imperatives bark.)
+
+BAD pattern (what we've been generating — avoid this):
+   "देखो पार्थ, मैं तुमसे एक गूढ़ बात कहता हूँ कि यह जो भीतर का ताप है यह
+    तुम्हें स्वयं को ही जलाएगा और इसका वश में रहना अति आवश्यक है।"
+   (One 25-word compound sentence. No imperatives. Reads as philosophy
+    lecture, not divine command.)
+
+═══════════════════════════════════════════════════════════════
+SPOKEN HINDI ONLY — AVOID LITERARY/SANSKRITIZED WORDS
+═══════════════════════════════════════════════════════════════
+ElevenLabs Hindi TTS mispronounces rare/literary words. Use natural
+spoken Hindi (Hindi a Mumbai/Delhi viewer uses every day), NOT
+Sanskritized literary register.
+
+AVOID — Sanskritized, hard for TTS to pronounce:
+   गूढ़, पार्थक्य, सर्वोच्च, अति आवश्यक, परिणाम, चेतना, उग्र आवेश, हावी,
+   नियंत्रण, स्वयं, भस्म, लक्ष्य, सत्य, असत्य, रोश, ताप
+PREFER — common spoken Hindi:
+   गहरी, सबसे ज़रूरी, बहुत ज़रूरी, असर, मन, गुस्सा, काबू, खुद, राख,
+   मंज़िल, सच, झूठ, क्रोध, आग
+General rule: if a word is one you'd write but never say in normal
+conversation, swap it for the spoken equivalent.
 
 ═══════════════════════════════════════════════════════════════
 HOOK — SCENE 1's FIRST SENTENCE MUST BE A DIRECT VOCATIVE
@@ -712,13 +767,20 @@ The FINAL (5th) scene is the only one that may close with a blessing or
 charge ("...और यही तुम्हारा धर्म है {listener_vocative}।").
 
 ═══════════════════════════════════════════════════════════════
-DRAMATIC ARC — 5 SCENES
+DRAMATIC ARC — 5 SCENES, WITH SCENE 3 AS THE IMPERATIVE PEAK
 ═══════════════════════════════════════════════════════════════
-Scene 1 — OPENING ADDRESS (the hook above)
-Scene 2 — THE HARD TRUTH: name what {listener_short} doesn't want to hear
-Scene 3 — THE COST / TEST: what {listener_short} will lose or face
-Scene 4 — THE REFRAME: what this all actually MEANS, the deeper lesson
-Scene 5 — BLESSING / CHARGE: final command, blessing, or seal of trust
+Scene 1 — OPENING ADDRESS (vocative hook, contemplative pacing, ~22-26 words)
+Scene 2 — THE HARD TRUTH: name what {listener_short} doesn't want to hear (~22-26 words)
+Scene 3 — IMPERATIVE PEAK (~14-18 words, ALL short bursts):
+          The emotional climax. Mostly 3-7 word imperative sentences. Repeat
+          the vocative "{listener_vocative}" twice. Use the IMPERATIVE
+          reference cadence here. Example shape:
+             "उठो {listener_vocative}। डर त्यागो। मेरा हाथ देखो — मैं
+              तुम्हारे साथ हूँ। अब लड़ो।"
+          This scene is intentionally SHORTER than the others — that's what
+          makes the peak land. Trust the rhythm.
+Scene 4 — THE REFRAME: what this all actually MEANS, the deeper lesson (~22-26 words)
+Scene 5 — BLESSING / CHARGE: final command, blessing, or seal of trust (~20-24 words)
 
 Every scene MUST advance the speech. No filler. No restating.
 
@@ -755,10 +817,17 @@ EVERY image_prompt MUST follow this structure (in English):
    diyas, lotus reliefs, etc.], [lighting], [mood], jewel-toned palette.
 
 ═══════════════════════════════════════════════════════════════
-NARRATION LENGTH
+NARRATION LENGTH — TIGHTER THAN A REGULAR SCRIPT
 ═══════════════════════════════════════════════════════════════
-EACH scene's narration must be 28-32 words.
-Total: 5 scenes × ~30 words = ~150 words → ~30-45 seconds spoken.
+Per-scene targets (intentionally varied so Scene 3 lands as a peak):
+   Scene 1 — 22-26 words
+   Scene 2 — 22-26 words
+   Scene 3 — 14-18 words   ← SHORT BURST PEAK, do not over-pad
+   Scene 4 — 22-26 words
+   Scene 5 — 20-24 words
+
+Total: ~100-120 words → ~25-35 seconds spoken. Tighter than the standard
+Mahabharata format. The reference goes viral BECAUSE it's short.
 
 ═══════════════════════════════════════════════════════════════
 OUTPUT — return ONLY valid JSON, no markdown fences, no preamble:
@@ -771,7 +840,7 @@ OUTPUT — return ONLY valid JSON, no markdown fences, no preamble:
   "listener": "{listener_short}",
   "scenes": [
     {{
-      "narration": "28-32 words in Hindi (Devanagari) — Krishna in first person, addressing {listener_vocative} directly. Vivid, intimate, divine tone.",
+      "narration": "Hindi (Devanagari) — Krishna first-person to {listener_vocative}. Per-scene length: scene 1/2/4 ~22-26 words, SCENE 3 ~14-18 words (short imperative peak, mostly 3-7 word sentences), scene 5 ~20-24 words. Use spoken Hindi (no Sanskritized words). At least one imperative verb per scene.",
       "image_prompt": "[shot] of Krishna and {listener_short} in [setting], Krishna [gesture/mudra], {listener_short} [pose/emotion], background contains [≥3 specific elements], [lighting], [mood], jewel-toned palette",
       "mood": "3-6 word English emotional tone phrase"
     }}
@@ -783,7 +852,13 @@ HARD RULES — violation makes the script unusable:
 - All narration MUST be in Hindi (Devanagari script)
 - All image_prompt and thumbnail_prompt MUST be in English
 - Title: under 60 characters, no hashtags in title
-- Narration per scene: 28-32 words, ~6-9 seconds spoken
+- Per-scene length: scenes 1/2/4 are 22-26 words, SCENE 3 is 14-18 words
+  (the imperative peak — short bursts, do not over-pad), scene 5 is 20-24 words
+- Each scene MUST contain at least one imperative verb
+  (करो/उठो/सुनो/देखो/जानो/त्यागो/लड़ो/चलो/छोड़ो/उठाओ/मानो/पाओ/बनो)
+- Use spoken Hindi only — NO Sanskritized words like गूढ़, चेतना, उग्र,
+  आवेश, हावी, नियंत्रण, स्वयं, भस्म, परिणाम, आवश्यक. Replace with the
+  natural spoken equivalents (गहरी, मन, गुस्सा, काबू, खुद, राख, असर, ज़रूरी)
 - Generate EXACTLY 5 scenes — never 4, never 6
 - speaker MUST equal "Krishna"
 - listener MUST equal "{listener_short}"
@@ -811,9 +886,11 @@ HARD RULES — violation makes the script unusable:
             reminders = []
             if last_short:
                 reminders.append(
-                    "Your previous response had narrations that were too short. "
-                    "Each scene MUST be 28-32 words. Below 25 words is unacceptable. "
-                    "You MUST produce EXACTLY 5 scenes."
+                    "Your previous response had narration length issues. "
+                    "Per-scene targets: scenes 1/2/4 = 22-26 words, SCENE 3 "
+                    "= 14-18 words (the imperative peak — KEEP IT SHORT, don't "
+                    "pad), scene 5 = 20-24 words. You MUST produce EXACTLY 5 "
+                    "scenes. Total ~100-120 words across all 5 scenes."
                 )
             if last_offenders:
                 offender_str = ", ".join(f"'{w}' ({n}x)" for w, n in last_offenders[:5])
@@ -852,7 +929,11 @@ HARD RULES — violation makes the script unusable:
         avg_words   = sum(word_counts) / max(len(word_counts), 1)
         n_scenes    = len(scenes)
 
-        last_short = (n_scenes != 5 or avg_words < 24)
+        # Acceptance threshold: must have 5 scenes, AND avg ≥ 18 words/scene
+        # (the new format averages ~22 words; below 18 means the LLM lost the
+        # plot and produced 1-2 word stub scenes). The prompt itself enforces
+        # the per-scene shape; the avg is just a floor.
+        last_short = (n_scenes != 5 or avg_words < 18)
         rep_ok, last_offenders = _check_repetition(scenes, max_repeats=4, topic=topic)
         fp_ok, last_fp_hits, last_fp_total = _check_first_person(scenes, min_hits=3)
         last_fp_low = not fp_ok

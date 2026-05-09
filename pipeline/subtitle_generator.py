@@ -113,22 +113,37 @@ def _groq_transcribe_words(audio_path: str, language: str) -> list:
 # Vyyas Al" — embarrassing for a brand that appears in every video.
 
 # Direct word-level fixes (case-insensitive, applied to any matching token).
+# Latin variants (English-mode Whisper) plus Devanagari variants (Hindi-mode
+# Whisper transcribes the spoken brand as "व्यासा"/"व्यास" since it isn't in
+# the model's dictionary).
 _DIRECT_FIXES = {
+    # Latin
     "vyyas":   "Vyasa",
     "vyaas":   "Vyasa",
     "viyas":   "Vyasa",
     "viyasa":  "Vyasa",
     "vayasa":  "Vyasa",
+    # Devanagari — Whisper-Hindi transcribes the spoken "Vyasa" this way
+    "व्यासा":  "Vyasa",
+    "व्यास":   "Vyasa",
+    "वयासा":   "Vyasa",
 }
+
+# Tokens we'd recognize as the spoken letters "AI" (the second half of the
+# brand "Vyasa AI"). Whisper sometimes hears it as "Al" (lowercase L), as the
+# Devanagari "एआई" / "एआय", or drops it entirely.
+_AI_TOKENS = {"AI", "ai", "Al", "AL", "al", "एआई", "एआय", "ए.आई"}
 
 
 def _correct_brand_transcripts(words: list) -> list:
     """
-    Run two passes over Whisper word output:
-      1. Per-word direct fixes (Vyyas/Vyas → Vyasa, etc.)
-      2. Contextual fix: a token "Al" / "AL" immediately after "Vyasa"
-         becomes "AI" (the spoken brand "Vyasa AI", not the proper name).
-    Punctuation attached to the token is preserved.
+    Three passes over Whisper word output:
+      1. Per-word direct fixes (Vyyas/व्यासा → Vyasa, etc.)
+      2. "Vyasa <Al>" → "Vyasa AI" (mistranscribed second token).
+      3. "Vyasa <not-AI>" → insert "AI" word so the burned-in subtitle
+         reads "Vyasa AI" even when Whisper dropped the AI token entirely.
+    Inserted AI tokens get a tiny synthetic time slice from the preceding
+    "Vyasa" word so the overlay still appears in sequence.
     """
     if not words:
         return words
@@ -136,8 +151,15 @@ def _correct_brand_transcripts(words: list) -> list:
     import re as _re
 
     def _fix_token(token: str) -> str:
-        # Strip leading/trailing punctuation for matching, restore on output
-        m = _re.match(r"^([\W_]*)(.*?)([\W_]*)$", token, flags=_re.UNICODE)
+        # First try the full token (handles Devanagari with combining vowel
+        # signs like व्यासा where Mn/Mc marks would otherwise be misread as
+        # trailing punctuation by a generic \W strip).
+        full_replacement = _DIRECT_FIXES.get(token.lower())
+        if full_replacement is not None:
+            return full_replacement
+        # Fall back to ASCII-punctuation strip — handles "Vyasa," / "Vyasa."
+        # / "Vyasa!" without touching Devanagari combining marks.
+        m = _re.match(r"^([\s\.,!?;:'\"\(\)\-]*)(.*?)([\s\.,!?;:'\"\(\)\-]*)$", token)
         if not m:
             return token
         lead, core, trail = m.group(1), m.group(2), m.group(3)
@@ -157,12 +179,43 @@ def _correct_brand_transcripts(words: list) -> list:
         cur = words[i]["word"].strip(",.!?:;")
         nxt = words[i + 1]
         nxt_core = nxt["word"].strip(",.!?:;")
-        if cur == "Vyasa" and nxt_core in ("Al", "AL", "al"):
-            # Preserve any trailing punctuation on the next token
+        if cur == "Vyasa" and nxt_core in _AI_TOKENS - {"AI"}:
             trail = nxt["word"][len(nxt_core):]
             nxt["word"] = "AI" + trail
 
-    return words
+    # Pass 3: insert "AI" after "Vyasa" when the next token isn't already
+    # an AI variant. Brand consistency — viewers should ALWAYS see "Vyasa AI"
+    # in the burned-in subtitle, never "Vyasa" alone.
+    out = []
+    i = 0
+    while i < len(words):
+        out.append(words[i])
+        cur_core = words[i]["word"].strip(",.!?:;")
+        if cur_core == "Vyasa":
+            nxt_core = (
+                words[i + 1]["word"].strip(",.!?:;")
+                if i + 1 < len(words) else ""
+            )
+            if nxt_core not in _AI_TOKENS:
+                # Synthesize a 0.20s "AI" word right after the Vyasa token,
+                # eating into the gap before the next word (or extending past
+                # the Vyasa end if no gap). Keeps the overlay sequence intact.
+                v_end = float(words[i].get("end", 0.0))
+                next_start = (
+                    float(words[i + 1].get("start", v_end + 0.30))
+                    if i + 1 < len(words) else v_end + 0.30
+                )
+                ai_start = v_end
+                ai_end   = min(v_end + 0.30, max(next_start - 0.02, v_end + 0.05))
+                if ai_end > ai_start:
+                    out.append({
+                        "word":  "AI",
+                        "start": ai_start,
+                        "end":   ai_end,
+                    })
+        i += 1
+
+    return out
 
 
 # ── Word grouping ─────────────────────────────────────────────────────────────

@@ -233,6 +233,27 @@ def _clean_narration(text: str) -> str:
 _DEFAULT_ELEVENLABS_VOICE = "pNInz6obpgDQGcFmaJgB"  # "Adam" — deep cinematic male
 
 
+# Per-series ElevenLabs voice_settings. The defaults below produce a stable,
+# consistent narrator — right for Mahabharata third-person storytelling but
+# deadly for Krishna direct-address, which depends on emotional dynamics
+# (soft contemplative passages followed by commanding peaks like "उठो पार्थ!").
+# Lowering stability and raising style makes ElevenLabs swing harder.
+_VOICE_SETTINGS_BY_SERIES = {
+    "krishna": {
+        "stability": 0.30,        # lower → more emotional swing per sentence
+        "similarity_boost": 0.75,
+        "style": 0.55,            # higher → more dramatic delivery / inflection
+        "use_speaker_boost": True,
+    },
+}
+_DEFAULT_VOICE_SETTINGS = {
+    "stability": 0.55,
+    "similarity_boost": 0.80,
+    "style": 0.30,
+    "use_speaker_boost": True,
+}
+
+
 def _elevenlabs_tts(
     text: str,
     output_mp3: str,
@@ -249,8 +270,10 @@ def _elevenlabs_tts(
     `api_key` is passed explicitly so the caller can run a fallback chain
     (primary key → secondary key) when the primary hits its quota.
     `key_label` shows up in the log so you can tell which key handled the run.
-    `series` lets us pick a series-specific voice (e.g. a deep/divine voice
-    for Krishna direct-address) via ELEVENLABS_VOICE_ID_<SERIES> env vars.
+    `series` selects both the per-series voice ID
+    (ELEVENLABS_VOICE_ID_<SERIES>) AND per-series voice_settings — Krishna
+    direct-address gets a more emotional / less stable delivery, others stay
+    stable.
     """
     if not api_key:
         return False
@@ -263,6 +286,7 @@ def _elevenlabs_tts(
         or _DEFAULT_ELEVENLABS_VOICE
     )
     model_id = "eleven_multilingual_v2"
+    voice_settings = _VOICE_SETTINGS_BY_SERIES.get(series, _DEFAULT_VOICE_SETTINGS)
 
     try:
         url = f"https://api.elevenlabs.io/v1/text-to-speech/{voice_id}"
@@ -274,12 +298,7 @@ def _elevenlabs_tts(
         body = {
             "text": text,
             "model_id": model_id,
-            "voice_settings": {
-                "stability": 0.55,
-                "similarity_boost": 0.80,
-                "style": 0.30,
-                "use_speaker_boost": True,
-            },
+            "voice_settings": voice_settings,
         }
         resp = requests.post(url, headers=headers, json=body, timeout=180)
         if resp.status_code != 200:

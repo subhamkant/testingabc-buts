@@ -366,6 +366,7 @@ async def run_krishna_speech(test_mode: bool = False, test_upload: bool = False)
                     clip_files, audio_path, script,
                     char_weights=char_weights,
                     output_path=output_path,
+                    series="krishna",
                 )
                 if not os.path.exists(video_path):
                     raise RuntimeError("Assembly produced no output file")
@@ -387,6 +388,7 @@ async def run_krishna_speech(test_mode: bool = False, test_upload: bool = False)
                 image_files, audio_path, script,
                 char_weights=char_weights,
                 output_path=output_path,
+                series="krishna",
             )
 
         # ── Step 4b: Burned-in word-level subtitles ───────────────
