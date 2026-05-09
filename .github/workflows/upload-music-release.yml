@@ -13,11 +13,32 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Create release and upload music tracks
+      - name: Verify local mp3s exist before touching release
         run: |
-          gh release delete music-tracks --yes 2>/dev/null || true
-          gh release create music-tracks assets/*.mp3 \
-            --title "Background Music Tracks" \
-            --notes "Background music for Mahabharata bot — do not delete this release"
+          shopt -s nullglob
+          mp3s=( assets/*.mp3 )
+          count=${#mp3s[@]}
+          echo "Found $count mp3 files in assets/"
+          if [ "$count" -eq 0 ]; then
+            echo "::error::No mp3 files in assets/. The mp3s are gitignored — this workflow"
+            echo "::error::cannot work on a clean GHA checkout. Upload from your local"
+            echo "::error::machine via 'gh release upload music-tracks assets/*.mp3 --clobber'"
+            echo "::error::or drag-drop in the GitHub releases UI."
+            exit 1
+          fi
+
+      - name: Upload tracks to existing release (or create if missing)
+        # --clobber replaces individual assets in place. Non-destructive: any
+        # files already on the release that aren't being uploaded stay there.
+        run: |
+          if gh release view music-tracks >/dev/null 2>&1; then
+            echo "Release exists — uploading/replacing assets..."
+            gh release upload music-tracks assets/*.mp3 --clobber
+          else
+            echo "Release missing — creating fresh..."
+            gh release create music-tracks assets/*.mp3 \
+              --title "Background Music Tracks" \
+              --notes "Background music for Mahabharata bot — do not delete this release"
+          fi
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
