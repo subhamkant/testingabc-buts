@@ -605,9 +605,11 @@ def _finalize_audio_no_music(output_path: str):
 
 def _apply_background_music(output_path: str):
     """
-    Mixes a randomly selected background track at ~18% volume with
-    sidechain ducking during voiceover. The final audio is also loudness-
-    normalized to YouTube's -14 LUFS target and resampled to 48 kHz / 192k AAC.
+    Mixes a randomly selected background track at ~32% base volume with
+    sidechain ducking during voiceover (the duck still drops the music well
+    under the voice during narration, but quiet passages and outro now have
+    more presence). The final audio is loudness-normalized to YouTube's -14
+    LUFS target and resampled to 48 kHz / 192k AAC.
     If no music track is available, voice is still normalized via
     _finalize_audio_no_music.
     """
@@ -629,10 +631,13 @@ def _apply_background_music(output_path: str):
 
     music_output = output_path.replace(".mp4", "_music.mp4")
 
+    # volume=0.32 (was 0.18) — music is louder during quiet/non-narration
+    # passages. Sidechain ducking still drops it during voice so narration
+    # stays clear (ratio=6 unchanged).
     duck_filter = (
         f"[0:a]asplit=2[voice_mix][voice_sc];"
         f"[1:a]atrim=0:{video_duration:.3f},asetpts=PTS-STARTPTS,"
-        f"volume=0.18[music_raw];"
+        f"volume=0.32[music_raw];"
         f"[music_raw][voice_sc]sidechaincompress="
         f"threshold=0.02:ratio=6:attack=150:release=600:makeup=1[music_ducked];"
         f"[voice_mix][music_ducked]amix=inputs=2:normalize=0,"
@@ -656,8 +661,10 @@ def _apply_background_music(output_path: str):
         print("    [OK] Music mixed + audio normalized to -14 LUFS / 48 kHz / 192k")
         return
 
+    # Flat fallback (no sidechain ducking) — must stay quieter than the ducked
+    # path because there's no auto-attenuation when voice plays.
     flat_filter = (
-        f"[1:a]volume=0.08,"
+        f"[1:a]volume=0.15,"
         f"atrim=0:{video_duration:.3f},asetpts=PTS-STARTPTS[music];"
         f"[0:a][music]amix=inputs=2:normalize=0,"
         f"{LOUDNORM_FILTER},aresample=48000[aout]"
@@ -676,7 +683,7 @@ def _apply_background_music(output_path: str):
 
     if result2.returncode == 0:
         os.replace(music_output, output_path)
-        print("    [OK] Music mixed at 8% + audio normalized to -14 LUFS")
+        print("    [OK] Music mixed (flat fallback) + audio normalized to -14 LUFS")
     else:
         print("    [!] Music mix failed, falling back to voice-only normalization")
         _finalize_audio_no_music(output_path)
