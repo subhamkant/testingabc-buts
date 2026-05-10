@@ -8,7 +8,6 @@
 # each run, so consumed topics persist across runs and the same topic
 # isn't re-used. Don't manually edit during a workflow run.
 
-What if all the world's oceans dried up overnight?
 What if Earth's magnetic field flipped tomorrow?
 What if the Moon were twice as close to Earth?
 What if every volcano on Earth erupted at once?
