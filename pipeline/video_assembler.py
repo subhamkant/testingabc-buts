@@ -1000,9 +1000,16 @@ def assemble_from_video_clips_continuous_audio(
     char_weights: list = None,
     output_path: str = "output/video.mp4",
     series: str = "mahabharata",
+    fallback_images: list = None,
 ) -> str:
     """AI-clip pipeline with ONE continuous audio track. `series` selects
-    per-series audio dynamics (LRA=14 for krishna, LRA=7 default)."""
+    per-series audio dynamics (LRA=14 for krishna, LRA=7 default).
+
+    `clip_files[i]` may be None for scenes where every I2V provider failed —
+    those scenes render from `fallback_images[i]` via Ken Burns instead, so
+    a single failure no longer forces the whole video to static. Pass the
+    reference-image list returned by `generate_video_clips` as
+    `fallback_images` to enable this."""
     os.makedirs("output", exist_ok=True)
     os.makedirs("temp/clips", exist_ok=True)
 
@@ -1010,17 +1017,33 @@ def assemble_from_video_clips_continuous_audio(
     audio_duration = get_audio_duration(audio_path)
     durations = _per_scene_durations(audio_duration, char_weights, n)
 
-    print(f"    Audio duration: {audio_duration:.2f}s  |  AI clips: {n}")
+    n_clips  = sum(1 for c in clip_files if c)
+    n_static = n - n_clips
+    if n_static:
+        print(f"    Audio duration: {audio_duration:.2f}s  |  scenes: {n} "
+              f"({n_clips} AI clip, {n_static} Ken Burns fallback)")
+    else:
+        print(f"    Audio duration: {audio_duration:.2f}s  |  AI clips: {n}")
     print(f"    Per-scene clip durations: " +
           ", ".join(f"{d:.2f}s" for d in durations))
 
     silent_paths = []
     for i, (clip, dur) in enumerate(zip(clip_files, durations)):
         silent_path = f"temp/clips/silent_clip_{i:02d}.mp4"
-        print(f"    AI clip {i+1}/{n} silent ({dur:.2f}s)...")
-        _make_silent_video_scene_clip(clip, silent_path, dur)
+        if clip:
+            print(f"    AI clip {i+1}/{n} silent ({dur:.2f}s)...")
+            _make_silent_video_scene_clip(clip, silent_path, dur)
+        else:
+            img = fallback_images[i] if fallback_images and i < len(fallback_images) else None
+            if not img or not os.path.exists(img):
+                raise RuntimeError(
+                    f"Scene {i+1} has no AI clip and no usable fallback image — "
+                    "cannot assemble. Pass `fallback_images` from generate_video_clips."
+                )
+            print(f"    Ken Burns {i+1}/{n} silent ({dur:.2f}s) — AI clip missing for this scene")
+            _make_silent_image_scene_clip(img, silent_path, dur)
         if not os.path.exists(silent_path):
-            raise RuntimeError(f"Silent AI clip {i+1} missing — FFmpeg produced no output")
+            raise RuntimeError(f"Silent scene {i+1} missing — FFmpeg produced no output")
         silent_paths.append(silent_path)
 
     silent_full = "temp/clips/silent_full.mp4"

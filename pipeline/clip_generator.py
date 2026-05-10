@@ -390,15 +390,22 @@ async def _generate_one_scene(
 
 # ── Public API ────────────────────────────────────────────────────────────────
 
-async def generate_video_clips(scenes: list) -> list:
+async def generate_video_clips(scenes: list) -> tuple[list, list]:
     """
-    Returns list[str] of clip paths (one per scene), order preserved.
+    Returns (clip_paths, image_files):
+      clip_paths   list[str | None]  one per scene; None where every provider
+                                     failed for that scene
+      image_files  list[str]         the I2V reference image per scene, also
+                                     usable as Ken Burns fallback by the
+                                     assembler when clip_paths[i] is None
 
-    Generates reference images via Pollinations (1 wide shot per scene), then
-    fans out per-scene I2V calls in parallel through the provider cascade.
-
-    Raises RuntimeError if ANY scene fails — main.py catches and falls back
-    to the static-image pipeline.
+    Per-scene fallback is the caller's job: a None in clip_paths signals
+    "render this scene from image_files[i] via Ken Burns". This function
+    NEVER raises on partial failure — the orchestrator decides whether the
+    failure rate warrants a full static-image pipeline (e.g. when zero clips
+    succeeded). The earlier all-or-nothing behaviour threw away every
+    successful clip the moment one scene failed; per-scene fallback keeps
+    the cinematic look on the scenes that did succeed.
     """
     print(f"    Providers configured: "
           f"fal={'yes' if FAL_KEY else 'no'}  "
@@ -429,15 +436,14 @@ async def generate_video_clips(scenes: list) -> list:
     ]
     results = await asyncio.gather(*tasks)
 
-    failed = [i + 1 for i, r in enumerate(results) if not r]
+    n_ok     = sum(1 for r in results if r)
+    failed   = [i + 1 for i, r in enumerate(results) if not r]
     if failed:
-        raise RuntimeError(
-            f"{len(failed)}/{len(scenes)} clip(s) failed (scenes {failed}). "
-            "Falling back to static-image pipeline."
-        )
-
-    print(f"\n    All {len(scenes)} clips generated successfully")
-    return list(results)
+        print(f"\n    {n_ok}/{len(scenes)} clips succeeded; "
+              f"scenes {failed} will render from static images")
+    else:
+        print(f"\n    All {len(scenes)} clips generated successfully")
+    return list(results), image_files
 
 
 # ── CLI: API discovery for whichever provider is configured ──────────────────
