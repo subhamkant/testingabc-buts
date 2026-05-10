@@ -50,6 +50,24 @@ _EDGE_FALLBACK = {
 _GEMINI_VOICE = os.environ.get("NARRATOR_VOICE", "Charon")
 _GEMINI_MODEL = "gemini-2.5-flash-preview-tts"
 
+# Series-specific Gemini voice overrides. The Mahabharata/Krishna stack stays
+# on the cinematic Charon; WhatIf is science-curiosity content and wants an
+# energetic, younger-sounding voice (Puck) to match the register.
+# An explicit NARRATOR_VOICE_<SERIES> env var overrides this map at runtime.
+_GEMINI_VOICE_BY_SERIES = {
+    "whatif":      "Puck",
+    "mahabharata": _GEMINI_VOICE,
+    "krishna":     _GEMINI_VOICE,
+}
+
+
+def _gemini_voice_for(series: str) -> str:
+    """Resolve the Gemini voice name for the given series — env override > map > default."""
+    env_override = os.environ.get(f"NARRATOR_VOICE_{series.upper()}", "").strip()
+    if env_override:
+        return env_override
+    return _GEMINI_VOICE_BY_SERIES.get(series, _GEMINI_VOICE)
+
 # SSML prosody for storytelling feel
 _RATE  = "-12%"   # deliberate, unhurried pace
 _PITCH = "-8Hz"   # deeper, more gravitas
@@ -68,14 +86,18 @@ def _pcm_to_wav(pcm_bytes: bytes, sample_rate: int = 24000) -> bytes:
     return buf.getvalue()
 
 
-def _gemini_tts(text: str, output_mp3: str) -> bool:
+def _gemini_tts(text: str, output_mp3: str, voice: str = None) -> bool:
     """
-    Generates audio via Gemini TTS (Charon voice).
+    Generates audio via Gemini TTS. Defaults to the global _GEMINI_VOICE
+    (Charon) but the caller can pass `voice` to override per series — e.g.
+    WhatIf passes "Puck" for an energetic, younger register.
     Returns True on success.
     """
     api_key = os.environ.get("GEMINI_API_KEY", "").strip()
     if not api_key:
         return False
+
+    voice_name = voice or _GEMINI_VOICE
 
     try:
         from google import genai
@@ -90,7 +112,7 @@ def _gemini_tts(text: str, output_mp3: str) -> bool:
                 speech_config=types.SpeechConfig(
                     voice_config=types.VoiceConfig(
                         prebuilt_voice_config=types.PrebuiltVoiceConfig(
-                            voice_name=_GEMINI_VOICE
+                            voice_name=voice_name
                         )
                     )
                 ),
@@ -717,11 +739,12 @@ async def generate_full_narration(
             print(f"    [OK] Full narration via {key_label} ({series})")
             return output_path, char_weights
 
-    # 2. Gemini Charon
+    # 2. Gemini TTS — series-aware voice (Charon for myth, Puck for WhatIf)
     if os.environ.get("GEMINI_API_KEY", "").strip():
-        print("    Trying Gemini TTS (Charon voice)...")
-        if await asyncio.to_thread(_gemini_tts, full_text, output_path):
-            print("    [OK] Full narration via Gemini Charon")
+        gemini_voice = _gemini_voice_for(series)
+        print(f"    Trying Gemini TTS ({gemini_voice} voice for {series})...")
+        if await asyncio.to_thread(_gemini_tts, full_text, output_path, gemini_voice):
+            print(f"    [OK] Full narration via Gemini {gemini_voice}")
             return output_path, char_weights
 
     # 3. Edge TTS SSML

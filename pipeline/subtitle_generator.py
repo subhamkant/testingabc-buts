@@ -117,22 +117,46 @@ def _groq_transcribe_words(audio_path: str, language: str) -> list:
 # Whisper transcribes the spoken brand as "व्यासा"/"व्यास" since it isn't in
 # the model's dictionary).
 _DIRECT_FIXES = {
-    # Latin
+    # Latin — common Whisper mishearings of "Vyasa"
     "vyyas":   "Vyasa",
     "vyaas":   "Vyasa",
     "viyas":   "Vyasa",
     "viyasa":  "Vyasa",
     "vayasa":  "Vyasa",
-    # Devanagari — Whisper-Hindi transcribes the spoken "Vyasa" this way
+    "vyas":    "Vyasa",
+    "vyassa":  "Vyasa",
+    "wyasa":   "Vyasa",
+    "wyas":    "Vyasa",
+    "byasa":   "Vyasa",
+    "byaas":   "Vyasa",
+    "biyasa":  "Vyasa",
+    "wasa":    "Vyasa",
+    "vassa":   "Vyasa",
+    "visa":    "Vyasa",   # high-confidence brand mishear in our corpus
+    "visor":   "Vyasa",
+    "viasa":   "Vyasa",
+    # Devanagari — Whisper-Hindi transcribes the spoken brand this way
     "व्यासा":  "Vyasa",
     "व्यास":   "Vyasa",
     "वयासा":   "Vyasa",
+    "वायसा":   "Vyasa",
+    "वियासा":  "Vyasa",
+    "बयासा":   "Vyasa",
 }
 
 # Tokens we'd recognize as the spoken letters "AI" (the second half of the
 # brand "Vyasa AI"). Whisper sometimes hears it as "Al" (lowercase L), as the
-# Devanagari "एआई" / "एआय", or drops it entirely.
-_AI_TOKENS = {"AI", "ai", "Al", "AL", "al", "एआई", "एआय", "ए.आई"}
+# Devanagari "एआई" / "एआय" / "आई", or drops it entirely.
+_AI_TOKENS = {
+    "AI", "ai", "Al", "AL", "al", "A.I.", "A.I", "a.i.",
+    "एआई", "एआय", "ए.आई", "ए.आय", "आई", "आय", "ऐ.आय",
+}
+
+# Concatenated "Vyasai" / "Vyasa.ai" cases — Whisper occasionally emits the
+# brand as a single glued token. We split it into two so the burned-in
+# subtitle keeps the "Vyasa" → "AI" two-card cadence that matches the other
+# correction passes.
+_CONCAT_BRAND_RE = None  # initialized lazily inside _correct_brand_transcripts
 
 
 def _correct_brand_transcripts(words: list) -> list:
@@ -149,6 +173,28 @@ def _correct_brand_transcripts(words: list) -> list:
         return words
 
     import re as _re
+
+    # Pre-pass: split concatenated "Vyasai" / "Vyasa.ai" / "vyasaai" tokens
+    # into ["Vyasa", "AI"] in place. The Latin variants we accept on the
+    # "Vyasa..." prefix mirror the fuzzy keys in _DIRECT_FIXES so a glued
+    # mishear like "viyasai" still gets caught here.
+    _concat_re = _re.compile(
+        r"^(v[iy]+a?s+s?a?|by[ay]?s+a?|w[iy]+a?s+a?|vass+a?)(\s*[\.\-]?\s*)(a[il]\.?i?\.?)$",
+        _re.IGNORECASE,
+    )
+    expanded = []
+    for w in words:
+        m = _concat_re.match((w.get("word") or "").strip())
+        if not m:
+            expanded.append(w)
+            continue
+        start = float(w.get("start", 0.0))
+        end   = float(w.get("end",   start + 0.30))
+        dur   = max(end - start, 0.10)
+        mid   = start + dur * 0.62
+        expanded.append({"word": "Vyasa", "start": start, "end": mid})
+        expanded.append({"word": "AI",    "start": mid,   "end": end})
+    words = expanded
 
     def _fix_token(token: str) -> str:
         # First try the full token (handles Devanagari with combining vowel

@@ -488,13 +488,13 @@ def _generate_whatif_script(forced_topic: str = None, dual_language: bool = True
 
     if dual_language:
         narration_block = (
-            '          "narration": "25-40 words in clear, natural ENGLISH — curious, vivid, present-tense",\n'
-            '          "narration_hi": "25-40 words in natural spoken HINDI (Devanagari script). Same content as English narration but read naturally — NOT a literal word-for-word translation.",\n'
+            '          "narration": "25-35 words in clear, natural ENGLISH — curious, vivid, present-tense",\n'
+            '          "narration_hi": "25-35 words in SIMPLE EVERYDAY spoken HINDI (Devanagari script) — the kind a young person speaks at home, NOT literary or Sanskritized Hindi. Common loanwords (planet, gravity, magnetic, satellite, signal, GPS, climate, ocean, virus, AI, etc.) MUST stay in their English form written in Devanagari (e.g. प्लैनेट, ग्रैविटी, मैग्नेटिक, सैटेलाइट, सिग्नल, जीपीएस, क्लाइमेट, ओशन, वायरस, ए-आई). DO NOT use words like ध्रुव, चुंबकीय, उपग्रह, गुरुत्वाकर्षण, वायुमंडल — use the everyday English-origin word in Devanagari instead. Same idea as English narration but spoken naturally — NOT a literal translation.",\n'
         )
         lang_note = "Each scene has BOTH English (narration) AND Hindi (narration_hi) versions of the same idea."
     else:
         narration_block = (
-            '          "narration": "25-40 words in clear, natural ENGLISH — curious, vivid, present-tense",\n'
+            '          "narration": "25-35 words in clear, natural ENGLISH — curious, vivid, present-tense",\n'
         )
         lang_note = "Narration is in English."
 
@@ -505,7 +505,7 @@ You are a science communicator writing a 60-90 second "What If" thought-experime
 
 TOPIC: "{topic}"
 
-TASK: Create a vertical (9:16) video script with EXACTLY 5 OR 6 scenes that imagines this hypothetical scenario plausibly.
+TASK: Create a vertical (9:16) video script with EXACTLY 4 OR 5 scenes that imagines this hypothetical scenario plausibly. Target video length: 45-60 seconds — this is the science-niche Shorts retention sweet spot, not 60-90s.
 
 VOICE & TONE:
 - Curious, wonder-driven, "imagine this for a moment" energy
@@ -524,16 +524,25 @@ LANGUAGE: {lang_note}
 STRUCTURE — RETENTION ON SHORTS
 ═══════════════════════════════════════════════════════════════
 Scene 1 — HOOK (the first 1.5 seconds decide if the viewer swipes):
-   Open with the question itself, framed dramatically. Examples:
-     "Imagine waking up tomorrow — and every human is gone."
-     "What if Earth had rings like Saturn? You wouldn't sleep tonight."
-   DO NOT open with "In this video..." or "Today we explore..." — get straight into the scenario.
+   CONSEQUENCE FIRST, scenario second. Open with a vivid concrete consequence
+   that punches the viewer, THEN reveal the scenario in the same scene.
+   Lead with sensory or visual imagery — not abstract framing.
+   Examples (CONSEQUENCE → SCENARIO):
+     "Your phone dies. GPS gone. Birds crash into buildings.
+      This is Earth — six months after the magnetic poles flip."
+     "The sky turns blood red. Plants stop growing within weeks.
+      This is what happens if the sun's output drops by just 5%."
+     "Eight billion people. Gone overnight. Streetlights still on,
+      subway trains still running. This is one day after every human vanishes."
+   DO NOT open with: "Imagine...", "What if...", "Have you ever wondered...",
+   "In this video...", "Today we explore..." — these are all instant swipe triggers.
+   Lead with the consequence as if it has already happened — present tense.
 
 Scenes 2-3 — SETUP & ESCALATION:
    Walk through the immediate consequences in vivid, concrete detail.
    Each scene reveals a new layer the viewer didn't expect.
 
-Scene 4 (and 5 if 6-scene) — PEAK CONSEQUENCE:
+Peak scene (penultimate) — PEAK CONSEQUENCE:
    The single most striking implication. The "wait, what?" moment.
 
 Final scene — RESOLUTION + REFLECTION:
@@ -552,24 +561,24 @@ CONTENT QUALITY
 ═══════════════════════════════════════════════════════════════
 NARRATION LENGTH — CRITICAL (HARD-ENFORCED)
 ═══════════════════════════════════════════════════════════════
-EACH scene's narration MUST be 25-40 words. This applies to BOTH the
+EACH scene's narration MUST be 25-35 words. This applies to BOTH the
 English `narration` field AND the Hindi `narration_hi` field per scene.
-Aim for 30-35 words per scene as the sweet spot.
+Aim for 28-32 words per scene as the sweet spot.
 
 NEVER write fewer than 25 words per scene. Anything under 20 words is
-unusable — it produces a 30-second video that nobody watches. Length is
+unusable — it produces a 25-second video that nobody watches. Length is
 not optional.
 
-At natural narration pace, 25-40 words = ~10-13 seconds spoken per scene.
-6 scenes × 30 words ≈ 180 words ≈ 60-75 seconds of audio. THAT is the
-target video length.
+At natural narration pace, 25-35 words = ~10-12 seconds spoken per scene.
+5 scenes × 30 words ≈ 150 words ≈ 50-60 seconds of audio. THAT is the
+target video length — the science-Shorts retention sweet spot.
 
 Bad scene example (5 words — DO NOT WRITE):
   "Humans vanish. Cities go silent."
-Good scene example (32 words — WRITE LIKE THIS):
-  "Imagine waking up to silence. Every human is simply gone — eight
-  billion people, vanished overnight. Streetlights stay on. Subway
-  trains roll into empty stations. The cat watches the door, waiting."
+Good scene example (30 words — WRITE LIKE THIS, consequence-first):
+  "Eight billion people, gone overnight. Streetlights stay on. Subway
+  trains roll into empty stations. The cat watches the door, waiting.
+  This is one day after humans vanish."
 
 ═══════════════════════════════════════════════════════════════
 OUTPUT — return ONLY valid JSON, no markdown fences, no preamble:
@@ -599,7 +608,7 @@ HARD RULES:
   phenomenon, the specific scenario phrasing) on top of the generic
   what-if/science fallbacks.
 - visual_style: MUST be exactly one of the allowed values
-- EXACTLY 5 OR 6 scenes
+- EXACTLY 4 OR 5 scenes (4 preferred for tight pacing, 5 for richer topics)
 - Narration MUST NOT contain URLs, hashtags, @mentions, or social-media text
 - image_prompt, video_prompt, thumbnail_prompt all in English
 - NO Mahabharata characters, gods, or mythology — this is science/curiosity content
@@ -617,10 +626,10 @@ HARD RULES:
             full_prompt += (
                 f"\n\nCRITICAL REMINDER: Your previous response had narrations averaging "
                 f"only {last_avg_words:.1f} words per scene across {last_n_scenes} scenes. "
-                f"That's a 30-second stub video, not the 60-90 second Short the prompt "
-                f"asked for. EVERY scene's `narration` AND `narration_hi` MUST be 25-40 "
-                f"words — no exceptions. Do NOT write 1-sentence scenes. Each scene needs "
-                f"2-3 full sentences with concrete sensory and scientific detail. Rewrite."
+                f"That's a stub video, not the 45-60 second Short the prompt asked for. "
+                f"EVERY scene's `narration` AND `narration_hi` MUST be 25-35 words — no "
+                f"exceptions. Do NOT write 1-sentence scenes. Each scene needs 2-3 full "
+                f"sentences with concrete sensory and scientific detail. Rewrite."
             )
 
         raw = _call_llm(full_prompt)
@@ -658,8 +667,9 @@ HARD RULES:
         last_avg_words = word_avg
         last_n_scenes  = n_scenes
 
-        # Accept if BOTH languages average >= 22 words/scene AND we have >= 5 scenes
-        if word_avg >= 22 and hi_avg >= 22 and n_scenes >= 5:
+        # Accept if BOTH languages average >= 22 words/scene AND we have 4-5 scenes.
+        # 4 is the new minimum since we trimmed the target to 45-60s (was 5-6 / 60-90s).
+        if word_avg >= 22 and hi_avg >= 22 and 4 <= n_scenes <= 5:
             break
 
         if attempt < 2:

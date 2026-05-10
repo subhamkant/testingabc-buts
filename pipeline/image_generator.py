@@ -45,24 +45,35 @@ STYLE_SUFFIX = (
 # per topic (e.g. dinosaurs -> nature-doc, black hole -> sci-fi-cinematic).
 _WHATIF_STYLE_SUFFIXES = {
     "photoreal-3d": (
-        "photorealistic 3D render, octane render quality, cinematic lighting, "
-        "sharp 8K detail, scientific illustration accuracy, "
-        "studio depth of field, volumetric atmosphere"
+        "photorealistic CGI render, octane / unreal-engine-5 quality, "
+        "physically-based shading, accurate scale and proportions, "
+        "raytraced reflections, soft global illumination, volumetric atmosphere, "
+        "scientific-illustration accuracy, true-to-life materials and textures, "
+        "ultra-sharp 8K detail, professional cinematic lighting, "
+        "high dynamic range, neutral color grading, no fantasy distortion"
     ),
     "nature-doc": (
-        "BBC nature documentary cinematography, golden hour lighting, "
-        "telephoto lens compression, naturalistic colour palette, "
-        "shallow depth of field, ultra-sharp 8K detail"
+        "BBC Planet Earth documentary cinematography, shot on Arri Alexa Mini LF, "
+        "telephoto 600mm lens compression, naturalistic golden-hour lighting, "
+        "true-to-life animal anatomy, accurate ecosystem detail, "
+        "shallow depth of field with creamy bokeh, "
+        "ultra-sharp 8K wildlife photography detail, professional color grading, "
+        "no fantasy elements, no cartoon styling"
     ),
     "sci-fi-cinematic": (
-        "Denis Villeneuve sci-fi aesthetic, Roger Deakins lighting, "
-        "anamorphic widescreen feel, atmospheric haze, dramatic silhouettes, "
-        "muted tonal palette, cinematic 8K detail"
+        "Denis Villeneuve sci-fi cinematography, Roger Deakins lighting, "
+        "shot on 35mm anamorphic Kodak Vision3 5219, "
+        "monumental scale composition with tiny human silhouettes for scale, "
+        "atmospheric haze and god-rays, muted desaturated palette with one accent color, "
+        "deep ultra-wide compositions, cinematic 2.39:1 framing feel, "
+        "ultra-sharp 8K detail, no neon kitsch, no pulp space-opera tropes"
     ),
     "illustrated": (
-        "polished concept art digital illustration, ArtStation trending, "
-        "painterly brush detail, vivid colour palette, dramatic composition, "
-        "sharp readable subjects"
+        "high-end editorial illustration, National Geographic feature art style, "
+        "polished concept art with painterly detail, ArtStation Featured quality, "
+        "dramatic composition with strong focal hierarchy, "
+        "vivid but believable color palette, sharp readable subjects, "
+        "no anime, no cel-shading, no flat cartoon styling"
     ),
 }
 
@@ -417,19 +428,41 @@ def generate_images(scenes: list, single_shot: bool = False, series: str = "maha
 
 
 def generate_thumbnail(thumbnail_prompt: str, output_path: str = "output/thumbnail.jpg", series: str = "mahabharata", visual_style: str = "") -> str:
-    """Generates a 1280x720 thumbnail (YouTube native size — landscape)."""
+    """
+    Generates a 1280x720 thumbnail (YouTube native size — landscape).
+
+    For WhatIf the thumbnail is the single most clicked-on asset and Pollinations
+    output at small sizes tends to be muddy with weak focal hierarchy. We append
+    a thumbnail-specific composition rider (centered subject, single high-contrast
+    focal point, dark backdrop, no small text) and vary the seed each retry so a
+    bad first composition isn't simply repeated four times.
+    """
     os.makedirs("output", exist_ok=True)
     style_suffix = _resolve_style_suffix(series, visual_style)
 
-    for attempt in range(3):
+    # Thumbnail composition rider — appended to the style suffix only for the
+    # landscape thumbnail call, not the scene images. Pushes the model toward
+    # phone-feed-readable framing.
+    if series == "whatif":
+        style_suffix = (
+            style_suffix
+            + ", thumbnail composition — single centered hero subject filling 60% "
+              "of the frame, dramatic single light source, dark moody backdrop "
+              "with strong contrast, no small text, no UI elements, no logos, "
+              "phone-feed legible at thumbnail size"
+        )
+
+    # Vary seeds across attempts so a poor first composition doesn't repeat.
+    seeds = [9999, 4242, 8137, 1729]
+    for attempt in range(len(seeds)):
         try:
             img_bytes, provider = generate_image_bytes(
-                thumbnail_prompt, seed=9999, width=1280, height=720,
+                thumbnail_prompt, seed=seeds[attempt], width=1280, height=720,
                 style_suffix=style_suffix,
             )
             with open(output_path, "wb") as f:
                 f.write(img_bytes)
-            print(f"    [OK] Thumbnail generated via {provider}")
+            print(f"    [OK] Thumbnail generated via {provider} (seed {seeds[attempt]})")
             return output_path
         except Exception as e:
             print(f"    [!] Thumbnail attempt {attempt+1}: {e}")
@@ -437,7 +470,7 @@ def generate_thumbnail(thumbnail_prompt: str, output_path: str = "output/thumbna
         wait = (attempt + 1) * 3
         time.sleep(wait)
 
-    print(f"    [ERROR] Thumbnail generation failed after 4 attempts")
+    print(f"    [ERROR] Thumbnail generation failed after {len(seeds)} attempts")
     return ""
 
 

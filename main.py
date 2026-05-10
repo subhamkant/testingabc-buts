@@ -146,8 +146,8 @@ def _subscribe_outro(series: str, language: str, listener: str = "") -> dict:
         whatif_video = "Slow zoom on Vyasa AI logo card with starfield parallax and golden glow"
         if language == "hi":
             narration = (
-                "ऐसी रोचक कहानियों के लिए... Vyasa AI को Subscribe करें — "
-                "समय और अंतरिक्ष के पार की कहानियाँ!"
+                "ऐसी मज़ेदार कहानियों के लिए... Vyasa AI को Subscribe करें — "
+                "टाइम और स्पेस के पार की कहानियाँ!"
             )
         else:
             narration = (
@@ -185,8 +185,17 @@ def _build_lang_script(dual_script: dict, language: str) -> dict:
     Convert a dual-language WhatIf script into a single-language copy by
     selecting `narration_hi` or `narration` per scene and writing it to the
     common `narration` field that downstream pipeline stages expect.
+
+    Title handling: the LLM produces a bilingual title "English | Hindi".
+    The Hindi upload keeps the bilingual title (Hindi viewers also read the
+    English half on the thumbnail). The English upload drops the Hindi half
+    so the title reads cleanly for English-only viewers.
     """
     out = dict(dual_script)
+    if language == "en":
+        title = (out.get("title") or "").strip()
+        if "|" in title:
+            out["title"] = title.split("|", 1)[0].strip().rstrip("-—,:; ").strip()
     out["scenes"] = []
     for scene in dual_script["scenes"]:
         narration = scene.get("narration_hi", "") if language == "hi" else scene.get("narration", "")

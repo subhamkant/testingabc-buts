@@ -28,6 +28,9 @@ SCOPES = [
     # uploads to per-series playlists). Re-run this script and update the
     # YOUTUBE_TOKEN_B64 secret to grant it.
     "https://www.googleapis.com/auth/youtube",
+    # `yt-analytics.readonly` enables YouTube Analytics API queries
+    # (watch time, retention, traffic sources, demographics, geography).
+    "https://www.googleapis.com/auth/yt-analytics.readonly",
 ]
 
 

@@ -527,14 +527,19 @@ def _apply_cinematic_polish(video_path: str, clip_durations: list) -> None:
 
 # ── Background music with smart ducking ──────────────────────────────────────
 
-def _pick_music_track() -> str:
+def _pick_music_track(series: str = "mahabharata") -> str:
     """
-    Returns a music track path:
-    1. BACKGROUND_MUSIC_PATH in .env if set to a real file
-    2. Otherwise picks from assets/ and assets/music/ (CI cache dir) with the
-       Mahabharata sad-theme title track weighted to 50% (used on ~2 of every
-       4 videos), since it's the most thematically aligned track in the pool.
-       The remaining 50% goes uniformly to the other tracks.
+    Returns a music track path, series-aware:
+
+    1. BACKGROUND_MUSIC_PATH env var wins (manual override for testing).
+    2. WhatIf: prefers tracks in `assets/music/whatif/` (curiosity / ambient /
+       synthwave register). Filenames containing 'whatif', 'curious', or
+       'ambient' anywhere in the pool also count. Falls back to non-mythic
+       tracks (i.e. excludes the Mahabharata sad-theme + epic tracks) so a
+       science video never ends up under a devotional cue.
+    3. Mahabharata / Krishna: original behaviour — 50% weight on the sad-theme
+       title track, uniform across the rest.
+
     Returns empty string if nothing found.
     """
     pinned = os.environ.get("BACKGROUND_MUSIC_PATH", "").strip()
@@ -542,7 +547,20 @@ def _pick_music_track() -> str:
         return pinned
 
     tracks = []
-    for search_dir in ["assets", "assets/music"]:
+    search_dirs = ["assets", "assets/music"]
+    if series == "whatif":
+        # Check the dedicated subdir first; if it has anything use ONLY that
+        # so a curated whatif pool wins over any generic mahabharata fallback.
+        if os.path.isdir("assets/music/whatif"):
+            whatif_dir_tracks = [
+                os.path.join("assets/music/whatif", f)
+                for f in os.listdir("assets/music/whatif")
+                if f.lower().endswith(".mp3")
+            ]
+            if whatif_dir_tracks:
+                return random.choice(whatif_dir_tracks)
+
+    for search_dir in search_dirs:
         if os.path.isdir(search_dir):
             tracks += [
                 os.path.join(search_dir, f)
@@ -553,6 +571,21 @@ def _pick_music_track() -> str:
     real_tracks = [t for t in tracks if "bgmusic" not in os.path.basename(t)]
     pool = real_tracks if real_tracks else tracks
     if not pool:
+        return ""
+
+    # WhatIf: filter the pool to non-mythic tracks. If the pool name suggests
+    # epic / sad / devotional content, exclude it. Whatever remains is a
+    # better neutral bed than nothing.
+    if series == "whatif":
+        _MYTHIC_HINTS = ("sad_theme", "mahabharat", "krishna", "bhakti", "devot", "epic")
+        whatif_safe = [
+            t for t in pool
+            if not any(h in os.path.basename(t).lower() for h in _MYTHIC_HINTS)
+        ]
+        if whatif_safe:
+            return random.choice(whatif_safe)
+        # No whatif-safe track in the pool → return empty so we skip music
+        # entirely rather than fall back to a mythic cue under science content.
         return ""
 
     sad_theme = next(
@@ -653,7 +686,7 @@ def _apply_background_music(output_path: str, series: str = "mahabharata"):
     If no music track is available, voice is still normalized via
     _finalize_audio_no_music.
     """
-    music_path = _pick_music_track()
+    music_path = _pick_music_track(series=series)
     if not music_path:
         _finalize_audio_no_music(output_path, series=series)
         return
@@ -672,13 +705,14 @@ def _apply_background_music(output_path: str, series: str = "mahabharata"):
     music_output = output_path.replace(".mp4", "_music.mp4")
     audio_chain = _audio_post_chain(series)
 
-    # volume=0.10 (was 0.32) — music is atmosphere only, should never compete
-    # with the narrator's voice. Sidechain ducking drops it further during voice.
-    # audio_chain adds dynaudnorm (krishna only) before loudnorm + aresample.
+    # volume=0.085 (was 0.10, originally 0.32) — music is atmosphere only,
+    # should never compete with the narrator's voice. Sidechain ducking drops
+    # it further during voice. audio_chain adds dynaudnorm (krishna only)
+    # before loudnorm + aresample.
     duck_filter = (
         f"[0:a]asplit=2[voice_mix][voice_sc];"
         f"[1:a]atrim=0:{video_duration:.3f},asetpts=PTS-STARTPTS,"
-        f"volume=0.10[music_raw];"
+        f"volume=0.085[music_raw];"
         f"[music_raw][voice_sc]sidechaincompress="
         f"threshold=0.02:ratio=6:attack=150:release=600:makeup=1[music_ducked];"
         f"[voice_mix][music_ducked]amix=inputs=2:normalize=0,"
