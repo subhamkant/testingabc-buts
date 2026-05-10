@@ -29,580 +29,535 @@ on:
           - whatif
           - krishna
 
+# ════════════════════════════════════════════════════════════════════════════
+# WORKFLOW STRUCTURE
+# ════════════════════════════════════════════════════════════════════════════
+# Every job has `timeout-minutes: 29` so it fits inside a single 30-min GHA
+# slot. To absorb runs that genuinely need longer (Mahabharata's ~80 min slow
+# path when AI clips are exhausted), each primary has THREE chained retry
+# siblings (retry-1, retry-2, retry-3). Each retry fires only if the prior
+# attempt was `failure` or `cancelled` (timeout-cancellation counts as
+# `cancelled`, not `failure`) and resumes from the shared checkpoint cache.
+#
+# Total budget per series: 4 attempts × 29 min = 116 min — covers the slowest
+# observed runs with margin while staying under the 30-min-per-attempt cap.
+#
+# Series → primary job mapping:
+#   - Mahabharata + Krishna: generate-and-upload  (cron picks which target)
+#   - WhatIf English phase:  whatif-english       (only on 04:00 UTC cron)
+#   - WhatIf Hindi phase:    whatif-hindi         (depends on EN succeeding)
+#
+# All retry jobs in a series share ONE artifact name — pipeline-checkpoint-
+# <PIPELINE_RUN_ID> — with `overwrite: true`, so each attempt's partial state
+# overwrites the prior and the next attempt resumes from wherever the last
+# one left off.
+
 jobs:
-  # ─── Mahabharata + Krishna single-job pipeline ──────────────────────────────
-  # WhatIf dispatches to its own pair of jobs (whatif-english + whatif-hindi)
-  # because dual-language EN+HI has historically blown the 90-min timeout.
+  # ════════════════════════════════════════════════════════════════════════
+  # Mahabharata + Krishna — single-job-family pipeline (4 attempts)
+  # ════════════════════════════════════════════════════════════════════════
+
   generate-and-upload:
-    # Skip on the WhatIf cron + on workflow_dispatch with target=whatif —
-    # those route to the per-language jobs below instead.
+    # Skip on the WhatIf cron + on workflow_dispatch with target=whatif.
     if: |
       github.event.schedule != '0 4 * * *' &&
       !(github.event_name == 'workflow_dispatch' && inputs.target == 'whatif')
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 29
     permissions:
       contents: write
-
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Setup pipeline runner (deps, FFmpeg, fonts, music, OAuth)
-        uses: ./.github/actions/setup-pipeline-runner
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-pipeline-runner
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           youtube-token-b64: ${{ secrets.YOUTUBE_TOKEN_B64 }}
           youtube-client-secrets: ${{ secrets.YOUTUBE_CLIENT_SECRETS }}
-
-      - name: Determine target for this run
+      - name: Determine target + PIPELINE_RUN_ID
         run: |
-          # Manual dispatch: use the chosen target.
-          # Scheduled: route by cron expression —
-          #   04:00 UTC = whatif (dual-language)
-          #   13:00 UTC = krishna (first-person direct address)
-          #   others    = hi (standard Mahabharata)
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             echo "TARGET=${{ inputs.target }}" >> $GITHUB_ENV
-          elif [ "${{ github.event.schedule }}" = "0 4 * * *" ]; then
-            echo "TARGET=whatif" >> $GITHUB_ENV
           elif [ "${{ github.event.schedule }}" = "0 13 * * *" ]; then
             echo "TARGET=krishna" >> $GITHUB_ENV
           else
             echo "TARGET=hi" >> $GITHUB_ENV
           fi
-
-      - name: Set PIPELINE_RUN_ID
-        run: |
-          # Deterministic per-workflow-run id used by CheckpointStore. Both the
-          # original job and the auto-retry job (which lives in the same
-          # workflow run) compute the same value because github.run_id is
-          # shared across jobs in one workflow run. This is what lets the
-          # retry job find and resume the original's checkpoints.
-          SERIES="$TARGET"
-          if [ "$TARGET" = "hi" ] || [ "$TARGET" = "en" ]; then
-            SERIES="mahabharata"
-          fi
+          # Resolve series for the cache key — both 'hi' and 'en' map to mahabharata.
+          T="$TARGET"
+          [ -z "$T" ] && T="${{ inputs.target }}"
+          SERIES="$T"
+          [ "$T" = "hi" ] || [ "$T" = "en" ] && SERIES="mahabharata"
           echo "PIPELINE_RUN_ID=${SERIES}_${{ github.run_id }}" >> $GITHUB_ENV
-
-      - name: Restore checkpoint from prior attempt (if any)
-        # Only the auto-retry job will find this artifact (uploaded by the
-        # original job on failure). On the first attempt this step downloads
-        # nothing — the action's `if-no-files-found` default handles cleanly.
-        uses: actions/download-artifact@v4
+      - uses: ./.github/actions/run-pipeline-with-checkpoint
         with:
-          name: pipeline-checkpoint-${{ env.PIPELINE_RUN_ID }}
-          path: cache/
-        continue-on-error: true
+          pipeline-run-id: ${{ env.PIPELINE_RUN_ID }}
+          pipeline-cmd: "python main.py ${{ env.TARGET }}"
+          commit-message: "Auto-update pipeline state [skip ci]"
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          gemini-api-key: ${{ secrets.GEMINI_API_KEY }}
+          groq-api-key: ${{ secrets.GROQ_API_KEY }}
+          fal-key: ${{ secrets.FAL_KEY }}
+          replicate-api-token: ${{ secrets.REPLICATE_API_TOKEN }}
+          hf-token: ${{ secrets.HF_TOKEN }}
+          hf-space: ${{ secrets.HF_SPACE }}
+          cloudflare-api-token: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          cloudflare-account-id: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          elevenlabs-api-key: ${{ secrets.ELEVENLABS_API_KEY }}
+          elevenlabs-api-key-fallback: ${{ secrets.ELEVENLABS_API_KEY_FALLBACK }}
+          elevenlabs-voice-id: ${{ secrets.ELEVENLABS_VOICE_ID }}
+          elevenlabs-voice-id-krishna: ${{ secrets.ELEVENLABS_VOICE_ID_KRISHNA }}
 
-      - name: Run pipeline
-        env:
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
-          FAL_KEY: ${{ secrets.FAL_KEY }}
-          REPLICATE_API_TOKEN: ${{ secrets.REPLICATE_API_TOKEN }}
-          HF_TOKEN: ${{ secrets.HF_TOKEN }}
-          HF_SPACE: ${{ secrets.HF_SPACE }}
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          # ElevenLabs is the first tier of the TTS cascade — when set, every
-          # video uses the premium voice (dramatically more human than Edge or
-          # Charon). Free tier gives ~10k chars/month (~5-7 videos). Falls back
-          # silently to Gemini Charon → Edge TTS if the secret is empty.
-          ELEVENLABS_API_KEY: ${{ secrets.ELEVENLABS_API_KEY }}
-          ELEVENLABS_API_KEY_FALLBACK: ${{ secrets.ELEVENLABS_API_KEY_FALLBACK }}
-          ELEVENLABS_VOICE_ID: ${{ secrets.ELEVENLABS_VOICE_ID }}
-          # Per-series voice override for Krishna direct-address videos. When
-          # set, the 13:00 UTC slot uses this voice (e.g. a deep / divine
-          # ElevenLabs voice). Falls back to ELEVENLABS_VOICE_ID if empty.
-          ELEVENLABS_VOICE_ID_KRISHNA: ${{ secrets.ELEVENLABS_VOICE_ID_KRISHNA }}
-          NARRATOR_VOICE: Charon
-          CINEMATIC_FPS: "30"
-          # Per-provider I2V timeout — drops a flaky free-tier provider sooner
-          # so the per-scene cascade falls to Ken Burns within ~120s instead of
-          # ~180s, capping how long a hung HF Space can hold up the batch.
-          CLIP_PROVIDER_TIMEOUT: "120"
-          # CheckpointStore reads this to scope cache/<run_id>/ — same value
-          # is computed identically by the auto-retry job so it resumes from
-          # the original job's checkpoints.
-          PIPELINE_RUN_ID: ${{ env.PIPELINE_RUN_ID }}
-        run: python main.py ${{ env.TARGET }} 2>&1 | tee pipeline_output.txt
-
-      - name: Save checkpoint cache (always — even on failure)
-        # Uploaded regardless of pipeline success or failure so the retry job
-        # can resume from whichever step the original got to. On a clean
-        # success the artifact is harmless (just unused); 7-day retention
-        # keeps storage bounded.
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: pipeline-checkpoint-${{ env.PIPELINE_RUN_ID }}
-          path: cache/${{ env.PIPELINE_RUN_ID }}/
-          retention-days: 7
-          if-no-files-found: ignore
-
-      # Email notifications disabled temporarily — re-enable after fixing MAIL_PASSWORD
-      # - name: Send success email
-      #   if: success()
-      #   uses: dawidd6/action-send-mail@v3
-      #   ...
-
-      # - name: Send failure email
-      #   if: failure()
-      #   uses: dawidd6/action-send-mail@v3
-      #   ...
-
-      - name: Commit updated state (characters + topic queues)
-        if: always()
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git
-          # Pull latest first to avoid push conflicts when multiple cron runs
-          # finish close together (Mahabharata 4×/day + Krishna + WhatIf).
-          git pull --rebase --autostash origin master || true
-          # Stage all rotating-state files. characters.json gets newly-detected
-          # character visuals appended; scheduled_topics_*.txt has the consumed
-          # topic line removed from the queue (and may have LLM-replenished
-          # topics appended); recent_topics.json grows with the just-uploaded
-          # topic so future runs avoid duplicates within the ~2-month window.
-          # Without committing these back, every workflow run starts from a
-          # fresh checkout and the avoidance/queue state is lost.
-          git add assets/characters.json scheduled_topics_*.txt recent_topics.json 2>/dev/null || true
-          if git diff --staged --quiet; then
-            echo "No state changes to commit."
-          else
-            git commit -m "Auto-update pipeline state [skip ci]"
-            git push
-          fi
-
-      - name: Save refreshed token (artifact)
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: token-refresh
-          path: token.pickle
-          retention-days: 1
-
-  # ─── Auto-retry-once on failure ─────────────────────────────────────────────
-  # Fires immediately if generate-and-upload fails. Downloads the checkpoint
-  # artifact saved by the original job and re-invokes main.py — the pipeline
-  # then resumes from the last completed step thanks to CheckpointStore.
-  # If THIS retry also fails the run dies and the user re-triggers manually
-  # from the GHA UI. Intentional design: prevents infinite retry loops on
-  # persistent issues (e.g. revoked API key) and bounds GHA minute spend.
-  generate-and-upload-retry:
+  generate-and-upload-retry-1:
     needs: generate-and-upload
-    # Don't fire when the primary was correctly skipped (its `if` evaluated
-    # false on a WhatIf run). `result == 'failure'` excludes that case.
-    if: failure() && needs.generate-and-upload.result == 'failure'
+    # Fire if primary was cancelled (timeout) OR failed. Skip if it succeeded
+    # OR was skipped (cron didn't route here).
+    if: |
+      always() &&
+      contains(fromJson('["failure", "cancelled"]'), needs.generate-and-upload.result)
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 29
     permissions:
       contents: write
-
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Setup pipeline runner (deps, FFmpeg, fonts, music, OAuth)
-        uses: ./.github/actions/setup-pipeline-runner
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-pipeline-runner
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           youtube-token-b64: ${{ secrets.YOUTUBE_TOKEN_B64 }}
           youtube-client-secrets: ${{ secrets.YOUTUBE_CLIENT_SECRETS }}
-
-      - name: Determine target for this run (same logic as primary job)
+      - name: Determine target + PIPELINE_RUN_ID (same as primary)
         run: |
-          # Identical to the primary job — both must compute the same TARGET
-          # so they hit the same CheckpointStore directory.
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             echo "TARGET=${{ inputs.target }}" >> $GITHUB_ENV
-          elif [ "${{ github.event.schedule }}" = "0 4 * * *" ]; then
-            echo "TARGET=whatif" >> $GITHUB_ENV
           elif [ "${{ github.event.schedule }}" = "0 13 * * *" ]; then
             echo "TARGET=krishna" >> $GITHUB_ENV
           else
             echo "TARGET=hi" >> $GITHUB_ENV
           fi
-
-      - name: Set PIPELINE_RUN_ID (same as primary job)
-        run: |
-          SERIES="$TARGET"
-          if [ "$TARGET" = "hi" ] || [ "$TARGET" = "en" ]; then
-            SERIES="mahabharata"
-          fi
+          T="$TARGET"
+          [ -z "$T" ] && T="${{ inputs.target }}"
+          SERIES="$T"
+          [ "$T" = "hi" ] || [ "$T" = "en" ] && SERIES="mahabharata"
           echo "PIPELINE_RUN_ID=${SERIES}_${{ github.run_id }}" >> $GITHUB_ENV
-
-      - name: Download checkpoint from primary job
-        # Required for resume — if no artifact exists the retry has nothing to
-        # resume from and would just redo the failed run from scratch (a waste
-        # of GHA minutes). Hard-fail if missing.
-        uses: actions/download-artifact@v4
+      - uses: ./.github/actions/run-pipeline-with-checkpoint
         with:
-          name: pipeline-checkpoint-${{ env.PIPELINE_RUN_ID }}
-          path: cache/${{ env.PIPELINE_RUN_ID }}/
+          pipeline-run-id: ${{ env.PIPELINE_RUN_ID }}
+          pipeline-cmd: "python main.py ${{ env.TARGET }}"
+          commit-message: "Auto-update pipeline state (retry-1) [skip ci]"
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          gemini-api-key: ${{ secrets.GEMINI_API_KEY }}
+          groq-api-key: ${{ secrets.GROQ_API_KEY }}
+          fal-key: ${{ secrets.FAL_KEY }}
+          replicate-api-token: ${{ secrets.REPLICATE_API_TOKEN }}
+          hf-token: ${{ secrets.HF_TOKEN }}
+          hf-space: ${{ secrets.HF_SPACE }}
+          cloudflare-api-token: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          cloudflare-account-id: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          elevenlabs-api-key: ${{ secrets.ELEVENLABS_API_KEY }}
+          elevenlabs-api-key-fallback: ${{ secrets.ELEVENLABS_API_KEY_FALLBACK }}
+          elevenlabs-voice-id: ${{ secrets.ELEVENLABS_VOICE_ID }}
+          elevenlabs-voice-id-krishna: ${{ secrets.ELEVENLABS_VOICE_ID_KRISHNA }}
 
-      - name: Resume pipeline from checkpoint
-        env:
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
-          FAL_KEY: ${{ secrets.FAL_KEY }}
-          REPLICATE_API_TOKEN: ${{ secrets.REPLICATE_API_TOKEN }}
-          HF_TOKEN: ${{ secrets.HF_TOKEN }}
-          HF_SPACE: ${{ secrets.HF_SPACE }}
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          ELEVENLABS_API_KEY: ${{ secrets.ELEVENLABS_API_KEY }}
-          ELEVENLABS_API_KEY_FALLBACK: ${{ secrets.ELEVENLABS_API_KEY_FALLBACK }}
-          ELEVENLABS_VOICE_ID: ${{ secrets.ELEVENLABS_VOICE_ID }}
-          ELEVENLABS_VOICE_ID_KRISHNA: ${{ secrets.ELEVENLABS_VOICE_ID_KRISHNA }}
-          NARRATOR_VOICE: Charon
-          CINEMATIC_FPS: "30"
-          # Per-provider I2V timeout — drops a flaky free-tier provider sooner
-          # so the per-scene cascade falls to Ken Burns within ~120s instead of
-          # ~180s, capping how long a hung HF Space can hold up the batch.
-          CLIP_PROVIDER_TIMEOUT: "120"
-          PIPELINE_RUN_ID: ${{ env.PIPELINE_RUN_ID }}
-        run: python main.py ${{ env.TARGET }} 2>&1 | tee pipeline_output.txt
-
-      - name: Save updated checkpoint cache (always)
-        if: always()
-        uses: actions/upload-artifact@v4
+  generate-and-upload-retry-2:
+    needs: generate-and-upload-retry-1
+    if: |
+      always() &&
+      contains(fromJson('["failure", "cancelled"]'), needs.generate-and-upload-retry-1.result)
+    runs-on: ubuntu-latest
+    timeout-minutes: 29
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-pipeline-runner
         with:
-          name: pipeline-checkpoint-${{ env.PIPELINE_RUN_ID }}-retry
-          path: cache/${{ env.PIPELINE_RUN_ID }}/
-          retention-days: 7
-          if-no-files-found: ignore
-
-      - name: Commit updated state (characters + topic queues)
-        if: always()
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          youtube-token-b64: ${{ secrets.YOUTUBE_TOKEN_B64 }}
+          youtube-client-secrets: ${{ secrets.YOUTUBE_CLIENT_SECRETS }}
+      - name: Determine target + PIPELINE_RUN_ID (same as primary)
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git
-          git pull --rebase --autostash origin master || true
-          git add assets/characters.json scheduled_topics_*.txt recent_topics.json 2>/dev/null || true
-          if git diff --staged --quiet; then
-            echo "No state changes to commit."
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "TARGET=${{ inputs.target }}" >> $GITHUB_ENV
+          elif [ "${{ github.event.schedule }}" = "0 13 * * *" ]; then
+            echo "TARGET=krishna" >> $GITHUB_ENV
           else
-            git commit -m "Auto-update pipeline state (retry) [skip ci]"
-            git push
+            echo "TARGET=hi" >> $GITHUB_ENV
           fi
+          T="$TARGET"
+          [ -z "$T" ] && T="${{ inputs.target }}"
+          SERIES="$T"
+          [ "$T" = "hi" ] || [ "$T" = "en" ] && SERIES="mahabharata"
+          echo "PIPELINE_RUN_ID=${SERIES}_${{ github.run_id }}" >> $GITHUB_ENV
+      - uses: ./.github/actions/run-pipeline-with-checkpoint
+        with:
+          pipeline-run-id: ${{ env.PIPELINE_RUN_ID }}
+          pipeline-cmd: "python main.py ${{ env.TARGET }}"
+          commit-message: "Auto-update pipeline state (retry-2) [skip ci]"
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          gemini-api-key: ${{ secrets.GEMINI_API_KEY }}
+          groq-api-key: ${{ secrets.GROQ_API_KEY }}
+          fal-key: ${{ secrets.FAL_KEY }}
+          replicate-api-token: ${{ secrets.REPLICATE_API_TOKEN }}
+          hf-token: ${{ secrets.HF_TOKEN }}
+          hf-space: ${{ secrets.HF_SPACE }}
+          cloudflare-api-token: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          cloudflare-account-id: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          elevenlabs-api-key: ${{ secrets.ELEVENLABS_API_KEY }}
+          elevenlabs-api-key-fallback: ${{ secrets.ELEVENLABS_API_KEY_FALLBACK }}
+          elevenlabs-voice-id: ${{ secrets.ELEVENLABS_VOICE_ID }}
+          elevenlabs-voice-id-krishna: ${{ secrets.ELEVENLABS_VOICE_ID_KRISHNA }}
 
-  # ─── WhatIf English phase ──────────────────────────────────────────────────
-  # Runs on the 04:00 UTC cron (and on workflow_dispatch with target=whatif).
-  # Generates the dual-language script, the shared visuals, and the English
-  # render+upload. Hindi phase below picks up the artifact and continues.
+  generate-and-upload-retry-3:
+    needs: generate-and-upload-retry-2
+    if: |
+      always() &&
+      contains(fromJson('["failure", "cancelled"]'), needs.generate-and-upload-retry-2.result)
+    runs-on: ubuntu-latest
+    timeout-minutes: 29
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-pipeline-runner
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          youtube-token-b64: ${{ secrets.YOUTUBE_TOKEN_B64 }}
+          youtube-client-secrets: ${{ secrets.YOUTUBE_CLIENT_SECRETS }}
+      - name: Determine target + PIPELINE_RUN_ID (same as primary)
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "TARGET=${{ inputs.target }}" >> $GITHUB_ENV
+          elif [ "${{ github.event.schedule }}" = "0 13 * * *" ]; then
+            echo "TARGET=krishna" >> $GITHUB_ENV
+          else
+            echo "TARGET=hi" >> $GITHUB_ENV
+          fi
+          T="$TARGET"
+          [ -z "$T" ] && T="${{ inputs.target }}"
+          SERIES="$T"
+          [ "$T" = "hi" ] || [ "$T" = "en" ] && SERIES="mahabharata"
+          echo "PIPELINE_RUN_ID=${SERIES}_${{ github.run_id }}" >> $GITHUB_ENV
+      - uses: ./.github/actions/run-pipeline-with-checkpoint
+        with:
+          pipeline-run-id: ${{ env.PIPELINE_RUN_ID }}
+          pipeline-cmd: "python main.py ${{ env.TARGET }}"
+          commit-message: "Auto-update pipeline state (retry-3) [skip ci]"
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          gemini-api-key: ${{ secrets.GEMINI_API_KEY }}
+          groq-api-key: ${{ secrets.GROQ_API_KEY }}
+          fal-key: ${{ secrets.FAL_KEY }}
+          replicate-api-token: ${{ secrets.REPLICATE_API_TOKEN }}
+          hf-token: ${{ secrets.HF_TOKEN }}
+          hf-space: ${{ secrets.HF_SPACE }}
+          cloudflare-api-token: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          cloudflare-account-id: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          elevenlabs-api-key: ${{ secrets.ELEVENLABS_API_KEY }}
+          elevenlabs-api-key-fallback: ${{ secrets.ELEVENLABS_API_KEY_FALLBACK }}
+          elevenlabs-voice-id: ${{ secrets.ELEVENLABS_VOICE_ID }}
+          elevenlabs-voice-id-krishna: ${{ secrets.ELEVENLABS_VOICE_ID_KRISHNA }}
+
+  # ════════════════════════════════════════════════════════════════════════
+  # WhatIf English phase (4 attempts) — runs on 04:00 UTC cron
+  # ════════════════════════════════════════════════════════════════════════
+
   whatif-english:
     if: |
       github.event.schedule == '0 4 * * *' ||
       (github.event_name == 'workflow_dispatch' && inputs.target == 'whatif')
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 29
     permissions:
       contents: write
-
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Setup pipeline runner (deps, FFmpeg, fonts, music, OAuth)
-        uses: ./.github/actions/setup-pipeline-runner
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-pipeline-runner
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           youtube-token-b64: ${{ secrets.YOUTUBE_TOKEN_B64 }}
           youtube-client-secrets: ${{ secrets.YOUTUBE_CLIENT_SECRETS }}
-
-      - name: Set PIPELINE_RUN_ID (whatif — language-agnostic)
-        run: echo "PIPELINE_RUN_ID=whatif_${{ github.run_id }}" >> $GITHUB_ENV
-
-      - name: Restore checkpoint from prior attempt (if any)
-        uses: actions/download-artifact@v4
+      - run: echo "PIPELINE_RUN_ID=whatif_${{ github.run_id }}" >> $GITHUB_ENV
+      - uses: ./.github/actions/run-pipeline-with-checkpoint
         with:
-          name: pipeline-checkpoint-${{ env.PIPELINE_RUN_ID }}
-          path: cache/
-        continue-on-error: true
+          pipeline-run-id: ${{ env.PIPELINE_RUN_ID }}
+          pipeline-cmd: "python main.py whatif --lang=en"
+          commit-message: "Auto-update pipeline state (whatif-en) [skip ci]"
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          gemini-api-key: ${{ secrets.GEMINI_API_KEY }}
+          groq-api-key: ${{ secrets.GROQ_API_KEY }}
+          fal-key: ${{ secrets.FAL_KEY }}
+          replicate-api-token: ${{ secrets.REPLICATE_API_TOKEN }}
+          hf-token: ${{ secrets.HF_TOKEN }}
+          hf-space: ${{ secrets.HF_SPACE }}
+          cloudflare-api-token: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          cloudflare-account-id: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          elevenlabs-api-key: ${{ secrets.ELEVENLABS_API_KEY }}
+          elevenlabs-api-key-fallback: ${{ secrets.ELEVENLABS_API_KEY_FALLBACK }}
+          elevenlabs-voice-id: ${{ secrets.ELEVENLABS_VOICE_ID }}
+          elevenlabs-voice-id-krishna: ${{ secrets.ELEVENLABS_VOICE_ID_KRISHNA }}
 
-      - name: Run WhatIf English phase
-        env:
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
-          FAL_KEY: ${{ secrets.FAL_KEY }}
-          REPLICATE_API_TOKEN: ${{ secrets.REPLICATE_API_TOKEN }}
-          HF_TOKEN: ${{ secrets.HF_TOKEN }}
-          HF_SPACE: ${{ secrets.HF_SPACE }}
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          ELEVENLABS_API_KEY: ${{ secrets.ELEVENLABS_API_KEY }}
-          ELEVENLABS_API_KEY_FALLBACK: ${{ secrets.ELEVENLABS_API_KEY_FALLBACK }}
-          ELEVENLABS_VOICE_ID: ${{ secrets.ELEVENLABS_VOICE_ID }}
-          NARRATOR_VOICE: Charon
-          CINEMATIC_FPS: "30"
-          # Per-provider I2V timeout — drops a flaky free-tier provider sooner
-          # so the per-scene cascade falls to Ken Burns within ~120s instead of
-          # ~180s, capping how long a hung HF Space can hold up the batch.
-          CLIP_PROVIDER_TIMEOUT: "120"
-          PIPELINE_RUN_ID: ${{ env.PIPELINE_RUN_ID }}
-        run: python main.py whatif --lang=en 2>&1 | tee pipeline_output.txt
-
-      - name: Save checkpoint cache (always)
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: pipeline-checkpoint-${{ env.PIPELINE_RUN_ID }}
-          path: cache/${{ env.PIPELINE_RUN_ID }}/
-          retention-days: 7
-          if-no-files-found: ignore
-          overwrite: true
-
-      - name: Commit updated state (characters + topic queues)
-        if: always()
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git
-          git pull --rebase --autostash origin master || true
-          git add assets/characters.json scheduled_topics_*.txt recent_topics.json 2>/dev/null || true
-          if git diff --staged --quiet; then
-            echo "No state changes to commit."
-          else
-            git commit -m "Auto-update pipeline state (whatif-en) [skip ci]"
-            git push
-          fi
-
-  whatif-english-retry:
+  whatif-english-retry-1:
     needs: whatif-english
-    if: failure() && needs.whatif-english.result == 'failure'
+    if: |
+      always() &&
+      contains(fromJson('["failure", "cancelled"]'), needs.whatif-english.result)
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 29
     permissions:
       contents: write
-
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Setup pipeline runner (deps, FFmpeg, fonts, music, OAuth)
-        uses: ./.github/actions/setup-pipeline-runner
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-pipeline-runner
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           youtube-token-b64: ${{ secrets.YOUTUBE_TOKEN_B64 }}
           youtube-client-secrets: ${{ secrets.YOUTUBE_CLIENT_SECRETS }}
-
-      - name: Set PIPELINE_RUN_ID
-        run: echo "PIPELINE_RUN_ID=whatif_${{ github.run_id }}" >> $GITHUB_ENV
-
-      - name: Download checkpoint from primary EN job
-        uses: actions/download-artifact@v4
+      - run: echo "PIPELINE_RUN_ID=whatif_${{ github.run_id }}" >> $GITHUB_ENV
+      - uses: ./.github/actions/run-pipeline-with-checkpoint
         with:
-          name: pipeline-checkpoint-${{ env.PIPELINE_RUN_ID }}
-          path: cache/${{ env.PIPELINE_RUN_ID }}/
+          pipeline-run-id: ${{ env.PIPELINE_RUN_ID }}
+          pipeline-cmd: "python main.py whatif --lang=en"
+          commit-message: "Auto-update pipeline state (whatif-en retry-1) [skip ci]"
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          gemini-api-key: ${{ secrets.GEMINI_API_KEY }}
+          groq-api-key: ${{ secrets.GROQ_API_KEY }}
+          fal-key: ${{ secrets.FAL_KEY }}
+          replicate-api-token: ${{ secrets.REPLICATE_API_TOKEN }}
+          hf-token: ${{ secrets.HF_TOKEN }}
+          hf-space: ${{ secrets.HF_SPACE }}
+          cloudflare-api-token: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          cloudflare-account-id: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          elevenlabs-api-key: ${{ secrets.ELEVENLABS_API_KEY }}
+          elevenlabs-api-key-fallback: ${{ secrets.ELEVENLABS_API_KEY_FALLBACK }}
+          elevenlabs-voice-id: ${{ secrets.ELEVENLABS_VOICE_ID }}
+          elevenlabs-voice-id-krishna: ${{ secrets.ELEVENLABS_VOICE_ID_KRISHNA }}
 
-      - name: Resume WhatIf English phase
-        env:
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
-          FAL_KEY: ${{ secrets.FAL_KEY }}
-          REPLICATE_API_TOKEN: ${{ secrets.REPLICATE_API_TOKEN }}
-          HF_TOKEN: ${{ secrets.HF_TOKEN }}
-          HF_SPACE: ${{ secrets.HF_SPACE }}
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          ELEVENLABS_API_KEY: ${{ secrets.ELEVENLABS_API_KEY }}
-          ELEVENLABS_API_KEY_FALLBACK: ${{ secrets.ELEVENLABS_API_KEY_FALLBACK }}
-          ELEVENLABS_VOICE_ID: ${{ secrets.ELEVENLABS_VOICE_ID }}
-          NARRATOR_VOICE: Charon
-          CINEMATIC_FPS: "30"
-          # Per-provider I2V timeout — drops a flaky free-tier provider sooner
-          # so the per-scene cascade falls to Ken Burns within ~120s instead of
-          # ~180s, capping how long a hung HF Space can hold up the batch.
-          CLIP_PROVIDER_TIMEOUT: "120"
-          PIPELINE_RUN_ID: ${{ env.PIPELINE_RUN_ID }}
-        run: python main.py whatif --lang=en 2>&1 | tee pipeline_output.txt
-
-      - name: Save updated checkpoint cache (always)
-        if: always()
-        uses: actions/upload-artifact@v4
+  whatif-english-retry-2:
+    needs: whatif-english-retry-1
+    if: |
+      always() &&
+      contains(fromJson('["failure", "cancelled"]'), needs.whatif-english-retry-1.result)
+    runs-on: ubuntu-latest
+    timeout-minutes: 29
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-pipeline-runner
         with:
-          name: pipeline-checkpoint-${{ env.PIPELINE_RUN_ID }}
-          path: cache/${{ env.PIPELINE_RUN_ID }}/
-          retention-days: 7
-          if-no-files-found: ignore
-          overwrite: true
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          youtube-token-b64: ${{ secrets.YOUTUBE_TOKEN_B64 }}
+          youtube-client-secrets: ${{ secrets.YOUTUBE_CLIENT_SECRETS }}
+      - run: echo "PIPELINE_RUN_ID=whatif_${{ github.run_id }}" >> $GITHUB_ENV
+      - uses: ./.github/actions/run-pipeline-with-checkpoint
+        with:
+          pipeline-run-id: ${{ env.PIPELINE_RUN_ID }}
+          pipeline-cmd: "python main.py whatif --lang=en"
+          commit-message: "Auto-update pipeline state (whatif-en retry-2) [skip ci]"
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          gemini-api-key: ${{ secrets.GEMINI_API_KEY }}
+          groq-api-key: ${{ secrets.GROQ_API_KEY }}
+          fal-key: ${{ secrets.FAL_KEY }}
+          replicate-api-token: ${{ secrets.REPLICATE_API_TOKEN }}
+          hf-token: ${{ secrets.HF_TOKEN }}
+          hf-space: ${{ secrets.HF_SPACE }}
+          cloudflare-api-token: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          cloudflare-account-id: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          elevenlabs-api-key: ${{ secrets.ELEVENLABS_API_KEY }}
+          elevenlabs-api-key-fallback: ${{ secrets.ELEVENLABS_API_KEY_FALLBACK }}
+          elevenlabs-voice-id: ${{ secrets.ELEVENLABS_VOICE_ID }}
+          elevenlabs-voice-id-krishna: ${{ secrets.ELEVENLABS_VOICE_ID_KRISHNA }}
 
-      - name: Commit updated state (characters + topic queues)
-        if: always()
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git
-          git pull --rebase --autostash origin master || true
-          git add assets/characters.json scheduled_topics_*.txt recent_topics.json 2>/dev/null || true
-          if git diff --staged --quiet; then
-            echo "No state changes to commit."
-          else
-            git commit -m "Auto-update pipeline state (whatif-en retry) [skip ci]"
-            git push
-          fi
+  whatif-english-retry-3:
+    needs: whatif-english-retry-2
+    if: |
+      always() &&
+      contains(fromJson('["failure", "cancelled"]'), needs.whatif-english-retry-2.result)
+    runs-on: ubuntu-latest
+    timeout-minutes: 29
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-pipeline-runner
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          youtube-token-b64: ${{ secrets.YOUTUBE_TOKEN_B64 }}
+          youtube-client-secrets: ${{ secrets.YOUTUBE_CLIENT_SECRETS }}
+      - run: echo "PIPELINE_RUN_ID=whatif_${{ github.run_id }}" >> $GITHUB_ENV
+      - uses: ./.github/actions/run-pipeline-with-checkpoint
+        with:
+          pipeline-run-id: ${{ env.PIPELINE_RUN_ID }}
+          pipeline-cmd: "python main.py whatif --lang=en"
+          commit-message: "Auto-update pipeline state (whatif-en retry-3) [skip ci]"
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          gemini-api-key: ${{ secrets.GEMINI_API_KEY }}
+          groq-api-key: ${{ secrets.GROQ_API_KEY }}
+          fal-key: ${{ secrets.FAL_KEY }}
+          replicate-api-token: ${{ secrets.REPLICATE_API_TOKEN }}
+          hf-token: ${{ secrets.HF_TOKEN }}
+          hf-space: ${{ secrets.HF_SPACE }}
+          cloudflare-api-token: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          cloudflare-account-id: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          elevenlabs-api-key: ${{ secrets.ELEVENLABS_API_KEY }}
+          elevenlabs-api-key-fallback: ${{ secrets.ELEVENLABS_API_KEY_FALLBACK }}
+          elevenlabs-voice-id: ${{ secrets.ELEVENLABS_VOICE_ID }}
+          elevenlabs-voice-id-krishna: ${{ secrets.ELEVENLABS_VOICE_ID_KRISHNA }}
 
-  # ─── WhatIf Hindi phase ────────────────────────────────────────────────────
-  # Depends on the EN phase succeeding. Downloads the same checkpoint artifact
-  # (script + visuals + EN audio cached by EN phase) and only does HI-specific
-  # TTS / assembly / subtitles / upload. ~30-40 min budget.
+  # ════════════════════════════════════════════════════════════════════════
+  # WhatIf Hindi phase (4 attempts) — depends on ANY EN attempt succeeding
+  # ════════════════════════════════════════════════════════════════════════
+
   whatif-hindi:
-    needs: [whatif-english, whatif-english-retry]
+    needs:
+      - whatif-english
+      - whatif-english-retry-1
+      - whatif-english-retry-2
+      - whatif-english-retry-3
     if: |
       always() && (
         needs.whatif-english.result == 'success' ||
-        needs.whatif-english-retry.result == 'success'
+        needs.whatif-english-retry-1.result == 'success' ||
+        needs.whatif-english-retry-2.result == 'success' ||
+        needs.whatif-english-retry-3.result == 'success'
       ) && (
         github.event.schedule == '0 4 * * *' ||
         (github.event_name == 'workflow_dispatch' && inputs.target == 'whatif')
       )
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 29
     permissions:
       contents: write
-
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Setup pipeline runner (deps, FFmpeg, fonts, music, OAuth)
-        uses: ./.github/actions/setup-pipeline-runner
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-pipeline-runner
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           youtube-token-b64: ${{ secrets.YOUTUBE_TOKEN_B64 }}
           youtube-client-secrets: ${{ secrets.YOUTUBE_CLIENT_SECRETS }}
-
-      - name: Set PIPELINE_RUN_ID (same as English phase)
-        run: echo "PIPELINE_RUN_ID=whatif_${{ github.run_id }}" >> $GITHUB_ENV
-
-      - name: Download EN-phase checkpoint (script + visuals + audio_en)
-        uses: actions/download-artifact@v4
+      - run: echo "PIPELINE_RUN_ID=whatif_${{ github.run_id }}" >> $GITHUB_ENV
+      - uses: ./.github/actions/run-pipeline-with-checkpoint
         with:
-          name: pipeline-checkpoint-${{ env.PIPELINE_RUN_ID }}
-          path: cache/${{ env.PIPELINE_RUN_ID }}/
+          pipeline-run-id: ${{ env.PIPELINE_RUN_ID }}
+          pipeline-cmd: "python main.py whatif --lang=hi"
+          commit-message: "Auto-update pipeline state (whatif-hi) [skip ci]"
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          gemini-api-key: ${{ secrets.GEMINI_API_KEY }}
+          groq-api-key: ${{ secrets.GROQ_API_KEY }}
+          fal-key: ${{ secrets.FAL_KEY }}
+          replicate-api-token: ${{ secrets.REPLICATE_API_TOKEN }}
+          hf-token: ${{ secrets.HF_TOKEN }}
+          hf-space: ${{ secrets.HF_SPACE }}
+          cloudflare-api-token: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          cloudflare-account-id: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          elevenlabs-api-key: ${{ secrets.ELEVENLABS_API_KEY }}
+          elevenlabs-api-key-fallback: ${{ secrets.ELEVENLABS_API_KEY_FALLBACK }}
+          elevenlabs-voice-id: ${{ secrets.ELEVENLABS_VOICE_ID }}
+          elevenlabs-voice-id-krishna: ${{ secrets.ELEVENLABS_VOICE_ID_KRISHNA }}
 
-      - name: Run WhatIf Hindi phase
-        env:
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
-          FAL_KEY: ${{ secrets.FAL_KEY }}
-          REPLICATE_API_TOKEN: ${{ secrets.REPLICATE_API_TOKEN }}
-          HF_TOKEN: ${{ secrets.HF_TOKEN }}
-          HF_SPACE: ${{ secrets.HF_SPACE }}
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          ELEVENLABS_API_KEY: ${{ secrets.ELEVENLABS_API_KEY }}
-          ELEVENLABS_API_KEY_FALLBACK: ${{ secrets.ELEVENLABS_API_KEY_FALLBACK }}
-          ELEVENLABS_VOICE_ID: ${{ secrets.ELEVENLABS_VOICE_ID }}
-          NARRATOR_VOICE: Charon
-          CINEMATIC_FPS: "30"
-          # Per-provider I2V timeout — drops a flaky free-tier provider sooner
-          # so the per-scene cascade falls to Ken Burns within ~120s instead of
-          # ~180s, capping how long a hung HF Space can hold up the batch.
-          CLIP_PROVIDER_TIMEOUT: "120"
-          PIPELINE_RUN_ID: ${{ env.PIPELINE_RUN_ID }}
-        run: python main.py whatif --lang=hi 2>&1 | tee pipeline_output.txt
-
-      - name: Save checkpoint cache (always)
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: pipeline-checkpoint-${{ env.PIPELINE_RUN_ID }}
-          path: cache/${{ env.PIPELINE_RUN_ID }}/
-          retention-days: 7
-          if-no-files-found: ignore
-          overwrite: true
-
-      - name: Commit updated state (characters + topic queues)
-        if: always()
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git
-          git pull --rebase --autostash origin master || true
-          git add assets/characters.json scheduled_topics_*.txt recent_topics.json 2>/dev/null || true
-          if git diff --staged --quiet; then
-            echo "No state changes to commit."
-          else
-            git commit -m "Auto-update pipeline state (whatif-hi) [skip ci]"
-            git push
-          fi
-
-  whatif-hindi-retry:
+  whatif-hindi-retry-1:
     needs: whatif-hindi
-    if: failure() && needs.whatif-hindi.result == 'failure'
+    if: |
+      always() &&
+      contains(fromJson('["failure", "cancelled"]'), needs.whatif-hindi.result)
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 29
     permissions:
       contents: write
-
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Setup pipeline runner (deps, FFmpeg, fonts, music, OAuth)
-        uses: ./.github/actions/setup-pipeline-runner
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-pipeline-runner
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           youtube-token-b64: ${{ secrets.YOUTUBE_TOKEN_B64 }}
           youtube-client-secrets: ${{ secrets.YOUTUBE_CLIENT_SECRETS }}
-
-      - name: Set PIPELINE_RUN_ID
-        run: echo "PIPELINE_RUN_ID=whatif_${{ github.run_id }}" >> $GITHUB_ENV
-
-      - name: Download checkpoint from primary HI job
-        uses: actions/download-artifact@v4
+      - run: echo "PIPELINE_RUN_ID=whatif_${{ github.run_id }}" >> $GITHUB_ENV
+      - uses: ./.github/actions/run-pipeline-with-checkpoint
         with:
-          name: pipeline-checkpoint-${{ env.PIPELINE_RUN_ID }}
-          path: cache/${{ env.PIPELINE_RUN_ID }}/
+          pipeline-run-id: ${{ env.PIPELINE_RUN_ID }}
+          pipeline-cmd: "python main.py whatif --lang=hi"
+          commit-message: "Auto-update pipeline state (whatif-hi retry-1) [skip ci]"
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          gemini-api-key: ${{ secrets.GEMINI_API_KEY }}
+          groq-api-key: ${{ secrets.GROQ_API_KEY }}
+          fal-key: ${{ secrets.FAL_KEY }}
+          replicate-api-token: ${{ secrets.REPLICATE_API_TOKEN }}
+          hf-token: ${{ secrets.HF_TOKEN }}
+          hf-space: ${{ secrets.HF_SPACE }}
+          cloudflare-api-token: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          cloudflare-account-id: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          elevenlabs-api-key: ${{ secrets.ELEVENLABS_API_KEY }}
+          elevenlabs-api-key-fallback: ${{ secrets.ELEVENLABS_API_KEY_FALLBACK }}
+          elevenlabs-voice-id: ${{ secrets.ELEVENLABS_VOICE_ID }}
+          elevenlabs-voice-id-krishna: ${{ secrets.ELEVENLABS_VOICE_ID_KRISHNA }}
 
-      - name: Resume WhatIf Hindi phase
-        env:
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
-          FAL_KEY: ${{ secrets.FAL_KEY }}
-          REPLICATE_API_TOKEN: ${{ secrets.REPLICATE_API_TOKEN }}
-          HF_TOKEN: ${{ secrets.HF_TOKEN }}
-          HF_SPACE: ${{ secrets.HF_SPACE }}
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          ELEVENLABS_API_KEY: ${{ secrets.ELEVENLABS_API_KEY }}
-          ELEVENLABS_API_KEY_FALLBACK: ${{ secrets.ELEVENLABS_API_KEY_FALLBACK }}
-          ELEVENLABS_VOICE_ID: ${{ secrets.ELEVENLABS_VOICE_ID }}
-          NARRATOR_VOICE: Charon
-          CINEMATIC_FPS: "30"
-          # Per-provider I2V timeout — drops a flaky free-tier provider sooner
-          # so the per-scene cascade falls to Ken Burns within ~120s instead of
-          # ~180s, capping how long a hung HF Space can hold up the batch.
-          CLIP_PROVIDER_TIMEOUT: "120"
-          PIPELINE_RUN_ID: ${{ env.PIPELINE_RUN_ID }}
-        run: python main.py whatif --lang=hi 2>&1 | tee pipeline_output.txt
-
-      - name: Save updated checkpoint cache (always)
-        if: always()
-        uses: actions/upload-artifact@v4
+  whatif-hindi-retry-2:
+    needs: whatif-hindi-retry-1
+    if: |
+      always() &&
+      contains(fromJson('["failure", "cancelled"]'), needs.whatif-hindi-retry-1.result)
+    runs-on: ubuntu-latest
+    timeout-minutes: 29
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-pipeline-runner
         with:
-          name: pipeline-checkpoint-${{ env.PIPELINE_RUN_ID }}
-          path: cache/${{ env.PIPELINE_RUN_ID }}/
-          retention-days: 7
-          if-no-files-found: ignore
-          overwrite: true
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          youtube-token-b64: ${{ secrets.YOUTUBE_TOKEN_B64 }}
+          youtube-client-secrets: ${{ secrets.YOUTUBE_CLIENT_SECRETS }}
+      - run: echo "PIPELINE_RUN_ID=whatif_${{ github.run_id }}" >> $GITHUB_ENV
+      - uses: ./.github/actions/run-pipeline-with-checkpoint
+        with:
+          pipeline-run-id: ${{ env.PIPELINE_RUN_ID }}
+          pipeline-cmd: "python main.py whatif --lang=hi"
+          commit-message: "Auto-update pipeline state (whatif-hi retry-2) [skip ci]"
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          gemini-api-key: ${{ secrets.GEMINI_API_KEY }}
+          groq-api-key: ${{ secrets.GROQ_API_KEY }}
+          fal-key: ${{ secrets.FAL_KEY }}
+          replicate-api-token: ${{ secrets.REPLICATE_API_TOKEN }}
+          hf-token: ${{ secrets.HF_TOKEN }}
+          hf-space: ${{ secrets.HF_SPACE }}
+          cloudflare-api-token: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          cloudflare-account-id: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          elevenlabs-api-key: ${{ secrets.ELEVENLABS_API_KEY }}
+          elevenlabs-api-key-fallback: ${{ secrets.ELEVENLABS_API_KEY_FALLBACK }}
+          elevenlabs-voice-id: ${{ secrets.ELEVENLABS_VOICE_ID }}
+          elevenlabs-voice-id-krishna: ${{ secrets.ELEVENLABS_VOICE_ID_KRISHNA }}
 
-      - name: Commit updated state (characters + topic queues)
-        if: always()
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git
-          git pull --rebase --autostash origin master || true
-          git add assets/characters.json scheduled_topics_*.txt recent_topics.json 2>/dev/null || true
-          if git diff --staged --quiet; then
-            echo "No state changes to commit."
-          else
-            git commit -m "Auto-update pipeline state (whatif-hi retry) [skip ci]"
-            git push
-          fi
+  whatif-hindi-retry-3:
+    needs: whatif-hindi-retry-2
+    if: |
+      always() &&
+      contains(fromJson('["failure", "cancelled"]'), needs.whatif-hindi-retry-2.result)
+    runs-on: ubuntu-latest
+    timeout-minutes: 29
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-pipeline-runner
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          youtube-token-b64: ${{ secrets.YOUTUBE_TOKEN_B64 }}
+          youtube-client-secrets: ${{ secrets.YOUTUBE_CLIENT_SECRETS }}
+      - run: echo "PIPELINE_RUN_ID=whatif_${{ github.run_id }}" >> $GITHUB_ENV
+      - uses: ./.github/actions/run-pipeline-with-checkpoint
+        with:
+          pipeline-run-id: ${{ env.PIPELINE_RUN_ID }}
+          pipeline-cmd: "python main.py whatif --lang=hi"
+          commit-message: "Auto-update pipeline state (whatif-hi retry-3) [skip ci]"
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          gemini-api-key: ${{ secrets.GEMINI_API_KEY }}
+          groq-api-key: ${{ secrets.GROQ_API_KEY }}
+          fal-key: ${{ secrets.FAL_KEY }}
+          replicate-api-token: ${{ secrets.REPLICATE_API_TOKEN }}
+          hf-token: ${{ secrets.HF_TOKEN }}
+          hf-space: ${{ secrets.HF_SPACE }}
+          cloudflare-api-token: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          cloudflare-account-id: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          elevenlabs-api-key: ${{ secrets.ELEVENLABS_API_KEY }}
+          elevenlabs-api-key-fallback: ${{ secrets.ELEVENLABS_API_KEY_FALLBACK }}
+          elevenlabs-voice-id: ${{ secrets.ELEVENLABS_VOICE_ID }}
+          elevenlabs-voice-id-krishna: ${{ secrets.ELEVENLABS_VOICE_ID_KRISHNA }}

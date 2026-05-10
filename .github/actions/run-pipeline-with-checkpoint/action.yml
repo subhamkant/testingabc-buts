@@ -1,0 +1,103 @@
+name: Run pipeline with checkpoint resume + commit
+description: |
+  Composite action used by every pipeline job (primary and chained retries).
+  Restores the run's checkpoint cache from the workflow's shared artifact,
+  runs main.py, saves the cache back, then commits any updated state files
+  (characters.json, scheduled_topics_*.txt, recent_topics.json).
+
+  All retry jobs reuse this — the only difference between attempts is the
+  `pipeline-cmd` input (always the same per series) and the chained `needs:`/
+  `if:` wiring in the calling job. The artifact name is identical across all
+  attempts within a workflow run, with `overwrite: true` so each attempt's
+  partial progress lands in cache for the next attempt to resume from.
+
+inputs:
+  pipeline-run-id:
+    required: true
+    description: "Shared cache key — same across primary + all retry jobs in this workflow run."
+  pipeline-cmd:
+    required: true
+    description: "Shell command to run. e.g. 'python main.py hi' or 'python main.py whatif --lang=en'."
+  commit-message:
+    required: false
+    default: "Auto-update pipeline state [skip ci]"
+    description: "Commit message used by the post-run state-commit step."
+
+  # ── secrets passed through ─────────────────────────────────────────────
+  github-token:                  { required: true }
+  gemini-api-key:                { required: true }
+  groq-api-key:                  { required: true }
+  fal-key:                       { required: true }
+  replicate-api-token:           { required: true }
+  hf-token:                      { required: true }
+  hf-space:                      { required: true }
+  cloudflare-api-token:          { required: true }
+  cloudflare-account-id:         { required: true }
+  elevenlabs-api-key:            { required: true }
+  elevenlabs-api-key-fallback:   { required: true }
+  elevenlabs-voice-id:           { required: true }
+  elevenlabs-voice-id-krishna:   { required: true }
+
+runs:
+  using: composite
+  steps:
+    - name: Restore checkpoint cache (no-op on first attempt)
+      uses: actions/download-artifact@v4
+      with:
+        name: pipeline-checkpoint-${{ inputs.pipeline-run-id }}
+        path: cache/${{ inputs.pipeline-run-id }}/
+      continue-on-error: true
+
+    - name: Run pipeline (resumes from cache if any)
+      shell: bash
+      env:
+        GEMINI_API_KEY:                ${{ inputs.gemini-api-key }}
+        GROQ_API_KEY:                  ${{ inputs.groq-api-key }}
+        FAL_KEY:                       ${{ inputs.fal-key }}
+        REPLICATE_API_TOKEN:           ${{ inputs.replicate-api-token }}
+        HF_TOKEN:                      ${{ inputs.hf-token }}
+        HF_SPACE:                      ${{ inputs.hf-space }}
+        CLOUDFLARE_API_TOKEN:          ${{ inputs.cloudflare-api-token }}
+        CLOUDFLARE_ACCOUNT_ID:         ${{ inputs.cloudflare-account-id }}
+        ELEVENLABS_API_KEY:            ${{ inputs.elevenlabs-api-key }}
+        ELEVENLABS_API_KEY_FALLBACK:   ${{ inputs.elevenlabs-api-key-fallback }}
+        ELEVENLABS_VOICE_ID:           ${{ inputs.elevenlabs-voice-id }}
+        ELEVENLABS_VOICE_ID_KRISHNA:   ${{ inputs.elevenlabs-voice-id-krishna }}
+        NARRATOR_VOICE: Charon
+        CINEMATIC_FPS: "30"
+        # Per-provider I2V timeout — drops a flaky free-tier provider sooner
+        # so the per-scene cascade falls to Ken Burns within ~120s.
+        CLIP_PROVIDER_TIMEOUT: "120"
+        PIPELINE_RUN_ID: ${{ inputs.pipeline-run-id }}
+      run: ${{ inputs.pipeline-cmd }} 2>&1 | tee pipeline_output.txt
+
+    - name: Save checkpoint cache (always — even on timeout / failure)
+      # Same artifact name across primary + all retries so each attempt's
+      # progress overwrites the previous. The next chained retry's restore
+      # step picks up the latest partial state.
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: pipeline-checkpoint-${{ inputs.pipeline-run-id }}
+        path: cache/${{ inputs.pipeline-run-id }}/
+        retention-days: 7
+        if-no-files-found: ignore
+        overwrite: true
+
+    - name: Commit updated state (characters + topic queues)
+      if: always()
+      shell: bash
+      run: |
+        git config user.name "github-actions[bot]"
+        git config user.email "github-actions[bot]@users.noreply.github.com"
+        git remote set-url origin https://x-access-token:${{ inputs.github-token }}@github.com/${{ github.repository }}.git
+        # Pull latest first to avoid push conflicts when multiple cron runs
+        # finish close together.
+        git pull --rebase --autostash origin master || true
+        git add assets/characters.json scheduled_topics_*.txt recent_topics.json 2>/dev/null || true
+        if git diff --staged --quiet; then
+          echo "No state changes to commit."
+        else
+          git commit -m "${{ inputs.commit-message }}"
+          git push
+        fi
