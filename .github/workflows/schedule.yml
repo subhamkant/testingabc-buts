@@ -40,106 +40,12 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Restore music cache
-        id: music-cache
-        uses: actions/cache@v4
+      - name: Setup pipeline runner (deps, FFmpeg, fonts, music, OAuth)
+        uses: ./.github/actions/setup-pipeline-runner
         with:
-          path: assets/music
-          key: music-tracks-v2
-
-      - name: Download music from GitHub Release
-        if: steps.music-cache.outputs.cache-hit != 'true'
-        continue-on-error: true
-        run: |
-          mkdir -p assets/music
-          curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-            "https://api.github.com/repos/${{ github.repository }}/releases/tags/music-tracks" \
-            | python3 -c "
-          import sys, json, urllib.request, os
-          TOKEN = '${{ secrets.GITHUB_TOKEN }}'
-          data = json.load(sys.stdin)
-          assets = data.get('assets', [])
-          print(f'Found {len(assets)} music files')
-          for a in assets:
-              api_url = a['url']
-              name = a['name']
-              print(f'Downloading {name}...')
-              req = urllib.request.Request(api_url, headers={
-                  'Authorization': f'token {TOKEN}',
-                  'Accept': 'application/octet-stream'
-              })
-              with urllib.request.urlopen(req) as r, open(f'assets/music/{name}', 'wb') as f:
-                  f.write(r.read())
-          "
-
-      - name: Restore cinematic assets cache (LUTs + overlays)
-        id: cinematic-cache
-        uses: actions/cache@v4
-        with:
-          path: |
-            assets/luts
-            assets/overlays
-          key: cinematic-assets-v1
-
-      - name: Download cinematic assets from GitHub Release
-        if: steps.cinematic-cache.outputs.cache-hit != 'true'
-        continue-on-error: true
-        run: |
-          mkdir -p assets/luts assets/overlays/lightleaks assets/overlays/lensflares
-          curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-            "https://api.github.com/repos/${{ github.repository }}/releases/tags/cinematic-assets" \
-            | python3 -c "
-          import sys, json, urllib.request, os
-          TOKEN = '${{ secrets.GITHUB_TOKEN }}'
-          data = json.load(sys.stdin)
-          assets = data.get('assets', [])
-          print(f'Found {len(assets)} cinematic asset files')
-          for a in assets:
-              name = a['name']
-              # Route by extension/name into the right subdir
-              if name.endswith('.cube'):
-                  dest = f'assets/luts/{name}'
-              elif 'lensflare' in name.lower() or 'flare' in name.lower():
-                  dest = f'assets/overlays/lensflares/{name}'
-              else:
-                  dest = f'assets/overlays/lightleaks/{name}'
-              print(f'Downloading {name} -> {dest}')
-              req = urllib.request.Request(a['url'], headers={
-                  'Authorization': f'token {TOKEN}',
-                  'Accept': 'application/octet-stream'
-              })
-              with urllib.request.urlopen(req) as r, open(dest, 'wb') as f:
-                  f.write(r.read())
-          " || true
-          # Always run the asset bootstrapper so synthetic LUTs/overlays exist
-          # even if no GitHub Release was uploaded yet
-          python download_assets.py || true
-
-      - name: Install FFmpeg + Devanagari font
-        # fonts-noto-* gives us Devanagari + Latin coverage for burned-in
-        # subtitles. libass picks them up automatically from system fontconfig.
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y ffmpeg fonts-noto-core fonts-noto-cjk \
-            fonts-indic fonts-deva
-          fc-cache -f -v
-
-      - name: Set up Python 3.11
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-          cache: pip
-
-      # ubuntu-latest already has FFmpeg — no install needed
-
-      - name: Install Python dependencies
-        run: pip install -r requirements.txt
-
-      - name: Restore YouTube auth token
-        run: echo "${{ secrets.YOUTUBE_TOKEN_B64 }}" | base64 -d > token.pickle
-
-      - name: Restore client_secrets.json
-        run: echo '${{ secrets.YOUTUBE_CLIENT_SECRETS }}' > client_secrets.json
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          youtube-token-b64: ${{ secrets.YOUTUBE_TOKEN_B64 }}
+          youtube-client-secrets: ${{ secrets.YOUTUBE_CLIENT_SECRETS }}
 
       - name: Determine target for this run
         run: |
@@ -157,6 +63,29 @@ jobs:
           else
             echo "TARGET=hi" >> $GITHUB_ENV
           fi
+
+      - name: Set PIPELINE_RUN_ID
+        run: |
+          # Deterministic per-workflow-run id used by CheckpointStore. Both the
+          # original job and the auto-retry job (which lives in the same
+          # workflow run) compute the same value because github.run_id is
+          # shared across jobs in one workflow run. This is what lets the
+          # retry job find and resume the original's checkpoints.
+          SERIES="$TARGET"
+          if [ "$TARGET" = "hi" ] || [ "$TARGET" = "en" ]; then
+            SERIES="mahabharata"
+          fi
+          echo "PIPELINE_RUN_ID=${SERIES}_${{ github.run_id }}" >> $GITHUB_ENV
+
+      - name: Restore checkpoint from prior attempt (if any)
+        # Only the auto-retry job will find this artifact (uploaded by the
+        # original job on failure). On the first attempt this step downloads
+        # nothing — the action's `if-no-files-found` default handles cleanly.
+        uses: actions/download-artifact@v4
+        with:
+          name: pipeline-checkpoint-${{ env.PIPELINE_RUN_ID }}
+          path: cache/
+        continue-on-error: true
 
       - name: Run pipeline
         env:
@@ -181,7 +110,24 @@ jobs:
           ELEVENLABS_VOICE_ID_KRISHNA: ${{ secrets.ELEVENLABS_VOICE_ID_KRISHNA }}
           NARRATOR_VOICE: Charon
           CINEMATIC_FPS: "30"
+          # CheckpointStore reads this to scope cache/<run_id>/ — same value
+          # is computed identically by the auto-retry job so it resumes from
+          # the original job's checkpoints.
+          PIPELINE_RUN_ID: ${{ env.PIPELINE_RUN_ID }}
         run: python main.py ${{ env.TARGET }} 2>&1 | tee pipeline_output.txt
+
+      - name: Save checkpoint cache (always — even on failure)
+        # Uploaded regardless of pipeline success or failure so the retry job
+        # can resume from whichever step the original got to. On a clean
+        # success the artifact is harmless (just unused); 7-day retention
+        # keeps storage bounded.
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pipeline-checkpoint-${{ env.PIPELINE_RUN_ID }}
+          path: cache/${{ env.PIPELINE_RUN_ID }}/
+          retention-days: 7
+          if-no-files-found: ignore
 
       # Email notifications disabled temporarily — re-enable after fixing MAIL_PASSWORD
       # - name: Send success email
@@ -225,3 +171,103 @@ jobs:
           name: token-refresh
           path: token.pickle
           retention-days: 1
+
+  # ─── Auto-retry-once on failure ─────────────────────────────────────────────
+  # Fires immediately if generate-and-upload fails. Downloads the checkpoint
+  # artifact saved by the original job and re-invokes main.py — the pipeline
+  # then resumes from the last completed step thanks to CheckpointStore.
+  # If THIS retry also fails the run dies and the user re-triggers manually
+  # from the GHA UI. Intentional design: prevents infinite retry loops on
+  # persistent issues (e.g. revoked API key) and bounds GHA minute spend.
+  generate-and-upload-retry:
+    needs: generate-and-upload
+    if: failure() && needs.generate-and-upload.result == 'failure'
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup pipeline runner (deps, FFmpeg, fonts, music, OAuth)
+        uses: ./.github/actions/setup-pipeline-runner
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          youtube-token-b64: ${{ secrets.YOUTUBE_TOKEN_B64 }}
+          youtube-client-secrets: ${{ secrets.YOUTUBE_CLIENT_SECRETS }}
+
+      - name: Determine target for this run (same logic as primary job)
+        run: |
+          # Identical to the primary job — both must compute the same TARGET
+          # so they hit the same CheckpointStore directory.
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "TARGET=${{ inputs.target }}" >> $GITHUB_ENV
+          elif [ "${{ github.event.schedule }}" = "0 4 * * *" ]; then
+            echo "TARGET=whatif" >> $GITHUB_ENV
+          elif [ "${{ github.event.schedule }}" = "0 13 * * *" ]; then
+            echo "TARGET=krishna" >> $GITHUB_ENV
+          else
+            echo "TARGET=hi" >> $GITHUB_ENV
+          fi
+
+      - name: Set PIPELINE_RUN_ID (same as primary job)
+        run: |
+          SERIES="$TARGET"
+          if [ "$TARGET" = "hi" ] || [ "$TARGET" = "en" ]; then
+            SERIES="mahabharata"
+          fi
+          echo "PIPELINE_RUN_ID=${SERIES}_${{ github.run_id }}" >> $GITHUB_ENV
+
+      - name: Download checkpoint from primary job
+        # Required for resume — if no artifact exists the retry has nothing to
+        # resume from and would just redo the failed run from scratch (a waste
+        # of GHA minutes). Hard-fail if missing.
+        uses: actions/download-artifact@v4
+        with:
+          name: pipeline-checkpoint-${{ env.PIPELINE_RUN_ID }}
+          path: cache/${{ env.PIPELINE_RUN_ID }}/
+
+      - name: Resume pipeline from checkpoint
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          FAL_KEY: ${{ secrets.FAL_KEY }}
+          REPLICATE_API_TOKEN: ${{ secrets.REPLICATE_API_TOKEN }}
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+          HF_SPACE: ${{ secrets.HF_SPACE }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          ELEVENLABS_API_KEY: ${{ secrets.ELEVENLABS_API_KEY }}
+          ELEVENLABS_API_KEY_FALLBACK: ${{ secrets.ELEVENLABS_API_KEY_FALLBACK }}
+          ELEVENLABS_VOICE_ID: ${{ secrets.ELEVENLABS_VOICE_ID }}
+          ELEVENLABS_VOICE_ID_KRISHNA: ${{ secrets.ELEVENLABS_VOICE_ID_KRISHNA }}
+          NARRATOR_VOICE: Charon
+          CINEMATIC_FPS: "30"
+          PIPELINE_RUN_ID: ${{ env.PIPELINE_RUN_ID }}
+        run: python main.py ${{ env.TARGET }} 2>&1 | tee pipeline_output.txt
+
+      - name: Save updated checkpoint cache (always)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pipeline-checkpoint-${{ env.PIPELINE_RUN_ID }}-retry
+          path: cache/${{ env.PIPELINE_RUN_ID }}/
+          retention-days: 7
+          if-no-files-found: ignore
+
+      - name: Commit updated state (characters + topic queues)
+        if: always()
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git
+          git pull --rebase --autostash origin master || true
+          git add assets/characters.json scheduled_topics_*.txt recent_topics.json 2>/dev/null || true
+          if git diff --staged --quiet; then
+            echo "No state changes to commit."
+          else
+            git commit -m "Auto-update pipeline state (retry) [skip ci]"
+            git push
+          fi

@@ -1,0 +1,124 @@
+name: Setup Pipeline Runner
+description: |
+  Composite action that handles all the setup steps a pipeline job needs:
+  music cache + download, cinematic assets cache + download, FFmpeg + Devanagari
+  fonts, Python 3.11, pip deps, YouTube OAuth token, client secrets.
+
+  Used by both the primary `generate-and-upload` job and its `*-retry` siblings
+  so the retry path doesn't duplicate ~100 lines of YAML.
+
+inputs:
+  github-token:
+    description: "GITHUB_TOKEN — used to fetch music + cinematic assets from releases"
+    required: true
+  youtube-token-b64:
+    description: "Base64-encoded YouTube OAuth token.pickle"
+    required: true
+  youtube-client-secrets:
+    description: "client_secrets.json content (JSON string)"
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Restore music cache
+      id: music-cache
+      uses: actions/cache@v4
+      with:
+        path: assets/music
+        key: music-tracks-v2
+
+    - name: Download music from GitHub Release
+      if: steps.music-cache.outputs.cache-hit != 'true'
+      shell: bash
+      continue-on-error: true
+      run: |
+        mkdir -p assets/music
+        curl -s -H "Authorization: token ${{ inputs.github-token }}" \
+          "https://api.github.com/repos/${{ github.repository }}/releases/tags/music-tracks" \
+          | python3 -c "
+        import sys, json, urllib.request, os
+        TOKEN = '${{ inputs.github-token }}'
+        data = json.load(sys.stdin)
+        assets = data.get('assets', [])
+        print(f'Found {len(assets)} music files')
+        for a in assets:
+            api_url = a['url']
+            name = a['name']
+            print(f'Downloading {name}...')
+            req = urllib.request.Request(api_url, headers={
+                'Authorization': f'token {TOKEN}',
+                'Accept': 'application/octet-stream'
+            })
+            with urllib.request.urlopen(req) as r, open(f'assets/music/{name}', 'wb') as f:
+                f.write(r.read())
+        "
+
+    - name: Restore cinematic assets cache (LUTs + overlays)
+      id: cinematic-cache
+      uses: actions/cache@v4
+      with:
+        path: |
+          assets/luts
+          assets/overlays
+        key: cinematic-assets-v1
+
+    - name: Download cinematic assets from GitHub Release
+      if: steps.cinematic-cache.outputs.cache-hit != 'true'
+      shell: bash
+      continue-on-error: true
+      run: |
+        mkdir -p assets/luts assets/overlays/lightleaks assets/overlays/lensflares
+        curl -s -H "Authorization: token ${{ inputs.github-token }}" \
+          "https://api.github.com/repos/${{ github.repository }}/releases/tags/cinematic-assets" \
+          | python3 -c "
+        import sys, json, urllib.request, os
+        TOKEN = '${{ inputs.github-token }}'
+        data = json.load(sys.stdin)
+        assets = data.get('assets', [])
+        print(f'Found {len(assets)} cinematic asset files')
+        for a in assets:
+            name = a['name']
+            if name.endswith('.cube'):
+                dest = f'assets/luts/{name}'
+            elif 'lensflare' in name.lower() or 'flare' in name.lower():
+                dest = f'assets/overlays/lensflares/{name}'
+            else:
+                dest = f'assets/overlays/lightleaks/{name}'
+            print(f'Downloading {name} -> {dest}')
+            req = urllib.request.Request(a['url'], headers={
+                'Authorization': f'token {TOKEN}',
+                'Accept': 'application/octet-stream'
+            })
+            with urllib.request.urlopen(req) as r, open(dest, 'wb') as f:
+                f.write(r.read())
+        " || true
+        # Always run the asset bootstrapper so synthetic LUTs/overlays exist
+        # even if no GitHub Release was uploaded yet
+        python download_assets.py || true
+
+    - name: Install FFmpeg + Devanagari font
+      shell: bash
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y ffmpeg fonts-noto-core fonts-noto-cjk \
+          fonts-indic fonts-deva
+        fc-cache -f -v
+
+    - name: Set up Python 3.11
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.11"
+        cache: pip
+
+    - name: Install Python dependencies
+      shell: bash
+      run: pip install -r requirements.txt
+
+    - name: Restore YouTube auth token
+      shell: bash
+      run: echo "${{ inputs.youtube-token-b64 }}" | base64 -d > token.pickle
+
+    - name: Restore client_secrets.json
+      shell: bash
+      run: echo '${{ inputs.youtube-client-secrets }}' > client_secrets.json

@@ -211,10 +211,17 @@ def upload_to_youtube(
     language: str,
     thumbnail_path: str = "",
     series: str = None,
+    on_video_id=None,
 ) -> str:
     """
     Uploads video to YouTube, sets thumbnail, and adds to the series playlist.
     Returns the YouTube video ID.
+
+    `on_video_id` (callable, optional) is invoked with the new video_id IMMEDIATELY
+    after `videos.insert` returns — before any post-upload work (thumbnail, playlist,
+    pinned comment). Callers use this to write a checkpoint so a partial-success
+    upload (video posted, but a downstream step failed) doesn't trigger a duplicate
+    re-upload on retry. Failures inside the callback do NOT abort the upload.
     """
     youtube = get_youtube_service()
 
@@ -277,6 +284,15 @@ def upload_to_youtube(
 
     video_id = response["id"]
     print(f"    [OK] Uploaded -> https://youtube.com/watch?v={video_id}")
+
+    # Checkpoint as soon as we have the video_id — protects against duplicate
+    # re-upload if any of the downstream steps (thumbnail / playlist / pinned
+    # comment) fail and the run is retried.
+    if on_video_id:
+        try:
+            on_video_id(video_id)
+        except Exception as cb_err:
+            print(f"    [!] Checkpoint callback failed (non-fatal): {cb_err}")
 
     # Set custom thumbnail if available
     if thumbnail_path and os.path.exists(thumbnail_path):
