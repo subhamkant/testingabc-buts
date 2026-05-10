@@ -287,17 +287,26 @@ async def run_pipeline(language: str = "en", test_mode: bool = False, test_uploa
             if _ai_clips_available:
                 try:
                     print("\nStep 3 — Generating AI video clips...")
-                    clip_files = await generate_video_clips(script["scenes"])
-                    print("\nStep 4 — Assembling video from AI clips with continuous audio...")
-                    video_path = assemble_from_video_clips_continuous_audio(
-                        clip_files, audio_path, script,
-                        char_weights=char_weights,
-                        output_path=output_path,
-                    )
-                    if not os.path.exists(video_path):
-                        raise RuntimeError("Assembly produced no output file")
+                    clip_files, ref_images = await generate_video_clips(script["scenes"])
+                    n_ai = sum(1 for c in clip_files if c)
+                    if n_ai == 0:
+                        print("    All AI clip providers failed — using full static-image pipeline")
+                    else:
+                        label = (
+                            f"{n_ai} AI clip" if n_ai == len(clip_files)
+                            else f"{n_ai} AI / {len(clip_files) - n_ai} Ken Burns"
+                        )
+                        print(f"\nStep 4 — Assembling video ({label}) with continuous audio...")
+                        video_path = assemble_from_video_clips_continuous_audio(
+                            clip_files, audio_path, script,
+                            char_weights=char_weights,
+                            output_path=output_path,
+                            fallback_images=ref_images,
+                        )
+                        if not os.path.exists(video_path):
+                            raise RuntimeError("Assembly produced no output file")
                 except Exception as clip_err:
-                    print(f"\n    AI clips failed: {clip_err}")
+                    print(f"\n    AI clips path failed: {clip_err}")
                     print("    Falling back to static images...")
                     video_path = None
 
@@ -392,6 +401,10 @@ async def run_krishna_speech(test_mode: bool = False, test_upload: bool = False)
     rotate). Mirrors run_pipeline structure with series="krishna" threaded
     through script generation, TTS (per-series voice override), image
     generation (Krishna+listener two-shot prompts), and the upload step.
+
+    Resumable: every step is checkpointed under cache/<run_id>/. The
+    auto-retry-once GHA job downloads the checkpoint and reinvokes this
+    function — completed steps are loaded from cache and skipped.
     """
     mode_tag = " [TEST-UPLOAD - 1 scene]" if test_upload else (" [TEST - 1 scene]" if test_mode else "")
 
@@ -399,106 +412,166 @@ async def run_krishna_speech(test_mode: bool = False, test_upload: bool = False)
     print(f"  Krishna Direct Address  |  Hindi{mode_tag}")
     print(f"{'='*55}\n")
 
+    ck = CheckpointStore(resolve_run_id("krishna", "hi"))
+    cached = ck.list_entries()
+    if cached:
+        print(f"  [resume] Found {len(cached)} cached step(s) in {ck.dir} — completed work will be skipped:")
+        for c in cached:
+            print(f"    - {c}")
+    else:
+        print(f"  Checkpoint cache: {ck.dir}")
+    print()
+
     cleanup_temp()
 
     try:
         # ── Step 1: Generate Krishna speech script ────────────────
-        print("Step 1 — Generating Krishna direct-address script...")
-        scheduled_topic = get_next_topic("krishna")
-        script = generate_script(language="hi", forced_topic=scheduled_topic, series="krishna")
+        if ck.has("script.json"):
+            print("Step 1 — [resume] script loaded from checkpoint")
+            script = ck.load_json("script.json")
+        else:
+            print("Step 1 — Generating Krishna direct-address script...")
+            scheduled_topic = get_next_topic("krishna")
+            script = generate_script(language="hi", forced_topic=scheduled_topic, series="krishna")
 
-        if test_mode or test_upload:
-            script["scenes"] = script["scenes"][:1]
-            print("    [test] Capped to 1 scene")
+            if test_mode or test_upload:
+                script["scenes"] = script["scenes"][:1]
+                print("    [test] Capped to 1 scene")
 
-        print(f"    Topic    : {script['topic']}")
-        print(f"    Title    : {script['title']}")
+            # Krishna-voiced outro before caching so a resumed run doesn't
+            # re-append (which would produce two outros)
+            script["scenes"].append(_subscribe_outro("krishna", "hi", script.get("listener", "")))
+            update_characters(script)
+            ck.save_json("script.json", script)
+
+        print(f"    Topic    : {script.get('topic', 'N/A')}")
+        print(f"    Title    : {script.get('title', 'N/A')}")
         print(f"    Speaker  : {script.get('speaker', 'Krishna')}")
         print(f"    Listener : {script.get('listener', '?')}")
-
-        # Krishna-voiced outro — preserves first-person immersion
-        script["scenes"].append(_subscribe_outro("krishna", "hi", script.get("listener", "")))
-        print(f"    Scenes   : {len(script['scenes'])} (+ Krishna-voiced outro)")
-        update_characters(script)
+        print(f"    Scenes   : {len(script['scenes'])} (incl. Krishna-voiced outro)")
 
         # ── Step 2: Continuous voiceover (single-pass TTS) ────────
-        # series="krishna" picks ELEVENLABS_VOICE_ID_KRISHNA if set, else
-        # falls back to the default narrator voice.
-        print("\nStep 2 — Generating continuous voiceover (series=krishna)...")
-        audio_path, char_weights = await generate_full_narration(
-            script["scenes"], language="hi", series="krishna"
-        )
+        if ck.has("audio.mp3") and ck.has("char_weights.json"):
+            print("\nStep 2 — [resume] audio loaded from checkpoint")
+            audio_path = ck.path("audio.mp3")
+            char_weights = ck.load_json("char_weights.json")
+        else:
+            print("\nStep 2 — Generating continuous voiceover (series=krishna)...")
+            audio_path_temp, char_weights = await generate_full_narration(
+                script["scenes"], language="hi", series="krishna"
+            )
 
-        if not audio_path or not os.path.exists(audio_path):
-            print("No audio generated. Aborting.")
-            return
+            if not audio_path_temp or not os.path.exists(audio_path_temp):
+                print("No audio generated. Aborting.")
+                return
 
-        # ── Steps 3 & 4: AI clips → assembly, or static-image fallback ──
+            ck.save_file("audio.mp3", audio_path_temp)
+            ck.save_json("char_weights.json", char_weights)
+            audio_path = ck.path("audio.mp3")
+
+        # ── Steps 3 & 4: Visuals + Assembly (cached as video_pre_subs.mp4) ──
         output_path = _video_output_path("hi", series="krishna")
         video_path = None
 
-        _ai_clips_available = any(
-            os.environ.get(k, "").strip()
-            for k in ("FAL_KEY", "REPLICATE_API_TOKEN", "HF_SPACE")
-        )
+        if ck.has("video_pre_subs.mp4"):
+            print("\nSteps 3+4 — [resume] assembled video loaded from checkpoint")
+            shutil.copy2(ck.path("video_pre_subs.mp4"), output_path)
+            video_path = output_path
+        else:
+            _ai_clips_available = any(
+                os.environ.get(k, "").strip()
+                for k in ("FAL_KEY", "REPLICATE_API_TOKEN", "HF_SPACE")
+            )
 
-        if _ai_clips_available:
-            try:
-                print("\nStep 3 — Generating AI video clips...")
-                clip_files = await generate_video_clips(script["scenes"])
-                print("\nStep 4 — Assembling video from AI clips with continuous audio...")
-                video_path = assemble_from_video_clips_continuous_audio(
-                    clip_files, audio_path, script,
+            if _ai_clips_available:
+                try:
+                    print("\nStep 3 — Generating AI video clips...")
+                    clip_files, ref_images = await generate_video_clips(script["scenes"])
+                    n_ai = sum(1 for c in clip_files if c)
+                    if n_ai == 0:
+                        print("    All AI clip providers failed — using full static-image pipeline")
+                    else:
+                        label = (
+                            f"{n_ai} AI clip" if n_ai == len(clip_files)
+                            else f"{n_ai} AI / {len(clip_files) - n_ai} Ken Burns"
+                        )
+                        print(f"\nStep 4 — Assembling video ({label}) with continuous audio...")
+                        video_path = assemble_from_video_clips_continuous_audio(
+                            clip_files, audio_path, script,
+                            char_weights=char_weights,
+                            output_path=output_path,
+                            series="krishna",
+                            fallback_images=ref_images,
+                        )
+                        if not os.path.exists(video_path):
+                            raise RuntimeError("Assembly produced no output file")
+                except Exception as clip_err:
+                    print(f"\n    AI clips path failed: {clip_err}")
+                    print("    Falling back to static images...")
+                    video_path = None
+
+            if video_path is None:
+                print("\nStep 3 — Generating images (Krishna+listener two-shots)...")
+                image_files = generate_images(script["scenes"], series="krishna")
+                if script.get("thumbnail_prompt"):
+                    generate_thumbnail(script["thumbnail_prompt"], series="krishna")
+                print("\nStep 4 — Assembling video with continuous audio...")
+                video_path = assemble_video_continuous_audio(
+                    image_files, audio_path, script,
                     char_weights=char_weights,
                     output_path=output_path,
                     series="krishna",
                 )
-                if not os.path.exists(video_path):
-                    raise RuntimeError("Assembly produced no output file")
-            except Exception as clip_err:
-                print(f"\n    AI clips failed: {clip_err}")
-                print("    Falling back to static images...")
-                video_path = None
 
-        if video_path is None:
-            print("\nStep 3 — Generating images (Krishna+listener two-shots)...")
-            # series="krishna" reuses the Mahabharata illustrated style suffix
-            # (no separate suffix needed) — _inject_characters auto-injects
-            # Krishna and the listener's visuals when their names appear.
-            image_files = generate_images(script["scenes"], series="krishna")
-            if script.get("thumbnail_prompt"):
-                generate_thumbnail(script["thumbnail_prompt"], series="krishna")
-            print("\nStep 4 — Assembling video with continuous audio...")
-            video_path = assemble_video_continuous_audio(
-                image_files, audio_path, script,
-                char_weights=char_weights,
-                output_path=output_path,
-                series="krishna",
-            )
+            # Cache the pre-subtitle assembled video
+            if video_path and os.path.exists(video_path):
+                ck.save_file("video_pre_subs.mp4", video_path)
 
         # ── Step 4b: Burned-in word-level subtitles ───────────────
-        if video_path and os.path.exists(video_path):
+        if ck.has("video.mp4"):
+            print("\nStep 4b — [resume] subtitled video loaded from checkpoint")
+            shutil.copy2(ck.path("video.mp4"), output_path)
+            video_path = output_path
+        elif video_path and os.path.exists(video_path):
             print("\nStep 4b — Burning word-level subtitles via Groq Whisper...")
             try:
                 apply_subtitles(video_path, audio_path, "hi")
             except Exception as sub_err:
                 print(f"    Subtitles failed (non-fatal): {sub_err}")
+            if os.path.exists(video_path):
+                ck.save_file("video.mp4", video_path)
 
         # ── Step 5: Upload to YouTube ─────────────────────────────
         video_id = None
-        if (not test_mode or test_upload) and os.path.exists("client_secrets.json"):
+        if ck.has("uploaded.json"):
+            uploaded = ck.load_json("uploaded.json")
+            video_id = uploaded.get("video_id")
+            print(f"\nStep 5 — [resume] already uploaded as https://youtube.com/watch?v={video_id}")
+        elif (not test_mode or test_upload) and os.path.exists("client_secrets.json"):
             try:
                 print("\nStep 5 — Uploading to YouTube...")
+                def _checkpoint_upload(vid: str):
+                    ck.save_json("uploaded.json", {
+                        "video_id": vid,
+                        "ts":       datetime.now(timezone.utc).isoformat(),
+                        "language": "hi",
+                        "series":   "krishna",
+                    })
+
                 video_id = upload_to_youtube(
                     video_path, script, "hi",
                     thumbnail_path="output/thumbnail.jpg",
                     series="krishna",
+                    on_video_id=_checkpoint_upload,
                 )
             except Exception as yt_err:
                 print(f"    YouTube upload failed: {yt_err}")
 
         # ── Done ──────────────────────────────────────────────────
-        log_video(video_path, script, "hi")
+        if not ck.has("logged.done"):
+            log_video(video_path, script, "hi")
+            ck.mark_done("logged.done")
+
         print(f"\nPipeline complete!")
         print(f"    Video saved -> {video_path}")
         if video_id:
@@ -564,7 +637,8 @@ async def run_whatif_dual_language(test_mode: bool = False, test_upload: bool = 
         # the visual generators only read image_prompt / video_prompt.
         visual_style = dual_script.get("visual_style", "photoreal-3d")
         clip_files = None
-        image_files = None
+        ref_images  = None   # parallel to clip_files; used for per-scene fallback
+        image_files = None   # only populated when ALL clips failed (3-shot rich path)
 
         _ai_clips_available = any(
             os.environ.get(k, "").strip()
@@ -573,7 +647,16 @@ async def run_whatif_dual_language(test_mode: bool = False, test_upload: bool = 
         if _ai_clips_available:
             try:
                 print("\nStep 2 — Generating shared AI video clips...")
-                clip_files = await generate_video_clips(dual_script["scenes"])
+                clips_raw, ref_images = await generate_video_clips(dual_script["scenes"])
+                if any(clips_raw):
+                    clip_files = clips_raw
+                    n_ai = sum(1 for c in clip_files if c)
+                    if n_ai < len(clip_files):
+                        print(f"    {n_ai}/{len(clip_files)} AI clips ok — failed scenes "
+                              f"will render as Ken Burns from the I2V reference images")
+                else:
+                    print("    All AI clip providers failed — falling back to static images")
+                    clip_files = None
             except Exception as clip_err:
                 print(f"\n    AI clips failed: {clip_err}")
                 print("    Falling back to static images...")
@@ -619,6 +702,7 @@ async def run_whatif_dual_language(test_mode: bool = False, test_upload: bool = 
                         clip_files, audio_path, lang_script,
                         char_weights=char_weights,
                         output_path=output_path,
+                        fallback_images=ref_images,
                     )
                 else:
                     video_path = assemble_video_continuous_audio(
