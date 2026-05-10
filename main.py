@@ -598,104 +598,216 @@ async def run_whatif_dual_language(test_mode: bool = False, test_upload: bool = 
     print(f"  Vyasa AI What If  |  Hindi + English{mode_tag}")
     print(f"{'='*55}\n")
 
+    # Backward-compat: this kicks off both phases sequentially in one process.
+    # GHA splits into two jobs (whatif-english + whatif-hindi) so each gets
+    # its own 90-min budget. Locally, this single-process flow is fine.
+    await run_whatif_phase("en", test_mode, test_upload)
+    await run_whatif_phase("hi", test_mode, test_upload)
+
+
+async def run_whatif_phase(language: str, test_mode: bool = False, test_upload: bool = False):
+    """
+    Run ONE language phase (en or hi) of the WhatIf dual-language pipeline.
+
+    Both phases share the same run_id (whatif_<github.run_id>) so the EN
+    phase's cached script + visuals are picked up unchanged by the HI phase
+    via the GHA artifact. The EN phase is the "primary" — it generates the
+    dual-language script and the shared visuals. The HI phase just consumes
+    those + does HI-specific TTS / assembly / subtitles / upload.
+
+    Resume points (per the standard checkpoint pattern):
+      - script.json (shared)
+      - visuals_manifest.json + visuals/ (shared)
+      - thumbnail.jpg (shared)
+      - audio_<lang>.mp3 + char_weights_<lang>.json
+      - video_pre_subs_<lang>.mp4
+      - video_<lang>.mp4
+      - uploaded_<lang>.json (video_id captured immediately after insert)
+    """
+    if language not in ("en", "hi"):
+        raise ValueError(f"WhatIf phase language must be 'en' or 'hi', got {language!r}")
+
+    lang_name = "English" if language == "en" else "Hindi"
+    mode_tag = " [TEST-UPLOAD - 1 scene]" if test_upload else (" [TEST - 1 scene]" if test_mode else "")
+
+    print(f"\n{'='*55}")
+    print(f"  Vyasa AI What If  |  {lang_name} phase{mode_tag}")
+    print(f"{'='*55}\n")
+
+    # Run id is language-AGNOSTIC for whatif so EN and HI share one cache dir.
+    ck = CheckpointStore(resolve_run_id("whatif"))
+    cached = ck.list_entries()
+    if cached:
+        print(f"  [resume] Found {len(cached)} cached entry(s) in {ck.dir}:")
+        for c in cached:
+            print(f"    - {c}")
+    else:
+        print(f"  Checkpoint cache: {ck.dir}")
+    print()
+
     cleanup_temp()
 
     try:
-        # ── Step 1: ONE dual-language script ──────────────────────
-        print("Step 1 — Generating dual-language What If script...")
-        scheduled_topic = get_next_topic("whatif")
-        dual_script = generate_script(
-            language="dual",
-            forced_topic=scheduled_topic,
-            series="whatif",
-            dual_language=True,
-        )
+        # ── Step 1: ONE dual-language script (SHARED across en + hi) ──
+        if ck.has("script.json"):
+            print("Step 1 — [resume/shared] script loaded from checkpoint")
+            dual_script = ck.load_json("script.json")
+        elif language == "hi":
+            print("[!] HI phase started without a cached script. The EN phase must run first")
+            print("    (it produces the dual-language script + visuals that HI consumes).")
+            return
+        else:
+            print("Step 1 — Generating dual-language What If script...")
+            scheduled_topic = get_next_topic("whatif")
+            dual_script = generate_script(
+                language="dual",
+                forced_topic=scheduled_topic,
+                series="whatif",
+                dual_language=True,
+            )
 
-        if test_mode or test_upload:
-            dual_script["scenes"] = dual_script["scenes"][:1]
-            print("    [test] Capped to 1 scene")
+            if test_mode or test_upload:
+                dual_script["scenes"] = dual_script["scenes"][:1]
+                print("    [test] Capped to 1 scene")
 
-        print(f"    Topic       : {dual_script['topic']}")
-        print(f"    Title       : {dual_script['title']}")
+            # Append bilingual outro before caching so a resumed run doesn't
+            # re-append (which would produce two outros)
+            outro_en = _subscribe_outro("whatif", "en")
+            outro_hi = _subscribe_outro("whatif", "hi")
+            dual_script["scenes"].append({
+                "narration":    outro_en["narration"],
+                "narration_hi": outro_hi["narration"],
+                "image_prompt": outro_en["image_prompt"],
+                "video_prompt": outro_en["video_prompt"],
+                "mood":         outro_en["mood"],
+            })
+            ck.save_json("script.json", dual_script)
+
+        print(f"    Topic       : {dual_script.get('topic', 'N/A')}")
+        print(f"    Title       : {dual_script.get('title', 'N/A')}")
         print(f"    Visual style: {dual_script.get('visual_style', 'photoreal-3d')}")
+        print(f"    Scenes      : {len(dual_script['scenes'])} (incl. subscribe outro)")
 
-        # Append series-aware bilingual outro
-        outro_en = _subscribe_outro("whatif", "en")
-        outro_hi = _subscribe_outro("whatif", "hi")
-        dual_script["scenes"].append({
-            "narration":    outro_en["narration"],
-            "narration_hi": outro_hi["narration"],
-            "image_prompt": outro_en["image_prompt"],
-            "video_prompt": outro_en["video_prompt"],
-            "mood":         outro_en["mood"],
-        })
-        print(f"    Scenes      : {len(dual_script['scenes'])} (+ subscribe outro)")
-        # NOTE: skipping update_characters — Mahabharata-specific.
-
-        # ── Step 2: Generate visuals ONCE ─────────────────────────
-        # Using the dual script's scenes (each has both narrations) is fine —
-        # the visual generators only read image_prompt / video_prompt.
+        # ── Step 2: Visuals (SHARED across en + hi) ───────────────
+        # Manifest records which path was taken (clips vs images) and the
+        # paths into the cache. HI phase loads this without re-generating.
         visual_style = dual_script.get("visual_style", "photoreal-3d")
         clip_files = None
-        ref_images  = None   # parallel to clip_files; used for per-scene fallback
-        image_files = None   # only populated when ALL clips failed (3-shot rich path)
+        ref_images = None
+        image_files = None
 
-        _ai_clips_available = any(
-            os.environ.get(k, "").strip()
-            for k in ("FAL_KEY", "REPLICATE_API_TOKEN", "HF_SPACE")
-        )
-        if _ai_clips_available:
-            try:
-                print("\nStep 2 — Generating shared AI video clips...")
-                clips_raw, ref_images = await generate_video_clips(dual_script["scenes"])
-                if any(clips_raw):
-                    clip_files = clips_raw
-                    n_ai = sum(1 for c in clip_files if c)
-                    if n_ai < len(clip_files):
-                        print(f"    {n_ai}/{len(clip_files)} AI clips ok — failed scenes "
-                              f"will render as Ken Burns from the I2V reference images")
-                else:
-                    print("    All AI clip providers failed — falling back to static images")
+        if ck.has("visuals_manifest.json"):
+            print("\nStep 2 — [resume/shared] visuals loaded from checkpoint")
+            manifest = ck.load_json("visuals_manifest.json")
+            kind = manifest.get("kind")
+            if kind == "clips":
+                clip_files  = manifest.get("clip_files")
+                ref_images  = manifest.get("ref_images")
+            else:
+                image_files = manifest.get("image_files")
+        elif language == "hi":
+            print("[!] HI phase started without cached visuals. The EN phase must run first.")
+            return
+        else:
+            _ai_clips_available = any(
+                os.environ.get(k, "").strip()
+                for k in ("FAL_KEY", "REPLICATE_API_TOKEN", "HF_SPACE")
+            )
+            if _ai_clips_available:
+                try:
+                    print("\nStep 2 — Generating shared AI video clips...")
+                    clips_raw, ref_images_raw = await generate_video_clips(dual_script["scenes"])
+                    if any(clips_raw):
+                        clip_files = clips_raw
+                        ref_images = ref_images_raw
+                        n_ai = sum(1 for c in clip_files if c)
+                        if n_ai < len(clip_files):
+                            print(f"    {n_ai}/{len(clip_files)} AI clips ok — failed scenes "
+                                  f"will render as Ken Burns from the I2V reference images")
+                    else:
+                        print("    All AI clip providers failed — falling back to static images")
+                        clip_files = None
+                except Exception as clip_err:
+                    print(f"\n    AI clips failed: {clip_err}")
+                    print("    Falling back to static images...")
                     clip_files = None
-            except Exception as clip_err:
-                print(f"\n    AI clips failed: {clip_err}")
-                print("    Falling back to static images...")
-                clip_files = None
 
-        if clip_files is None:
-            print("\nStep 2 — Generating shared images via free cascade...")
-            image_files = generate_images(
-                dual_script["scenes"], series="whatif", visual_style=visual_style,
-            )
-            if dual_script.get("thumbnail_prompt"):
-                generate_thumbnail(
-                    dual_script["thumbnail_prompt"],
-                    series="whatif", visual_style=visual_style,
+            if clip_files is None:
+                print("\nStep 2 — Generating shared images via free cascade...")
+                image_files = generate_images(
+                    dual_script["scenes"], series="whatif", visual_style=visual_style,
                 )
+                if dual_script.get("thumbnail_prompt"):
+                    generate_thumbnail(
+                        dual_script["thumbnail_prompt"],
+                        series="whatif", visual_style=visual_style,
+                    )
+                    if os.path.exists("output/thumbnail.jpg"):
+                        ck.save_file("thumbnail.jpg", "output/thumbnail.jpg")
 
-        # ── Step 3-5: per-language render + upload ────────────────
-        # English first, Hindi second — English is the primary audience for
-        # the WhatIf series (science/curiosity content travels further in EN).
-        # If anything fails partway, English ships first.
-        video_ids = {}
-        for lang in ("en", "hi"):
-            lang_name = "Hindi" if lang == "hi" else "English"
-            print(f"\n{'─'*55}\n  Rendering {lang_name} version\n{'─'*55}")
+            # Cache visuals so the HI phase can reuse them
+            if clip_files:
+                cached_clips = []
+                for i, p in enumerate(clip_files):
+                    if p and os.path.exists(p):
+                        cached_clips.append(ck.save_file(f"visuals/clip_{i:02d}.mp4", p))
+                    else:
+                        cached_clips.append(None)
+                cached_refs = []
+                if ref_images:
+                    for i, p in enumerate(ref_images):
+                        if p and os.path.exists(p):
+                            cached_refs.append(ck.save_file(f"visuals/ref_{i:02d}.jpg", p))
+                        else:
+                            cached_refs.append(None)
+                ck.save_json("visuals_manifest.json", {
+                    "kind":        "clips",
+                    "clip_files":  cached_clips,
+                    "ref_images":  cached_refs or None,
+                })
+                clip_files = cached_clips
+                ref_images = cached_refs or None
+            elif image_files:
+                cached_imgs = ck.save_files("visuals", image_files)
+                ck.save_json("visuals_manifest.json", {
+                    "kind":        "images",
+                    "image_files": cached_imgs,
+                })
+                image_files = cached_imgs
 
-            lang_script = _build_lang_script(dual_script, lang)
-            output_path = _video_output_path(lang, series="whatif")
+        # Restore the thumbnail to its expected location for the upload step
+        if ck.has("thumbnail.jpg") and not os.path.exists("output/thumbnail.jpg"):
+            os.makedirs("output", exist_ok=True)
+            shutil.copy2(ck.path("thumbnail.jpg"), "output/thumbnail.jpg")
 
-            # TTS for this language
-            print(f"\nStep 3a [{lang}] — TTS...")
-            audio_path, char_weights = await generate_full_narration(
-                lang_script["scenes"], lang
+        # ── Step 3a: Per-language TTS ─────────────────────────────
+        lang_script = _build_lang_script(dual_script, language)
+        output_path = _video_output_path(language, series="whatif")
+
+        if ck.has(f"audio_{language}.mp3") and ck.has(f"char_weights_{language}.json"):
+            print(f"\nStep 3a [{language}] — [resume] audio loaded from checkpoint")
+            audio_path = ck.path(f"audio_{language}.mp3")
+            char_weights = ck.load_json(f"char_weights_{language}.json")
+        else:
+            print(f"\nStep 3a [{language}] — TTS...")
+            audio_path_temp, char_weights = await generate_full_narration(
+                lang_script["scenes"], language
             )
-            if not audio_path or not os.path.exists(audio_path):
-                print(f"    [!] No audio generated for {lang}, skipping")
-                continue
+            if not audio_path_temp or not os.path.exists(audio_path_temp):
+                print(f"    [!] No audio generated for {language}, aborting phase")
+                return
+            ck.save_file(f"audio_{language}.mp3", audio_path_temp)
+            ck.save_json(f"char_weights_{language}.json", char_weights)
+            audio_path = ck.path(f"audio_{language}.mp3")
 
-            # Assemble using SHARED visuals
-            print(f"\nStep 3b [{lang}] — Assembling video...")
+        # ── Step 3b: Assembly ─────────────────────────────────────
+        video_path = None
+        if ck.has(f"video_pre_subs_{language}.mp4"):
+            print(f"\nStep 3b [{language}] — [resume] assembled video loaded from checkpoint")
+            shutil.copy2(ck.path(f"video_pre_subs_{language}.mp4"), output_path)
+            video_path = output_path
+        else:
+            print(f"\nStep 3b [{language}] — Assembling video...")
             try:
                 if clip_files:
                     video_path = assemble_from_video_clips_continuous_audio(
@@ -711,37 +823,59 @@ async def run_whatif_dual_language(test_mode: bool = False, test_upload: bool = 
                         output_path=output_path,
                     )
             except Exception as a_err:
-                print(f"    [!] Assembly failed for {lang}: {a_err}")
-                continue
-
-            # Subtitles
+                print(f"    [!] Assembly failed for {language}: {a_err}")
+                return
             if video_path and os.path.exists(video_path):
-                print(f"\nStep 3c [{lang}] — Subtitles...")
-                try:
-                    apply_subtitles(video_path, audio_path, lang)
-                except Exception as sub_err:
-                    print(f"    Subtitles failed (non-fatal): {sub_err}")
+                ck.save_file(f"video_pre_subs_{language}.mp4", video_path)
 
-            # Upload
-            video_id = None
-            if (not test_mode or test_upload) and os.path.exists("client_secrets.json"):
-                try:
-                    print(f"\nStep 3d [{lang}] — Uploading to YouTube...")
-                    video_id = upload_to_youtube(
-                        video_path, lang_script, lang,
-                        thumbnail_path="output/thumbnail.jpg",
-                        series="whatif",
-                    )
-                    video_ids[lang] = video_id
-                except Exception as yt_err:
-                    print(f"    YouTube upload failed: {yt_err}")
+        # ── Step 3c: Subtitles ────────────────────────────────────
+        if ck.has(f"video_{language}.mp4"):
+            print(f"\nStep 3c [{language}] — [resume] subtitled video loaded from checkpoint")
+            shutil.copy2(ck.path(f"video_{language}.mp4"), output_path)
+            video_path = output_path
+        elif video_path and os.path.exists(video_path):
+            print(f"\nStep 3c [{language}] — Subtitles...")
+            try:
+                apply_subtitles(video_path, audio_path, language)
+            except Exception as sub_err:
+                print(f"    Subtitles failed (non-fatal): {sub_err}")
+            if os.path.exists(video_path):
+                ck.save_file(f"video_{language}.mp4", video_path)
 
-            log_video(video_path, lang_script, lang)
+        # ── Step 3d: Upload ───────────────────────────────────────
+        video_id = None
+        if ck.has(f"uploaded_{language}.json"):
+            uploaded = ck.load_json(f"uploaded_{language}.json")
+            video_id = uploaded.get("video_id")
+            print(f"\nStep 3d [{language}] — [resume] already uploaded as https://youtube.com/watch?v={video_id}")
+        elif (not test_mode or test_upload) and os.path.exists("client_secrets.json"):
+            try:
+                print(f"\nStep 3d [{language}] — Uploading to YouTube...")
+                def _checkpoint_upload(vid: str, _lang=language):
+                    ck.save_json(f"uploaded_{_lang}.json", {
+                        "video_id": vid,
+                        "ts":       datetime.now(timezone.utc).isoformat(),
+                        "language": _lang,
+                        "series":   "whatif",
+                    })
+
+                video_id = upload_to_youtube(
+                    video_path, lang_script, language,
+                    thumbnail_path="output/thumbnail.jpg",
+                    series="whatif",
+                    on_video_id=_checkpoint_upload,
+                )
+            except Exception as yt_err:
+                print(f"    YouTube upload failed: {yt_err}")
 
         # ── Done ──────────────────────────────────────────────────
-        print(f"\n{'='*55}\nWhat If Pipeline complete!\n{'='*55}")
-        for lang, vid in video_ids.items():
-            print(f"    {lang.upper()} -> https://youtube.com/watch?v={vid}")
+        if not ck.has(f"logged_{language}.done"):
+            log_video(video_path, lang_script, language)
+            ck.mark_done(f"logged_{language}.done")
+
+        print(f"\n{lang_name} phase complete!")
+        if video_id:
+            print(f"    YouTube -> https://youtube.com/watch?v={video_id}")
         print()
 
     finally:
@@ -756,12 +890,25 @@ if __name__ == "__main__":
     test_upload = "--test-upload" in args
     args = [a for a in args if a not in ("--test", "--test-upload")]
 
+    # Optional --lang=en|hi flag (used by the WhatIf split GHA jobs to run
+    # one language at a time). Without --lang, `whatif` runs both phases
+    # sequentially in one process for backward-compat / local dev.
+    whatif_lang = None
+    for a in list(args):
+        if a.startswith("--lang="):
+            whatif_lang = a.split("=", 1)[1].strip()
+            args.remove(a)
+
     target = args[0] if args else "hi"
 
     if target == "whatif":
-        log_file = _setup_logging("whatif", test_mode or test_upload)
+        log_label = f"whatif_{whatif_lang}" if whatif_lang else "whatif"
+        log_file = _setup_logging(log_label, test_mode or test_upload)
         try:
-            asyncio.run(run_whatif_dual_language(test_mode, test_upload))
+            if whatif_lang in ("en", "hi"):
+                asyncio.run(run_whatif_phase(whatif_lang, test_mode, test_upload))
+            else:
+                asyncio.run(run_whatif_dual_language(test_mode, test_upload))
         finally:
             sys.stdout = sys.stdout._stream
             log_file.close()
@@ -780,5 +927,9 @@ if __name__ == "__main__":
             sys.stdout = sys.stdout._stream
             log_file.close()
     else:
-        print("Usage: python main.py [en|hi|whatif|krishna] [--test | --test-upload]")
+        print(
+            "Usage: python main.py [en|hi|whatif|krishna] [--lang=en|hi] [--test | --test-upload]\n"
+            "  --lang=en | --lang=hi  (whatif only) — runs only the EN or HI phase.\n"
+            "                            Without --lang, whatif runs both phases serially."
+        )
         sys.exit(1)
