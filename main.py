@@ -768,7 +768,26 @@ async def run_whatif_phase(language: str, test_mode: bool = False, test_upload: 
                 clip_files = cached_clips
                 ref_images = cached_refs or None
             elif image_files:
-                cached_imgs = ck.save_files("visuals", image_files)
+                # generate_images returns list[list[str]] — outer index = scene,
+                # inner index = shot (3 shots per scene by default for the rich
+                # Ken Burns path). Preserve that nesting through the cache so
+                # the assembler still receives the right shape on resume.
+                cached_imgs = []
+                for scene_idx, scene_shots in enumerate(image_files):
+                    if isinstance(scene_shots, str):
+                        scene_shots = [scene_shots]
+                    scene_cached = []
+                    for shot_idx, shot_path in enumerate(scene_shots):
+                        if not shot_path or not os.path.exists(shot_path):
+                            scene_cached.append(shot_path)
+                            continue
+                        ext = os.path.splitext(shot_path)[1] or ".jpg"
+                        cached_path = ck.save_file(
+                            f"visuals/scene_{scene_idx:02d}_shot_{shot_idx:02d}{ext}",
+                            shot_path,
+                        )
+                        scene_cached.append(cached_path)
+                    cached_imgs.append(scene_cached)
                 ck.save_json("visuals_manifest.json", {
                     "kind":        "images",
                     "image_files": cached_imgs,
