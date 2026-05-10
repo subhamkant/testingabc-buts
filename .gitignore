@@ -17,6 +17,10 @@ video_log_001.txt
 trending_cache.json
 temp/trending_cache.json
 
+# Per-run pipeline checkpoint cache (uploaded as a GHA artifact for retries,
+# not committed back to the repo — regenerable per-run state)
+cache/
+
 # Runtime state
 .env
 scheduled_topics.txt
