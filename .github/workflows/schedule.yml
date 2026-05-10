@@ -40,7 +40,7 @@ jobs:
       github.event.schedule != '0 4 * * *' &&
       !(github.event_name == 'workflow_dispatch' && inputs.target == 'whatif')
     runs-on: ubuntu-latest
-    timeout-minutes: 90
+    timeout-minutes: 30
     permissions:
       contents: write
 
@@ -118,6 +118,10 @@ jobs:
           ELEVENLABS_VOICE_ID_KRISHNA: ${{ secrets.ELEVENLABS_VOICE_ID_KRISHNA }}
           NARRATOR_VOICE: Charon
           CINEMATIC_FPS: "30"
+          # Per-provider I2V timeout — drops a flaky free-tier provider sooner
+          # so the per-scene cascade falls to Ken Burns within ~120s instead of
+          # ~180s, capping how long a hung HF Space can hold up the batch.
+          CLIP_PROVIDER_TIMEOUT: "120"
           # CheckpointStore reads this to scope cache/<run_id>/ — same value
           # is computed identically by the auto-retry job so it resumes from
           # the original job's checkpoints.
@@ -193,7 +197,7 @@ jobs:
     # false on a WhatIf run). `result == 'failure'` excludes that case.
     if: failure() && needs.generate-and-upload.result == 'failure'
     runs-on: ubuntu-latest
-    timeout-minutes: 90
+    timeout-minutes: 30
     permissions:
       contents: write
 
@@ -255,6 +259,10 @@ jobs:
           ELEVENLABS_VOICE_ID_KRISHNA: ${{ secrets.ELEVENLABS_VOICE_ID_KRISHNA }}
           NARRATOR_VOICE: Charon
           CINEMATIC_FPS: "30"
+          # Per-provider I2V timeout — drops a flaky free-tier provider sooner
+          # so the per-scene cascade falls to Ken Burns within ~120s instead of
+          # ~180s, capping how long a hung HF Space can hold up the batch.
+          CLIP_PROVIDER_TIMEOUT: "120"
           PIPELINE_RUN_ID: ${{ env.PIPELINE_RUN_ID }}
         run: python main.py ${{ env.TARGET }} 2>&1 | tee pipeline_output.txt
 
@@ -291,7 +299,7 @@ jobs:
       github.event.schedule == '0 4 * * *' ||
       (github.event_name == 'workflow_dispatch' && inputs.target == 'whatif')
     runs-on: ubuntu-latest
-    timeout-minutes: 90
+    timeout-minutes: 30
     permissions:
       contents: write
 
@@ -331,6 +339,10 @@ jobs:
           ELEVENLABS_VOICE_ID: ${{ secrets.ELEVENLABS_VOICE_ID }}
           NARRATOR_VOICE: Charon
           CINEMATIC_FPS: "30"
+          # Per-provider I2V timeout — drops a flaky free-tier provider sooner
+          # so the per-scene cascade falls to Ken Burns within ~120s instead of
+          # ~180s, capping how long a hung HF Space can hold up the batch.
+          CLIP_PROVIDER_TIMEOUT: "120"
           PIPELINE_RUN_ID: ${{ env.PIPELINE_RUN_ID }}
         run: python main.py whatif --lang=en 2>&1 | tee pipeline_output.txt
 
@@ -363,7 +375,7 @@ jobs:
     needs: whatif-english
     if: failure() && needs.whatif-english.result == 'failure'
     runs-on: ubuntu-latest
-    timeout-minutes: 90
+    timeout-minutes: 30
     permissions:
       contents: write
 
@@ -402,6 +414,10 @@ jobs:
           ELEVENLABS_VOICE_ID: ${{ secrets.ELEVENLABS_VOICE_ID }}
           NARRATOR_VOICE: Charon
           CINEMATIC_FPS: "30"
+          # Per-provider I2V timeout — drops a flaky free-tier provider sooner
+          # so the per-scene cascade falls to Ken Burns within ~120s instead of
+          # ~180s, capping how long a hung HF Space can hold up the batch.
+          CLIP_PROVIDER_TIMEOUT: "120"
           PIPELINE_RUN_ID: ${{ env.PIPELINE_RUN_ID }}
         run: python main.py whatif --lang=en 2>&1 | tee pipeline_output.txt
 
@@ -445,7 +461,7 @@ jobs:
         (github.event_name == 'workflow_dispatch' && inputs.target == 'whatif')
       )
     runs-on: ubuntu-latest
-    timeout-minutes: 90
+    timeout-minutes: 30
     permissions:
       contents: write
 
@@ -484,6 +500,10 @@ jobs:
           ELEVENLABS_VOICE_ID: ${{ secrets.ELEVENLABS_VOICE_ID }}
           NARRATOR_VOICE: Charon
           CINEMATIC_FPS: "30"
+          # Per-provider I2V timeout — drops a flaky free-tier provider sooner
+          # so the per-scene cascade falls to Ken Burns within ~120s instead of
+          # ~180s, capping how long a hung HF Space can hold up the batch.
+          CLIP_PROVIDER_TIMEOUT: "120"
           PIPELINE_RUN_ID: ${{ env.PIPELINE_RUN_ID }}
         run: python main.py whatif --lang=hi 2>&1 | tee pipeline_output.txt
 
@@ -516,7 +536,7 @@ jobs:
     needs: whatif-hindi
     if: failure() && needs.whatif-hindi.result == 'failure'
     runs-on: ubuntu-latest
-    timeout-minutes: 90
+    timeout-minutes: 30
     permissions:
       contents: write
 
@@ -555,6 +575,10 @@ jobs:
           ELEVENLABS_VOICE_ID: ${{ secrets.ELEVENLABS_VOICE_ID }}
           NARRATOR_VOICE: Charon
           CINEMATIC_FPS: "30"
+          # Per-provider I2V timeout — drops a flaky free-tier provider sooner
+          # so the per-scene cascade falls to Ken Burns within ~120s instead of
+          # ~180s, capping how long a hung HF Space can hold up the batch.
+          CLIP_PROVIDER_TIMEOUT: "120"
           PIPELINE_RUN_ID: ${{ env.PIPELINE_RUN_ID }}
         run: python main.py whatif --lang=hi 2>&1 | tee pipeline_output.txt
 
