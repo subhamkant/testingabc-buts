@@ -1644,6 +1644,26 @@ def generate_script(
     - mood: 3-6 words in English
     - image_prompt and video_prompt MUST reference the mood
     - description MUST end with the exact hashtag block above
+
+    ═══════════════════════════════════════════════════════════════
+    PRIORITY ORDER — IF YOU CAN'T SATISFY EVERY RULE
+    ═══════════════════════════════════════════════════════════════
+    Narration storytelling quality is #1. SEO metadata is #5.
+    If the SEO formatting and the narration quality ever pull against
+    each other, ALWAYS keep the narration punchy and concrete and let
+    SEO take the hit. A boring title on a gripping story still earns
+    views; a perfectly-optimized title on a flat narration does not.
+
+    Priority order, top is most important:
+      1. Scene 1 hook is a real scroll-stopper (pattern A/B/C, named character)
+      2. Every non-final scene ends with a forward-pull (curiosity gap)
+      3. Hindi: verb variety — at most 2 sentences end in था/थी/थे/थीं
+      4. Each scene 25-40 words, present-tense, vivid sensory detail
+      5. SEO title/description/tag formatting
+
+    The two reference videos this channel is optimizing toward — "Bhishma's
+    Untold Sacrifice" and "What If Humans Vanish?" — both prioritized 1-4
+    above 5. Do the same.
     """
 
     # Try up to 3 times — if a response fails any quality gate (too short,
