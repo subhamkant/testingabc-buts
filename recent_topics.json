@@ -1,32 +1,8 @@
 {
   "whatif": [
     {
-      "topic": "What if humans suddenly disappeared from Earth tomorrow?",
-      "ts": "2026-05-10 04:00:00"
-    },
-    {
-      "topic": "What if Earth's magnetic field flipped tomorrow?",
-<<<<<<< Updated upstream
-      "ts": "2026-05-10 18:58:08"
-=======
-      "ts": "2026-05-10 19:19:54"
->>>>>>> Stashed changes
-    }
-  ],
-  "mahabharata": [
-    {
-      "topic": "The death of Jayadratha — Arjuna's vow and Krishna's miracle",
-      "ts": "2026-05-10 05:57:42"
-    },
-    {
-      "topic": "Bhishma's sacrifice — how one oath destroyed a dynasty",
-      "ts": "2026-05-10 10:19:22"
-    }
-  ],
-  "krishna": [
-    {
-      "topic": "Duty above bloodline",
-      "ts": "2026-05-10 15:25:49"
+      "topic": "What if the Moon were twice as close to Earth?",
+      "ts": "2026-05-11 09:05:39"
     }
   ]
 }
