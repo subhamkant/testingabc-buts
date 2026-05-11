@@ -20,7 +20,15 @@ from urllib.parse import quote
 # WhatIf series uses a different per-style suffix from _WHATIF_STYLE_SUFFIXES
 # based on the script's visual_style — this Mahabharata suffix does not apply.
 STYLE_SUFFIX = (
-    "photorealistic cinematic film still, ancient India epic Mahabharata, "
+    "photorealistic cinematic film still, "
+    # ── Photoreal cinema-camera anchors (pushes FLUX away from the "Anger's
+    # Fire" plastic-CGI look toward Bhishma-style real cinematography) ──
+    "shot on Arri Alexa LF with 50mm anamorphic lens, "
+    "Kodak Vision3 5219 film stock, professional cinema-grade color grading, "
+    "physically-based skin shader with visible pores and fine facial detail, "
+    "natural sub-surface scattering on skin, realistic beard and hair texture, "
+    # ── Period / aesthetic register (unchanged from prior iteration) ──
+    "ancient India epic Mahabharata, "
     "Star Bharat Mahabharat live-action / Baahubali period-film aesthetic, "
     "real human faces with natural skin tones and accurate skin texture, "
     "balanced cinematic color grading — neutral whites, true skin colors, "
@@ -36,7 +44,10 @@ STYLE_SUFFIX = (
     "shallow depth of field, hero character in sharp focus, expressive facial emotion, "
     "cinematic composition, rule of thirds, inspired by Raja Ravi Varma paintings "
     "rendered as live-action film, consistent character design, sharp focus, "
+    # ── Negative anchors — bans cartoonish + the Anger's Fire CGI-plastic look ──
     "no cartoon, no anime, no cel shading, no comic book illustration, "
+    "no CGI plastic skin, no 3D-render plastic look, no video-game character render, "
+    "no smooth airbrushed skin, no Pixar-style stylization, no over-rendered, "
     "no magenta cast, no pink cast, no purple skin, no over-saturated wash"
 )
 
@@ -85,8 +96,9 @@ def _resolve_style_suffix(series: str, visual_style: str) -> str:
     return STYLE_SUFFIX
 
 # Negative prompt — suppresses blurry/low-quality outputs, FLUX-schnell's
-# known anatomy weaknesses (hands/fingers), AND the heavy magenta/pink wash
-# that older STYLE_SUFFIX iterations produced.
+# known anatomy weaknesses (hands/fingers), the heavy magenta/pink wash that
+# older STYLE_SUFFIX iterations produced, AND the CGI-plastic / video-game-
+# character look that made the Anger's Fire video look cartoonish.
 _NEGATIVE = (
     "blurry,blur,out of focus,low quality,pixelated,distorted,"
     "ugly,bad anatomy,watermark,text,logo,duplicate,deformed,"
@@ -96,7 +108,10 @@ _NEGATIVE = (
     "asymmetric eyes,cross-eyed,bad proportions,"
     "magenta cast,pink cast,purple skin,over-saturated,"
     "color wash,monochrome filter,sepia overlay,"
-    "cartoon,anime,cel shaded,illustration,drawing"
+    "cartoon,anime,cel shaded,illustration,drawing,"
+    "cgi plastic skin,3d render plastic,video game character,"
+    "smooth airbrushed skin,pixar style,unreal engine character,"
+    "doll-like face,waxy skin,over-rendered"
 )
 
 # 3 compositional angles per scene — gives genuine visual variety
