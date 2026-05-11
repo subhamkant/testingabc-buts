@@ -68,6 +68,40 @@ def _gemini_voice_for(series: str) -> str:
         return env_override
     return _GEMINI_VOICE_BY_SERIES.get(series, _GEMINI_VOICE)
 
+
+# Per-series TTS provider cascade order. The two best-performing reference videos
+# on the channel (Bhishma Mahabharata HI, Humans Vanish WhatIf) both ended up on
+# Gemini Charon after ElevenLabs was blocked — that storytelling cadence is what
+# viewers responded to. So Mahabharata now prefers Gemini Charon as primary; the
+# Krishna direct-address format keeps ElevenLabs first because its per-scene
+# voice_settings + dB scaling in _KRISHNA_PER_SCENE_DB / _KRISHNA_PER_SCENE_SETTINGS
+# do real dynamics work that Charon (single-take) would flatten.
+#
+# Each entry is a tag the cascade dispatcher recognizes:
+#   "krishna_per_scene" — only fires when series == "krishna"; per-scene ElevenLabs
+#                         with the hand-engineered dynamics arc
+#   "elevenlabs"        — single-call ElevenLabs (walks both keys)
+#   "gemini"            — single-call Gemini TTS with the series-resolved voice
+#   "edge_ssml"         — Edge TTS with SSML prosody (primary voice, then fallback)
+#   "edge_plain"        — plain Edge TTS, last resort
+#
+# Override at runtime via TTS_PROVIDER_ORDER_<SERIES> env (comma-separated).
+_PROVIDER_ORDER_BY_SERIES = {
+    "mahabharata": ["gemini", "elevenlabs", "edge_ssml", "edge_plain"],
+    "krishna":     ["krishna_per_scene", "elevenlabs", "gemini", "edge_ssml", "edge_plain"],
+    "whatif":      ["elevenlabs", "gemini", "edge_ssml", "edge_plain"],
+}
+_DEFAULT_PROVIDER_ORDER = ["elevenlabs", "gemini", "edge_ssml", "edge_plain"]
+
+
+def _provider_order_for(series: str) -> list:
+    """Resolve the TTS provider cascade — env override > per-series map > default."""
+    env_override = os.environ.get(f"TTS_PROVIDER_ORDER_{series.upper()}", "").strip()
+    if env_override:
+        return [p.strip() for p in env_override.split(",") if p.strip()]
+    return list(_PROVIDER_ORDER_BY_SERIES.get(series, _DEFAULT_PROVIDER_ORDER))
+
+
 # SSML prosody for storytelling feel
 _RATE  = "-12%"   # deliberate, unhurried pace
 _PITCH = "-8Hz"   # deeper, more gravitas
@@ -691,9 +725,11 @@ async def generate_full_narration(
     use a distinct divine voice while the standard Mahabharata flow keeps
     the default narrator.
 
-    Provider cascade: ElevenLabs → Gemini Charon → Edge SSML → Edge plain.
-    Once a provider succeeds, the entire video is consistent voice (no
-    half-Gemini / half-Edge seams).
+    Provider cascade is series-aware — see `_PROVIDER_ORDER_BY_SERIES`:
+      mahabharata: Gemini Charon → ElevenLabs → Edge SSML → Edge plain
+      krishna:     per-scene ElevenLabs → ElevenLabs → Gemini → Edge SSML → Edge plain
+      whatif:      ElevenLabs → Gemini Puck → Edge SSML → Edge plain
+    Once a provider succeeds, the entire video uses one consistent voice.
     """
     os.makedirs("temp/audio", exist_ok=True)
 
@@ -712,64 +748,81 @@ async def generate_full_narration(
     print(f"    Full narration: {len(full_text)} chars across {len(scenes)} scene(s)")
 
     output_path = "temp/audio/narration_full.mp3"
-
-    # ── 0. Krishna per-scene TTS (only when an ElevenLabs key is set) ──
-    # Each scene gets its own ElevenLabs request with per-scene voice_settings
-    # — contemplative for Scenes 1/2/4, dramatic peak for Scene 3, warm
-    # blessing for Scene 5. This is what produces real LRA in the output.
-    # If the per-scene path fails for any reason we fall through to the
-    # standard single-call path below.
-    if series == "krishna" and _elevenlabs_keys():
-        print(f"    Krishna mode — per-scene TTS with per-scene voice settings...")
-        ok = await _generate_per_scene_krishna_tts(scenes, output_path, language)
-        if ok:
-            print(f"    [OK] Krishna per-scene narration -> {output_path}")
-            return output_path, char_weights
-        print("    [!] Per-scene Krishna TTS failed — falling back to single-call mode")
-
-    # 1. ElevenLabs (best, requires ELEVENLABS_API_KEY[_FALLBACK])
-    # Walk both keys in order — falls through on quota errors / 401 / network
-    # failures, so a single dead key doesn't bump us all the way down to Edge.
-    for key_label, key in _elevenlabs_keys():
-        print(f"    Trying {key_label} (most realistic)...")
-        ok = await asyncio.to_thread(
-            _elevenlabs_tts, full_text, output_path, language, key, key_label, series
-        )
-        if ok:
-            print(f"    [OK] Full narration via {key_label} ({series})")
-            return output_path, char_weights
-
-    # 2. Gemini TTS — series-aware voice (Charon for myth, Puck for WhatIf)
-    if os.environ.get("GEMINI_API_KEY", "").strip():
-        gemini_voice = _gemini_voice_for(series)
-        print(f"    Trying Gemini TTS ({gemini_voice} voice for {series})...")
-        if await asyncio.to_thread(_gemini_tts, full_text, output_path, gemini_voice):
-            print(f"    [OK] Full narration via Gemini {gemini_voice}")
-            return output_path, char_weights
-
-    # 3. Edge TTS SSML
     voice_pri = _EDGE_VOICES.get(language, _EDGE_VOICES["en"])
     voice_alt = _EDGE_FALLBACK.get(language, _EDGE_FALLBACK["en"])
 
-    print("    Trying Edge TTS (SSML, primary voice)...")
-    if await _edge_tts(full_text, voice_pri, output_path, use_ssml=True):
-        _normalize_audio(output_path)
-        print("    [OK] Full narration via Edge SSML")
-        return output_path, char_weights
+    order = _provider_order_for(series)
+    print(f"    TTS cascade ({series}): {' -> '.join(order)}")
 
-    # 4. Edge TTS fallback voice
-    print("    Trying Edge TTS (SSML, fallback voice)...")
-    if await _edge_tts(full_text, voice_alt, output_path, use_ssml=True):
-        _normalize_audio(output_path)
-        print("    [OK] Full narration via Edge SSML fallback")
-        return output_path, char_weights
+    for provider in order:
+        # Krishna per-scene path — only valid when series=krishna AND an
+        # ElevenLabs key is set. Builds the macro dynamic arc via per-scene
+        # voice_settings + dB scaling that single-call providers can't match.
+        if provider == "krishna_per_scene":
+            if series != "krishna" or not _elevenlabs_keys():
+                continue
+            print(f"    Krishna mode — per-scene TTS with per-scene voice settings...")
+            ok = await _generate_per_scene_krishna_tts(scenes, output_path, language)
+            if ok:
+                print(f"    [OK] Krishna per-scene narration -> {output_path}")
+                return output_path, char_weights
+            print("    [!] Per-scene Krishna TTS failed — falling through cascade")
+            continue
 
-    # 5. Plain Edge TTS — last resort
-    print("    Trying Edge TTS (plain)...")
-    if await _edge_tts(full_text, voice_pri, output_path, use_ssml=False):
-        _normalize_audio(output_path)
-        print("    [OK] Full narration via Edge plain")
-        return output_path, char_weights
+        # ElevenLabs single-call — walks both keys (primary + fallback) so a
+        # single dead key doesn't bump us all the way down the cascade.
+        if provider == "elevenlabs":
+            tried_any = False
+            for key_label, key in _elevenlabs_keys():
+                tried_any = True
+                print(f"    Trying {key_label} (most realistic)...")
+                ok = await asyncio.to_thread(
+                    _elevenlabs_tts, full_text, output_path, language, key, key_label, series
+                )
+                if ok:
+                    print(f"    [OK] Full narration via {key_label} ({series})")
+                    return output_path, char_weights
+            if not tried_any:
+                # No keys configured — skip silently, don't pollute the log
+                pass
+            continue
+
+        # Gemini TTS — series-aware voice (Charon for myth, Puck for WhatIf)
+        if provider == "gemini":
+            if not os.environ.get("GEMINI_API_KEY", "").strip():
+                continue
+            gemini_voice = _gemini_voice_for(series)
+            print(f"    Trying Gemini TTS ({gemini_voice} voice for {series})...")
+            if await asyncio.to_thread(_gemini_tts, full_text, output_path, gemini_voice):
+                print(f"    [OK] Full narration via Gemini {gemini_voice}")
+                return output_path, char_weights
+            continue
+
+        # Edge TTS with SSML — tries primary then fallback voice
+        if provider == "edge_ssml":
+            print("    Trying Edge TTS (SSML, primary voice)...")
+            if await _edge_tts(full_text, voice_pri, output_path, use_ssml=True):
+                _normalize_audio(output_path)
+                print("    [OK] Full narration via Edge SSML")
+                return output_path, char_weights
+            print("    Trying Edge TTS (SSML, fallback voice)...")
+            if await _edge_tts(full_text, voice_alt, output_path, use_ssml=True):
+                _normalize_audio(output_path)
+                print("    [OK] Full narration via Edge SSML fallback")
+                return output_path, char_weights
+            continue
+
+        # Plain Edge TTS — bottom of barrel
+        if provider == "edge_plain":
+            print("    Trying Edge TTS (plain)...")
+            if await _edge_tts(full_text, voice_pri, output_path, use_ssml=False):
+                _normalize_audio(output_path)
+                print("    [OK] Full narration via Edge plain")
+                return output_path, char_weights
+            continue
+
+        # Unknown provider tag — log and skip rather than crash
+        print(f"    [warn] Unknown TTS provider in cascade: {provider!r} — skipping")
 
     raise RuntimeError("All TTS providers failed for full narration")
 
