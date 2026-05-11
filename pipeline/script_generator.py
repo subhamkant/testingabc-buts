@@ -8,15 +8,6 @@ def _call_llm(prompt: str) -> str:
     """
     Calls Groq (primary, 14 400 RPD free) then falls back to Gemini 2.5 Flash.
     Returns the raw text response.
-
-    Token budgets are sized to fit the longest prompts in this file —
-    Mahabharata's 2-pass dramatization step emits ~5-6k chars of bilingual
-    JSON (title + 100-150-word description + 17 tags + 5 scenes with both
-    English + Hindi narration + image/video prompts + character dialogue +
-    thumbnail prompt). Earlier defaults (Groq 4096, Gemini library default
-    of ~8192 output tokens) truncated mid-description on Mahabharata runs
-    and produced unparseable JSON. The values below are sized with ~2x
-    headroom over the longest observed valid output.
     """
     groq_key = os.environ.get("GROQ_API_KEY", "").strip()
 
@@ -29,24 +20,17 @@ def _call_llm(prompt: str) -> str:
                 model="llama-3.3-70b-versatile",
                 messages=[{"role": "user", "content": prompt}],
                 temperature=0.9,
-                max_tokens=8192,
+                max_tokens=4096,
             )
             return resp.choices[0].message.content.strip()
         except Exception as e:
             print(f"    Groq failed: {e} — falling back to Gemini...")
 
     # ── Fallback: Gemini 2.5 Flash ───────────────────────────────────────────
-    # Explicit max_output_tokens=16384 (was library default ~8192). Gemini 2.5
-    # Flash supports up to 65k output tokens; 16k is enough headroom for our
-    # longest bilingual script JSON without paying for tokens we don't use.
-    from google.genai import types as _genai_types
     client = genai.Client(api_key=os.environ["GEMINI_API_KEY"])
     response = client.models.generate_content(
         model="gemini-2.5-flash",
         contents=prompt,
-        config=_genai_types.GenerateContentConfig(
-            max_output_tokens=16384,
-        ),
     )
     return response.text.strip()
 
@@ -341,105 +325,10 @@ def _trim_narration(text: str, max_words: int = 45) -> str:
     return truncated + "..."
 
 
-def _repair_truncated_json(raw: str) -> str:
-    """
-    Best-effort repair for LLM JSON that got cut off mid-output (typically
-    because the model hit its max_output_tokens cap before closing all brackets).
-
-    Strategy — walk the string once tracking quote state and bracket stack, then:
-      1. If we ended inside a string literal, close it with `"`.
-      2. If the open-bracket stack ends with an object that has a dangling key
-         (`"foo":` with no value), append `null` so the object remains valid.
-      3. If the last meaningful char is a trailing `,`, drop it.
-      4. Close every remaining open bracket in correct nested order.
-
-    This salvages partial output instead of failing the whole pipeline. Caller
-    must still validate that critical fields (title, scenes) are present — a
-    description that arrives truncated will be a short partial string, not
-    None, so downstream code can detect and re-prompt or substitute.
-    """
-    stack = []          # 'object' | 'array' | 'string'
-    escape_next = False
-    last_non_ws = -1    # index of last non-whitespace char outside a string
-    expect_value = False  # True right after `:`, meaning a value is owed
-
-    for i, ch in enumerate(raw):
-        if stack and stack[-1] == "string":
-            if escape_next:
-                escape_next = False
-            elif ch == "\\":
-                escape_next = True
-            elif ch == '"':
-                stack.pop()
-                last_non_ws = i
-            # other chars inside a string are content; don't update last_non_ws
-        else:
-            if ch.isspace():
-                continue
-            last_non_ws = i
-            if ch == '"':
-                stack.append("string")
-                # Entering a string commits to a value — clear the pending-value
-                # flag so that a string that never closes won't trigger a stray
-                # `null` append in step (2) after we close the string in step (1).
-                expect_value = False
-            elif ch == "{":
-                stack.append("object")
-                expect_value = False
-            elif ch == "[":
-                stack.append("array")
-                expect_value = False
-            elif ch == "}":
-                if stack and stack[-1] == "object":
-                    stack.pop()
-                expect_value = False
-            elif ch == "]":
-                if stack and stack[-1] == "array":
-                    stack.pop()
-                expect_value = False
-            elif ch == ":":
-                expect_value = True
-            elif ch == ",":
-                expect_value = False
-            else:
-                # Bare value char (digit / letter / etc.) — we got a value, so
-                # the colon's debt is paid.
-                expect_value = False
-
-    repaired = raw
-
-    # (1) Close an open string.
-    if stack and stack[-1] == "string":
-        repaired += '"'
-        stack.pop()
-
-    # (2) If a colon was followed only by whitespace + EOF (the closed string
-    # *was* the key), append `null` to give the key a value.
-    # We detect this by looking at the chars after our string close. The
-    # `expect_value=True` flag is the cleanest signal.
-    if expect_value:
-        repaired += " null"
-        expect_value = False
-
-    # (3) Drop a dangling comma before we close brackets.
-    import re as _re
-    repaired = _re.sub(r",\s*$", "", repaired)
-
-    # (4) Close brackets in reverse-nested order.
-    for kind in reversed(stack):
-        if kind == "object":
-            repaired += "}"
-        elif kind == "array":
-            repaired += "]"
-
-    return repaired
-
-
 def _parse_llm_json(raw: str) -> dict:
     """
     Robust JSON parser for LLM output.
-    Handles: unescaped newlines inside strings, trailing commas, stray control
-    chars, AND truncated-mid-output responses (close-the-brackets repair pass).
+    Handles: unescaped newlines inside strings, trailing commas, stray control chars.
     """
     import re
 
@@ -480,20 +369,8 @@ def _parse_llm_json(raw: str) -> dict:
 
     try:
         return json.loads(cleaned)
-    except json.JSONDecodeError:
-        pass
-
-    # Fix 3: last resort — repair a truncated-mid-output response by closing
-    # any open string + brackets. Salvages partial scripts so the pipeline can
-    # at least proceed to validation (which will detect missing/short fields
-    # and re-prompt instead of crashing the whole job).
-    try:
-        repaired = _repair_truncated_json(cleaned)
-        parsed = json.loads(repaired)
-        print(f"    [warn] LLM JSON was truncated; salvaged via repair pass")
-        return parsed
     except json.JSONDecodeError as e:
-        raise ValueError(f"Could not parse LLM JSON after cleaning + repair: {e}\n{cleaned[:400]}")
+        raise ValueError(f"Could not parse LLM JSON after cleaning: {e}\n{cleaned[:400]}")
 
 
 def _generate_story_outline(topic: str) -> list:
