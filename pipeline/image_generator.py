@@ -20,11 +20,7 @@ from urllib.parse import quote
 # WhatIf series uses a different per-style suffix from _WHATIF_STYLE_SUFFIXES
 # based on the script's visual_style — this Mahabharata suffix does not apply.
 STYLE_SUFFIX = (
-    "photorealistic cinematic film still, "
-    "shot on Arri Alexa LF with 35mm anamorphic lens, "
-    "Kodak Vision3 5219 film stock, professional cinema-grade color grading, "
-    "physically-based skin shader with accurate sub-surface scattering, "
-    "ancient India epic Mahabharata, "
+    "photorealistic cinematic film still, ancient India epic Mahabharata, "
     "Star Bharat Mahabharat live-action / Baahubali period-film aesthetic, "
     "real human faces with natural skin tones and accurate skin texture, "
     "balanced cinematic color grading — neutral whites, true skin colors, "
@@ -339,53 +335,21 @@ def generate_image_bytes(prompt: str, seed: int, width: int, height: int, mood: 
     """
     Tries HF -> Cloudflare -> Pollinations until one returns a usable image.
     Returns (image_bytes, provider_name). Raises only if all three fail.
-
-    HF FLUX-schnell is retried 3x with backoff before falling through. Evidence:
-    the "What If Humans Vanish" reference video hit 100% HF on a single attempt
-    because the quota was fresh; later runs leak to Pollinations the moment HF
-    returns 429/timeout, even though the rate-limit window typically clears in
-    seconds. Retrying inside the HF tier keeps quality high without changing
-    provider order.
-
-    Pollinations success is logged as `[warn] image generated via Pollinations`
-    so we can spot quality contamination in pipeline logs.
     """
     full_prompt = _build_full_prompt(prompt, mood, style_suffix=style_suffix)
-
+    providers = [
+        ("hf-flux-schnell",         lambda: _gen_hf(full_prompt, seed, width, height)),
+        ("cloudflare-flux-schnell", lambda: _gen_cloudflare(full_prompt, seed, width, height)),
+        ("pollinations-flux-realism", lambda: _gen_pollinations(full_prompt, seed, width, height)),
+    ]
     last_err = None
-
-    # Tier 1 — HF FLUX-schnell, retry-with-backoff. 2s -> 4s -> 8s, total
-    # worst-case +14s per failing shot; typical-case the second attempt hits.
-    _HF_BACKOFFS = [0, 2, 4, 8]
-    for attempt, wait_before in enumerate(_HF_BACKOFFS):
-        if wait_before:
-            time.sleep(wait_before)
+    for name, fn in providers:
         try:
-            data = _gen_hf(full_prompt, seed, width, height)
-            return data, "hf-flux-schnell"
+            data = fn()
+            return data, name
         except Exception as e:
-            last_err = f"hf-flux-schnell (attempt {attempt+1}/{len(_HF_BACKOFFS)}): {e}"
-            if attempt < len(_HF_BACKOFFS) - 1:
-                print(f"    [retry] {last_err} — waiting {_HF_BACKOFFS[attempt+1]}s")
+            last_err = f"{name}: {e}"
             continue
-
-    # Tier 2 — Cloudflare FLUX-schnell. Free, decent quality when quota allows.
-    try:
-        data = _gen_cloudflare(full_prompt, seed, width, height)
-        return data, "cloudflare-flux-schnell"
-    except Exception as e:
-        last_err = f"cloudflare-flux-schnell: {e}"
-
-    # Tier 3 — Pollinations FLUX-realism. Last resort; muddier output but
-    # essentially infinite quota. Flag the contamination in the log so a human
-    # can decide whether the resulting video is shippable.
-    try:
-        data = _gen_pollinations(full_prompt, seed, width, height)
-        print(f"    [warn] image generated via Pollinations (HF + Cloudflare both failed) — quality may be muddy")
-        return data, "pollinations-flux-realism"
-    except Exception as e:
-        last_err = f"pollinations-flux-realism: {e}"
-
     raise RuntimeError(f"all image providers failed; last={last_err}")
 
 
