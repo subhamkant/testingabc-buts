@@ -376,7 +376,7 @@ def generate_image_bytes(prompt: str, seed: int, width: int, height: int, mood: 
     raise RuntimeError(f"all image providers failed; last={last_err}")
 
 
-def generate_images(scenes: list, single_shot: bool = False, series: str = "mahabharata", visual_style: str = "") -> list:
+def generate_images(scenes: list, single_shot: bool = False, series: str = "mahabharata", visual_style: str = "", ck=None) -> list:
     """
     Generates portrait (768x1344) images per scene.
 
@@ -390,7 +390,20 @@ def generate_images(scenes: list, single_shot: bool = False, series: str = "maha
     series + visual_style select the style suffix and skip Mahabharata-specific
     character injection when generating WhatIf imagery.
 
+    PARTIAL RESUME — if `ck` (CheckpointStore) is provided, this function:
+      1. Reads `visuals_partial.json` from the cache on entry. Any scene
+         already listed there has its cached shot paths loaded and the
+         generation step is skipped for that scene — the run resumes
+         mid-batch instead of regenerating everything from scratch.
+      2. After each new scene's shots complete (success OR placeholder
+         fallback), the shots are immediately saved to the cache and
+         `visuals_partial.json` is updated atomically. A cancellation
+         mid-batch (e.g. 29-min GHA cap) preserves all work up to the
+         last completed scene.
+
     Returns list[list[str]] — outer index = scene, inner index = shot.
+    When `ck` is provided returned paths point into the cache directory;
+    otherwise they point into temp/images.
     """
     os.makedirs("temp/images", exist_ok=True)
     scene_groups = []
@@ -398,7 +411,36 @@ def generate_images(scenes: list, single_shot: bool = False, series: str = "maha
     angles = _SHOT_ANGLES[:1] if single_shot else _SHOT_ANGLES
     style_suffix = _resolve_style_suffix(series, visual_style)
 
+    # ── Partial-resume bootstrap ──────────────────────────────────────
+    # visuals_partial.json shape: {"<scene_idx>": ["<abs_cache_path_shot0>", ...]}
+    # Only honored when the cached files still exist on disk (defensive — a
+    # botched artifact restore could leave a manifest pointing at missing
+    # files; in that case we regenerate from scratch for safety).
+    partial_key = "visuals_partial.json"
+    partial: dict = {}
+    if ck is not None and ck.has(partial_key):
+        try:
+            raw = ck.load_json(partial_key)
+            for k, v in (raw or {}).items():
+                if not isinstance(v, list):
+                    continue
+                if all(isinstance(p, str) and os.path.exists(p) for p in v) and v:
+                    partial[int(k)] = v
+            if partial:
+                print(f"    [resume] Partial visuals manifest: {len(partial)} of "
+                      f"{len(scenes)} scenes already cached — will skip those")
+        except Exception as _e:
+            print(f"    [resume] Could not load partial manifest: {_e} — regenerating from scratch")
+            partial = {}
+
     for i, scene in enumerate(scenes):
+        # ── Resume path ───────────────────────────────────────────────
+        if i in partial:
+            shot_paths = list(partial[i])
+            scene_groups.append(shot_paths)
+            print(f"    [resume] Scene {i+1}/{len(scenes)} loaded from partial checkpoint — {len(shot_paths)} shots")
+            continue
+
         shot_paths = []
         mood = scene.get("mood", "")
 
@@ -443,6 +485,29 @@ def generate_images(scenes: list, single_shot: bool = False, series: str = "maha
                 print(f"    [~] Placeholder for scene {i+1} shot {j+1}")
 
             time.sleep(1)
+
+        # ── Per-scene checkpoint ──────────────────────────────────────
+        # Save the just-finished scene to the cache + update partial manifest
+        # so the next workflow attempt resumes from here on cancellation.
+        if ck is not None:
+            cached_paths = []
+            for j_idx, temp_path in enumerate(shot_paths):
+                ext = os.path.splitext(temp_path)[1] or ".jpg"
+                cache_name = f"visuals/scene_{i:02d}_shot_{j_idx:02d}{ext}"
+                try:
+                    cached_paths.append(ck.save_file(cache_name, temp_path))
+                except Exception as _e:
+                    print(f"    [warn] Could not checkpoint scene {i+1} shot {j_idx+1}: {_e}")
+                    cached_paths.append(temp_path)
+            # Replace returned paths with cache paths so downstream uses the cache copy
+            shot_paths = cached_paths
+            try:
+                # Atomic load → update → save (save_json itself is atomic)
+                current = ck.load_json(partial_key) if ck.has(partial_key) else {}
+                current[str(i)] = cached_paths
+                ck.save_json(partial_key, current)
+            except Exception as _e:
+                print(f"    [warn] Could not update partial manifest for scene {i+1}: {_e}")
 
         scene_groups.append(shot_paths)
         print(f"    [OK] Scene {i+1}/{len(scenes)} complete — {len(shot_paths)} shots")

@@ -321,7 +321,9 @@ async def run_pipeline(language: str = "en", test_mode: bool = False, test_uploa
 
             if video_path is None:
                 print("\nStep 3 — Generating images via free cascade (HF -> Cloudflare -> Pollinations)...")
-                image_files = generate_images(script["scenes"], series="mahabharata")
+                # Pass ck so generate_images can checkpoint after EACH scene
+                # completes — survives 29-min cap mid-batch and resumes there.
+                image_files = generate_images(script["scenes"], series="mahabharata", ck=ck)
                 if script.get("thumbnail_prompt"):
                     generate_thumbnail(script["thumbnail_prompt"], series="mahabharata")
                 print("\nStep 4 — Assembling video with continuous audio...")
@@ -521,7 +523,8 @@ async def run_krishna_speech(test_mode: bool = False, test_upload: bool = False)
 
             if video_path is None:
                 print("\nStep 3 — Generating images (Krishna+listener two-shots)...")
-                image_files = generate_images(script["scenes"], series="krishna")
+                # Per-scene checkpoint via ck — see Mahabharata flow comment above.
+                image_files = generate_images(script["scenes"], series="krishna", ck=ck)
                 if script.get("thumbnail_prompt"):
                     generate_thumbnail(script["thumbnail_prompt"], series="krishna")
                 print("\nStep 4 — Assembling video with continuous audio...")
@@ -743,8 +746,13 @@ async def run_whatif_phase(language: str, test_mode: bool = False, test_upload: 
 
             if clip_files is None:
                 print("\nStep 2 — Generating shared images via free cascade...")
+                # Per-scene checkpoint via ck so a 29-min-cap cancellation
+                # mid-batch preserves completed scenes for the retry job.
+                # The bulk visuals_manifest.json save below remains as the
+                # "all done" marker; partial-resume uses visuals_partial.json.
                 image_files = generate_images(
                     dual_script["scenes"], series="whatif", visual_style=visual_style,
+                    ck=ck,
                 )
                 if dual_script.get("thumbnail_prompt"):
                     generate_thumbnail(
