@@ -121,71 +121,84 @@ def _gemini_call_with_retry(client, prompt: str, config) -> str:
 
 
 # ── Story Topics — well-known Mahabharata incidents ───────────────────────────
+# Topic phrasing matters more than topic choice. Every entry follows the
+# Bhishma-template that produced the channel's best-performing video:
+#   [Named character]'s [ONE specific X] — [consequence / payoff]
+#
+# The "ONE X" frames a single central thread the LLM can echo in Scene 1's
+# hook AND the final scene's resolution (see NARRATIVE BOOKEND rule in the
+# Mahabharata script prompt). The "— consequence" half gives the payoff the
+# bookend will land on.
+#
+# Reference: "Bhishma's sacrifice — how ONE OATH destroyed a dynasty" → Scene 1
+# hook "एक प्रतिज्ञा ने कुरुवंश को शाप दिया था" → Scene 6 closure "एक वचन
+# ने कुरुवंश को... वंचित कर दिया". Same noun. Same subject. Closure delivered.
 STORY_TOPICS = [
-    # ── Core canonical incidents (original set) ─────────────────────────────
-    "The Kurukshetra war begins — conches blow and armies clash",
-    "Krishna reveals the Bhagavad Gita to the trembling Arjuna",
-    "Draupadi's vastraharan — her divine cry saved by Krishna",
-    "Karna's tragic birth, abandonment and lifelong struggle for respect",
-    "The dice game — Shakuni cheats and the Pandavas lose everything",
-    "Abhimanyu enters the Chakravyuha alone and fights to his last breath",
-    "Bhishma falls on a bed of arrows at Kurukshetra",
-    "Krishna shows Arjuna his Vishwaroop — the terrifying cosmic form",
-    "Draupadi's swayamvara — only Arjuna pierces the rotating fish",
-    "Ekalavya cuts off his thumb as Gurudakshina for Drona",
-    "Duryodhana humiliates Draupadi in the Kuru royal court",
-    "The lac palace trap — Duryodhana tries to burn the Pandavas alive",
-    "Karna donates his armour to Indra and faces certain death",
-    "The death of Jayadratha — Arjuna's vow and Krishna's miracle",
-    "Bhima kills Duryodhana — the war of Kurukshetra ends",
-    "Ashwatthama's revenge — the massacre of sleeping warriors",
-    "Gandhari's curse destroys Krishna's entire Yadava clan",
-    "The Pandavas' final journey — one by one they fall in the Himalayas",
-    "Karna's reunion with Kunti — the secret she kept for decades",
-    "Drona teaches archery — Arjuna sees only the eye of the bird",
+    # ── Core canonical incidents (rephrased: claim → consequence) ─────────
+    "Kurukshetra's opening conches — the one moment that ended an entire dynasty",
+    "Krishna's one battlefield conversation with Arjuna — how the Bhagavad Gita began with a single moment of doubt",
+    "Draupadi's one cry for help — how the vastraharan was stopped by a miracle that doomed the Kuru clan",
+    "Karna's one secret — how being born to a god still couldn't save him from being called sutaputra his whole life",
+    "Shakuni's one loaded dice — how a rigged game cost the Pandavas their kingdom and their wife",
+    "Abhimanyu's one decision to enter the Chakravyuha — how a 16-year-old's courage trapped him in a maze of death",
+    "Bhishma's one moment of pity for Shikhandi — how invincibility ended on a bed of arrows",
+    "Krishna's one cosmic form — the Vishwaroop vision that made Arjuna forget he was holding a bow",
+    "Draupadi's one impossible test — how a rotating fish chose the husband who would change history",
+    "Ekalavya's one gurudakshina — the severed thumb that revealed Drona's deepest fear of being surpassed",
+    "Duryodhana's one act in court — how humiliating Draupadi sealed the Kuru dynasty's destruction",
+    "Duryodhana's one fire trap — how the lac palace was built to burn the Pandavas alive in their sleep",
+    "Karna's one gift to Indra — how donating his divine armour guaranteed his own death",
+    "Arjuna's one vow at sunset — how Jayadratha's death required a miracle from Krishna himself",
+    "Bhima's one strike at Duryodhana's thigh — how the Kurukshetra war ended with a forbidden blow",
+    "Ashwatthama's one night of revenge — how a massacre of sleeping warriors became his eternal curse",
+    "Gandhari's one curse to Krishna — how a mother's grief destroyed an entire divine clan",
+    "The Pandavas' one final pilgrimage — how five brothers fell one by one on the Himalayan slopes",
+    "Karna's one reunion with Kunti — the secret a mother kept for decades, revealed too late",
+    "Drona's one archery test — how only Arjuna saw the bird's eye and earned the title of greatest archer",
 
-    # ── YouTube-suggested topics (expanded reach into lesser-known incidents)
-    # Curated from algorithm-recommended Mahabharata search terms — these are
-    # what viewers are actively searching for but few channels cover well.
-    "Krishna creates a fake sunset to trap Jayadratha — Arjuna's vengeance fulfilled",
-    "Jayadratha's lone stand against the entire Pandava army on day 13",
-    "Jayadratha's severed head lands in his father's meditative lap — a curse fulfilled",
-    "Krishna offers Karna the throne before the war — and Karna refuses, sealing his fate",
-    "Bhishma faces Amba reborn as Shikhandi — the curse that ends an unstoppable warrior",
-    "Gandhari blindfolds herself for Dhritarashtra — and never sees her hundred sons",
-    "Aravan offers his life so the Pandavas can win — a one-day marriage to Mohini",
-    "Sahadeva sees every future moment — but is cursed to never warn anyone",
-    "Ashwatthama's immortality becomes his eternal punishment after the war",
-    "Krishna beheads Shishupala with the Sudarshan — exactly 100 sins counted",
-    "Kunti hides Karna's identity from her own sons — until the night before war",
-    "Barbarika's three arrows could end the war in one breath — Krishna asks for his head",
-    "Parshurama curses Karna — the moment Karna forgets his weapons in battle",
-    "Balarama refuses to fight at Kurukshetra — chooses a pilgrimage instead",
-    "Vidura warns Dhritarashtra — and the blind king refuses to listen, again and again",
-    "Yudhishthira answers the Yaksha's questions — the test that revives his brothers",
-    "Shikhandi appears on the battlefield — and Bhishma lays down his bow",
-    "Arjuna's silent grief after Abhimanyu's death — and the vow that consumed him",
-    "The forgotten warriors who delayed Arjuna so Jayadratha could survive",
-    "Nakula's silent mastery — the most beautiful warrior of the Mahabharata",
-    "The hidden conversation between Bhishma and Amba — a tragic cosmic destiny",
-    "Krishna's celestial mechanics — orchestrating the premature sunset",
-    "Why Drona broke his own teaching for one student — Arjuna's unspoken privilege",
-    "Bhima vows to drink Dushasana's blood — and keeps his word at Kurukshetra",
-    "The night before the war — Karna learns the truth from Kunti and accepts his fate",
+    # ── YouTube-suggested topics (rephrased to match the same template) ───
+    "Krishna's one fake sunset — the celestial trick that delivered Jayadratha to Arjuna's vow",
+    "Jayadratha's one day of glory — how he held off the entire Pandava army on day 13 of war",
+    "Jayadratha's one severed head — the curse that fulfilled itself in his father's meditating lap",
+    "Krishna's one offer to Karna — the throne refused, the friendship lost, the fate sealed",
+    "Bhishma's one weakness — how Amba reborn as Shikhandi ended the war's most unstoppable warrior",
+    "Gandhari's one blindfold — the lifetime vow that left her never knowing her hundred sons' faces",
+    "Aravan's one-day marriage to Mohini — the sacrifice that bought the Pandavas their victory",
+    "Sahadeva's one curse — the gift of seeing every future moment but never being allowed to warn anyone",
+    "Ashwatthama's one immortal punishment — how being unable to die became worse than dying",
+    "Krishna's one Sudarshan strike — the 100th sin that beheaded Shishupala in a single moment",
+    "Kunti's one decades-long secret — the night before war when she finally told Karna the truth",
+    "Barbarika's one head — the sacrifice Krishna demanded so a single warrior couldn't end the war in one breath",
+    "Parshurama's one curse on Karna — the forgotten weapons that decided the moment of his death",
+    "Balarama's one refusal — how Krishna's brother walked away from Kurukshetra and chose pilgrimage instead",
+    "Vidura's one warning to Dhritarashtra — the blind king's refusal that doomed his hundred sons",
+    "Yudhishthira's one Yaksha encounter — the test of dharma that revived his four dead brothers",
+    "Shikhandi's one appearance on the battlefield — the moment Bhishma laid down his bow forever",
+    "Arjuna's one vow after Abhimanyu's death — how a father's grief consumed an entire day of war",
+    "The forgotten warriors' one stand — how unnamed kings delayed Arjuna so Jayadratha could survive a few more hours",
+    "Nakula's one quiet mastery — the most beautiful warrior of the Mahabharata, remembered for his silence",
+    "Bhishma and Amba's one hidden conversation — the cosmic destiny set in motion by a rejected princess",
+    "Krishna's one celestial trick — how he created a premature sunset to break Jayadratha's last shield",
+    "Drona's one broken teaching — the unspoken privilege that made Arjuna the only true archer in his class",
+    "Bhima's one vow at the dice hall — how he kept his word to drink Dushasana's blood at Kurukshetra",
+    "Karna's one night of truth — when Kunti revealed his identity and he chose his fate anyway",
 ]
 
 # ── Motivational Themes ───────────────────────────────────────────────────────
+# Same Bhishma-template: [character/concept]'s [one X] — [consequence/payoff].
+# "Bhishma's sacrifice — how one oath destroyed a dynasty" is the gold standard
+# this list models from (the channel's best-performing video to date).
 MOTIVATIONAL_THEMES = [
-    "Karma Yoga — act without attachment, Krishna's greatest lesson",
-    "Why Arjuna almost quit before the greatest battle of his life",
-    "Karna's dignity — the man who gave everything and asked nothing",
+    "Krishna's one Karma Yoga lesson — how acting without attachment freed Arjuna to fight",
+    "Arjuna's one moment of doubt — how the greatest archer almost quit before the greatest battle",
+    "Karna's one quiet dignity — the man who gave everything and never once asked for credit",
     "Bhishma's sacrifice — how one oath destroyed a dynasty",
-    "The real lesson of the Bhagavad Gita most people never learn",
-    "Why Krishna did not fight at Kurukshetra but still won the war",
-    "Draupadi's resilience — how she never broke despite everything",
-    "Yudhishthira's truth — the one man who never lied in the Mahabharata",
-    "The Pandavas' 13 years of exile — patience as the greatest weapon",
-    "What Vidura told Dhritarashtra that could have prevented the war",
+    "The Bhagavad Gita's one hidden lesson — what most readers miss after decades of study",
+    "Krishna's one strategic choice — how refusing to fight at Kurukshetra still won him the war",
+    "Draupadi's one unbroken spirit — how a queen survived five husbands' failures and never bent",
+    "Yudhishthira's one lifelong truth — the man who never lied, and the day even he had to",
+    "The Pandavas' 13 years of exile — how patience became their deadliest weapon",
+    "Vidura's one warning — the words to Dhritarashtra that could have prevented the entire war",
 ]
 
 # ── Krishna Direct-Address Series ─────────────────────────────────────────────
@@ -1446,6 +1459,50 @@ def generate_script(
 
     The FINAL scene is the only one that may end with closure or a moral.
 
+    ═══════════════════════════════════════════════════════════════
+    NARRATIVE BOOKEND — THE FINAL SCENE MUST CLOSE THE HOOK
+    ═══════════════════════════════════════════════════════════════
+    Scene 1's hook poses a SPECIFIC claim — a named character did a specific
+    thing that had a specific consequence. The FINAL scene MUST echo that
+    same claim and deliver its payoff. Same central noun. Same actor. Same
+    consequence-frame.
+
+    This bookend is what makes the viewer feel CLOSURE. Without it the video
+    ends but does not RESOLVE — and the algorithm sees a low "ended-watching"
+    signal even when viewers stayed.
+
+    This is the single biggest narrative-cohesion lever and the strongest
+    differentiator between videos that retain to 100% and ones that drop at 80%.
+
+    REFERENCE EXAMPLE — the channel's highest-performing Mahabharata video to date:
+
+      HOOK (Scene 1):
+        "क्या आप जानते हैं भीष्म की एक प्रतिज्ञा ने कुरुवंश को शाप दिया था?"
+        ("Did you know Bhishma's ONE VOW cursed the KURU DYNASTY?")
+        → Central noun: "एक प्रतिज्ञा" (one vow)
+        → Subject: कुरुवंश (Kuru dynasty)
+        → Claim: cursed / harmed
+
+      CLOSURE (Final scene):
+        "एक वचन ने कुरुवंश को उनके सबसे महान योद्धा से वंचित कर दिया।"
+        ("One vow deprived the Kuru dynasty of their greatest warrior.")
+        → Echoes "एक वचन" ≈ "एक प्रतिज्ञा" (same noun, light synonym ok)
+        → Same subject: कुरुवंश
+        → Payoff delivered: stripped of greatest warrior
+
+      Notice: Same syntactic shape "एक X ने कुरुवंश को Y". Viewer hears
+      the rhyme, feels closure. The script TELLS a complete story.
+
+    GOOD bookend (NEW topic — Karna):
+      Hook:    "Karna's ONE PROMISE to Kunti changed the war's outcome."
+      Closure: "One promise — and Karna died fighting the wrong brothers."
+               (Same noun "one promise". Same actor "Karna". Payoff: died.)
+
+    BAD ending (no bookend — sounds wise but feels untethered):
+      Hook:    "Karna's one promise to Kunti changed everything."
+      Closure: "Such is the wisdom of dharma."
+               (Generic moral. Doesn't echo the hook noun or subject.)
+
     Rules for EVERY scene:
     - Each scene MUST advance the story. No filler. No repetition.
     - The story must be SELF-CONTAINED — a viewer who has never heard
@@ -1453,6 +1510,9 @@ def generate_script(
     - Use vivid, present-tense, sensory language ("the air thickens",
       "swords clash", "his eyes burn") — not abstract moralizing.
     - Reference specific characters and visible action in each scene.
+    - ALL scenes orbit ONE CENTRAL THREAD (the noun/event Scene 1 named).
+      Don't make scene 4 about an unrelated Mahabharata fact just because
+      it's interesting — every scene must add a new angle to the SAME thread.
 
     ═══════════════════════════════════════════════════════════════
     CONTENT QUALITY — STRICTLY ENFORCED
