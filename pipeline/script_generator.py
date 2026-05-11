@@ -2,6 +2,19 @@ from google import genai
 import json
 import random
 import os
+import time
+
+
+# Transient-error signatures that warrant a retry rather than failing the run.
+# Covers Gemini 5xx (UNAVAILABLE/high demand), 429 rate-limit, and network
+# timeouts — all of which clear within seconds-to-minutes in practice.
+_GEMINI_TRANSIENT_MARKERS = (
+    "503", "UNAVAILABLE", "high demand", "currently experiencing",
+    "500", "502", "504", "INTERNAL",
+    "429", "RESOURCE_EXHAUSTED", "rate limit",
+    "timeout", "Timeout", "TimeoutError",
+    "connection reset", "ConnectionError",
+)
 
 
 def _call_llm(prompt: str) -> str:
@@ -15,8 +28,16 @@ def _call_llm(prompt: str) -> str:
     English + Hindi narration + image/video prompts + character dialogue +
     thumbnail prompt). Earlier defaults (Groq 4096, Gemini library default
     of ~8192 output tokens) truncated mid-description on Mahabharata runs
-    and produced unparseable JSON. The values below are sized with ~2x
-    headroom over the longest observed valid output.
+    and produced unparseable JSON. Values below have ~2x headroom over the
+    longest observed valid output.
+
+    Gemini fallback is hardened against the failure mode observed on
+    2026-05-11: Groq daily quota exhausted -> Gemini returned `503 UNAVAILABLE
+    "This model is currently experiencing high demand"`. The naive single-call
+    fallback crashed the whole workflow attempt. We now retry the same model
+    with exponential backoff on transient errors (5xx / 429 / timeout), then
+    fall over to gemini-2.5-flash-lite (lower-demand sibling) as a last resort
+    before raising.
     """
     groq_key = os.environ.get("GROQ_API_KEY", "").strip()
 
@@ -35,20 +56,69 @@ def _call_llm(prompt: str) -> str:
         except Exception as e:
             print(f"    Groq failed: {e} — falling back to Gemini...")
 
-    # ── Fallback: Gemini 2.5 Flash ───────────────────────────────────────────
+    # ── Fallback: Gemini 2.5 Flash with retry-on-transient ───────────────────
     # Explicit max_output_tokens=16384 (was library default ~8192). Gemini 2.5
     # Flash supports up to 65k output tokens; 16k is enough headroom for our
     # longest bilingual script JSON without paying for tokens we don't use.
     from google.genai import types as _genai_types
     client = genai.Client(api_key=os.environ["GEMINI_API_KEY"])
-    response = client.models.generate_content(
-        model="gemini-2.5-flash",
-        contents=prompt,
-        config=_genai_types.GenerateContentConfig(
-            max_output_tokens=16384,
-        ),
-    )
-    return response.text.strip()
+    config = _genai_types.GenerateContentConfig(max_output_tokens=16384)
+
+    return _gemini_call_with_retry(client, prompt, config)
+
+
+def _gemini_call_with_retry(client, prompt: str, config) -> str:
+    """
+    Call gemini-2.5-flash with retry-on-transient (503/429/5xx/timeout),
+    then fall over to gemini-2.5-flash-lite as a last-resort sibling model.
+
+    Backoff schedule: 0s, 8s, 20s, 45s — total worst-case wait ~73s before
+    we even try the fallback model. That's tolerable because the next layer
+    up (the workflow's chained retry job) would otherwise spin up a fresh
+    runner from scratch (~90s of setup) only to crash on the same call.
+    """
+    backoffs = [0, 8, 20, 45]
+    last_err = ""
+
+    # Tier 1 — gemini-2.5-flash with retry
+    for attempt, wait in enumerate(backoffs):
+        if wait:
+            print(f"    Gemini 2.5 Flash retry in {wait}s (attempt {attempt + 1}/{len(backoffs)})...")
+            time.sleep(wait)
+        try:
+            response = client.models.generate_content(
+                model="gemini-2.5-flash",
+                contents=prompt,
+                config=config,
+            )
+            return response.text.strip()
+        except Exception as e:
+            err_str = str(e)
+            last_err = err_str[:200]
+            is_transient = any(m in err_str for m in _GEMINI_TRANSIENT_MARKERS)
+            if not is_transient:
+                # Non-transient error — bubble up immediately, don't waste retry budget
+                raise
+            print(f"    Gemini 2.5 Flash transient error: {err_str[:120]}")
+            # Loop continues to next backoff slot
+
+    # Tier 2 — gemini-2.5-flash-lite fallback (lighter sibling, less demand)
+    print(f"    Gemini 2.5 Flash exhausted retries — trying gemini-2.5-flash-lite as last resort...")
+    try:
+        response = client.models.generate_content(
+            model="gemini-2.5-flash-lite",
+            contents=prompt,
+            config=config,
+        )
+        print(f"    [OK] gemini-2.5-flash-lite succeeded as fallback")
+        return response.text.strip()
+    except Exception as e:
+        raise RuntimeError(
+            f"Both Gemini models failed. "
+            f"flash (after {len(backoffs)} attempts): {last_err}; "
+            f"flash-lite: {str(e)[:200]}"
+        )
+
 
 # ── Story Topics — well-known Mahabharata incidents ───────────────────────────
 STORY_TOPICS = [
