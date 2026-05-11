@@ -335,10 +335,18 @@ def _gen_cloudflare(prompt: str, seed: int, width: int, height: int) -> bytes:
 def _gen_pollinations(prompt: str, seed: int, width: int, height: int) -> bytes:
     encoded  = quote(prompt)
     negative = quote(_NEGATIVE)
+    # model=flux: bare FLUX-schnell, no postprocessing filter applied.
+    # Was model=flux-realism — that variant adds a "realism" LoRA + heavy
+    # warm/saturated filter on top of FLUX-schnell, which is what gave the
+    # earlier Pollinations-rendered scenes the muddy plastic-CGI look the
+    # user wanted to move away from (Anger's Fire register). Bare flux
+    # produces output closer to HF FLUX-schnell — sharper, cleaner, no
+    # forced color wash. Switch is reversible via env or one-line revert.
+    pollinations_model = os.environ.get("POLLINATIONS_MODEL", "flux").strip() or "flux"
     url = (
         f"https://image.pollinations.ai/prompt/{encoded}"
         f"?width={width}&height={height}&seed={seed}"
-        f"&model=flux-realism&nologo=true&enhance=true&negative={negative}"
+        f"&model={pollinations_model}&nologo=true&enhance=true&negative={negative}"
     )
     resp = requests.get(url, timeout=45)
     if resp.status_code != 200 or len(resp.content) < _MIN_BYTES:
