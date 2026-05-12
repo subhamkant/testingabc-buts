@@ -828,6 +828,51 @@ BAD (no bookend — generic moralizing closer):
    Viewer hears it as a separate sentence, not as resolution.)
 
 ═══════════════════════════════════════════════════════════════
+SHOW, DON'T TELL — THIS IS THE BORING-PROOF RULE
+═══════════════════════════════════════════════════════════════
+Boring science scripts default to ENUMERATING ("the climate changes,
+ecosystems collapse, species go extinct"). Engaging science scripts
+SHOW one concrete image at a time, anchored in a human-scale detail
+the viewer can FEEL.
+
+Every non-final scene MUST contain at least TWO of:
+  1. A SENSORY DETAIL — what you'd hear / smell / feel
+     ("the air tastes like burnt copper", "skin prickles before the
+      shockwave hits", "a low hum that wasn't there yesterday")
+  2. A HUMAN-SCALE ANCHOR — what one person would experience
+     ("a farmer in Kansas wakes to find the dawn 90 minutes late",
+      "your phone battery dies and never comes back")
+  3. A SPECIFIC NUMBER + UNIT — not "many" or "lots" but
+     "847 cubic kilometers of ash", "7 minutes after sunrise",
+     "every cell in a human body weighs 2% more"
+  4. A NAMED OBJECT IN CLOSE-UP — not "the city" but
+     "a single traffic light blinking red over an empty intersection",
+     "the dust on a windowsill nobody's wiped in three weeks"
+
+BAD (telling — enumerates without anchoring):
+  "Volcanic eruptions deeply impact human societies with widespread
+   destruction, displacement, and loss of life."
+
+GOOD (showing — two anchors in one beat):
+  "In Reykjavík, the streetlights stay on at noon. A child draws her
+   finger through the ash on a parked car — it's been three days."
+
+═══════════════════════════════════════════════════════════════
+MID-SCENE TURN — STOPS SCROLL-AT-SCENE-2
+═══════════════════════════════════════════════════════════════
+At least 2 non-final scenes MUST contain a TURN at the halfway mark.
+The scene starts heading one direction, then pivots. This is what
+makes a viewer feel "wait, what?" inside a scene — not just between
+scenes.
+
+GOOD turn:
+  "The eruption ends. Birds return to the sky. — Then the second
+   one starts, 1,200 kilometers away."
+
+BAD (no turn — single linear beat):
+  "The eruption ends and the climate begins to recover over decades."
+
+═══════════════════════════════════════════════════════════════
 CONTENT QUALITY
 ═══════════════════════════════════════════════════════════════
 - Every sentence must contain a NEW concrete detail (a specific number, place, organism, mechanism, timescale).
@@ -1573,6 +1618,92 @@ def generate_script(
       Hook:    "Karna's one promise to Kunti changed everything."
       Closure: "Such is the wisdom of dharma."
                (Generic moral. Doesn't echo the hook noun or subject.)
+
+    ═══════════════════════════════════════════════════════════════
+    SHOW, DON'T TELL — THIS IS THE BORING-PROOF RULE
+    ═══════════════════════════════════════════════════════════════
+    Boring mythology scripts default to SUMMARIZING ("then he took
+    a vow", "then she cursed him", "then they fought"). Engaging
+    mythology scripts SHOW one concrete image at a time — a hand
+    raised, a sound, a single look. The viewer doesn't need every
+    fact; they need to FEEL the room.
+
+    Every non-final scene MUST contain at least TWO of:
+      1. A DIRECT QUOTED LINE of dialogue from a named character.
+         Keep it ≤ 8 words. Use real Hindi/Sanskrit-flavored speech.
+         Example: कृष्ण बोले — "धर्म रुकता नहीं, अर्जुन।"
+                  (Krishna said — "Dharma does not pause, Arjuna.")
+      2. A SENSORY DETAIL — what someone HEARS / SMELLS / FEELS in
+         the room, not what they think.
+         Example: शंख की गूंज दीवारों में रह गई।
+                  (The conch's echo lingered in the walls.)
+         Example: हस्तिनापुर के दीप कांप उठे।
+                  (Hastinapur's oil lamps trembled.)
+      3. A SPECIFIC PHYSICAL ACTION — what someone does with hands,
+         eyes, breath, footsteps. Not "he was angry" — "his fist
+         closed around the bow until the leather creaked."
+      4. A NAMED OBJECT IN CLOSE-UP — not "the hall" but "the marble
+         floor where Draupadi's hair touched it"; not "a weapon" but
+         "Karna's golden armor catching the morning light."
+
+    BAD (telling — summary prose, no anchor):
+        "गांधारी ने श्राप दिया। कृष्ण ने स्वीकार किया। यदुवंश का नाश हो गया।"
+        ("Gandhari cursed. Krishna accepted. The Yadavas were destroyed.")
+
+    GOOD (showing — two anchors, dialogue + physical):
+        "गांधारी की उंगली कृष्ण की ओर उठी, कांपते हुए।
+         वह बोलीं — 'तेरा कुल भी ऐसे ही नष्ट होगा।'
+         कृष्ण मुस्कुराए — पर आंखें झुक गईं।"
+        (Gandhari's finger rose toward Krishna, trembling. She said —
+         "Your clan shall be destroyed the same way." Krishna smiled —
+         but his eyes lowered.)
+
+    ═══════════════════════════════════════════════════════════════
+    MID-SCENE TURN — STOPS SCROLL-AT-SCENE-2
+    ═══════════════════════════════════════════════════════════════
+    At least 2 non-final scenes MUST contain a TURN at the halfway
+    mark. The scene starts heading one direction, then pivots. This
+    is what makes a viewer feel "wait, what?" INSIDE a scene — not
+    just between scenes.
+
+    GOOD turn:
+        "भीष्म ने धनुष उठाया, अजय और अटूट।
+         फिर सामने आया शिखंडी — और भीष्म ने धनुष नीचे रख दिया।"
+        (Bhishma raised his bow, undefeated and unbreakable.
+         Then Shikhandi stepped forward — and Bhishma set his bow down.)
+
+    BAD (no turn — single linear beat):
+        "भीष्म युद्ध में लड़ते रहे और फिर वे गिर गए।"
+        (Bhishma kept fighting in the war and then he fell.)
+
+    ═══════════════════════════════════════════════════════════════
+    GROUND TEACHINGS IN INCIDENTS (for motivational topics)
+    ═══════════════════════════════════════════════════════════════
+    If the TOPIC is a teaching (Karma Yoga, Bhagavad Gita lessons,
+    Bhishma's sacrifice as wisdom, "what Vidura told Dhritarashtra"),
+    DO NOT write generic wisdom prose. ANCHOR the teaching in ONE
+    specific scene from the epic. The teaching lands when the viewer
+    SEES it happen — not when the narrator explains it.
+
+    BAD (abstract teaching prose):
+        "गीता हमें सिखाती है कि कर्म फल की चिंता किए बिना करना चाहिए।
+         यही सच्चा योग है।"
+        ("The Gita teaches us to act without concern for results.
+          That is true yoga.")
+
+    GOOD (same teaching, anchored in a single chariot moment):
+        "अर्जुन का धनुष कांप रहा था। कृष्ण ने अपनी उंगली उठाई —
+         सामने खड़े गुरु द्रोण की ओर।
+         उन्होंने कहा — 'देखो, अर्जुन। फिर छोड़ो।'
+         वो छह शब्द जिसने योद्धा को योगी बनाया।"
+        (Arjuna's bow was trembling. Krishna raised his finger —
+         pointing at his own guru, Drona, standing across.
+         He said — "Look, Arjuna. Then let go."
+         Six words that turned a warrior into a yogi.)
+
+    The teaching becomes UNDERSTOOD when wrapped around a specific
+    moment with named characters and physical action. Don't lecture;
+    show the moment that contains the lesson.
 
     Rules for EVERY scene:
     - Each scene MUST advance the story. No filler. No repetition.
