@@ -8,7 +8,6 @@
 # each run, so consumed topics persist across runs and the same topic
 # isn't re-used. Don't manually edit during a workflow run.
 
-What if Antarctica's ice sheet melted completely?
 What if gravity on Earth were cut in half?
 What if the Sun disappeared for 24 hours?
 What if humans could photosynthesize like plants?
