@@ -68,6 +68,11 @@ runs:
         # Per-provider I2V timeout — drops a flaky free-tier provider sooner
         # so the per-scene cascade falls to Ken Burns within ~120s.
         CLIP_PROVIDER_TIMEOUT: "120"
+        # WhatIf EN-phase hold — skip the English TTS/assembly/subtitles/upload.
+        # The EN phase still generates the shared script + visuals (which the
+        # HI phase needs to consume). HI upload proceeds normally.
+        # To restore EN uploads: set this to "false" or remove the line.
+        WHATIF_SKIP_EN_UPLOAD: "true"
         PIPELINE_RUN_ID: ${{ inputs.pipeline-run-id }}
       run: ${{ inputs.pipeline-cmd }} 2>&1 | tee pipeline_output.txt
 

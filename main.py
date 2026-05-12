@@ -816,6 +816,19 @@ async def run_whatif_phase(language: str, test_mode: bool = False, test_upload: 
             os.makedirs("output", exist_ok=True)
             shutil.copy2(ck.path("thumbnail.jpg"), "output/thumbnail.jpg")
 
+        # ── Optional EN-phase early-exit ──────────────────────────
+        # When WHATIF_SKIP_EN_UPLOAD is set, the EN phase stops here — script
+        # + visuals are already cached (Steps 1-2), which is everything the HI
+        # phase needs. We skip EN's TTS / assembly / subtitles / upload entirely,
+        # saving ~10-15 min per workflow run while still producing the HI video.
+        # Toggle off later by removing the env var from GHA secrets (or setting
+        # WHATIF_SKIP_EN_UPLOAD=false).
+        if language == "en" and os.environ.get("WHATIF_SKIP_EN_UPLOAD", "").lower() in ("1", "true", "yes"):
+            print(f"\n[skip] WHATIF_SKIP_EN_UPLOAD set — EN phase ends after shared visuals.")
+            print(f"       HI phase will load script.json + visuals_manifest.json from this cache.")
+            print(f"\nEnglish phase complete (shared assets only — no EN upload)!\n")
+            return
+
         # ── Step 3a: Per-language TTS ─────────────────────────────
         lang_script = _build_lang_script(dual_script, language)
         output_path = _video_output_path(language, series="whatif")
