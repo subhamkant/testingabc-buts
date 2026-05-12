@@ -408,6 +408,45 @@ def _check_repetition(scenes: list, max_repeats: int = 2, topic: str = "") -> tu
     return (len(offenders) == 0), offenders
 
 
+def _check_character_names(scenes: list) -> tuple:
+    """
+    Verify every Mahabharata scene's image_prompt mentions at least one
+    recognized character name from `assets/characters.json`. Returns
+    (ok, missing_scene_indices) where missing_scene_indices is 1-based.
+
+    Required for visual consistency: `_inject_characters` in image_generator
+    is a substring matcher — if the image_prompt uses generic descriptors
+    ("the divine lord" / "the dark-skinned god") instead of named characters
+    ("Krishna" / "Karna"), the injector skips, character visual descriptions
+    are never appended to the FLUX prompt, and renders drift visually
+    (Krishna rendered as Shiva-like ascetic, etc.).
+    """
+    # Import lazily to avoid circular dependency (image_generator may import this file)
+    try:
+        from pipeline.image_generator import _KNOWN_NAMES
+        recognized = {n.lower() for n in _KNOWN_NAMES}
+        # Augment with the characters actually in characters.json
+        from pipeline.image_generator import _CHARACTERS
+        recognized |= {n.lower() for n in _CHARACTERS}
+    except Exception:
+        # Fallback list — should match image_generator._KNOWN_NAMES + characters.json keys
+        recognized = {
+            "krishna", "arjuna", "bhishma", "karna", "draupadi", "yudhishthira",
+            "bhima", "bheema", "nakula", "sahadeva", "duryodhana", "dushasana",
+            "drona", "ashwatthama", "gandhari", "dhritarashtra", "vidura",
+            "kunti", "shakuni", "abhimanyu", "subhadra", "ghatotkacha",
+            "jayadratha", "shikhandi", "amba", "satyavati", "devavrata",
+            "parashurama", "ekalavya", "sanjaya", "balarama", "vyasa",
+        }
+
+    missing = []
+    for i, scene in enumerate(scenes):
+        prompt_lower = (scene.get("image_prompt") or "").lower()
+        if not any(name in prompt_lower for name in recognized):
+            missing.append(i + 1)
+    return (len(missing) == 0), missing
+
+
 def _trim_narration(text: str, max_words: int = 45) -> str:
     """Hard-cap narration at max_words, ending at the last complete sentence.
     Long-form videos (60-90s, 5-6 scenes) need 25-40 words per scene; this
@@ -755,6 +794,38 @@ Final scene — RESOLUTION + REFLECTION:
    Land it. Tie back to something the viewer can feel about their own world.
    This scene MAY end with closure — every other scene must end with a hook
    forward (a question, a "...but", or an unresolved threat).
+
+═══════════════════════════════════════════════════════════════
+NARRATIVE BOOKEND — THE FINAL SCENE MUST CLOSE THE HOOK
+═══════════════════════════════════════════════════════════════
+Scene 1's hook poses a specific consequence with named nouns and a
+specific time/place anchor. The FINAL scene MUST echo it back — same
+central noun, same time/place anchor, payoff delivered.
+
+Without a bookend the video ENDS but does not RESOLVE — the viewer
+hears the closer but doesn't feel anything has been answered. This is
+the single biggest narrative-cohesion lever between "the video felt
+complete" and "the video just stopped."
+
+GOOD (bookend — opens a question, closes with payoff):
+  Hook (Scene 1):
+    "Your phone dies. GPS gone. Birds crash into buildings. This is
+     Earth — six months after the magnetic poles flip."
+    → Central noun: "magnetic poles flip"
+    → Time anchor: "six months"
+    → Claim: dying systems
+
+  Closure (Final scene):
+    "Six months from a single magnetic flip — no GPS, no migrations,
+     no normal sky. Earth still spinning, but nothing on it the same."
+    → Echoes "six months" + "magnetic flip"
+    → Payoff: nothing the same
+
+BAD (no bookend — generic moralizing closer):
+  Hook:    "Lava buries cities. Ash chokes the sky."
+  Closure: "Such are the wonders of geology, reminding us of nature's power."
+  (Generic moral. Doesn't echo "lava" / "ash" / any specific anchor.
+   Viewer hears it as a separate sentence, not as resolution.)
 
 ═══════════════════════════════════════════════════════════════
 CONTENT QUALITY
@@ -1596,6 +1667,39 @@ def generate_script(
         background contains [≥3 specific elements from the palette above],
         [lighting style], [mood adjective], [palette: jewel-toned colours]
 
+    ═══════════════════════════════════════════════════════════════
+    CHARACTER NAMING — CRITICAL FOR VISUAL CONSISTENCY
+    ═══════════════════════════════════════════════════════════════
+    EVERY image_prompt that depicts a character MUST use the character's
+    SPECIFIC NAME — never a generic descriptor.
+
+    The pipeline injects character visual descriptions (skin tone, jewelry,
+    feathers, etc.) into the FLUX prompt by substring-matching named
+    characters from `assets/characters.json`. If you write "the divine lord"
+    or "the dark-skinned god" instead of "Krishna", the injector finds no
+    match → no peacock feather → no lotus eyes → no indigo-blue divine skin
+    → FLUX renders a generic ascetic figure (which is what just happened
+    with the Krishna-as-Shiva render in "Gandhari's Last Curse to Krishna").
+
+    GOOD (names every character):
+        "Medium shot of Krishna and Gandhari in the Hastinapur royal hall,
+         Krishna with peacock-feather crown standing in calm acceptance,
+         Gandhari blindfolded with trembling raised palm casting her curse,
+         background contains carved sandstone pillars, hanging brass diyas,
+         dust motes in dawn light..."
+
+    BAD (generic descriptors — character injection will NOT fire):
+        "The divine lord stands before the grieving queen as she casts her
+         curse, the hall behind them filled with mourning..."
+        ("divine lord" doesn't match Krishna; "grieving queen" doesn't
+         match Gandhari; injection skips entirely; FLUX guesses wrong.)
+
+    Recognized names: Krishna, Arjuna, Bhishma, Karna, Draupadi, Yudhishthira,
+    Bhima, Nakula, Sahadeva, Duryodhana, Dushasana, Drona, Ashwatthama,
+    Gandhari, Dhritarashtra, Vidura, Kunti, Shakuni, Abhimanyu, Subhadra,
+    Ghatotkacha, Jayadratha, Shikhandi, Amba, Satyavati, Devavrata,
+    Parashurama, Ekalavya, Sanjaya, Balarama, Vyasa. Use the exact spelling.
+
     GOOD example:
         "Wide shot of Devavrata kneeling on the river bank of the Yamuna,
          hands raised in solemn vow, his father Shantanu watching from a
@@ -1707,13 +1811,15 @@ def generate_script(
     """
 
     # Try up to 3 times — if a response fails any quality gate (too short,
-    # too few scenes, too repetitive, or "tha-tha-tha" verb tic), re-prompt
-    # with a targeted reminder appended that names the specific failure.
+    # too few scenes, too repetitive, "tha-tha-tha" verb tic, or any scene's
+    # image_prompt uses generic descriptors instead of named characters),
+    # re-prompt with a targeted reminder naming the specific failure.
     data = None
     last_offenders = []
     last_short     = False
     last_tha_tic   = False
     last_tha_ratio = 0.0
+    last_missing_names = []   # 1-based scene indices missing a character name in image_prompt
     for attempt in range(3):
         full_prompt = prompt
         if attempt > 0:
@@ -1742,6 +1848,19 @@ def generate_script(
                     f"nominalization (\"द्रौपदी का अपमान — एक क्षण...\"), or "
                     f"exclamatory beats. Mix the patterns. The script must MOVE, "
                     f"not list events chronologically."
+                )
+            if last_missing_names:
+                scene_list = ", ".join(f"scene {n}" for n in last_missing_names)
+                reminders.append(
+                    f"Your previous response had image_prompts in {scene_list} that "
+                    f"used GENERIC DESCRIPTORS instead of named characters (e.g. "
+                    f"\"the divine lord\" / \"the dark-skinned god\" / \"the grieving queen\"). "
+                    f"The pipeline injects character visual details by substring-matching "
+                    f"the character's name (Krishna / Arjuna / Bhishma / Gandhari / etc.) "
+                    f"from assets/characters.json. Generic descriptors do NOT match — the "
+                    f"injector skips, and FLUX renders the wrong figure (Krishna ends up "
+                    f"looking like a generic ascetic without the peacock feather, etc.). "
+                    f"Rewrite EVERY image_prompt to use the SPECIFIC character name."
                 )
             if reminders:
                 full_prompt += "\n\nCRITICAL REMINDERS:\n- " + "\n- ".join(reminders)
@@ -1774,15 +1893,22 @@ def generate_script(
         # filler like "valor" / "वीरता" appearing 5+ times.
         rep_ok, last_offenders = _check_repetition(scenes, max_repeats=4, topic=topic)
 
-        # Hindi-only "tha-tha-tha" verbal tic check. Threshold 0.35 = at most
-        # ~1 in 3 sentences may end with past auxiliary; otherwise the
-        # narration reads as a chronological list rather than cinema.
+        # Hindi-only "tha-tha-tha" verbal tic check. Threshold lowered from
+        # 0.35 -> 0.15 because Gandhari shipped with 7 violations out of ~20
+        # sentences (35% — right at the old cap). The prompt rule says "AT
+        # MOST 2 sentences" which for a 5-6 scene script is roughly 10-15%,
+        # so 0.15 matches the rule more faithfully.
         if language == "hi":
-            tha_ok, last_tha_ratio, tha_hits, tha_total = _check_past_aux_tic(scenes, threshold=0.35)
+            tha_ok, last_tha_ratio, tha_hits, tha_total = _check_past_aux_tic(scenes, threshold=0.15)
             last_tha_tic = not tha_ok
         else:
             tha_ok = True
             last_tha_tic = False
+
+        # Character-name validator: every Mahabharata scene's image_prompt
+        # must contain at least one recognized character name so
+        # _inject_characters() can append the visual description.
+        names_ok, last_missing_names = _check_character_names(scenes)
 
         print(f"    Script: {n_scenes} scenes, avg {avg_words:.1f} words/scene "
               f"(per-scene: {word_counts})")
@@ -1792,9 +1918,13 @@ def generate_script(
         if last_tha_tic:
             print(f"    [warn] Past-aux tic: {tha_hits}/{tha_total} sentences "
                   f"end with था/थी/थे/थीं ({last_tha_ratio:.0%})")
+        if last_missing_names:
+            print(f"    [warn] Generic-descriptor image_prompts in scenes "
+                  f"{last_missing_names} — character injection will not fire")
 
-        # Acceptable if length OK AND repetition AND verb-variety all pass
-        if not last_short and rep_ok and tha_ok:
+        # Acceptable if length OK AND repetition AND verb-variety AND
+        # character-name discipline all pass.
+        if not last_short and rep_ok and tha_ok and names_ok:
             break
 
         if attempt < 2:
@@ -1805,6 +1935,8 @@ def generate_script(
                 why.append(f"{len(last_offenders)} repeated words")
             if last_tha_tic:
                 why.append(f"था-tic {last_tha_ratio:.0%}")
+            if last_missing_names:
+                why.append(f"{len(last_missing_names)} scenes missing character names")
             print(f"    [retry] {'; '.join(why)}. Re-prompting...")
 
     data["language"] = language

@@ -20,35 +20,24 @@ from urllib.parse import quote
 # WhatIf series uses a different per-style suffix from _WHATIF_STYLE_SUFFIXES
 # based on the script's visual_style — this Mahabharata suffix does not apply.
 STYLE_SUFFIX = (
-    "photorealistic cinematic film still, "
-    # ── Photoreal cinema-camera anchors (pushes FLUX away from the "Anger's
-    # Fire" plastic-CGI look toward Bhishma-style real cinematography) ──
-    "shot on Arri Alexa LF with 50mm anamorphic lens, "
-    "Kodak Vision3 5219 film stock, professional cinema-grade color grading, "
-    "physically-based skin shader with visible pores and fine facial detail, "
-    "natural sub-surface scattering on skin, realistic beard and hair texture, "
-    # ── Period / aesthetic register (unchanged from prior iteration) ──
-    "ancient India epic Mahabharata, "
-    "Star Bharat Mahabharat live-action / Baahubali period-film aesthetic, "
-    "real human faces with natural skin tones and accurate skin texture, "
-    "balanced cinematic color grading — neutral whites, true skin colors, "
-    "ultra-sharp 8K resolution, "
-    "ornate Hindu temple-palace architecture in the background — carved sandstone "
-    "pillars, hanging brass oil lamps, lotus reliefs, stone deity carvings, "
-    "patterned floor tiles, multiple planes of architectural depth, "
-    "directional cinematic lighting through carved arches, soft volumetric haze, "
-    "rich jewel-toned palette of gold, crimson, deep emerald, lapis blue — "
-    "but applied as accent colors over natural background tones, NOT as a "
-    "global color wash across the whole frame, "
-    "intricate gold jewelry detail and rich silk garments with visible embroidery, "
-    "shallow depth of field, hero character in sharp focus, expressive facial emotion, "
-    "cinematic composition, rule of thirds, inspired by Raja Ravi Varma paintings "
-    "rendered as live-action film, consistent character design, sharp focus, "
-    # ── Negative anchors — bans cartoonish + the Anger's Fire CGI-plastic look ──
-    "no cartoon, no anime, no cel shading, no comic book illustration, "
-    "no CGI plastic skin, no 3D-render plastic look, no video-game character render, "
-    "no smooth airbrushed skin, no Pixar-style stylization, no over-rendered, "
-    "no magenta cast, no pink cast, no purple skin, no over-saturated wash"
+    # Photoreal anchor — kept short for distilled FLUX variants (Pollinations,
+    # Cloudflare) which honor long prompts less reliably than HF FLUX-schnell.
+    # The previous ~500-char version contained semantically conflicting cues
+    # ("warm jewel-toned palette" vs "balanced color, neutral whites" vs
+    # "no magenta cast") that distilled models resolved by picking whichever
+    # signal was most repeated — the warm/magenta side, by mass. This shorter
+    # version removes the warm-palette anchor entirely; scene-specific
+    # image_prompts and the per-scene `mood` field still drive color when a
+    # scene needs warm tones.
+    "photorealistic cinematic film still shot on Arri Alexa LF, "
+    "Kodak Vision3 5219 film stock, "
+    "physically-based skin with visible pores and fine facial hair, "
+    "ancient India Mahabharat live-action / Baahubali period-film aesthetic, "
+    "carved sandstone temple architecture in sharp focus, oil-lamp lighting, "
+    "balanced natural color grading, neutral whites, true skin tones, "
+    "ultra-sharp 8K detail throughout, "
+    "no global color wash, no orange filter, no magenta or pink cast, "
+    "no CGI plastic look, no airbrushed skin"
 )
 
 # WhatIf series style suffixes — picked by `script["visual_style"]`. Mahabharata
@@ -95,23 +84,29 @@ def _resolve_style_suffix(series: str, visual_style: str) -> str:
         return _WHATIF_STYLE_SUFFIXES.get(visual_style, _WHATIF_STYLE_SUFFIXES["photoreal-3d"])
     return STYLE_SUFFIX
 
-# Negative prompt — suppresses blurry/low-quality outputs, FLUX-schnell's
-# known anatomy weaknesses (hands/fingers), the heavy magenta/pink wash that
-# older STYLE_SUFFIX iterations produced, AND the CGI-plastic / video-game-
-# character look that made the Anger's Fire video look cartoonish.
+# Negative prompt — distilled FLUX variants (Pollinations, Cloudflare)
+# down-weight late tokens, so the highest-priority failure modes are
+# front-loaded. The order below reflects what the Volcanoes + Gandhari
+# analysis flagged as the most-recurring visible quality regressions
+# (heavy color wash, plastic skin, CGI-game-character vibe).
 _NEGATIVE = (
+    # ── Color-wash failure mode (top priority — most visible on output) ──
+    "orange cast,magenta cast,pink cast,purple cast,color wash,"
+    "warm filter,heavy filter,sepia overlay,monochrome filter,"
+    "over-saturated,over-graded,"
+    # ── Plastic / CGI-character failure mode ──
+    "cgi plastic skin,doll-like face,waxy skin,smooth airbrushed skin,"
+    "3d render plastic,video game character,pixar style,"
+    "unreal engine character,over-rendered,"
+    # ── Cartoon / illustration bans ──
+    "cartoon,anime,cel shaded,illustration,drawing,comic book,"
+    # ── Standard quality / anatomy fixes (preserved from prior version) ──
     "blurry,blur,out of focus,low quality,pixelated,distorted,"
     "ugly,bad anatomy,watermark,text,logo,duplicate,deformed,"
     "extra fingers,six fingers,seven fingers,too many fingers,"
     "mutated hands,malformed hands,fused fingers,missing fingers,"
     "extra limbs,extra arms,malformed limbs,disfigured,"
-    "asymmetric eyes,cross-eyed,bad proportions,"
-    "magenta cast,pink cast,purple skin,over-saturated,"
-    "color wash,monochrome filter,sepia overlay,"
-    "cartoon,anime,cel shaded,illustration,drawing,"
-    "cgi plastic skin,3d render plastic,video game character,"
-    "smooth airbrushed skin,pixar style,unreal engine character,"
-    "doll-like face,waxy skin,over-rendered"
+    "asymmetric eyes,cross-eyed,bad proportions"
 )
 
 # 3 compositional angles per scene — gives genuine visual variety
