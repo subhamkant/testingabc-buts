@@ -12,7 +12,11 @@
   "whatif": [
     {
       "topic": "What if every volcano on Earth erupted at once?",
+<<<<<<< Updated upstream
       "ts": "2026-05-12 07:06:13"
+=======
+      "ts": "2026-05-12 07:17:35"
+>>>>>>> Stashed changes
     }
   ]
 }
