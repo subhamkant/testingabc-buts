@@ -339,11 +339,18 @@ async def run_pipeline(language: str = "en", test_mode: bool = False, test_uploa
                 ck.save_file("video_pre_subs.mp4", video_path)
 
         # ── Step 4b: Burned-in word-level subtitles ───────────────
+        # Gated behind BURN_SUBTITLES env var (default OFF per the
+        # 2026-05-14 decision — subtitles weren't appearing on every shot
+        # consistently AND the FFmpeg overlay pass costs ~4-5 min per
+        # video. YouTube's auto-captions cover accessibility while we
+        # investigate the timing issue. Re-enable by setting
+        # BURN_SUBTITLES=true in GHA secrets or .env.)
+        _burn_subs = os.environ.get("BURN_SUBTITLES", "false").lower() in ("1", "true", "yes")
         if ck.has("video.mp4"):
             print("\nStep 4b — [resume] subtitled video loaded from checkpoint")
             shutil.copy2(ck.path("video.mp4"), output_path)
             video_path = output_path
-        elif video_path and os.path.exists(video_path):
+        elif _burn_subs and video_path and os.path.exists(video_path):
             print("\nStep 4b — Burning word-level subtitles via Groq Whisper...")
             try:
                 apply_subtitles(video_path, audio_path, language)
@@ -540,11 +547,12 @@ async def run_krishna_speech(test_mode: bool = False, test_upload: bool = False)
                 ck.save_file("video_pre_subs.mp4", video_path)
 
         # ── Step 4b: Burned-in word-level subtitles ───────────────
+        _burn_subs = os.environ.get("BURN_SUBTITLES", "false").lower() in ("1", "true", "yes")
         if ck.has("video.mp4"):
             print("\nStep 4b — [resume] subtitled video loaded from checkpoint")
             shutil.copy2(ck.path("video.mp4"), output_path)
             video_path = output_path
-        elif video_path and os.path.exists(video_path):
+        elif _burn_subs and video_path and os.path.exists(video_path):
             print("\nStep 4b — Burning word-level subtitles via Groq Whisper...")
             try:
                 apply_subtitles(video_path, audio_path, "hi")
@@ -878,11 +886,12 @@ async def run_whatif_phase(language: str, test_mode: bool = False, test_upload: 
                 ck.save_file(f"video_pre_subs_{language}.mp4", video_path)
 
         # ── Step 3c: Subtitles ────────────────────────────────────
+        _burn_subs = os.environ.get("BURN_SUBTITLES", "false").lower() in ("1", "true", "yes")
         if ck.has(f"video_{language}.mp4"):
             print(f"\nStep 3c [{language}] — [resume] subtitled video loaded from checkpoint")
             shutil.copy2(ck.path(f"video_{language}.mp4"), output_path)
             video_path = output_path
-        elif video_path and os.path.exists(video_path):
+        elif _burn_subs and video_path and os.path.exists(video_path):
             print(f"\nStep 3c [{language}] — Subtitles...")
             try:
                 apply_subtitles(video_path, audio_path, language)

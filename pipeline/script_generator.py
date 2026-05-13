@@ -17,27 +17,55 @@ _GEMINI_TRANSIENT_MARKERS = (
 )
 
 
-def _call_llm(prompt: str) -> str:
+# Model cascades by quality tier. Mahabharata + WhatIf dramatization use
+# `quality="best"` which tries Gemini 2.5 Pro first (better Hindi creative
+# prose than Flash — the 2026-05-13 local test had hindi grammar errors
+# like `भीम ने प्रतिज्ञा हे` and gender mismatch `बच गए` for a feminine
+# subject, characteristic of Flash-tier model output on long-form Hindi).
+# Other call sites (outline pass, validators, etc.) use `quality="fast"`
+# to preserve quota — they don't need creative-prose grade.
+_GEMINI_MODELS_BEST = ("gemini-2.5-pro", "gemini-2.5-flash", "gemini-2.5-flash-lite")
+_GEMINI_MODELS_FAST = ("gemini-2.5-flash", "gemini-2.5-flash-lite")
+
+
+def _gemini_keys():
     """
-    Calls Groq (primary, 14 400 RPD free) then falls back to Gemini 2.5 Flash.
-    Returns the raw text response.
+    Returns list of (label, api_key) tuples for the Gemini API. Walks
+    GEMINI_API_KEY first (primary), then GEMINI_API_KEY_FALLBACK if set
+    (second Google account's project — doubles the 50 RPD Pro quota to
+    100 RPD when both are configured). Mirrors the existing
+    _elevenlabs_keys() pattern.
+
+    Empty/whitespace-only keys are filtered out so missing fallback
+    doesn't break primary-only operation.
+    """
+    keys = []
+    primary = os.environ.get("GEMINI_API_KEY", "").strip()
+    if primary:
+        keys.append(("primary", primary))
+    fallback = os.environ.get("GEMINI_API_KEY_FALLBACK", "").strip()
+    if fallback and fallback != primary:
+        keys.append(("fallback", fallback))
+    return keys
+
+
+def _call_llm(prompt: str, quality: str = "fast") -> str:
+    """
+    Calls Groq (primary, 14 400 RPD free) then falls back to Gemini.
+
+    `quality="fast"` (default): Gemini cascade is flash → flash-lite. Used
+    for outline pass, validators, and any call site where prose quality
+    isn't load-bearing.
+
+    `quality="best"`: Gemini cascade is pro → flash → flash-lite. Used for
+    Mahabharata + WhatIf dramatization where Hindi grammar errors and
+    summary-prose register hurt the final video. Pro has a free-tier limit
+    of 50 RPD on the Generative Language API; the cascade falls through to
+    Flash on quota exhaustion or transient errors.
 
     Token budgets are sized to fit the longest prompts in this file —
     Mahabharata's 2-pass dramatization step emits ~5-6k chars of bilingual
-    JSON (title + 100-150-word description + 17 tags + 5 scenes with both
-    English + Hindi narration + image/video prompts + character dialogue +
-    thumbnail prompt). Earlier defaults (Groq 4096, Gemini library default
-    of ~8192 output tokens) truncated mid-description on Mahabharata runs
-    and produced unparseable JSON. Values below have ~2x headroom over the
-    longest observed valid output.
-
-    Gemini fallback is hardened against the failure mode observed on
-    2026-05-11: Groq daily quota exhausted -> Gemini returned `503 UNAVAILABLE
-    "This model is currently experiencing high demand"`. The naive single-call
-    fallback crashed the whole workflow attempt. We now retry the same model
-    with exponential backoff on transient errors (5xx / 429 / timeout), then
-    fall over to gemini-2.5-flash-lite (lower-demand sibling) as a last resort
-    before raising.
+    JSON. Values below have ~2x headroom over the longest observed output.
     """
     groq_key = os.environ.get("GROQ_API_KEY", "").strip()
 
@@ -54,70 +82,86 @@ def _call_llm(prompt: str) -> str:
             )
             return resp.choices[0].message.content.strip()
         except Exception as e:
-            print(f"    Groq failed: {e} — falling back to Gemini...")
+            print(f"    Groq failed: {e} — falling back to Gemini ({quality})...")
 
-    # ── Fallback: Gemini 2.5 Flash with retry-on-transient ───────────────────
-    # Explicit max_output_tokens=16384 (was library default ~8192). Gemini 2.5
-    # Flash supports up to 65k output tokens; 16k is enough headroom for our
-    # longest bilingual script JSON without paying for tokens we don't use.
+    # ── Fallback: Gemini cascade with retry-on-transient + key fallback ─────
     from google.genai import types as _genai_types
-    client = genai.Client(api_key=os.environ["GEMINI_API_KEY"])
+    keys = _gemini_keys()
+    if not keys:
+        raise RuntimeError("No GEMINI_API_KEY configured")
     config = _genai_types.GenerateContentConfig(max_output_tokens=16384)
+    models = _GEMINI_MODELS_BEST if quality == "best" else _GEMINI_MODELS_FAST
+    return _gemini_call_with_retry(keys, prompt, config, models=models)
 
-    return _gemini_call_with_retry(client, prompt, config)
 
-
-def _gemini_call_with_retry(client, prompt: str, config) -> str:
+def _gemini_call_with_retry(keys, prompt: str, config, models=None) -> str:
     """
-    Call gemini-2.5-flash with retry-on-transient (503/429/5xx/timeout),
-    then fall over to gemini-2.5-flash-lite as a last-resort sibling model.
+    Walks models × keys. For each model, tries every available key; if
+    every key returns a quota/auth error on that model, falls over to
+    the next model. Within a single (model, key) attempt, retries with
+    backoff only on TRANSIENT-but-not-quota errors (5xx / timeout /
+    network) — quota 429s don't retry because the quota doesn't reset
+    in the 73s backoff window.
 
-    Backoff schedule: 0s, 8s, 20s, 45s — total worst-case wait ~73s before
-    we even try the fallback model. That's tolerable because the next layer
-    up (the workflow's chained retry job) would otherwise spin up a fresh
-    runner from scratch (~90s of setup) only to crash on the same call.
+    Backoff per (model, key) on transient: 0s, 8s, 20s, 45s.
+
+    Key fallback pattern matches the existing _elevenlabs_keys() flow:
+    primary GEMINI_API_KEY first, then GEMINI_API_KEY_FALLBACK if
+    configured. Each key represents an independent GCP project (which
+    has its own 50 RPD Pro quota), so when both are configured we get
+    100 RPD of Pro total.
     """
+    if models is None:
+        models = _GEMINI_MODELS_FAST
     backoffs = [0, 8, 20, 45]
     last_err = ""
 
-    # Tier 1 — gemini-2.5-flash with retry
-    for attempt, wait in enumerate(backoffs):
-        if wait:
-            print(f"    Gemini 2.5 Flash retry in {wait}s (attempt {attempt + 1}/{len(backoffs)})...")
-            time.sleep(wait)
-        try:
-            response = client.models.generate_content(
-                model="gemini-2.5-flash",
-                contents=prompt,
-                config=config,
-            )
-            return response.text.strip()
-        except Exception as e:
-            err_str = str(e)
-            last_err = err_str[:200]
-            is_transient = any(m in err_str for m in _GEMINI_TRANSIENT_MARKERS)
-            if not is_transient:
-                # Non-transient error — bubble up immediately, don't waste retry budget
-                raise
-            print(f"    Gemini 2.5 Flash transient error: {err_str[:120]}")
-            # Loop continues to next backoff slot
+    for model_idx, model_name in enumerate(models):
+        for key_idx, (key_label, api_key) in enumerate(keys):
+            client = genai.Client(api_key=api_key)
+            # First (model, key) combo gets full retry-with-backoff.
+            # Subsequent keys/models get a single attempt each.
+            attempts = backoffs if (model_idx == 0 and key_idx == 0) else [0]
+            for attempt, wait in enumerate(attempts):
+                if wait:
+                    print(f"    {model_name}/{key_label} retry in {wait}s (attempt {attempt + 1}/{len(attempts)})...")
+                    time.sleep(wait)
+                try:
+                    response = client.models.generate_content(
+                        model=model_name,
+                        contents=prompt,
+                        config=config,
+                    )
+                    if model_idx > 0 or key_idx > 0:
+                        print(f"    [OK] {model_name}/{key_label} succeeded as fallback")
+                    return response.text.strip()
+                except Exception as e:
+                    err_str = str(e)
+                    last_err = f"{model_name}/{key_label}: {err_str[:140]}"
+                    is_transient = any(m in err_str for m in _GEMINI_TRANSIENT_MARKERS)
+                    is_quota = "RESOURCE_EXHAUSTED" in err_str or "exceeded your current quota" in err_str
+                    if not is_transient and not (model_idx == 0 and key_idx == 0):
+                        # Non-transient on a fallback combo — move to next combo
+                        print(f"    {model_name}/{key_label} non-transient: {err_str[:100]}")
+                        break
+                    if not is_transient:
+                        # First-combo non-transient (e.g. 401) — bubble up
+                        raise
+                    if is_quota:
+                        # Quota 429 — don't retry on this key, the daily reset
+                        # won't happen in our 73s backoff window. Move to next
+                        # key (different GCP project) or next model.
+                        print(f"    {model_name}/{key_label} quota exhausted — skipping retries")
+                        break
+                    # Transient but not quota: per-minute rate limit, 5xx, network.
+                    # Retry with backoff if attempts remain.
+                    print(f"    {model_name}/{key_label} transient: {err_str[:100]}")
+            # Loop continues to next key on same model.
+        # If we've tried all keys on this model, fall to the next model.
+        if model_idx < len(models) - 1:
+            print(f"    {model_name} exhausted on all {len(keys)} key(s) — falling over to {models[model_idx + 1]}...")
 
-    # Tier 2 — gemini-2.5-flash-lite fallback (lighter sibling, less demand)
-    print(f"    Gemini 2.5 Flash exhausted retries — trying gemini-2.5-flash-lite as last resort...")
-    try:
-        response = client.models.generate_content(
-            model="gemini-2.5-flash-lite",
-            contents=prompt,
-            config=config,
-        )
-        print(f"    [OK] gemini-2.5-flash-lite succeeded as fallback")
-        return response.text.strip()
-    except Exception as e:
-        raise RuntimeError(
-            f"Both Gemini models failed. "
-            f"flash (after {len(backoffs)} attempts): {last_err}; "
-            f"flash-lite: {str(e)[:200]}"
-        )
+    raise RuntimeError(f"All Gemini (model, key) combos failed; last error: {last_err}")
 
 
 # ── Story Topics — well-known Mahabharata incidents ───────────────────────────
@@ -445,6 +489,205 @@ def _check_character_names(scenes: list) -> tuple:
         if not any(name in prompt_lower for name in recognized):
             missing.append(i + 1)
     return (len(missing) == 0), missing
+
+
+# ── Bookend / engagement / monotony validators (Fix 2 / 3 / 4) ──────────
+# These were added after analyzing 4 videos that shipped on 2026-05-13 and
+# still showed the same recurring failures the prompt rules were meant to
+# fix. The pattern: prompt rules alone get ~30-50% LLM compliance; rules
+# that round-trip violations back into a retry attempt get ~95% compliance.
+
+# Synonym table for bookend matching — when Scene 1's central noun is one
+# of these, the final scene may use any sibling and still count as a match.
+# Seeded from Bhishma's reference video (the working bookend pattern):
+# हुक: "एक प्रतिज्ञा" → closure: "एक वचन". Both legitimate.
+_BOOKEND_SYNONYMS = [
+    {"प्रतिज्ञा", "वचन", "कसम", "शपथ", "vow", "oath", "promise"},
+    {"शाप", "अभिशाप", "श्राप", "curse"},
+    {"युद्ध", "रण", "संग्राम", "war", "battle"},
+    {"धर्म", "कर्म", "dharma", "duty"},
+    {"बलिदान", "त्याग", "sacrifice", "renunciation"},
+    {"विवाह", "स्वयंवर", "marriage", "wedding"},
+    {"वनवास", "निर्वासन", "exile", "banishment"},
+    {"न्याय", "अन्याय", "justice", "injustice"},
+    {"क्रोध", "रोष", "wrath", "anger", "fury"},
+    {"प्रेम", "प्यार", "love"},
+    {"मृत्यु", "मौत", "death"},
+    {"विश्वासघात", "धोखा", "betrayal", "deceit"},
+    {"वंश", "कुल", "dynasty", "clan", "lineage"},
+    {"महाभारत", "कुरुक्षेत्र", "mahabharata", "kurukshetra"},
+    {"रहस्य", "गुप्त", "secret", "mystery"},
+    {"सत्य", "truth"},
+    {"प्रलय", "विनाश", "destruction", "apocalypse"},
+    {"ज्योति", "प्रकाश", "light"},
+    {"अंधकार", "तम", "darkness"},
+]
+
+
+def _content_nouns_from(text: str, ignore: set, top_k: int = 4) -> list:
+    """Extract the top-k longest content-token candidates from a narration."""
+    import re as _re
+    toks = _re.split(r"[\s।॥,.!?;:'\"()\[\]\-—–…]+", text.lower())
+    seen = set()
+    out = []
+    for w in toks:
+        w = w.strip()
+        if len(w) < 3 or w in ignore or w in seen:
+            continue
+        seen.add(w)
+        out.append(w)
+    # Prefer longer tokens — they tend to be more specific / content-bearing
+    out.sort(key=lambda x: -len(x))
+    return out[:top_k]
+
+
+def _check_bookend(scenes: list, topic: str = "") -> tuple:
+    """
+    Verify the FINAL scene's narration echoes Scene 1's central noun (or a
+    recognized synonym). Returns (ok, scene1_central_noun_or_None).
+
+    When scene 1 says "एक प्रतिज्ञा ने कुरुवंश को शाप दिया" and the final
+    scene closes with "एक वचन ने कुरुवंश को... वंचित कर दिया" — that's a
+    bookend; the noun "प्रतिज्ञा" was echoed via synonym "वचन". When the
+    final scene closes with "ऐसा है धर्म की महिमा" (a generic moral that
+    doesn't echo "प्रतिज्ञा" or its synonyms), the bookend is broken.
+
+    Mirrors the proven pattern from `_check_repetition` and
+    `_check_character_names`: post-hoc check, round-trip the failure back
+    into the next prompt attempt.
+    """
+    if len(scenes) < 3:
+        return True, None
+    ignore = set(_REPETITION_STOPWORDS) | {n.lower() for n in _CHARACTER_NAMES}
+    if topic:
+        import re as _re
+        for t in _re.split(r"[\s,.!?;:'\"()\-—]+", topic.lower()):
+            if len(t) > 2:
+                ignore.add(t)
+
+    scene1_text = (scenes[0].get("narration") or "")
+    final_text  = (scenes[-1].get("narration") or "").lower()
+
+    candidates = _content_nouns_from(scene1_text, ignore, top_k=5)
+    if not candidates:
+        return True, None  # nothing to check — trust the LLM
+
+    # Build expanded match set for each candidate (the candidate + its synonyms)
+    def expand(noun: str) -> set:
+        out = {noun}
+        for grp in _BOOKEND_SYNONYMS:
+            if noun in grp or any(noun in g.lower() for g in grp):
+                out |= {g.lower() for g in grp}
+        return out
+
+    # Pick the FIRST candidate that we can attest is centrally-thematic
+    # (here: just use the first/most-specific noun; that's our hook subject)
+    central = candidates[0]
+    match_set = expand(central)
+
+    if any(m in final_text for m in match_set):
+        return True, central
+    return False, central
+
+
+# Hindi sensory anchor vocabulary — sounds / sights / touch / smell / breath.
+# Used by _check_engagement_density. Curated from cinematic Mahabharata
+# narrations; expanded to cover the science-curiosity register for WhatIf.
+_SENSORY_TOKENS_HI = {
+    # sound
+    "शंख", "गूंज", "ध्वनि", "आवाज़", "आवाज", "स्वर", "चीख", "घोष",
+    # sight / light
+    "दीप", "ज्योति", "रोशनी", "प्रकाश", "किरण", "छाया", "धुआं", "धुआँ",
+    # body / physical
+    "आंख", "आँख", "हाथ", "उंगली", "उँगली", "पैर", "कदम", "सांस", "साँस",
+    "माथा", "होंठ", "कान", "रक्त", "खून", "पसीना", "अश्रु", "आँसू",
+    # texture / atmosphere
+    "धूल", "गर्द", "कांप", "काँप", "गूँज", "सुगंध", "खुशबू",
+    # objects in close-up (mythological)
+    "धनुष", "तीर", "मुद्रा", "मुकुट", "हथेली", "पैरों",
+    # elemental
+    "अग्नि", "पवन", "जल", "धरती",
+}
+
+_DIALOGUE_MARKERS_HI = (
+    "बोले", "बोला", "बोली", "कहा", "कही", "कहती", "कहते", "कहता",
+    "पूछा", "पूछती", "बोले —", "कहा —", "कहते हैं", "बोले:",
+)
+
+
+def _check_engagement_density(scenes: list, language: str = "hi") -> tuple:
+    """
+    Enforce the engagement floor introduced by the SHOW-DONT-TELL rule:
+    every script must contain ≥2 dialogue markers and ≥4 sensory tokens
+    across all scene narrations combined. Below either threshold means
+    the script reads as summary prose — boring.
+
+    Returns (ok, dialogue_count, sensory_count).
+    """
+    if language != "hi":
+        # English / dual narrations would need a parallel vocab set; for
+        # now only Hindi narration is validated (single biggest impact
+        # surface).
+        return True, 0, 0
+
+    dialogue = 0
+    sensory  = 0
+    for s in scenes:
+        text = (s.get("narration") or "")
+        for marker in _DIALOGUE_MARKERS_HI:
+            dialogue += text.count(marker)
+        # also count dash-em-quoted dialogue ("कृष्ण — '...'")
+        if " — \"" in text or " — '" in text or " — “" in text:
+            dialogue += text.count(" — \"") + text.count(" — '") + text.count(" — “")
+        for tok in _SENSORY_TOKENS_HI:
+            sensory += text.count(tok)
+
+    ok = (dialogue >= 2 and sensory >= 4)
+    return ok, dialogue, sensory
+
+
+def _check_ending_monotony(scenes: list, language: str = "hi", max_ratio: float = 0.40) -> tuple:
+    """
+    Detect the dominant sentence-ending pattern across all narrations and
+    fail when any single pattern exceeds `max_ratio` of all sentences.
+    Generalizes the older `_check_past_aux_tic` which only caught था/थी/थे/थीं —
+    misses present-tense `हैं` chains and future-conditional `जाएगा` chains
+    that produce the same listy, boring rhythm.
+
+    Returns (ok, dominant_pattern, ratio, hits, total).
+    """
+    if language != "hi":
+        return True, None, 0.0, 0, 0
+    import re as _re
+    sentences = []
+    for s in scenes:
+        text = (s.get("narration") or "").strip()
+        if not text:
+            continue
+        for snt in _re.split(r"[।!?\.]+", text):
+            snt = snt.strip()
+            if snt:
+                sentences.append(snt)
+    if not sentences:
+        return True, None, 0.0, 0, 0
+
+    # Extract the last "word" (last whitespace-separated token, stripped of
+    # punctuation/maatras-stripping isn't worth doing — we just need a key).
+    from collections import Counter
+    endings = Counter()
+    for snt in sentences:
+        toks = snt.rsplit(None, 1)
+        last = toks[-1] if toks else snt
+        last = last.strip("।.!?,;:'\"()-—")
+        if last:
+            endings[last] += 1
+
+    if not endings:
+        return True, None, 0.0, 0, len(sentences)
+
+    dom_word, dom_count = endings.most_common(1)[0]
+    ratio = dom_count / len(sentences)
+    return (ratio <= max_ratio), dom_word, ratio, dom_count, len(sentences)
 
 
 def _trim_narration(text: str, max_words: int = 45) -> str:
@@ -954,7 +1197,10 @@ HARD RULES:
                 f"sentences with concrete sensory and scientific detail. Rewrite."
             )
 
-        raw = _call_llm(full_prompt)
+        # quality="best" — WhatIf bilingual narration needs Gemini Pro's
+        # creative-prose ability to avoid the summary-prose register that
+        # Flash produces on long-form Hindi.
+        raw = _call_llm(full_prompt, quality="best")
         start = raw.find("{")
         end   = raw.rfind("}")
         if start == -1 or end == -1:
@@ -1304,7 +1550,11 @@ HARD RULES — violation makes the script unusable:
             if reminders:
                 full_prompt += "\n\nCRITICAL REMINDERS:\n- " + "\n- ".join(reminders)
 
-        raw = _call_llm(full_prompt)
+        # quality="best" — Krishna direct-address is first-person Hindi prose
+        # that needs creative-prose grade. Flash produces summary register
+        # ("कृष्ण ने कहा X") instead of the divine-monologue register
+        # ("मैं तुमसे एक सच कहता हूँ पार्थ") the format requires.
+        raw = _call_llm(full_prompt, quality="best")
 
         start = raw.find("{")
         end   = raw.rfind("}")
@@ -1941,62 +2191,117 @@ def generate_script(
     - description MUST end with the exact hashtag block above
     """
 
-    # Try up to 3 times — if a response fails any quality gate (too short,
-    # too few scenes, too repetitive, "tha-tha-tha" verb tic, or any scene's
-    # image_prompt uses generic descriptors instead of named characters),
-    # re-prompt with a targeted reminder naming the specific failure.
+    # Up to 5 attempts (was 3) — multiple simultaneous validator violations
+    # need more rounds. Per-attempt we now apply ONE prioritized reminder
+    # (not the concatenation of all violations) so the LLM focuses on the
+    # single most-important fix per attempt instead of trying to satisfy
+    # everything at once and shrinking the narration to compensate (which
+    # is exactly what happened in the 2026-05-13 local test that produced
+    # a 28.9-second video).
+    #
+    # Priority order — length is always #1 because shrinkage is the worst
+    # failure mode (a 30-second script can't be salvaged downstream).
     data = None
-    last_offenders = []
-    last_short     = False
-    last_tha_tic   = False
-    last_tha_ratio = 0.0
-    last_missing_names = []   # 1-based scene indices missing a character name in image_prompt
-    for attempt in range(3):
+    last_offenders     = []
+    last_short         = False
+    last_tha_tic       = False
+    last_tha_ratio     = 0.0
+    last_missing_names = []
+    last_bookend_miss  = None
+    last_eng_short     = False
+    last_eng_dialogue  = 0
+    last_eng_sensory   = 0
+    last_mono_pattern  = None
+    last_mono_ratio    = 0.0
+    MAX_ATTEMPTS = 5
+    for attempt in range(MAX_ATTEMPTS):
         full_prompt = prompt
         if attempt > 0:
-            reminders = []
+            # Pick the SINGLE highest-priority violation to fix this round.
+            # If multiple validators fired last time, the lower-priority ones
+            # get picked up on the next attempt — the LLM gets one focused
+            # reminder instead of a wall of competing instructions.
+            #
+            # Priority: length > char-names > bookend > engagement > tha-tic >
+            #           monotony > repetition.
+            #
+            # Length is FIRST because the 2026-05-13 test showed the LLM
+            # over-compresses to satisfy style rules when given everything
+            # at once. A 30s video is unrecoverable; the length floor must
+            # be restored before any other reminder is allowed to fire.
+            chosen = None
             if last_short:
-                reminders.append(
-                    "Your previous response had narrations that were too short. "
-                    "Each scene MUST be 25-40 words. Below 25 words is unacceptable."
+                chosen = (
+                    "Your previous response had narrations that were TOO SHORT. "
+                    "Each scene MUST be 25-40 words. Below 25 words is unacceptable. "
+                    "THIS IS THE TOP PRIORITY — do NOT shrink the narration to satisfy "
+                    "any other rule. First restore the per-scene word count, THEN "
+                    "the other quality gates will be checked separately."
                 )
-            if last_offenders:
-                offender_str = ", ".join(f"'{w}' ({n}x)" for w, n in last_offenders[:5])
-                reminders.append(
-                    f"Your previous response REPEATED these words too many times: "
-                    f"{offender_str}. Use SYNONYMS. Each sentence must contain a "
-                    f"NEW concrete detail (a different name, place, or action). "
-                    f"DO NOT restate the same fact twice in different words."
-                )
-            if last_tha_tic:
-                reminders.append(
-                    f"Your previous response had the \"था-था-था\" verbal tic — "
-                    f"{int(last_tha_ratio * 100)}% of sentences ended with "
-                    f"था/थी/थे/थीं. AT MOST 2 sentences in the whole script "
-                    f"may end that way. Rewrite using HISTORICAL PRESENT "
-                    f"(\"द्रौपदी रोती है\" not \"रोई थी\"), simple perfective "
-                    f"WITHOUT auxiliary (\"भीम ने प्रतिज्ञा ली\" not \"ली थी\"), "
-                    f"nominalization (\"द्रौपदी का अपमान — एक क्षण...\"), or "
-                    f"exclamatory beats. Mix the patterns. The script must MOVE, "
-                    f"not list events chronologically."
-                )
-            if last_missing_names:
+            elif last_missing_names:
                 scene_list = ", ".join(f"scene {n}" for n in last_missing_names)
-                reminders.append(
+                chosen = (
                     f"Your previous response had image_prompts in {scene_list} that "
                     f"used GENERIC DESCRIPTORS instead of named characters (e.g. "
-                    f"\"the divine lord\" / \"the dark-skinned god\" / \"the grieving queen\"). "
-                    f"The pipeline injects character visual details by substring-matching "
-                    f"the character's name (Krishna / Arjuna / Bhishma / Gandhari / etc.) "
-                    f"from assets/characters.json. Generic descriptors do NOT match — the "
-                    f"injector skips, and FLUX renders the wrong figure (Krishna ends up "
-                    f"looking like a generic ascetic without the peacock feather, etc.). "
-                    f"Rewrite EVERY image_prompt to use the SPECIFIC character name."
+                    f"\"the divine lord\" / \"the grieving queen\"). The pipeline injects "
+                    f"character visual details by substring-matching the character's name "
+                    f"(Krishna / Arjuna / Bhishma / Gandhari / etc.). Generic descriptors do "
+                    f"NOT match — FLUX renders the wrong figure (Krishna ends up looking "
+                    f"like a generic ascetic without the peacock feather). Rewrite EVERY "
+                    f"image_prompt to use the SPECIFIC character name."
                 )
-            if reminders:
-                full_prompt += "\n\nCRITICAL REMINDERS:\n- " + "\n- ".join(reminders)
+            elif last_bookend_miss:
+                chosen = (
+                    f"Your previous response had NO NARRATIVE BOOKEND. Scene 1's central "
+                    f"noun was '{last_bookend_miss}' but the final scene did NOT echo it. "
+                    f"REWRITE the final scene to name '{last_bookend_miss}' (or a direct "
+                    f"synonym) explicitly, and deliver the payoff that resolves the hook's "
+                    f"claim. See the Bhishma reference: \"प्रतिज्ञा\" → \"वचन\". Same noun, "
+                    f"same subject, payoff delivered."
+                )
+            elif last_eng_short:
+                chosen = (
+                    f"Your previous response had only {last_eng_dialogue} dialogue marker(s) "
+                    f"and {last_eng_sensory} sensory anchor(s) across the entire script. "
+                    f"The engagement floor is ≥2 quoted dialogue lines (बोले / कहा / —) AND "
+                    f"≥4 sensory anchors (आंखें / दीप / गूंज / हाथ / आवाज़ / धूल / etc.) "
+                    f"across all scenes combined. SHOW the scene — don't summarize. Keep "
+                    f"the same scene structure and word counts; just add the dialogue + "
+                    f"sensory anchors inside the existing sentences."
+                )
+            elif last_tha_tic:
+                chosen = (
+                    f"Your previous response had the \"था-था-था\" verbal tic — "
+                    f"{int(last_tha_ratio * 100)}% of sentences ended with था/थी/थे/थीं. "
+                    f"AT MOST 2 sentences in the whole script may end that way. Rewrite "
+                    f"using HISTORICAL PRESENT (\"द्रौपदी रोती है\" not \"रोई थी\"), simple "
+                    f"perfective WITHOUT auxiliary (\"भीम ने प्रतिज्ञा ली\" not \"ली थी\"), "
+                    f"nominalization, or exclamatory beats. Keep the same word counts."
+                )
+            elif last_mono_pattern:
+                chosen = (
+                    f"Your previous response had sentence-ending MONOTONY — "
+                    f"{int(last_mono_ratio * 100)}% of sentences ended with the same word "
+                    f"'{last_mono_pattern}'. No single sentence-ending pattern may exceed "
+                    f"40% of all sentences. Mix endings: historical present, simple "
+                    f"perfective without auxiliary, nominalization, vocative beats, "
+                    f"questions. Keep the same word counts. The script must MOVE."
+                )
+            elif last_offenders:
+                offender_str = ", ".join(f"'{w}' ({n}x)" for w, n in last_offenders[:3])
+                chosen = (
+                    f"Your previous response REPEATED these words too many times: "
+                    f"{offender_str}. Use SYNONYMS. Each sentence must contain a NEW "
+                    f"concrete detail. Keep the same word counts."
+                )
+            if chosen:
+                full_prompt += f"\n\nCRITICAL REMINDER FOR THIS ATTEMPT:\n{chosen}"
 
-        raw = _call_llm(full_prompt)
+        # quality="best" — Mahabharata dramatization is the longest creative
+        # Hindi prose call in the pipeline. The 2026-05-13 local test
+        # produced ungrammatical Hindi (`प्रतिज्ञा हे` / gender mismatch)
+        # characteristic of Flash; Pro handles this register better.
+        raw = _call_llm(full_prompt, quality="best")
 
         # Extract the JSON object — handles thinking text, code fences, and preamble
         start = raw.find("{")
@@ -2041,6 +2346,29 @@ def generate_script(
         # _inject_characters() can append the visual description.
         names_ok, last_missing_names = _check_character_names(scenes)
 
+        # Bookend validator (Fix 2): final scene's narration must echo
+        # scene 1's central noun (or a recognized synonym). Without this
+        # the video ends but doesn't RESOLVE.
+        bookend_ok, last_bookend_miss = _check_bookend(scenes, topic=topic)
+        if bookend_ok:
+            last_bookend_miss = None  # clear so the reminder doesn't fire
+
+        # Engagement-density validator (Fix 3): ≥2 dialogue + ≥4 sensory
+        # anchors across the whole Hindi script. Below threshold means
+        # summary prose — the engagement floor is breached.
+        eng_ok, last_eng_dialogue, last_eng_sensory = _check_engagement_density(scenes, language)
+        last_eng_short = not eng_ok
+
+        # Ending-monotony validator (Fix 4): no single sentence-ending
+        # pattern may exceed 40% of all sentences. Generalizes the older
+        # tha-tic check — also catches present-tense `हैं` chains and
+        # future-conditional `जाएगा` chains.
+        mono_ok, mono_pattern, mono_ratio, mono_hits, mono_total = _check_ending_monotony(
+            scenes, language=language, max_ratio=0.40,
+        )
+        last_mono_pattern = mono_pattern if not mono_ok else None
+        last_mono_ratio   = mono_ratio
+
         print(f"    Script: {n_scenes} scenes, avg {avg_words:.1f} words/scene "
               f"(per-scene: {word_counts})")
         if last_offenders:
@@ -2052,13 +2380,22 @@ def generate_script(
         if last_missing_names:
             print(f"    [warn] Generic-descriptor image_prompts in scenes "
                   f"{last_missing_names} — character injection will not fire")
+        if last_bookend_miss:
+            print(f"    [warn] Bookend missing — scene 1 noun '{last_bookend_miss}' "
+                  f"not echoed in final scene")
+        if last_eng_short:
+            print(f"    [warn] Engagement floor: {last_eng_dialogue} dialogue, "
+                  f"{last_eng_sensory} sensory (need ≥2 dialogue + ≥4 sensory)")
+        if last_mono_pattern:
+            print(f"    [warn] Sentence-ending monotony: '{last_mono_pattern}' at "
+                  f"{int(last_mono_ratio * 100)}% ({mono_hits}/{mono_total})")
 
-        # Acceptable if length OK AND repetition AND verb-variety AND
-        # character-name discipline all pass.
-        if not last_short and rep_ok and tha_ok and names_ok:
+        # Acceptable if every gate passes.
+        if (not last_short and rep_ok and tha_ok and names_ok
+                and bookend_ok and eng_ok and mono_ok):
             break
 
-        if attempt < 2:
+        if attempt < MAX_ATTEMPTS - 1:
             why = []
             if last_short:
                 why.append(f"too short ({n_scenes} scenes / {avg_words:.1f} avg words)")
@@ -2068,6 +2405,12 @@ def generate_script(
                 why.append(f"था-tic {last_tha_ratio:.0%}")
             if last_missing_names:
                 why.append(f"{len(last_missing_names)} scenes missing character names")
+            if last_bookend_miss:
+                why.append(f"bookend missing ('{last_bookend_miss}')")
+            if last_eng_short:
+                why.append(f"engagement floor (D={last_eng_dialogue} / S={last_eng_sensory})")
+            if last_mono_pattern:
+                why.append(f"ending monotony '{last_mono_pattern}' {int(last_mono_ratio * 100)}%")
             print(f"    [retry] {'; '.join(why)}. Re-prompting...")
 
     data["language"] = language
