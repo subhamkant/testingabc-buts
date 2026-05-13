@@ -139,9 +139,18 @@ _NEGATIVE = (
     "unreal engine character,over-rendered,"
     # ── Cartoon / illustration bans ──
     "cartoon,anime,cel shaded,illustration,drawing,comic book,"
+    # ── Embedded-text failure mode (2026-05-14 production check: FLUX-schnell
+    # garbled "Vyasa AI" as VyssA / Virtasy / Vilysaria / Viysas across uploaded
+    # outro frames. Distilled FLUX cannot reliably spell brand names — keep
+    # text out of the prompts AND front-load explicit negatives so the model
+    # avoids letterforms even when prompts accidentally suggest them). ──
+    "text,letters,letterforms,typography,calligraphy,handwriting,"
+    "channel name,subscribe text,logo text,bold text,glowing text,"
+    "scribbled letters,garbled text,misspelled text,fake text,"
+    "watermark,signature,caption,subtitle text in image,"
     # ── Standard quality / anatomy fixes (preserved from prior version) ──
     "blurry,blur,out of focus,low quality,pixelated,distorted,"
-    "ugly,bad anatomy,watermark,text,logo,duplicate,deformed,"
+    "ugly,bad anatomy,logo,duplicate,deformed,"
     "extra fingers,six fingers,seven fingers,too many fingers,"
     "mutated hands,malformed hands,fused fingers,missing fingers,"
     "extra limbs,extra arms,malformed limbs,disfigured,"
@@ -685,6 +694,36 @@ def generate_images(scenes: list, single_shot: bool = False, series: str = "maha
             scene_groups.append(shot_paths)
             print(f"    [resume] Scene {i+1}/{len(scenes)} loaded from partial checkpoint — {len(shot_paths)} shots")
             continue
+
+        # ── Static-asset path (2026-05-14) ────────────────────────────
+        # Subscribe-outro scenes carry an `image_path` field pointing at a
+        # hand-picked asset in assets/outro/. Skip FLUX entirely and copy
+        # the asset to the per-scene output path. Guarantees the channel
+        # name overlay / outro composition is exactly what was approved —
+        # no FLUX gambling on text rendering ("Vyasa AI" -> "VyssA" garble
+        # observed in production on 2026-05-14).
+        static_path = scene.get("image_path", "")
+        if static_path and os.path.exists(static_path):
+            output_path = f"temp/images/scene_{i:02d}_shot_00.jpg"
+            try:
+                import shutil
+                shutil.copy2(static_path, output_path)
+                shot_paths = [output_path]
+                if ck is not None:
+                    try:
+                        cached = ck.save_file(f"visuals/scene_{i:02d}_shot_00.jpg", output_path)
+                        shot_paths = [cached]
+                        current = ck.load_json(partial_key) if ck.has(partial_key) else {}
+                        current[str(i)] = shot_paths
+                        ck.save_json(partial_key, current)
+                    except Exception as _e:
+                        print(f"    [warn] Could not checkpoint static outro asset: {_e}")
+                scene_groups.append(shot_paths)
+                print(f"    [static] Scene {i+1}/{len(scenes)} — using outro asset {static_path}")
+                continue
+            except Exception as _e:
+                # Fall through to regular generation as a defensive backup
+                print(f"    [warn] Static asset copy failed ({_e}) — falling through to FLUX")
 
         shot_paths = []
         mood = scene.get("mood", "")

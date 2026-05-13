@@ -97,6 +97,13 @@ _KRISHNA_LISTENER_VOCATIVE = {
 }
 
 
+_OUTRO_ASSETS = {
+    "mahabharata": "assets/outro/mahabharata.jpg",
+    "krishna":     "assets/outro/krishna.jpg",
+    "whatif":      "assets/outro/whatif.jpg",
+}
+
+
 def _subscribe_outro(series: str, language: str, listener: str = "") -> dict:
     """
     Returns a scene dict for the fixed subscribe-CTA outro. Series-aware so the
@@ -104,6 +111,13 @@ def _subscribe_outro(series: str, language: str, listener: str = "") -> dict:
 
     `listener` is used by the Krishna outro to address the right person (e.g.
     "उद्धव" when the speech was to Uddhava, not the hardcoded "पार्थ").
+
+    NEW 2026-05-14: outro scenes now carry a static `image_path` pointing to
+    a hand-picked asset in assets/outro/. The image pipeline detects this and
+    skips FLUX generation entirely — guarantees the channel name overlay,
+    composition, and quality are exactly what was approved (no per-video
+    FLUX gambling). `image_prompt` is kept as a fallback in case the asset
+    file ever goes missing.
     """
     if series == "krishna":
         # First-person Krishna outro — preserves the divine-monologue immersion
@@ -113,11 +127,15 @@ def _subscribe_outro(series: str, language: str, listener: str = "") -> dict:
         vocative = _KRISHNA_LISTENER_VOCATIVE.get(listener_name, listener_name)
 
         krishna_image = (
+            # NO embedded text — FLUX-schnell cannot spell channel/brand names
+            # (2026-05-14 production check: rendered "Vyasa AI" as VyssA /
+            # Virtasy / Vilysaria / Viysas — all garbled). Channel CTA is
+            # delivered via the spoken narration below instead.
             f"Cinematic two-shot of Krishna and {listener_name} at golden hour, "
             "Krishna with peacock-feather crown and blue skin gesturing in mudra, "
-            f"{listener_name} listening intently, soft text 'Vyasa AI' subtly glowing "
-            "in the lower-third like a divine seal, jewel-toned palette of crimson "
-            "gold and lapis, illustrated mythology art, ornate background carvings"
+            f"{listener_name} listening intently, soft golden glow in the lower-third, "
+            "jewel-toned palette of crimson gold and lapis, illustrated mythology art, "
+            "ornate background carvings"
         )
         krishna_video = (
             f"Slow push-in on Krishna and {listener_name} two-shot, "
@@ -131,6 +149,7 @@ def _subscribe_outro(series: str, language: str, listener: str = "") -> dict:
         )
         return {
             "narration":    narration,
+            "image_path":   _OUTRO_ASSETS["krishna"],
             "image_prompt": krishna_image,
             "video_prompt": krishna_video,
             "mood":         "divine and intimate",
@@ -138,12 +157,20 @@ def _subscribe_outro(series: str, language: str, listener: str = "") -> dict:
 
     if series == "whatif":
         whatif_image = (
-            "Vyasa AI logo card — bold cinematic lettering 'Subscribe to Vyasa AI', "
-            "starfield background with subtle nebula, deep blue and gold palette, "
-            "9:16 portrait composition, modern science-curiosity aesthetic, "
-            "clean readable text, no clutter"
+            # NO embedded text — FLUX-schnell cannot spell channel/brand names.
+            # NO people — "portrait composition" pulls FLUX to face renders
+            # even without character names (2026-05-14 check shipped 3/3
+            # WhatIf candidates as face close-ups). This prompt explicitly
+            # bans humans/faces and describes only the cosmic scene.
+            "Empty deep-space cosmic scene, swirling nebula clouds with star "
+            "clusters, glowing distant planets and ringed gas giant, spiral "
+            "galaxy in the distance, atomic orbital patterns and DNA helix "
+            "motifs as floating ethereal light, deep blue and gold palette, "
+            "modern minimal sci-fi aesthetic, abstract astronomy artwork, "
+            "9:16 vertical canvas, no people, no faces, no humans, "
+            "no text, no lettering, no logos"
         )
-        whatif_video = "Slow zoom on Vyasa AI logo card with starfield parallax and golden glow"
+        whatif_video = "Slow zoom into cosmic scene with starfield parallax and golden glow"
         if language == "hi":
             narration = (
                 "ऐसी मज़ेदार कहानियों के लिए... Vyasa AI को Subscribe करें — "
@@ -156,16 +183,23 @@ def _subscribe_outro(series: str, language: str, listener: str = "") -> dict:
             )
         return {
             "narration":    narration,
+            "image_path":   _OUTRO_ASSETS["whatif"],
             "image_prompt": whatif_image,
             "video_prompt": whatif_video,
             "mood":         "inviting and curious",
         }
 
     # Mahabharata (default)
+    # NO embedded text — FLUX-schnell cannot spell "Vyasa AI" (production
+    # check 2026-05-14 shipped frames with VyssA / Virtasy / Vilysaria /
+    # Viysas — all garbled). Channel CTA is delivered via narration; image
+    # is a clean visual tableau without typography.
     maha_image = (
-        "Epic Mahabharata collage — Krishna, Arjuna, Karna, Draupadi in golden cinematic light, "
-        "bold text 'Subscribe to Vyasa AI' glowing in center, lotus and Om symbol, "
-        "jewel-toned palette, dramatic portrait composition"
+        "Epic Mahabharata tableau — Krishna with peacock crown, Arjuna with "
+        "Gandiva bow, Karna with golden armor, Draupadi in crimson sari, "
+        "arrayed in golden cinematic light around a central glowing Om symbol "
+        "above a lotus, jewel-toned palette, dramatic portrait composition, "
+        "no text, no lettering, no logos"
     )
     maha_video = "Cinematic zoom out from Om symbol to full Mahabharata tableau, golden light rays"
     if language == "hi":
@@ -174,6 +208,7 @@ def _subscribe_outro(series: str, language: str, listener: str = "") -> dict:
         narration = "For more Mahabharata stories... Subscribe to Vyasa AI. Hit the bell!"
     return {
         "narration":    narration,
+        "image_path":   _OUTRO_ASSETS["mahabharata"],
         "image_prompt": maha_image,
         "video_prompt": maha_video,
         "mood":         "inspiring and inviting",
