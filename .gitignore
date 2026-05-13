@@ -12,6 +12,8 @@ temp/
 output/
 logs/
 video_log_001.txt
+# Local-test artifacts (smoke renders, preview videos, log captures)
+preview/
 
 # Runtime caches (regenerable, no point committing)
 trending_cache.json

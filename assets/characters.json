@@ -7,8 +7,8 @@
   },
 
   "Arjuna": {
-    "visual": "Arjuna the mighty archer, tall and athletic warrior with wheatish golden-brown skin, sharp hawk-like eyes, dark wavy hair, wearing ornate kshatriya armor with gold-trimmed breastplate, jeweled crown, holding the divine bow Gandiva which glows with divine light, quiver of inexhaustible arrows, regal heroic posture, determined courageous expression",
-    "colors": "golden-bronze skin, gleaming silver-gold armor, jeweled crown, white and gold"
+    "visual": "Arjuna the mighty archer, tall powerful athletic warrior with strong defined muscular build and broad shoulders, wheatish golden-brown skin, sharp hawk-like eyes, dark wavy hair, wearing ornate kshatriya armor with gold-trimmed breastplate, jeweled crown, holding the divine bow Gandiva which glows with divine light, quiver of inexhaustible arrows, regal heroic posture, determined courageous expression",
+    "colors": "golden-bronze skin, gleaming silver-gold armor, jeweled crown, white and gold, muscular warrior build"
   },
 
   "Draupadi": {
@@ -22,8 +22,13 @@
   },
 
   "Karna": {
-    "visual": "Karna the great warrior, heroically built with natural golden divine armor (kavacha) fused to his chest and golden earrings (kundala) glowing on his ears, golden-bronze radiant skin, sharp strong features, dark intense eyes filled with pride and hidden sorrow, wearing warrior's attire with the natural born golden breastplate, powerful archer's stance, conflicted noble expression",
-    "colors": "golden-bronze radiant skin, divine golden armor glow, red warrior attire"
+    "visual": "Karna the great warrior, heroically built powerful broad-shouldered warrior with defined muscular chest and strong arms, natural golden divine armor (kavacha) fused to his chest and golden earrings (kundala) glowing on his ears, luminous golden-bronze radiant skin, sharp strong features, dark intense eyes filled with pride and hidden sorrow, wearing warrior's attire with the natural born golden breastplate, powerful archer's stance, conflicted noble expression",
+    "colors": "luminous golden-bronze radiant skin, divine golden armor glow, red warrior attire, muscular warrior physique"
+  },
+
+  "Bhima": {
+    "visual": "Bhima the mighty Pandava warrior son of Vayu, heavily muscular massive bull-strong warrior with huge powerful build, broad thick chest and thick arms, towering imposing frame, fierce dark moustache, intense fearless eyes, golden-brown radiant skin, wearing warrior's attire that strains against his powerful physique, wielding his legendary gada (heavy mace), expression of righteous fury and immense strength",
+    "colors": "golden-brown radiant skin, warrior's attire, gleaming gada mace, massive muscular warrior form"
   },
 
   "Yudhishthira": {

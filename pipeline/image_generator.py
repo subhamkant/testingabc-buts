@@ -5,6 +5,7 @@ import time
 import json
 import base64
 import io
+import subprocess
 from urllib.parse import quote
 
 # Mahabharata style suffix — photorealistic cinematic period film aesthetic
@@ -22,20 +23,37 @@ from urllib.parse import quote
 STYLE_SUFFIX = (
     # Photoreal anchor — kept short for distilled FLUX variants (Pollinations,
     # Cloudflare) which honor long prompts less reliably than HF FLUX-schnell.
-    # The previous ~500-char version contained semantically conflicting cues
-    # ("warm jewel-toned palette" vs "balanced color, neutral whites" vs
-    # "no magenta cast") that distilled models resolved by picking whichever
-    # signal was most repeated — the warm/magenta side, by mass. This shorter
-    # version removes the warm-palette anchor entirely; scene-specific
-    # image_prompts and the per-scene `mood` field still drive color when a
-    # scene needs warm tones.
+    # WALKED BACK from earlier version: "physically-based skin with visible
+    # pores and fine facial hair" + "ultra-sharp 8K detail throughout" were
+    # producing splotchy/scarred face artifacts and broken eye anatomy on
+    # women's close-ups in the 2026-05-13 local test (Draupadi face had
+    # mottled "wet/grimy" texture, eyelid anatomy was broken in another shot).
+    # Distilled FLUX-schnell over-interprets "visible pores" as "lots of
+    # skin texture" and produces splotches. Softer anchors below.
     "photorealistic cinematic film still shot on Arri Alexa LF, "
     "Kodak Vision3 5219 film stock, "
-    "physically-based skin with visible pores and fine facial hair, "
+    "natural skin texture, realistic facial features, "
+    # Eye-specific anchor — added 2026-05-14 after the Karna-arc local test
+    # shipped 7/10 frames with dead-eye / black-void pupils. Distilled FLUX
+    # at 4 steps loses eye micro-detail without an explicit eye cue. This
+    # is eye-only — does not re-introduce "pores"/"8K" that caused splotchy
+    # skin on the prior iteration.
+    "detailed expressive eyes with clearly defined iris and pupils, "
+    "natural catch-light reflections in the eyes, "
+    # Face-exposure anchor — added 2026-05-14 after the v3_images smoke test
+    # shipped Karna with near-black skin from FLUX over-interpreting "oil-lamp"
+    # / "subtle glow" lighting cues. Canonical Karna is golden-bronze (Surya's
+    # son), not silhouette-dark. This anchor pushes back without overruling
+    # mood / shadow direction from the scene prompt. "Luminous golden glowing
+    # complexion" added 2026-05-14 evening after v7_muscle smoke test showed
+    # the golden shift was additive and helped on Karna/Arjuna.
+    "warm golden-bronze skin tone for Indian characters, "
+    "luminous golden glowing complexion, "
+    "well-lit faces with key-light on the face, even facial exposure, "
     "ancient India Mahabharat live-action / Baahubali period-film aesthetic, "
     "carved sandstone temple architecture in sharp focus, oil-lamp lighting, "
     "balanced natural color grading, neutral whites, true skin tones, "
-    "ultra-sharp 8K detail throughout, "
+    "sharp focus on subject, clear facial features, "
     "no global color wash, no orange filter, no magenta or pink cast, "
     "no CGI plastic look, no airbrushed skin"
 )
@@ -90,7 +108,28 @@ def _resolve_style_suffix(series: str, visual_style: str) -> str:
 # analysis flagged as the most-recurring visible quality regressions
 # (heavy color wash, plastic skin, CGI-game-character vibe).
 _NEGATIVE = (
-    # ── Color-wash failure mode (top priority — most visible on output) ──
+    # ── Eye-detail failure mode (TOP priority — 2026-05-14 Karna-arc local
+    # test shipped 7/10 frames with dead-eye / black-void pupils. Distilled
+    # FLUX-schnell loses eye micro-detail; front-loaded negatives push it
+    # to actually render iris/pupil structure rather than dark voids). ──
+    "dead eyes,glassy eyes,vacant stare,blank eyes,soulless eyes,"
+    "missing pupils,missing iris,black void eyes,recessed eye sockets,"
+    "asymmetric eyes,one eye closed,wonky eyes,smeared eyes,blurred eyes,"
+    "eyes without detail,unfocused eyes,"
+    # ── Face-underexposure failure mode (2026-05-14 v3_images test: Karna
+    # rendered with near-black skin from FLUX over-reading "oil-lamp" cues
+    # as silhouette lighting; canonical Karna is golden-bronze). ──
+    "underexposed face,blackened skin,overly dark face,silhouette face,"
+    "face in deep shadow,unlit face,muddy skin tone,washed-out dark skin,"
+    "ashen face,grey skin,"
+    # ── Face-distortion failure mode (observed in 2026-05-13 test where
+    # women's faces had splotchy/scarred patterns + broken eye anatomy.
+    # Distilled FLUX-schnell variants downweight late negatives). ──
+    "splotchy skin,mottled face,scarred face,skin condition,acne,"
+    "exaggerated pore detail,over-textured skin,patchy skin,"
+    "deformed eyes,broken facial anatomy,extra eye,"
+    "missing eye,crooked eye,droopy eyelid,merged eyebrows,"
+    # ── Color-wash failure mode (most visible color regression) ──
     "orange cast,magenta cast,pink cast,purple cast,color wash,"
     "warm filter,heavy filter,sepia overlay,monochrome filter,"
     "over-saturated,over-graded,"
@@ -106,14 +145,20 @@ _NEGATIVE = (
     "extra fingers,six fingers,seven fingers,too many fingers,"
     "mutated hands,malformed hands,fused fingers,missing fingers,"
     "extra limbs,extra arms,malformed limbs,disfigured,"
-    "asymmetric eyes,cross-eyed,bad proportions"
+    "cross-eyed,bad proportions"
 )
 
-# 3 compositional angles per scene — gives genuine visual variety
+# 3 compositional angles per scene — gives genuine visual variety.
+# "dramatic close-up" was walked back to "medium close-up" on 2026-05-14
+# after the Karna-arc local test shipped 7/10 frames with dead-eye / black-
+# void pupils. FLUX-schnell at 4 steps cannot resolve eye micro-detail when
+# the eye fills > ~15% of the frame — medium close-up keeps the emotional
+# punch but gives the model enough pixel budget to actually render iris/
+# pupil structure.
 _SHOT_ANGLES = [
-    "",                     # base prompt — wide establishing shot
-    "medium shot, ",        # mid-range character focus
-    "dramatic close-up, ",  # emotional detail / facial expression
+    "WIDE SHOT, ",                  # establishing — env + character together
+    "MEDIUM SHOT, ",                # mid-range character focus
+    "MEDIUM CLOSE-UP, ",            # head-and-shoulders, eyes still readable
 ]
 
 # Load character reference descriptions once at import time
@@ -125,6 +170,51 @@ try:
         }
 except Exception:
     _CHARACTERS = {}
+
+
+def _primary_character(prompt: str) -> str:
+    """
+    Returns the FIRST known character name found in the prompt (case-insensitive),
+    or empty string if none found. Used to derive a stable per-character seed
+    so the same character renders with a similar face across all scenes of a
+    video — eliminates the worst face-drift problem (Karna looking like four
+    different actors across six scenes). The "first" character takes priority
+    because image prompts typically lead with the scene's hero ("Karna sits...",
+    "Indra appears..."), and downstream characters are usually secondary.
+
+    Searches both _CHARACTERS (15 heroes with full visual descriptions) AND
+    _KNOWN_NAMES (the broader Mahabharat character list including Indra,
+    Surya, etc.). Seed-stability needs only the *name*, not a visual
+    description, so secondary characters still get consistent faces across
+    scenes.
+    """
+    prompt_lower = prompt.lower()
+    earliest_pos = len(prompt_lower) + 1
+    earliest_name = ""
+    # Combined candidate pool — dedupe via set, preserve original casing
+    candidates = set(_CHARACTERS.keys()) | set(_KNOWN_NAMES)
+    for name in candidates:
+        pos = prompt_lower.find(name.lower())
+        if 0 <= pos < earliest_pos:
+            earliest_pos = pos
+            earliest_name = name
+    return earliest_name
+
+
+def _char_stable_seed(character: str, shot_index: int) -> int:
+    """
+    Deterministic seed derived from character name + shot index. Same character
+    → same seed across all scenes → FLUX-schnell renders a visually similar
+    face. The shot_index offset gives each angle a *related-but-not-identical*
+    seed so the wide / medium / close-up shots don't look like the same crop
+    of one image. Empty character falls back to scene-position seeding.
+    """
+    if not character:
+        return 0
+    h = 0
+    for ch in character:
+        h = (h * 131 + ord(ch)) & 0xFFFFFFFF
+    return (h + shot_index * 17) % 99991  # prime modulus for spread
 
 
 def _inject_characters(prompt: str) -> str:
@@ -299,32 +389,106 @@ def _gen_hf(prompt: str, seed: int, width: int, height: int) -> bytes:
     return _ensure_dims(resp.content, width, height)
 
 
+def _cloudflare_accounts() -> list[tuple[str, str, str]]:
+    """
+    Return all configured Cloudflare (label, account_id, api_token) triples
+    in cascade order. Primary first, then numbered fallbacks _2, _3, ... .
+    Empty / unset entries are skipped. Same shape as _gemini_keys() in
+    script_generator.py — when the primary account exhausts its 10k-neuron/day
+    free quota with a 429 (or similar quota error), the cascade walks to the
+    next account immediately so production never falls to Pollinations
+    (which produces visibly muddier output) while quota is available on
+    another account.
+    """
+    out: list[tuple[str, str, str]] = []
+    pid = os.environ.get("CLOUDFLARE_ACCOUNT_ID", "").strip()
+    ptk = os.environ.get("CLOUDFLARE_API_TOKEN", "").strip()
+    if pid and ptk:
+        out.append(("cf-primary", pid, ptk))
+    for n in range(2, 6):
+        aid = os.environ.get(f"CLOUDFLARE_ACCOUNT_ID_{n}", "").strip()
+        atk = os.environ.get(f"CLOUDFLARE_API_TOKEN_{n}", "").strip()
+        if aid and atk and (aid, atk) not in [(a, t) for _, a, t in out]:
+            out.append((f"cf-acct-{n}", aid, atk))
+    return out
+
+
+def _cf_is_quota_error(status: int, body_text: str) -> bool:
+    """
+    Distinguish quota exhaustion (try next account) from transient errors
+    (try same account on next pipeline retry). Cloudflare returns 429 for
+    rate-limit AND for daily-neuron-cap; both warrant fast-fail to next
+    account. 401/403 = bad token (try next account). 5xx = transient (still
+    try next account since the alternative is Pollinations).
+    """
+    if status in (429, 401, 403):
+        return True
+    low = body_text.lower()
+    if "neuron" in low and ("limit" in low or "quota" in low or "exceeded" in low):
+        return True
+    if "rate" in low and "limit" in low:
+        return True
+    return False
+
+
 def _gen_cloudflare(prompt: str, seed: int, width: int, height: int) -> bytes:
-    token = os.environ.get("CLOUDFLARE_API_TOKEN", "").strip()
-    account_id = os.environ.get("CLOUDFLARE_ACCOUNT_ID", "").strip()
-    if not (token and account_id):
-        raise RuntimeError("CLOUDFLARE_API_TOKEN/ACCOUNT_ID not set")
-    url = (
-        f"https://api.cloudflare.com/client/v4/accounts/{account_id}"
-        f"/ai/run/@cf/black-forest-labs/flux-1-schnell"
-    )
-    headers = {"Authorization": f"Bearer {token}"}
-    # steps=8 is the free-tier max for flux-schnell; 4 is faster but produces
-    # more anatomy errors (extra fingers, malformed hands). 8 is the quality cap.
+    """
+    Multi-account FLUX-schnell call. Walks every configured CF account in
+    order; on quota/auth errors fast-fails to next account, on the LAST
+    account also re-raises any 5xx so the outer cascade can fall to
+    Pollinations. steps=8 is the free-tier max for flux-schnell — 4 is
+    faster but produces more anatomy errors.
+    """
+    accounts = _cloudflare_accounts()
+    if not accounts:
+        raise RuntimeError("no CLOUDFLARE_ACCOUNT_ID/API_TOKEN pairs configured")
+
     body = {"prompt": prompt, "steps": 8, "seed": seed, "negative_prompt": _NEGATIVE}
-    resp = requests.post(url, headers=headers, json=body, timeout=60)
-    if resp.status_code != 200:
-        raise RuntimeError(f"cloudflare status={resp.status_code}")
-    data = resp.json()
-    if not data.get("success"):
-        raise RuntimeError(f"cloudflare success=false: {data.get('errors')}")
-    img_b64 = data.get("result", {}).get("image", "")
-    if not img_b64:
-        raise RuntimeError("cloudflare missing result.image")
-    raw = base64.b64decode(img_b64)
-    if len(raw) < _MIN_BYTES:
-        raise RuntimeError(f"cloudflare bytes={len(raw)}")
-    return _ensure_dims(raw, width, height)
+    last_err = "no accounts attempted"
+    for label, account_id, token in accounts:
+        url = (
+            f"https://api.cloudflare.com/client/v4/accounts/{account_id}"
+            f"/ai/run/@cf/black-forest-labs/flux-1-schnell"
+        )
+        headers = {"Authorization": f"Bearer {token}"}
+        try:
+            resp = requests.post(url, headers=headers, json=body, timeout=60)
+        except Exception as net_err:
+            last_err = f"{label} network: {net_err}"
+            continue
+
+        if resp.status_code != 200:
+            last_err = f"{label} status={resp.status_code} body={resp.text[:120]}"
+            if _cf_is_quota_error(resp.status_code, resp.text):
+                # Hit quota / auth — move to next account immediately.
+                continue
+            # Non-quota non-200 (rare). Still try next account — better than
+            # giving up on Cloudflare entirely and falling to Pollinations.
+            continue
+
+        try:
+            data = resp.json()
+        except Exception as je:
+            last_err = f"{label} bad json: {je}"
+            continue
+        if not data.get("success"):
+            errs = data.get("errors") or []
+            err_str = str(errs).lower()
+            last_err = f"{label} success=false: {errs}"
+            if any(k in err_str for k in ("quota", "neuron", "rate", "limit", "exceeded")):
+                continue
+            continue
+        img_b64 = data.get("result", {}).get("image", "")
+        if not img_b64:
+            last_err = f"{label} missing result.image"
+            continue
+        raw = base64.b64decode(img_b64)
+        if len(raw) < _MIN_BYTES:
+            last_err = f"{label} bytes={len(raw)}"
+            continue
+        return _ensure_dims(raw, width, height)
+
+    raise RuntimeError(f"cloudflare cascade exhausted: {last_err}")
 
 
 def _gen_pollinations(prompt: str, seed: int, width: int, height: int) -> bytes:
@@ -349,21 +513,107 @@ def _gen_pollinations(prompt: str, seed: int, width: int, height: int) -> bytes:
     return resp.content
 
 
+def _correct_warm_cast(img_bytes: bytes, provider: str) -> bytes:
+    """
+    Neutralize the magenta/orange warm wash that Cloudflare FLUX-schnell and
+    Pollinations consistently produce on this pipeline. Prompt-based anti-
+    cast anchors (`no magenta cast`, `no warm filter` in _NEGATIVE) have
+    repeatedly failed across multiple test runs — the bias is at the pixel
+    level on these distilled FLUX variants, not at the prompt level.
+
+    Three-filter ffmpeg pipeline applied via stdin/stdout pipes:
+      - colortemperature mix=0.5 toward 5200K — cools the warm wash
+      - eq saturation=0.88 gamma=1.02 — desat slightly + lift midtones
+      - unsharp 5:5:0.4 — compensate for blurry backgrounds
+
+    HF FLUX-schnell output is bypass-skipped — when HF quota becomes
+    available again (or with HF Pro), its renders don't have the cast and
+    we don't want to double-correct.
+
+    Intensity is gated by IMAGE_COLOR_CORRECT_INTENSITY env var
+    (default 1.0; set 0.0 to disable entirely without code change).
+
+    Any ffmpeg failure returns the original bytes unchanged — never crashes
+    the pipeline.
+    """
+    if "hf-flux" in provider.lower():
+        return img_bytes
+
+    try:
+        intensity = float(os.environ.get("IMAGE_COLOR_CORRECT_INTENSITY", "1.0"))
+    except ValueError:
+        intensity = 1.0
+    if intensity <= 0:
+        return img_bytes
+
+    # Scale the three filter strengths by intensity. At intensity=1.0 these
+    # match the values that produced visible improvement in local A/B testing.
+    temp_mix = max(0.0, min(1.0, 0.5 * intensity))
+    sat      = 1.0 - (0.12 * intensity)
+    gamma    = 1.0 + (0.02 * intensity)
+    sharpen  = 0.4 * intensity
+
+    vf = (
+        f"colortemperature=temperature=5200:mix={temp_mix:.2f},"
+        f"eq=saturation={sat:.2f}:gamma={gamma:.2f},"
+        f"unsharp=5:5:{sharpen:.2f}"
+    )
+
+    try:
+        result = subprocess.run(
+            [
+                "ffmpeg", "-y", "-loglevel", "error",
+                "-i", "pipe:0",
+                "-vf", vf,
+                "-f", "image2pipe", "-vcodec", "mjpeg", "-q:v", "2",
+                "pipe:1",
+            ],
+            input=img_bytes,
+            capture_output=True,
+            timeout=15,
+        )
+        if result.returncode == 0 and result.stdout and len(result.stdout) > _MIN_BYTES:
+            return result.stdout
+        # ffmpeg failed (non-zero exit or tiny output) — fall through, keep original
+        return img_bytes
+    except Exception:
+        # subprocess timeout / OS error / etc. — never crash, just skip correction
+        return img_bytes
+
+
 def generate_image_bytes(prompt: str, seed: int, width: int, height: int, mood: str = "", style_suffix: str = STYLE_SUFFIX) -> tuple[bytes, str]:
     """
-    Tries HF -> Cloudflare -> Pollinations until one returns a usable image.
-    Returns (image_bytes, provider_name). Raises only if all three fail.
+    Tries Cloudflare (multi-account cascade) -> HF -> Pollinations until one
+    returns a usable image. Returns (image_bytes, provider_name).
+
+    Order rationale (2026-05-14):
+      1. Cloudflare first — produces the best visible quality on our prompts
+         (the v3/v4 smoke-test images that the user approved were all CF).
+         With 2-3 configured accounts, the daily 10k-neuron quota stretches
+         to 4-6 clean videos/day.
+      2. HF FLUX-schnell — backup. Frequently 429s on free tier; FLUX.1-dev
+         was deprecated entirely 2026-05-14. Kept in the cascade for any
+         account that still has HF Pro / unused quota.
+      3. Pollinations — last resort only. Free-unlimited but produces visibly
+         muddier output (the v5_pollinations smoke test the user rejected
+         was Pollinations-only).
+
+    Post-processing pipeline applied to every successful render:
+      - _correct_warm_cast — neutralizes magenta/orange wash (Cloudflare/
+        Pollinations only; HF FLUX-schnell bypassed since its output has
+        no cast).
     """
     full_prompt = _build_full_prompt(prompt, mood, style_suffix=style_suffix)
     providers = [
-        ("hf-flux-schnell",         lambda: _gen_hf(full_prompt, seed, width, height)),
         ("cloudflare-flux-schnell", lambda: _gen_cloudflare(full_prompt, seed, width, height)),
+        ("hf-flux-schnell",         lambda: _gen_hf(full_prompt, seed, width, height)),
         ("pollinations-flux-realism", lambda: _gen_pollinations(full_prompt, seed, width, height)),
     ]
     last_err = None
     for name, fn in providers:
         try:
             data = fn()
+            data = _correct_warm_cast(data, name)
             return data, name
         except Exception as e:
             last_err = f"{name}: {e}"
@@ -444,15 +694,23 @@ def generate_images(scenes: list, single_shot: bool = False, series: str = "maha
         # outperforms a wide establishing shot for first-frame retention.
         scene_angles = angles
         if single_shot and i == 0:
-            scene_angles = ["dramatic close-up on face mid-emotion, "]
+            # Hook frame — medium close-up keeps emotional punch but gives
+            # FLUX-schnell room to render eyes (extreme close-ups produced
+            # dead-eye pupils in the 2026-05-14 Karna-arc test).
+            scene_angles = ["MEDIUM CLOSE-UP on face mid-emotion (head and shoulders visible), "]
 
         for j, angle_prefix in enumerate(scene_angles):
             output_path = f"temp/images/scene_{i:02d}_shot_{j:02d}.jpg"
             # Character injection is Mahabharata-specific (Krishna/Arjuna/etc.
             # visual descriptors); skip it for WhatIf science content.
-            base_prompt = scene["image_prompt"] if series == "whatif" else _inject_characters(scene["image_prompt"])
+            raw_prompt = scene["image_prompt"]
+            base_prompt = raw_prompt if series == "whatif" else _inject_characters(raw_prompt)
             prompt = f"{angle_prefix}{base_prompt}"
-            seed = i * 137 + j * 31
+            # Stable per-character seed: same hero across scenes → similar
+            # face. Falls back to scene-position seed when no known character
+            # is mentioned (WhatIf scenes, environment-only shots).
+            hero = "" if series == "whatif" else _primary_character(raw_prompt)
+            seed = _char_stable_seed(hero, j) if hero else (i * 137 + j * 31)
 
             success = False
             for attempt in range(3):

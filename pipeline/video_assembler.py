@@ -427,9 +427,20 @@ def _apply_cinematic_polish(video_path: str, clip_durations: list) -> None:
 
     Every step degrades gracefully: missing assets / filter errors leave the
     original file untouched and the pipeline continues.
+
+    Light-leak overlay is now gated behind CINEMATIC_LIGHT_LEAK env var
+    (default OFF). The 2026-05-13 local test showed the screen-blended
+    overlay was causing ghost / double-exposure artifacts at scene
+    boundaries — two adjacent shots' frames bleeding through the leak
+    texture (visible at the 5s mark of preview/local_test.mp4 — two faces
+    overlapping). Set CINEMATIC_LIGHT_LEAK=true to re-enable if you decide
+    the polish-layer look is worth the ghost risk.
     """
     lut        = _pick_lut()
-    leak       = _pick_overlay("lightleaks")
+    # Light-leak overlay: gated by env var, default OFF to suppress the
+    # ghost/double-exposure at scene boundaries.
+    leak_enabled = os.environ.get("CINEMATIC_LIGHT_LEAK", "false").lower() in ("1", "true", "yes")
+    leak       = _pick_overlay("lightleaks") if leak_enabled else ""
     fps_env    = os.environ.get("CINEMATIC_FPS", "").strip()
     target_fps = int(fps_env) if fps_env.isdigit() else 0
 
