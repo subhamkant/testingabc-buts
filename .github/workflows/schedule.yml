@@ -102,6 +102,10 @@ jobs:
           hf-space: ${{ secrets.HF_SPACE }}
           cloudflare-api-token: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           cloudflare-account-id: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          cloudflare-api-token-2: ${{ secrets.CLOUDFLARE_API_TOKEN_2 }}
+          cloudflare-account-id-2: ${{ secrets.CLOUDFLARE_ACCOUNT_ID_2 }}
+          cloudflare-api-token-3: ${{ secrets.CLOUDFLARE_API_TOKEN_3 }}
+          cloudflare-account-id-3: ${{ secrets.CLOUDFLARE_ACCOUNT_ID_3 }}
           elevenlabs-api-key: ${{ secrets.ELEVENLABS_API_KEY }}
           elevenlabs-api-key-fallback: ${{ secrets.ELEVENLABS_API_KEY_FALLBACK }}
           elevenlabs-voice-id: ${{ secrets.ELEVENLABS_VOICE_ID }}
@@ -153,6 +157,10 @@ jobs:
           hf-space: ${{ secrets.HF_SPACE }}
           cloudflare-api-token: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           cloudflare-account-id: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          cloudflare-api-token-2: ${{ secrets.CLOUDFLARE_API_TOKEN_2 }}
+          cloudflare-account-id-2: ${{ secrets.CLOUDFLARE_ACCOUNT_ID_2 }}
+          cloudflare-api-token-3: ${{ secrets.CLOUDFLARE_API_TOKEN_3 }}
+          cloudflare-account-id-3: ${{ secrets.CLOUDFLARE_ACCOUNT_ID_3 }}
           elevenlabs-api-key: ${{ secrets.ELEVENLABS_API_KEY }}
           elevenlabs-api-key-fallback: ${{ secrets.ELEVENLABS_API_KEY_FALLBACK }}
           elevenlabs-voice-id: ${{ secrets.ELEVENLABS_VOICE_ID }}
@@ -202,6 +210,10 @@ jobs:
           hf-space: ${{ secrets.HF_SPACE }}
           cloudflare-api-token: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           cloudflare-account-id: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          cloudflare-api-token-2: ${{ secrets.CLOUDFLARE_API_TOKEN_2 }}
+          cloudflare-account-id-2: ${{ secrets.CLOUDFLARE_ACCOUNT_ID_2 }}
+          cloudflare-api-token-3: ${{ secrets.CLOUDFLARE_API_TOKEN_3 }}
+          cloudflare-account-id-3: ${{ secrets.CLOUDFLARE_ACCOUNT_ID_3 }}
           elevenlabs-api-key: ${{ secrets.ELEVENLABS_API_KEY }}
           elevenlabs-api-key-fallback: ${{ secrets.ELEVENLABS_API_KEY_FALLBACK }}
           elevenlabs-voice-id: ${{ secrets.ELEVENLABS_VOICE_ID }}
@@ -251,6 +263,10 @@ jobs:
           hf-space: ${{ secrets.HF_SPACE }}
           cloudflare-api-token: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           cloudflare-account-id: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          cloudflare-api-token-2: ${{ secrets.CLOUDFLARE_API_TOKEN_2 }}
+          cloudflare-account-id-2: ${{ secrets.CLOUDFLARE_ACCOUNT_ID_2 }}
+          cloudflare-api-token-3: ${{ secrets.CLOUDFLARE_API_TOKEN_3 }}
+          cloudflare-account-id-3: ${{ secrets.CLOUDFLARE_ACCOUNT_ID_3 }}
           elevenlabs-api-key: ${{ secrets.ELEVENLABS_API_KEY }}
           elevenlabs-api-key-fallback: ${{ secrets.ELEVENLABS_API_KEY_FALLBACK }}
           elevenlabs-voice-id: ${{ secrets.ELEVENLABS_VOICE_ID }}
@@ -290,6 +306,10 @@ jobs:
           hf-space: ${{ secrets.HF_SPACE }}
           cloudflare-api-token: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           cloudflare-account-id: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          cloudflare-api-token-2: ${{ secrets.CLOUDFLARE_API_TOKEN_2 }}
+          cloudflare-account-id-2: ${{ secrets.CLOUDFLARE_ACCOUNT_ID_2 }}
+          cloudflare-api-token-3: ${{ secrets.CLOUDFLARE_API_TOKEN_3 }}
+          cloudflare-account-id-3: ${{ secrets.CLOUDFLARE_ACCOUNT_ID_3 }}
           elevenlabs-api-key: ${{ secrets.ELEVENLABS_API_KEY }}
           elevenlabs-api-key-fallback: ${{ secrets.ELEVENLABS_API_KEY_FALLBACK }}
           elevenlabs-voice-id: ${{ secrets.ELEVENLABS_VOICE_ID }}
@@ -326,6 +346,10 @@ jobs:
           hf-space: ${{ secrets.HF_SPACE }}
           cloudflare-api-token: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           cloudflare-account-id: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          cloudflare-api-token-2: ${{ secrets.CLOUDFLARE_API_TOKEN_2 }}
+          cloudflare-account-id-2: ${{ secrets.CLOUDFLARE_ACCOUNT_ID_2 }}
+          cloudflare-api-token-3: ${{ secrets.CLOUDFLARE_API_TOKEN_3 }}
+          cloudflare-account-id-3: ${{ secrets.CLOUDFLARE_ACCOUNT_ID_3 }}
           elevenlabs-api-key: ${{ secrets.ELEVENLABS_API_KEY }}
           elevenlabs-api-key-fallback: ${{ secrets.ELEVENLABS_API_KEY_FALLBACK }}
           elevenlabs-voice-id: ${{ secrets.ELEVENLABS_VOICE_ID }}
@@ -362,6 +386,10 @@ jobs:
           hf-space: ${{ secrets.HF_SPACE }}
           cloudflare-api-token: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           cloudflare-account-id: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          cloudflare-api-token-2: ${{ secrets.CLOUDFLARE_API_TOKEN_2 }}
+          cloudflare-account-id-2: ${{ secrets.CLOUDFLARE_ACCOUNT_ID_2 }}
+          cloudflare-api-token-3: ${{ secrets.CLOUDFLARE_API_TOKEN_3 }}
+          cloudflare-account-id-3: ${{ secrets.CLOUDFLARE_ACCOUNT_ID_3 }}
           elevenlabs-api-key: ${{ secrets.ELEVENLABS_API_KEY }}
           elevenlabs-api-key-fallback: ${{ secrets.ELEVENLABS_API_KEY_FALLBACK }}
           elevenlabs-voice-id: ${{ secrets.ELEVENLABS_VOICE_ID }}
@@ -398,6 +426,10 @@ jobs:
           hf-space: ${{ secrets.HF_SPACE }}
           cloudflare-api-token: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           cloudflare-account-id: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          cloudflare-api-token-2: ${{ secrets.CLOUDFLARE_API_TOKEN_2 }}
+          cloudflare-account-id-2: ${{ secrets.CLOUDFLARE_ACCOUNT_ID_2 }}
+          cloudflare-api-token-3: ${{ secrets.CLOUDFLARE_API_TOKEN_3 }}
+          cloudflare-account-id-3: ${{ secrets.CLOUDFLARE_ACCOUNT_ID_3 }}
           elevenlabs-api-key: ${{ secrets.ELEVENLABS_API_KEY }}
           elevenlabs-api-key-fallback: ${{ secrets.ELEVENLABS_API_KEY_FALLBACK }}
           elevenlabs-voice-id: ${{ secrets.ELEVENLABS_VOICE_ID }}
@@ -449,6 +481,10 @@ jobs:
           hf-space: ${{ secrets.HF_SPACE }}
           cloudflare-api-token: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           cloudflare-account-id: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          cloudflare-api-token-2: ${{ secrets.CLOUDFLARE_API_TOKEN_2 }}
+          cloudflare-account-id-2: ${{ secrets.CLOUDFLARE_ACCOUNT_ID_2 }}
+          cloudflare-api-token-3: ${{ secrets.CLOUDFLARE_API_TOKEN_3 }}
+          cloudflare-account-id-3: ${{ secrets.CLOUDFLARE_ACCOUNT_ID_3 }}
           elevenlabs-api-key: ${{ secrets.ELEVENLABS_API_KEY }}
           elevenlabs-api-key-fallback: ${{ secrets.ELEVENLABS_API_KEY_FALLBACK }}
           elevenlabs-voice-id: ${{ secrets.ELEVENLABS_VOICE_ID }}
@@ -485,6 +521,10 @@ jobs:
           hf-space: ${{ secrets.HF_SPACE }}
           cloudflare-api-token: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           cloudflare-account-id: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          cloudflare-api-token-2: ${{ secrets.CLOUDFLARE_API_TOKEN_2 }}
+          cloudflare-account-id-2: ${{ secrets.CLOUDFLARE_ACCOUNT_ID_2 }}
+          cloudflare-api-token-3: ${{ secrets.CLOUDFLARE_API_TOKEN_3 }}
+          cloudflare-account-id-3: ${{ secrets.CLOUDFLARE_ACCOUNT_ID_3 }}
           elevenlabs-api-key: ${{ secrets.ELEVENLABS_API_KEY }}
           elevenlabs-api-key-fallback: ${{ secrets.ELEVENLABS_API_KEY_FALLBACK }}
           elevenlabs-voice-id: ${{ secrets.ELEVENLABS_VOICE_ID }}
@@ -521,6 +561,10 @@ jobs:
           hf-space: ${{ secrets.HF_SPACE }}
           cloudflare-api-token: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           cloudflare-account-id: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          cloudflare-api-token-2: ${{ secrets.CLOUDFLARE_API_TOKEN_2 }}
+          cloudflare-account-id-2: ${{ secrets.CLOUDFLARE_ACCOUNT_ID_2 }}
+          cloudflare-api-token-3: ${{ secrets.CLOUDFLARE_API_TOKEN_3 }}
+          cloudflare-account-id-3: ${{ secrets.CLOUDFLARE_ACCOUNT_ID_3 }}
           elevenlabs-api-key: ${{ secrets.ELEVENLABS_API_KEY }}
           elevenlabs-api-key-fallback: ${{ secrets.ELEVENLABS_API_KEY_FALLBACK }}
           elevenlabs-voice-id: ${{ secrets.ELEVENLABS_VOICE_ID }}
@@ -557,6 +601,10 @@ jobs:
           hf-space: ${{ secrets.HF_SPACE }}
           cloudflare-api-token: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           cloudflare-account-id: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          cloudflare-api-token-2: ${{ secrets.CLOUDFLARE_API_TOKEN_2 }}
+          cloudflare-account-id-2: ${{ secrets.CLOUDFLARE_ACCOUNT_ID_2 }}
+          cloudflare-api-token-3: ${{ secrets.CLOUDFLARE_API_TOKEN_3 }}
+          cloudflare-account-id-3: ${{ secrets.CLOUDFLARE_ACCOUNT_ID_3 }}
           elevenlabs-api-key: ${{ secrets.ELEVENLABS_API_KEY }}
           elevenlabs-api-key-fallback: ${{ secrets.ELEVENLABS_API_KEY_FALLBACK }}
           elevenlabs-voice-id: ${{ secrets.ELEVENLABS_VOICE_ID }}

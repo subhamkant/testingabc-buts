@@ -33,6 +33,14 @@ inputs:
   hf-space:                      { required: true }
   cloudflare-api-token:          { required: true }
   cloudflare-account-id:         { required: true }
+  # Additional Cloudflare Workers AI accounts — cascaded by _gen_cloudflare
+  # in pipeline/image_generator.py. Optional; if unset the cascade still
+  # works with whatever accounts ARE configured. 3 accounts = ~6 clean
+  # videos/day capacity vs ~2 on a single account (10k neurons each).
+  cloudflare-api-token-2:        { required: false, default: "" }
+  cloudflare-account-id-2:       { required: false, default: "" }
+  cloudflare-api-token-3:        { required: false, default: "" }
+  cloudflare-account-id-3:       { required: false, default: "" }
   elevenlabs-api-key:            { required: true }
   elevenlabs-api-key-fallback:   { required: true }
   elevenlabs-voice-id:           { required: true }
@@ -59,6 +67,10 @@ runs:
         HF_SPACE:                      ${{ inputs.hf-space }}
         CLOUDFLARE_API_TOKEN:          ${{ inputs.cloudflare-api-token }}
         CLOUDFLARE_ACCOUNT_ID:         ${{ inputs.cloudflare-account-id }}
+        CLOUDFLARE_API_TOKEN_2:        ${{ inputs.cloudflare-api-token-2 }}
+        CLOUDFLARE_ACCOUNT_ID_2:       ${{ inputs.cloudflare-account-id-2 }}
+        CLOUDFLARE_API_TOKEN_3:        ${{ inputs.cloudflare-api-token-3 }}
+        CLOUDFLARE_ACCOUNT_ID_3:       ${{ inputs.cloudflare-account-id-3 }}
         ELEVENLABS_API_KEY:            ${{ inputs.elevenlabs-api-key }}
         ELEVENLABS_API_KEY_FALLBACK:   ${{ inputs.elevenlabs-api-key-fallback }}
         ELEVENLABS_VOICE_ID:           ${{ inputs.elevenlabs-voice-id }}
