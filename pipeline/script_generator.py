@@ -1498,7 +1498,7 @@ OUTPUT — return ONLY valid JSON, no markdown fences, no preamble:
   "listener": "{listener_short}",
   "scenes": [
     {{
-      "narration": "Hindi (Devanagari) — Krishna first-person to {listener_vocative}. Per-scene length: scene 1/2/4 ~22-26 words, SCENE 3 ~14-18 words (short imperative peak, mostly 3-7 word sentences), scene 5 ~20-24 words. Use spoken Hindi (no Sanskritized words). At least one imperative verb per scene.",
+      "narration": "Hindi (Devanagari) — Krishna first-person to {listener_vocative}. Per-scene length: scene 1/2/4 ~28-34 words, SCENE 3 ~18-22 words (short imperative peak — punchy 3-7 word sentences but enough of them to hit 18-22), scene 5 ~26-30 words. Use spoken Hindi (no Sanskritized words). At least one imperative verb per scene. Multiple short sentences ADDING UP to the target, not one long compound.",
       "image_prompt": "[shot] of Krishna and {listener_short} in [setting], Krishna [gesture/mudra], {listener_short} [pose/emotion], background contains [≥3 specific elements], [lighting], [mood], jewel-toned palette",
       "mood": "3-6 word English emotional tone phrase"
     }}
@@ -1518,8 +1518,10 @@ HARD RULES — violation makes the script unusable:
 - Tags MUST include topic-specific long-tail keywords (e.g. 'Krishna
   {listener_short} on [theme]', '[theme]') in addition to the generic
   Krishna/Mahabharata fallbacks.
-- Per-scene length: scenes 1/2/4 are 22-26 words, SCENE 3 is 14-18 words
-  (the imperative peak — short bursts, do not over-pad), scene 5 is 20-24 words
+- Per-scene length: scenes 1/2/4 are 28-34 words each, SCENE 3 is 18-22 words
+  (the imperative peak — keep sentences short, but use ENOUGH of them to hit
+  18-22; don't undershoot), scene 5 is 26-30 words. Total 130-150 words across
+  all 5 scenes — this is the production minimum, do NOT undershoot.
 - Each scene MUST contain at least one imperative verb
   (करो/उठो/सुनो/देखो/जानो/त्यागो/लड़ो/चलो/छोड़ो/उठाओ/मानो/पाओ/बनो)
 - Use spoken Hindi only — NO Sanskritized words like गूढ़, चेतना, उग्र,
@@ -1546,35 +1548,59 @@ HARD RULES — violation makes the script unusable:
     last_fp_low     = False
     last_fp_hits    = 0
     last_fp_total   = 0
-    for attempt in range(3):
+    # Retry budget 3 → 5 + length-recovery preempt (mirror of Mahabharata posture
+    # shipped in commit aeaaabd). 2026-05-14 production check showed Krishna
+    # scripts shipping at ~17 chars/word avg = ~104 chars per scene = ~17 words
+    # per scene — far under the new 28-34 word target. Old 3-retry budget with
+    # floor=18 was accepting sub-target output. New posture: 5 retries, floor=24,
+    # length-priority preempt isolates the length fix from style fixes.
+    for attempt in range(5):
         full_prompt = prompt
         if attempt > 0:
-            reminders = []
-            if last_short:
-                reminders.append(
-                    "Your previous response had narration length issues. "
-                    "Per-scene targets: scenes 1/2/4 = 22-26 words, SCENE 3 "
-                    "= 14-18 words (the imperative peak — KEEP IT SHORT, don't "
-                    "pad), scene 5 = 20-24 words. You MUST produce EXACTLY 5 "
-                    "scenes. Total ~100-120 words across all 5 scenes."
-                )
-            if last_offenders:
-                offender_str = ", ".join(f"'{w}' ({n}x)" for w, n in last_offenders[:5])
-                reminders.append(
-                    f"Your previous response REPEATED these words too many times: "
-                    f"{offender_str}. Use SYNONYMS. Each sentence must contain a "
-                    f"NEW concrete idea or image."
-                )
-            if last_fp_low:
-                reminders.append(
-                    f"Your previous response was not in first person — only "
-                    f"{last_fp_hits} of {last_fp_total} scenes contained "
-                    f"first-person/vocative markers (मैं / तुम / पार्थ / देखो / सुनो). "
-                    f"This MUST be a Krishna direct-address speech. EVERY scene "
-                    f"must contain at least one of: मैं, मैंने, तुम, तुम्हें, "
-                    f"तुम्हारे, {listener_vocative}, देखो, सुनो. Rewrite all 5 "
-                    f"scenes in Krishna's first-person voice."
-                )
+            # Length-recovery preempt: when narration is below target AND we've
+            # already burned at least one retry, send ONLY the length reminder
+            # this round. Other validators (repetition, first-person) fire on
+            # the next round once length is recovered. Prevents the LLM from
+            # trying to satisfy 3 reminders at once and over-correcting on style
+            # to crash length further.
+            if attempt >= 2 and last_short:
+                reminders = [
+                    "LENGTH FIRST — your previous response had narration too "
+                    "short. RESTORE THE LENGTH first, then satisfy style rules "
+                    "next round. Per-scene targets: scenes 1/2/4 = 28-34 words, "
+                    "SCENE 3 = 18-22 words (the imperative peak — short "
+                    "sentences but enough of them), scene 5 = 26-30 words. "
+                    "Total 130-150 words across all 5 scenes. Use multiple "
+                    "short sentences that ADD UP to the target; do NOT undershoot."
+                ]
+            else:
+                reminders = []
+                if last_short:
+                    reminders.append(
+                        "Your previous response had narration length issues. "
+                        "Per-scene targets: scenes 1/2/4 = 28-34 words, SCENE 3 "
+                        "= 18-22 words (the imperative peak — short sentences "
+                        "but ENOUGH of them, don't undershoot), scene 5 = 26-30 "
+                        "words. You MUST produce EXACTLY 5 scenes. Total 130-150 "
+                        "words across all 5 scenes."
+                    )
+                if last_offenders:
+                    offender_str = ", ".join(f"'{w}' ({n}x)" for w, n in last_offenders[:5])
+                    reminders.append(
+                        f"Your previous response REPEATED these words too many times: "
+                        f"{offender_str}. Use SYNONYMS. Each sentence must contain a "
+                        f"NEW concrete idea or image."
+                    )
+                if last_fp_low:
+                    reminders.append(
+                        f"Your previous response was not in first person — only "
+                        f"{last_fp_hits} of {last_fp_total} scenes contained "
+                        f"first-person/vocative markers (मैं / तुम / पार्थ / देखो / सुनो). "
+                        f"This MUST be a Krishna direct-address speech. EVERY scene "
+                        f"must contain at least one of: मैं, मैंने, तुम, तुम्हें, "
+                        f"तुम्हारे, {listener_vocative}, देखो, सुनो. Rewrite all 5 "
+                        f"scenes in Krishna's first-person voice."
+                    )
             if reminders:
                 full_prompt += "\n\nCRITICAL REMINDERS:\n- " + "\n- ".join(reminders)
 
@@ -1599,11 +1625,13 @@ HARD RULES — violation makes the script unusable:
         avg_words   = sum(word_counts) / max(len(word_counts), 1)
         n_scenes    = len(scenes)
 
-        # Acceptance threshold: must have 5 scenes, AND avg ≥ 18 words/scene
-        # (the new format averages ~22 words; below 18 means the LLM lost the
-        # plot and produced 1-2 word stub scenes). The prompt itself enforces
-        # the per-scene shape; the avg is just a floor.
-        last_short = (n_scenes != 5 or avg_words < 18)
+        # Acceptance threshold: must have 5 scenes, AND avg ≥ 24 words/scene
+        # (raised from 18 on 2026-05-14 after production check showed ~17
+        # words/scene shipping — the old floor was too low and accepted
+        # sub-target output. New target avg is ~28 words; floor of 24 rejects
+        # output that's clearly under-density while still allowing scene 3
+        # imperative peak to be ~18-22).
+        last_short = (n_scenes != 5 or avg_words < 24)
         rep_ok, last_offenders = _check_repetition(scenes, max_repeats=4, topic=topic)
         fp_ok, last_fp_hits, last_fp_total = _check_first_person(scenes, min_hits=3)
         last_fp_low = not fp_ok
@@ -1619,7 +1647,7 @@ HARD RULES — violation makes the script unusable:
         if not last_short and rep_ok and fp_ok:
             break
 
-        if attempt < 2:
+        if attempt < 4:  # we have at least one more retry left (range(5))
             why = []
             if last_short:
                 why.append(f"length issue ({n_scenes} scenes / {avg_words:.1f} avg)")
