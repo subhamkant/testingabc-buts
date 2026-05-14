@@ -88,6 +88,43 @@ runs:
         PIPELINE_RUN_ID: ${{ inputs.pipeline-run-id }}
       run: ${{ inputs.pipeline-cmd }} 2>&1 | tee pipeline_output.txt
 
+    - name: Persist unsaved assembled video to checkpoint (cancellation race)
+      # Cancellation race: if Step 4 produced output/video_*.mp4 but Python
+      # was SIGKILL'd before ck.save_file("video_pre_subs.mp4") completed,
+      # the next retry would re-assemble from scratch — and if image
+      # providers are 429-storming during retry, it produces a video full
+      # of black placeholders. This step copies any output/*.mp4 into the
+      # cache under the right checkpoint key BEFORE upload-artifact runs,
+      # so the cache that retries restore from already has the finished
+      # video. `if: always()` => runs even after Python step gets
+      # cancelled or timed out.
+      if: always()
+      shell: bash
+      run: |
+        mkdir -p "cache/${{ inputs.pipeline-run-id }}"
+        shopt -s nullglob
+        copied=0
+        for f in output/video_*.mp4; do
+          base=$(basename "$f")
+          # Map output filename → cache key by series prefix
+          if [[ "$base" == video_whatif_en_* ]]; then
+            dest="cache/${{ inputs.pipeline-run-id }}/video_pre_subs_en.mp4"
+          elif [[ "$base" == video_whatif_hi_* ]]; then
+            dest="cache/${{ inputs.pipeline-run-id }}/video_pre_subs_hi.mp4"
+          else
+            # Mahabharata (video_hi_*) and Krishna (video_krishna_hi_*) both
+            # use the unprefixed video_pre_subs.mp4 cache key
+            dest="cache/${{ inputs.pipeline-run-id }}/video_pre_subs.mp4"
+          fi
+          # Only copy if cache doesn't already have a same-or-newer file
+          if [[ ! -f "$dest" ]] || [[ "$f" -nt "$dest" ]]; then
+            cp -f "$f" "$dest"
+            copied=$((copied+1))
+            echo "  Persisted $base -> $(basename $dest)"
+          fi
+        done
+        echo "Defensive cache save: $copied file(s) copied."
+
     - name: Save checkpoint cache (always — even on timeout / failure)
       # Same artifact name across primary + all retries so each attempt's
       # progress overwrites the previous. The next chained retry's restore

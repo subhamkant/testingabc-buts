@@ -772,9 +772,9 @@ def generate_images(scenes: list, single_shot: bool = False, series: str = "maha
                 time.sleep(wait)
 
             if not success:
-                _create_placeholder(output_path, i * 3 + j)
+                _create_placeholder(output_path, i * 3 + j, series=series)
                 shot_paths.append(output_path)
-                print(f"    [~] Placeholder for scene {i+1} shot {j+1}")
+                print(f"    [~] Placeholder (outro-asset fallback) for scene {i+1} shot {j+1}")
 
             time.sleep(1)
 
@@ -854,9 +854,38 @@ def generate_thumbnail(thumbnail_prompt: str, output_path: str = "output/thumbna
     return ""
 
 
-def _create_placeholder(output_path: str, index: int):
-    """Creates a solid-colour 768x1344 placeholder image via FFmpeg."""
+_OUTRO_FALLBACK_BY_SERIES = {
+    "mahabharata": "assets/outro/mahabharata.jpg",
+    "krishna":     "assets/outro/krishna.jpg",
+    "whatif":      "assets/outro/whatif.jpg",
+}
+
+
+def _create_placeholder(output_path: str, index: int, series: str = "mahabharata"):
+    """
+    Fallback image used when ALL providers (HF + 3 CF accounts + Pollinations)
+    fail for a given scene. Reuses the series' hand-picked outro asset so
+    the viewer sees ACTUAL imagery instead of a solid color tile.
+
+    2026-05-14 production check (Krishna "Uddhava" video) shipped 5 scenes
+    of near-black solid-color tiles when Pollinations 429-stormed during a
+    retry — the "video" was effectively just audio over a black screen.
+    Reusing the outro asset means worst case = an "outro tableau loop"
+    that's visibly mythological even if it's the same image repeated.
+
+    Falls back to the old solid-color tile if the asset is missing on disk.
+    """
     import subprocess
+    import shutil
+
+    asset = _OUTRO_FALLBACK_BY_SERIES.get(series, "")
+    if asset and os.path.exists(asset):
+        try:
+            shutil.copy2(asset, output_path)
+            return
+        except Exception:
+            pass  # fall through to ffmpeg solid color
+
     colors = ["#1a0a2e", "#0d1b2a", "#1b2838", "#2d1b69", "#0f0c29"]
     color = colors[index % len(colors)]
     subprocess.run(
