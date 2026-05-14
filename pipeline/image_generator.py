@@ -20,7 +20,11 @@ from urllib.parse import quote
 #
 # WhatIf series uses a different per-style suffix from _WHATIF_STYLE_SUFFIXES
 # based on the script's visual_style — this Mahabharata suffix does not apply.
-STYLE_SUFFIX = (
+# MORTAL variant — golden-bronze skin anchor for mortal Mahabharata warriors
+# (Karna, Arjuna, Bhima, etc.). The "luminous golden glowing complexion" line
+# was added 2026-05-14 evening to push back against FLUX silhouette-dark
+# tendencies under "oil-lamp lighting" cues.
+STYLE_SUFFIX_MORTAL = (
     # Photoreal anchor — kept short for distilled FLUX variants (Pollinations,
     # Cloudflare) which honor long prompts less reliably than HF FLUX-schnell.
     # WALKED BACK from earlier version: "physically-based skin with visible
@@ -44,9 +48,7 @@ STYLE_SUFFIX = (
     # shipped Karna with near-black skin from FLUX over-interpreting "oil-lamp"
     # / "subtle glow" lighting cues. Canonical Karna is golden-bronze (Surya's
     # son), not silhouette-dark. This anchor pushes back without overruling
-    # mood / shadow direction from the scene prompt. "Luminous golden glowing
-    # complexion" added 2026-05-14 evening after v7_muscle smoke test showed
-    # the golden shift was additive and helped on Karna/Arjuna.
+    # mood / shadow direction from the scene prompt.
     "warm golden-bronze skin tone for Indian characters, "
     "luminous golden glowing complexion, "
     "well-lit faces with key-light on the face, even facial exposure, "
@@ -57,6 +59,43 @@ STYLE_SUFFIX = (
     "no global color wash, no orange filter, no magenta or pink cast, "
     "no CGI plastic look, no airbrushed skin"
 )
+
+# DIVINE variant — same as MORTAL minus the golden-bronze skin anchor that
+# conflicts with canonical divine skin tones (Krishna indigo-blue, Hanuman
+# red-gold). Added 2026-05-14 after the "Krishna to Karna" upload showed
+# Krishna rendered as dark teal/muddied-blue because the global golden anchor
+# was fighting his `characters.json` "dark indigo-blue divine skin" descriptor.
+# All other anchors (eye detail, well-lit face, photoreal cinema, anti-color-
+# wash negatives) preserved — only the skin-tone enforcement changes.
+STYLE_SUFFIX_DIVINE = (
+    "photorealistic cinematic film still shot on Arri Alexa LF, "
+    "Kodak Vision3 5219 film stock, "
+    "natural skin texture, realistic facial features, "
+    "detailed expressive eyes with clearly defined iris and pupils, "
+    "natural catch-light reflections in the eyes, "
+    # Skin-tone routing for divine + mortal in the same frame: explicitly name
+    # BOTH so FLUX doesn't average them into a single muddy tone. The character
+    # descriptor injected by _inject_characters already says "indigo-blue divine
+    # skin" for Krishna and "tan-brown body + vanara face with reddish-brown fur"
+    # for Hanuman — this anchor reinforces Krishna's blue AND keeps mortal
+    # warriors bronze when they share a frame with him. Hanuman's per-character
+    # descriptor is detailed enough on its own; don't fight it from the suffix.
+    "Krishna with brilliant indigo-blue divine skin (when present in scene), "
+    "mortal warriors with warm golden-bronze skin tone, "
+    "well-lit faces with key-light on the face, even facial exposure, "
+    "ancient India Mahabharat live-action / Baahubali period-film aesthetic, "
+    "carved sandstone temple architecture in sharp focus, oil-lamp lighting, "
+    "balanced natural color grading, neutral whites, "
+    "sharp focus on subject, clear facial features, "
+    "no global color wash, no orange filter, no magenta or pink cast, "
+    "no CGI plastic look, no airbrushed skin"
+)
+
+# Backwards-compat alias — kept so existing `style_suffix: str = STYLE_SUFFIX`
+# default-arg signatures continue to work. Mortal is the safe default since
+# the divine override fires only when a divine character is detected in the
+# prompt (see generate_image_bytes).
+STYLE_SUFFIX = STYLE_SUFFIX_MORTAL
 
 # WhatIf series style suffixes — picked by `script["visual_style"]`. Mahabharata
 # style does NOT apply to WhatIf scripts; the LLM picks the most suitable style
@@ -169,6 +208,18 @@ _SHOT_ANGLES = [
     "MEDIUM SHOT, ",                # mid-range character focus
     "MEDIUM CLOSE-UP, ",            # head-and-shoulders, eyes still readable
 ]
+
+# Divine non-golden-skin characters — when one of these is referenced anywhere
+# in an image prompt, swap from STYLE_SUFFIX_MORTAL to STYLE_SUFFIX_DIVINE so
+# the global golden-bronze anchor doesn't override their canonical color.
+#   Krishna  — dark indigo-blue divine skin
+#   Hanuman  — red-gold / red-orange divine form
+# Barbarik is NOT in this set — he renders fine on the warrior-golden path.
+# Substring scan (case-insensitive) catches both primary and secondary roles,
+# e.g. "Karna and Krishna two-shot" should still trigger divine mode because
+# Krishna's blue is more sensitive to override than Karna's bronze.
+_DIVINE_NON_GOLDEN_CHARACTERS = {"Krishna", "Hanuman"}
+
 
 # Load character reference descriptions once at import time
 _CHAR_FILE = os.path.join(os.path.dirname(__file__), "..", "assets", "characters.json")
@@ -611,7 +662,18 @@ def generate_image_bytes(prompt: str, seed: int, width: int, height: int, mood: 
       - _correct_warm_cast — neutralizes magenta/orange wash (Cloudflare/
         Pollinations only; HF FLUX-schnell bypassed since its output has
         no cast).
+
+    Divine-character override (added 2026-05-14):
+      When the caller passed STYLE_SUFFIX_MORTAL (the default for Mahabharata
+      + Krishna series) AND the prompt mentions a divine non-golden-skin
+      character (Krishna, Hanuman), swap to STYLE_SUFFIX_DIVINE. This stops
+      the global golden-bronze skin anchor from fighting Krishna's canonical
+      indigo-blue / Hanuman's red-gold. WhatIf suffixes are left alone.
     """
+    if style_suffix is STYLE_SUFFIX_MORTAL:
+        prompt_lower = prompt.lower()
+        if any(name.lower() in prompt_lower for name in _DIVINE_NON_GOLDEN_CHARACTERS):
+            style_suffix = STYLE_SUFFIX_DIVINE
     full_prompt = _build_full_prompt(prompt, mood, style_suffix=style_suffix)
     providers = [
         ("cloudflare-flux-schnell", lambda: _gen_cloudflare(full_prompt, seed, width, height)),
