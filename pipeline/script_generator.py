@@ -848,7 +848,35 @@ def _parse_llm_json(raw: str) -> dict:
     except json.JSONDecodeError:
         pass
 
-    # Fix 3: last resort — repair a truncated-mid-output response by closing
+    # Fix 3: "Extra data" salvage — LLM emitted valid JSON followed by
+    # additional text (markdown commentary, repeated/explanation JSON, prose).
+    # Observed in production on 2026-05-14: Gemini 2.5 Pro for Mahabharata
+    # script returned a valid JSON object then ~7600 chars of trailing text,
+    # tripping JSONDecodeError("Extra data") at char 7633. raw_decode parses
+    # the leading JSON value and tells us where it ends — anything after is
+    # ignored. Strip leading whitespace + any leading markdown fence remnants
+    # first so the decoder sees the opening "{" as char 0.
+    try:
+        trimmed = cleaned.lstrip()
+        # Skip past common leading-noise prefixes ("```json\n{...", "Here is
+        # the JSON:\n{...") by jumping to the first "{" or "[".
+        first_brace = -1
+        for i, c in enumerate(trimmed):
+            if c in ("{", "["):
+                first_brace = i
+                break
+        if first_brace > 0:
+            trimmed = trimmed[first_brace:]
+        decoder = json.JSONDecoder()
+        parsed, end_idx = decoder.raw_decode(trimmed)
+        trailing = trimmed[end_idx:].strip()
+        if trailing:
+            print(f"    [warn] LLM JSON had {len(trailing)} chars trailing extra data; trimmed")
+        return parsed
+    except json.JSONDecodeError:
+        pass
+
+    # Fix 4: last resort — repair a truncated-mid-output response by closing
     # any open string + brackets. Salvages partial scripts so the pipeline can
     # at least proceed to validation (which will detect missing/short fields
     # and re-prompt instead of crashing the whole job).
