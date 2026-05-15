@@ -360,7 +360,20 @@ async def run_pipeline(language: str = "en", test_mode: bool = False, test_uploa
                 # completes — survives 29-min cap mid-batch and resumes there.
                 image_files = generate_images(script["scenes"], series="mahabharata", ck=ck)
                 if script.get("thumbnail_prompt"):
-                    generate_thumbnail(script["thumbnail_prompt"], series="mahabharata")
+                    # Extract Hindi shock-phrase from title for thumbnail overlay.
+                    # Title format from prompt: "महाभारत #N: <Hindi half> | <English half>"
+                    _ov_text = ""
+                    _title = script.get("title", "")
+                    if "|" in _title:
+                        _hindi_half = _title.split("|")[0].strip()
+                        if ":" in _hindi_half:
+                            _ov_text = _hindi_half.split(":", 1)[1].strip()
+                        else:
+                            _ov_text = _hindi_half
+                    generate_thumbnail(
+                        script["thumbnail_prompt"], series="mahabharata",
+                        overlay_text=_ov_text[:25],  # 25-char cap for thumbnail legibility
+                    )
                 print("\nStep 4 — Assembling video with continuous audio...")
                 video_path = assemble_video_continuous_audio(
                     image_files, audio_path, script,

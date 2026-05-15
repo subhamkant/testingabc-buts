@@ -869,7 +869,85 @@ def generate_images(scenes: list, single_shot: bool = False, series: str = "maha
     return scene_groups
 
 
-def generate_thumbnail(thumbnail_prompt: str, output_path: str = "output/thumbnail.jpg", series: str = "mahabharata", visual_style: str = "") -> str:
+def _overlay_thumbnail_text(thumb_path: str, overlay_text: str) -> bool:
+    """
+    Composite a bold Hindi text card onto an existing FLUX-rendered thumbnail.
+    Used to add the search-stopping "shock phrase" overlay (e.g. "कर्ण का सच",
+    "भीष्म प्रतिज्ञा") that successful Hindi mythology Shorts channels use to
+    drive CTR on browse/search/suggested surfaces.
+
+    Added 2026-05-15 after channel analytics showed thumbnails were
+    text-free FLUX art — competing channels overlay 2-3 Hindi words for the
+    eye-catch. Renders via pipeline.text_renderer (HarfBuzz for Devanagari
+    shaping; FLUX can't spell so it's done as a separate raster pass).
+
+    Position: bottom 1/3 of the 1280×720 thumbnail, centered horizontally,
+    yellow fill + black outline + soft shadow (the canonical "thumbnail
+    text" look). Returns True on success; on any failure the original
+    thumbnail is left untouched (defensive — never break the pipeline).
+    """
+    if not overlay_text or not overlay_text.strip():
+        return False
+    try:
+        from PIL import Image
+        from pipeline.text_renderer import render_text_card
+        from pipeline.subtitle_generator import FONT_PATH
+    except Exception as e:
+        print(f"    [!] Thumbnail text overlay deps missing: {e}")
+        return False
+    if not os.path.exists(thumb_path):
+        return False
+    try:
+        # Auto-size text to fit ~85% of thumbnail width. 1280px wide, target
+        # ~1080px text width. For a 4-word Hindi phrase that lands at ~70-90
+        # pixels per glyph, font_size ~110-130 works. Start at 130, downscale
+        # if too wide.
+        text = overlay_text.strip()
+        base = Image.open(thumb_path).convert("RGBA")
+        W, H = base.size  # 1280, 720
+        max_text_w = int(W * 0.88)
+
+        font_size = 130
+        for _ in range(5):
+            card = render_text_card(
+                text, FONT_PATH, font_size=font_size,
+                fill=(255, 230, 0, 255),
+                outline=(0, 0, 0, 255),
+                outline_px=7,
+                shadow=(0, 0, 0, 180),
+                shadow_offset=(4, 4),
+            )
+            if card.width <= max_text_w:
+                break
+            # Too wide; shrink
+            font_size = int(font_size * max_text_w / max(card.width, 1))
+        if card.width > max_text_w:
+            # Last resort: brute-shrink to fit
+            ratio = max_text_w / card.width
+            card = card.resize(
+                (int(card.width * ratio), int(card.height * ratio)),
+                Image.LANCZOS,
+            )
+
+        # Place at bottom 1/3: y_center = H * 0.72
+        x = (W - card.width) // 2
+        y = int(H * 0.72) - card.height // 2
+        base.paste(card, (x, y), card)
+        base.convert("RGB").save(thumb_path, "JPEG", quality=92)
+        print(f"    [OK] Thumbnail text overlay: {text!r}")
+        return True
+    except Exception as e:
+        print(f"    [!] Thumbnail text overlay failed: {e}")
+        return False
+
+
+def generate_thumbnail(
+    thumbnail_prompt: str,
+    output_path: str = "output/thumbnail.jpg",
+    series: str = "mahabharata",
+    visual_style: str = "",
+    overlay_text: str = "",
+) -> str:
     """
     Generates a 1280x720 thumbnail (YouTube native size — landscape).
 
@@ -878,6 +956,11 @@ def generate_thumbnail(thumbnail_prompt: str, output_path: str = "output/thumbna
     a thumbnail-specific composition rider (centered subject, single high-contrast
     focal point, dark backdrop, no small text) and vary the seed each retry so a
     bad first composition isn't simply repeated four times.
+
+    `overlay_text` (added 2026-05-15): when provided, a bold Hindi text card
+    is composited onto the bottom 1/3 of the thumbnail after FLUX renders.
+    Used to add the search-stopping shock phrase ("कर्ण का सच", "भीष्म प्रतिज्ञा")
+    competing mythology channels use to drive CTR. Empty = no overlay.
     """
     os.makedirs("output", exist_ok=True)
     style_suffix = _resolve_style_suffix(series, visual_style)
@@ -905,6 +988,10 @@ def generate_thumbnail(thumbnail_prompt: str, output_path: str = "output/thumbna
             with open(output_path, "wb") as f:
                 f.write(img_bytes)
             print(f"    [OK] Thumbnail generated via {provider} (seed {seeds[attempt]})")
+            # Post-render text overlay (Hindi shock phrase via HarfBuzz).
+            # Defensive — never crashes the thumbnail step on overlay failure.
+            if overlay_text:
+                _overlay_thumbnail_text(output_path, overlay_text)
             return output_path
         except Exception as e:
             print(f"    [!] Thumbnail attempt {attempt+1}: {e}")

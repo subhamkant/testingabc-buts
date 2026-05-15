@@ -538,6 +538,141 @@ def _apply_cinematic_polish(video_path: str, clip_durations: list) -> None:
 
 # ── Background music with smart ducking ──────────────────────────────────────
 
+# ─────────────────────────────────────────────────────────────────────────────
+# SFX (sound effects) at scene boundaries — added 2026-05-15
+# ─────────────────────────────────────────────────────────────────────────────
+# Successful Hindi mythology Shorts layer diegetic SFX at climax moments
+# (sword clang on वध, divine bell on Krishna scenes, war drum on Kurukshetra
+# transitions). Adds the perceptual polish that distinguishes professional
+# mythology Shorts from text-to-speech demos. Gated by ENABLE_SFX env (default
+# "true"). Files live in assets/sfx/ — currently ffmpeg-synthesized placeholders;
+# replace with real sourced SFX from pixabay/freesound for production quality.
+
+_SFX_DIR = "assets/sfx"
+
+# Mood / narration keyword → SFX file. The mood string is the script-supplied
+# "3-6 word English emotional tone phrase" per scene. Keywords match
+# substrings (case-insensitive). First match wins; falls back to chime.
+_SFX_KEYWORD_MAP = [
+    # (keywords, sfx_file, volume)
+    (("battle", "war", "fight", "fierce", "rage", "anger", "sword", "vadh", "kill",
+      "fury", "duel"),                                       "sword_clang.mp3", 0.45),
+    (("divine", "god", "krishna", "miracle", "blessing", "sacred", "holy",
+      "celestial"),                                          "divine_bell.mp3", 0.40),
+    (("epic", "cosmic", "thunder", "battlefield", "kurukshetra", "earth-shaking",
+      "shocking", "doomed"),                                 "war_drum.mp3",    0.45),
+    (("vow", "promise", "oath", "declaration", "announcement", "pratigya",
+      "decree"),                                             "conch.mp3",       0.40),
+]
+_SFX_DEFAULT = ("chime.mp3", 0.30)
+
+
+def _pick_sfx_for_mood(mood: str) -> tuple[str, float] | None:
+    """Maps a scene's mood phrase to (sfx_filename, volume) or None on miss."""
+    if not mood:
+        return None
+    low = mood.lower()
+    for keywords, sfx_file, vol in _SFX_KEYWORD_MAP:
+        if any(k in low for k in keywords):
+            path = os.path.join(_SFX_DIR, sfx_file)
+            if os.path.exists(path):
+                return path, vol
+    # Fall back to chime
+    chime_path = os.path.join(_SFX_DIR, _SFX_DEFAULT[0])
+    if os.path.exists(chime_path):
+        return chime_path, _SFX_DEFAULT[1]
+    return None
+
+
+def _inject_scene_boundary_sfx(video_path: str, scene_durations: list,
+                                scene_moods: list, lead_in_s: float = 0.15) -> bool:
+    """
+    Re-encode the video's audio track with SFX layered in at each scene
+    boundary. Each SFX starts `lead_in_s` before its scene begins so it
+    fades into the new scene rather than disrupting the previous.
+
+    Returns True on success; on any ffmpeg failure leaves the video
+    unchanged (defensive — never break the assembly).
+
+    Skipped entirely when ENABLE_SFX env var is "false"/"0".
+    """
+    if os.environ.get("ENABLE_SFX", "true").lower() in ("0", "false", "no"):
+        print("    [sfx] ENABLE_SFX=false — skipping scene-boundary SFX")
+        return False
+    if not os.path.exists(video_path):
+        return False
+    n = len(scene_durations)
+    if n != len(scene_moods) or n == 0:
+        return False
+
+    # Compute scene START times (cumulative). Skip scene 0 (don't SFX-bump
+    # the opening — let the hook narration land clean).
+    starts = []
+    t = 0.0
+    for d in scene_durations:
+        starts.append(t)
+        t += d
+
+    # Build per-scene SFX entries with delay+volume
+    sfx_inputs = []  # list of (path, start_s, volume)
+    for i in range(1, n):  # skip scene 0
+        pick = _pick_sfx_for_mood(scene_moods[i])
+        if pick:
+            sfx_path, vol = pick
+            sfx_start = max(0.0, starts[i] - lead_in_s)
+            sfx_inputs.append((sfx_path, sfx_start, vol))
+
+    if not sfx_inputs:
+        print("    [sfx] no SFX matched any scene mood — skipping")
+        return False
+
+    # Build ffmpeg command
+    # -i video  -i sfx1 -i sfx2 ... then filter_complex:
+    #   [N:a]volume=v,adelay=ms|ms[sfxN]
+    #   [0:a][sfx1][sfx2]...amix=...[out]
+    cmd = ["ffmpeg", "-y", "-i", video_path]
+    for sfx_path, _, _ in sfx_inputs:
+        cmd += ["-i", sfx_path]
+
+    fc_parts = []
+    sfx_labels = []
+    for idx, (_, start_s, vol) in enumerate(sfx_inputs):
+        delay_ms = int(start_s * 1000)
+        # input index is idx+1 (because video audio is [0:a])
+        label = f"sfx{idx}"
+        fc_parts.append(
+            f"[{idx+1}:a]volume={vol},adelay={delay_ms}|{delay_ms},apad[{label}]"
+        )
+        sfx_labels.append(f"[{label}]")
+    # Mix video audio with all delayed SFX. duration=first to keep original length.
+    mix = "[0:a]" + "".join(sfx_labels) + f"amix=inputs={1+len(sfx_inputs)}:duration=first:dropout_transition=0[out]"
+    fc_parts.append(mix)
+
+    out_path = video_path + ".sfx.mp4"
+    cmd += [
+        "-filter_complex", ";".join(fc_parts),
+        "-map", "0:v",
+        "-map", "[out]",
+        "-c:v", "copy",
+        "-c:a", "aac", "-b:a", "192k",
+        out_path,
+    ]
+
+    r = subprocess.run(cmd, capture_output=True)
+    if r.returncode != 0:
+        err = r.stderr.decode("utf-8", errors="replace")[-400:] if r.stderr else ""
+        print(f"    [!] SFX mix failed (non-fatal): {err}")
+        return False
+
+    try:
+        os.replace(out_path, video_path)
+        print(f"    [OK] Layered {len(sfx_inputs)} SFX into audio at scene boundaries")
+        return True
+    except Exception as e:
+        print(f"    [!] SFX swap failed: {e}")
+        return False
+
+
 def _pick_music_track(series: str = "mahabharata") -> str:
     """
     Returns a music track path, series-aware:
@@ -1032,6 +1167,13 @@ def assemble_video_continuous_audio(
     size_mb = os.path.getsize(output_path) / (1024 * 1024)
     print(f"    [OK] Continuous-audio video -> {output_path} ({size_mb:.1f} MB)")
 
+    # Scene-boundary SFX (mood-mapped): sword clang on battle, divine bell on
+    # Krishna, war drum on Kurukshetra, conch on vows, chime default. Layered
+    # into narration audio BEFORE music mix so SFX gets sidechain ducking too.
+    scene_moods = [s.get("mood", "") for s in (script_data.get("scenes") or [])]
+    if len(scene_moods) == n:
+        _inject_scene_boundary_sfx(output_path, durations, scene_moods)
+
     _apply_cinematic_polish(output_path, durations)
     _apply_background_music(output_path, series=series)
 
@@ -1099,6 +1241,13 @@ def assemble_from_video_clips_continuous_audio(
 
     size_mb = os.path.getsize(output_path) / (1024 * 1024)
     print(f"    [OK] Continuous-audio video -> {output_path} ({size_mb:.1f} MB)")
+
+    # Scene-boundary SFX (mood-mapped): sword clang on battle, divine bell on
+    # Krishna, war drum on Kurukshetra, conch on vows, chime default. Layered
+    # into narration audio BEFORE music mix so SFX gets sidechain ducking too.
+    scene_moods = [s.get("mood", "") for s in (script_data.get("scenes") or [])]
+    if len(scene_moods) == n:
+        _inject_scene_boundary_sfx(output_path, durations, scene_moods)
 
     _apply_cinematic_polish(output_path, durations)
     _apply_background_music(output_path, series=series)

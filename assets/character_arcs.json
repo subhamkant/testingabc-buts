@@ -1,0 +1,77 @@
+{
+  "_note": "Mahabharata character arcs — 7 episodes per character, played sequentially. The script generator walks arcs in order: arc 1 episode 1, 2, ... 7, then arc 2 episode 1, ... etc. State tracking via recent_topics.json (already excludes used topics). Once an arc is fully exhausted (all 7 episodes used in recent_topics), the next arc starts. Designed to train YouTube's Suggested algorithm to pair sequential episodes — channel's RELATED_VIDEO traffic was 0.1% before this system.",
+  "_added": "2026-05-15 — channel-focus refactor after 13-day analytics showed topic-salad (random Mahabharata stories per upload) wasn't building Suggested traffic. Sequential character arcs in playlist + episode-numbered titles fix that.",
+
+  "arcs": [
+    {
+      "name": "Bhishma — The Vow That Doomed a Dynasty",
+      "character": "भीष्म",
+      "playlist_seed": "Mahabharata: The Bhishma Arc",
+      "topics": [
+        "Bhishma's vow of celibacy — the day prince Devavrata chose his father's love over the throne, taking the terrible oath that earned him the name 'Bhishma'",
+        "Bhishma raising the Pandavas and Kauravas together — the grandfather torn between two warring factions of his own bloodline",
+        "Bhishma's silence during Draupadi's vastraharan — why the greatest warrior of his age could not lift his sword to stop the queen's humiliation",
+        "Bhishma in the Kurukshetra war — fighting for the side he knew was wrong, killing soldiers from the family he raised",
+        "Shikhandi and Bhishma — the secret promise that revealed the invincible warrior's only weakness",
+        "Bhishma on the bed of arrows — 58 days of waiting for death, choosing the moment of his own departure",
+        "Bhishma's final teachings to Yudhishthira — the Shanti Parva wisdom delivered from a dying bed of arrows"
+      ]
+    },
+    {
+      "name": "Karna — The Forgotten Son",
+      "character": "कर्ण",
+      "playlist_seed": "Mahabharata: The Karna Arc",
+      "topics": [
+        "Karna's birth and abandonment — Kunti's secret child, the son of Surya placed in a basket on the Ganges",
+        "Karna's rejection at Draupadi's swayamvara — the wound that defined his life when she called him sutaputra",
+        "Karna's friendship with Duryodhana — the loyalty that bound him to the wrong side of dharma forever",
+        "Karna and Parashurama — the curse from a guru who learned his student's true caste at the wrong moment",
+        "Karna's gift of kavach and kundal to Indra — the sacrifice of his own protective armor he was born with",
+        "Karna's meeting with Kunti before the war — the mother revealing she abandoned him, asking him to spare her sons",
+        "Karna's death by Arjuna's arrow — the moment his chariot wheel sank into the earth and the curse came true"
+      ]
+    },
+    {
+      "name": "Arjuna — The Reluctant Warrior",
+      "character": "अर्जुन",
+      "playlist_seed": "Mahabharata: The Arjuna Arc",
+      "topics": [
+        "Arjuna and Drona's bird-eye test — the moment Drona knew this student would become the greatest archer",
+        "Arjuna's exile in disguise as Brihannala — the warrior who became a dance teacher to fulfill a vow",
+        "Arjuna and Krishna in the Gita — the chariot stops, the cousin becomes the philosopher",
+        "Arjuna's vow to kill Jayadratha before sundown — the impossible promise that nearly broke him",
+        "Arjuna fighting his own grandfather Bhishma — using Shikhandi as a shield to do what he could never do otherwise",
+        "Arjuna fighting his guru Drona — and the lie 'Ashwatthama is dead' that broke the master's spirit",
+        "Arjuna's grief after Abhimanyu's death — the father's vow that turned the war on day fourteen"
+      ]
+    },
+    {
+      "name": "Draupadi — The Queen Who Lit the War",
+      "character": "द्रौपदी",
+      "playlist_seed": "Mahabharata: The Draupadi Arc",
+      "topics": [
+        "Draupadi born from the sacrificial fire — the daughter Drupada asked for to destroy Drona",
+        "Draupadi's swayamvara — the moment she chose Arjuna (in disguise) and rejected Karna",
+        "Draupadi as wife to five Pandavas — the unusual marriage that bound the brothers forever",
+        "Draupadi's vastraharan in the Kuru sabha — the queen pulled by her hair, the elders silent",
+        "Draupadi's vow about her hair — never tying it back until washed in Dushasana's blood",
+        "Draupadi in the forest exile — twelve years of waiting, refusing to forget the humiliation",
+        "Draupadi's grief after the war — winning a kingdom of corpses, losing all five sons in one night"
+      ]
+    },
+    {
+      "name": "Yudhishthira — The Cost of Truth",
+      "character": "युधिष्ठिर",
+      "playlist_seed": "Mahabharata: The Yudhishthira Arc",
+      "topics": [
+        "Yudhishthira and the Yaksha at the lake — the questions that defined dharma in the forest",
+        "Yudhishthira's gambling addiction — how the truthful king lost everything including his wife",
+        "Yudhishthira's lie 'Ashwatthama is dead' — the only lie of his life, and what it cost him",
+        "Yudhishthira's refusal to abandon a dog at heaven's gate — the final test of dharma",
+        "Yudhishthira's vision of his brothers in hell — the moment heaven tested his attachment",
+        "Yudhishthira's rule as king — the prosperous kingdom built on guilt over his cousins' deaths",
+        "Yudhishthira's final journey to the Himalayas — walking with his brothers and Draupadi toward death"
+      ]
+    }
+  ]
+}

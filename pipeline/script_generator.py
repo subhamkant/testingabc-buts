@@ -177,6 +177,68 @@ def _gemini_call_with_retry(keys, prompt: str, config, models=None) -> str:
 # Reference: "Bhishma's sacrifice — how ONE OATH destroyed a dynasty" → Scene 1
 # hook "एक प्रतिज्ञा ने कुरुवंश को शाप दिया था" → Scene 6 closure "एक वचन
 # ने कुरुवंश को... वंचित कर दिया". Same noun. Same subject. Closure delivered.
+# ─────────────────────────────────────────────────────────────────────────────
+# CHARACTER ARC SYSTEM (added 2026-05-15)
+# ─────────────────────────────────────────────────────────────────────────────
+# Sequential character arcs that train the YouTube Suggested algorithm to pair
+# episodes together. Walks assets/character_arcs.json in order: arc 1 episode
+# 1, 2, ... 7, then arc 2 episode 1 ... etc. State tracked via existing
+# recent_topics.json (which already records every used topic with timestamps).
+#
+# When all arcs are exhausted (35 episodes × 5 arcs = 35 used), falls back to
+# the legacy random STORY_TOPICS / MOTIVATIONAL_THEMES pool below.
+_ARC_FILE = os.path.join(os.path.dirname(__file__), "..", "assets", "character_arcs.json")
+_RECENT_TOPICS_FILE = os.path.join(os.path.dirname(__file__), "..", "recent_topics.json")
+
+
+def _load_arcs() -> list:
+    """Returns the list of arcs from assets/character_arcs.json, or [] if missing."""
+    try:
+        with open(_ARC_FILE, encoding="utf-8") as f:
+            return json.load(f).get("arcs", []) or []
+    except Exception:
+        return []
+
+
+def _load_used_topics() -> set[str]:
+    """Returns the set of topic strings already used (from recent_topics.json,
+    mahabharata section). recent_topics.json is auto-committed by GHA after
+    every successful upload, so this is the source of truth across runs."""
+    try:
+        with open(_RECENT_TOPICS_FILE, encoding="utf-8") as f:
+            data = json.load(f)
+        return {entry["topic"] for entry in data.get("mahabharata", []) if entry.get("topic")}
+    except Exception:
+        return set()
+
+
+def _pick_next_arc_topic() -> tuple[str, int, str] | None:
+    """
+    Walk character arcs sequentially, picking the first topic NOT in
+    recent_topics.json. Returns (topic, episode_n, arc_name) or None when
+    all arcs are exhausted.
+
+    episode_n is the GLOBAL episode count across the channel (sequential
+    1, 2, 3 ... across all arcs combined), so titles read like
+    "महाभारत #14: कर्ण की पीड़ा" giving viewers a clear progression cue.
+    The arc_name is for logging / future per-arc playlist routing.
+    """
+    arcs = _load_arcs()
+    used = _load_used_topics()
+    if not arcs:
+        return None
+    global_n = 0
+    for arc in arcs:
+        for topic in arc.get("topics", []):
+            global_n += 1
+            if topic not in used:
+                return topic, global_n, arc.get("name", "")
+    return None
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Legacy random-pool fallback (kept for when arcs are exhausted)
+# ─────────────────────────────────────────────────────────────────────────────
 STORY_TOPICS = [
     # ── Core canonical incidents (rephrased: claim → consequence) ─────────
     "Kurukshetra's opening conches — the one moment that ended an entire dynasty",
@@ -1693,6 +1755,16 @@ def generate_script(
 
     _MOTIVATIONAL_KEYWORDS = ("karma", "dharma", "lesson", "wisdom", "why", "power", "teaching")
 
+    # ── Topic selection ─────────────────────────────────────────────────
+    # Default path: character-arc-aware picker (added 2026-05-15). Walks
+    # assets/character_arcs.json sequentially — 7 episodes per character,
+    # then rotate to next character. Falls back to random STORY_TOPICS /
+    # MOTIVATIONAL_THEMES when arcs run dry or arc file is missing. This
+    # trains YouTube's Suggested algorithm to pair sequential episodes
+    # (channel's RELATED_VIDEO traffic share was 0.1% before this — the
+    # weakest signal in the report).
+    episode_n = None
+    arc_name  = None
     if forced_topic:
         topic = forced_topic
         content_type = (
@@ -1701,8 +1773,22 @@ def generate_script(
             else "story"
         )
     else:
-        content_type = random.choice(["story", "motivational"])
-        topic = random.choice(STORY_TOPICS if content_type == "story" else MOTIVATIONAL_THEMES)
+        arc_pick = _pick_next_arc_topic()
+        if arc_pick:
+            topic, episode_n, arc_name = arc_pick
+            content_type = "story"
+            print(f"    [arc] {arc_name} — episode {episode_n}: {topic[:80]}")
+        else:
+            print(f"    [arc] all arcs exhausted in recent_topics.json — falling back to random pool")
+            content_type = random.choice(["story", "motivational"])
+            topic = random.choice(STORY_TOPICS if content_type == "story" else MOTIVATIONAL_THEMES)
+
+    # Episode number string for the title prefix. Arc-driven runs pass a number;
+    # forced-topic / random-fallback runs get the next sequential count after
+    # whatever's in recent_topics.json so titles stay numbered consistently.
+    if episode_n is None:
+        episode_n = len(_load_used_topics()) + 1
+    episode_n_str = str(episode_n)
 
     lang_label = "Hindi (Devanagari script, natural spoken Hindi)" if language == "hi" else "English"
     style_note = (
@@ -1813,6 +1899,7 @@ def generate_script(
     TASK: Create a 60-90 second vertical (9:16) video script with EXACTLY 5 OR 6 scenes about a well-known incident from the Mahabharata.
 
     TOPIC: "{topic}"
+    EPISODE_NUMBER (use this for title prefix 'महाभारत #{episode_n_str}'): {episode_n_str}
     LANGUAGE: {lang_label}
     STYLE: {style_note}
     {language_rules}
@@ -2241,8 +2328,8 @@ def generate_script(
     OUTPUT — return ONLY valid JSON, no markdown fences, no preamble:
     ═══════════════════════════════════════════════════════════════
     {{
-      "title": "SEARCH-OPTIMIZED bilingual title under 60 chars, no hashtags. Format: '[High-volume Hindi search keyword]: [Dramatic Hindi half] | [English half]'. The first 1-2 Hindi words MUST be a high-search keyword viewers type: 'महाभारत कथा', 'भीष्म प्रतिज्ञा', 'कर्ण की कहानी', 'अर्जुन का प्रण', 'कृष्ण का सच', 'द्रौपदी का अपमान', 'कुरुक्षेत्र युद्ध'. NEVER lead with English half — Hindi keyword first. Example: 'भीष्म प्रतिज्ञा: एक अनकहा बलिदान | The Vow That Doomed a Dynasty'. Channel analytics 2026-05-15 showed only 2.6% search traffic — leading with high-volume Hindi terms is the lever to grow it.",
-      "description": "Hook sentence under 90 chars that expands the title's promise with concrete detail.\\n\\n#Shorts #Mahabharata #महाभारत #Krishna #HinduMythology\\n\\n100-150 words about the story, weaving in named characters and the specific incident. Build curiosity. Don't spoil the ending in the description.\\n\\n#Shorts #Mahabharata #महाभारत #HinduMythology #Krishna #कृष्ण #BhagavadGita #भगवद_गीता #Arjuna #अर्जुन #Kurukshetra #AncientIndia #IndianMythology #Dharma #EpicStory #MythologyShorts #VedicWisdom #HinduDharma #IndianHistory #SpiritualShorts #trending",
+      "title": "SEARCH-OPTIMIZED bilingual title under 75 chars (allows episode prefix), no hashtags. Format: 'महाभारत #N: [Dramatic Hindi half] | [English half]' where N is the episode number passed as {episode_n}. The first 1-2 Hindi words MUST be a high-search keyword viewers type: 'महाभारत कथा', 'भीष्म प्रतिज्ञा', 'कर्ण की कहानी', 'अर्जुन का प्रण', 'कृष्ण का सच', 'द्रौपदी का अपमान', 'कुरुक्षेत्र युद्ध'. Episode numbering (e.g. 'महाभारत #12: कर्ण की पीड़ा | Karna's Hidden Pain') trains the Suggested algorithm to pair sequential episodes — the channel's #1 weakest traffic source right now is RELATED_VIDEO at 0.1%. NEVER lead with English half — Hindi keyword first.",
+      "description": "Hook sentence under 90 chars that expands the title's promise with concrete detail.\\n\\n#Shorts #Mahabharata #महाभारत #Krishna #HinduMythology\\n\\n100-150 words about the story, weaving in named characters and the specific incident. Build curiosity. Don't spoil the ending in the description.\\n\\n#Shorts #Mahabharata #महाभारत #Hindu #HinduStory #BhagavadGita #भगवद_गीता #Krishna #कृष्ण #Arjuna #अर्जुन #Karna #कर्ण #Bhishma #भीष्म #Draupadi #द्रौपदी #Kurukshetra #कुरुक्षेत्र #AncientIndia #IndianMythology #Dharma #EpicStory #MythologyShorts #VedicWisdom #HinduDharma #IndianHistory #SpiritualShorts #PauranikKathayein #भारतीयइतिहास #SanatanDharma #सनातनधर्म #HindiShorts #trending",
       "tags": ["topic-specific long-tail tag 1","topic-specific long-tail tag 2","named character 1 (English)","named character 1 (Hindi/Devanagari)","named character 2","specific incident name","viewer-search query like 'why X happened'","Mahabharata","महाभारत","Shorts","Hindu mythology","Krishna","कृष्ण"],
       "scenes": [
         {{
