@@ -15,6 +15,19 @@ video_log_001.txt
 # Local-test artifacts (smoke renders, preview videos, log captures)
 preview/
 
+# Offline long-form drivers — personal topic seeds, one-shot config per
+# video; the reusable modules they import (pipeline/longform_assembler.py,
+# pipeline/shorts_slicer.py) ARE tracked in git. Drivers are not.
+whatif_longform_hindi.py
+whatif_iran_cables.py
+whatif_shorts_from_longform.py
+make_internet_24h_script.py
+whatif_archive_purge.py
+
+# WhatIf videos moved to a separate channel — downloaded copies live here
+# (102 MB, 16 files). Not for git.
+whatif_archive/
+
 # Runtime caches (regenerable, no point committing)
 trending_cache.json
 temp/trending_cache.json

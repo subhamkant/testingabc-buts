@@ -2077,6 +2077,44 @@ def generate_script(
     Spoken duration: ~55-75 seconds (a fixed subscribe outro adds ~6s for 60-80s total video).
 
     ═══════════════════════════════════════════════════════════════
+    COMMENT-BAIT — THE LAST SCENE MUST END WITH A DEBATE QUESTION
+    ═══════════════════════════════════════════════════════════════
+    Added 2026-05-15 after channel analytics showed only 3 comments across
+    58 videos. Comments are the strongest engagement signal YouTube uses to
+    decide whether to push a video. Every video MUST end with a question
+    that VIEWERS WANT TO ANSWER IN THE COMMENTS.
+
+    The FINAL scene's narration MUST end with a debate-triggering question
+    tied to the specific story you just told. Patterns that work:
+
+    PATTERN A — moral dilemma:
+      "क्या भीष्म ने सही किया? Comment में बताओ।"
+      "क्या कर्ण का दान सही था, या मूर्खता? तुम्हारी क्या राय है?"
+
+    PATTERN B — character take:
+      "तुम होते भीष्म की जगह तो क्या करते? Comment में बताओ।"
+      "अगर अर्जुन ने प्रतिज्ञा तोड़ी होती तो क्या होता? सोचो।"
+
+    PATTERN C — emotional reaction:
+      "ये कहानी सुनकर तुम्हें कैसा लगा? Comment में लिखो।"
+      "क्या तुम्हें कर्ण के लिए दुख होता है? बताओ।"
+
+    REQUIREMENT: The question must:
+    - Be 6-12 Hindi words
+    - Tie to the SPECIFIC characters/incident in this video (not generic)
+    - Be answerable with a one-line opinion (not require a paragraph)
+    - Use "Comment में बताओ" / "Comment में लिखो" / "तुम्हारी क्या राय है?"
+      as the explicit ask
+
+    Including this question in the final scene's narration is what gets
+    viewers to actually comment. Without it the channel grows ~3% engagement
+    rate; with it expected ~8-12%. This is the single biggest growth lever
+    for an under-1k-subs channel.
+
+    NEVER use generic prompts like "Subscribe karein" in the narration —
+    that's already in the outro and doesn't trigger comments.
+
+    ═══════════════════════════════════════════════════════════════
     IMAGE PROMPT QUALITY — RICH BACKGROUNDS ARE NON-NEGOTIABLE
     ═══════════════════════════════════════════════════════════════
     The image style is illustrated Indian mythology art (Amar Chitra Katha
@@ -2203,7 +2241,7 @@ def generate_script(
     OUTPUT — return ONLY valid JSON, no markdown fences, no preamble:
     ═══════════════════════════════════════════════════════════════
     {{
-      "title": "[English title with named character + power keyword] | [Hindi title with character name] — under 60 chars total, no hashtags",
+      "title": "SEARCH-OPTIMIZED bilingual title under 60 chars, no hashtags. Format: '[High-volume Hindi search keyword]: [Dramatic Hindi half] | [English half]'. The first 1-2 Hindi words MUST be a high-search keyword viewers type: 'महाभारत कथा', 'भीष्म प्रतिज्ञा', 'कर्ण की कहानी', 'अर्जुन का प्रण', 'कृष्ण का सच', 'द्रौपदी का अपमान', 'कुरुक्षेत्र युद्ध'. NEVER lead with English half — Hindi keyword first. Example: 'भीष्म प्रतिज्ञा: एक अनकहा बलिदान | The Vow That Doomed a Dynasty'. Channel analytics 2026-05-15 showed only 2.6% search traffic — leading with high-volume Hindi terms is the lever to grow it.",
       "description": "Hook sentence under 90 chars that expands the title's promise with concrete detail.\\n\\n#Shorts #Mahabharata #महाभारत #Krishna #HinduMythology\\n\\n100-150 words about the story, weaving in named characters and the specific incident. Build curiosity. Don't spoil the ending in the description.\\n\\n#Shorts #Mahabharata #महाभारत #HinduMythology #Krishna #कृष्ण #BhagavadGita #भगवद_गीता #Arjuna #अर्जुन #Kurukshetra #AncientIndia #IndianMythology #Dharma #EpicStory #MythologyShorts #VedicWisdom #HinduDharma #IndianHistory #SpiritualShorts #trending",
       "tags": ["topic-specific long-tail tag 1","topic-specific long-tail tag 2","named character 1 (English)","named character 1 (Hindi/Devanagari)","named character 2","specific incident name","viewer-search query like 'why X happened'","Mahabharata","महाभारत","Shorts","Hindu mythology","Krishna","कृष्ण"],
       "scenes": [

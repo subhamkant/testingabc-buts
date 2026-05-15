@@ -2,19 +2,20 @@ name: Mahabharata YouTube Bot
 
 on:
   schedule:
-    # ── Mahabharata Hindi — 2x/day (cut from 3x on 2026-05-13 to give the
-    # remaining videos more retry budget + stretch HF FLUX-schnell free
-    # quota further. The 07:00 UTC slot was dropped; 19:00 + 01:00 kept). ──
-    # Run 1 -> 12:30 AM IST (19:00 UTC previous day)
-    - cron: "0 19 * * *"
-    # Run 2 ->  6:30 AM IST (01:00 UTC)
-    - cron: "0 1 * * *"
-    # ── Krishna direct-address — 1x/day ──
-    # Run 3 ->  6:30 PM IST (13:00 UTC) — first-person Krishna speech (Hindi)
-    - cron: "0 13 * * *"
-    # ── What If dual-language — 1x/day (= 2 uploads, fits 10k API quota) ──
-    # Run 4 ->  9:30 AM IST (04:00 UTC) — generates HI + EN sharing visuals
-    - cron: "0 4 * * *"
+    # ── Mahabharata Hindi — 2x/day at OPTIMAL IST evening windows ──
+    # Schedule cut 2026-05-15 after channel analytics showed:
+    #   - Krishna direct-address videos avg 37% retention vs Mahabharata 70%+
+    #     (Krishna was dragging channel-wide reach down — removed)
+    #   - WhatIf series moving to a separate channel — removed
+    #   - 19:00 + 01:00 UTC = 12:30 AM + 6:30 AM IST = mostly off-peak;
+    #     re-targeted to 15:00 + 18:00 UTC = 8:30 PM + 11:30 PM IST = the
+    #     analytics-confirmed prime windows (15:00 UTC: n=6 avg=151 views,
+    #     18:00 UTC: n=5 avg=137 views — most reliable high-traffic slots
+    #     across all uploaded videos this month).
+    # Run 1 ->  8:30 PM IST (15:00 UTC) — prime evening audience
+    - cron: "0 15 * * *"
+    # Run 2 -> 11:30 PM IST (18:00 UTC) — late evening, second peak
+    - cron: "0 18 * * *"
 
   workflow_dispatch:
     inputs:
