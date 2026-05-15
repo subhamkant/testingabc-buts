@@ -31,6 +31,14 @@ SCOPES = [
     # `yt-analytics.readonly` enables YouTube Analytics API queries
     # (watch time, retention, traffic sources, demographics, geography).
     "https://www.googleapis.com/auth/yt-analytics.readonly",
+    # `youtube.force-ssl` is required to POST comments via commentThreads.insert
+    # (the auto long-form-backlink-comment feature). Added 2026-05-14 after
+    # Stage 2 Shorts run hit "Insufficient authentication scopes" 403s when
+    # trying to post a CTA comment with the long-form link.
+    # Note: YouTube API has NO endpoint to PIN a comment — only post it.
+    # After this scope is granted, the bot can post the backlink comment on
+    # each Short; you pin it manually in YouTube Studio (one click per video).
+    "https://www.googleapis.com/auth/youtube.force-ssl",
 ]
 
 

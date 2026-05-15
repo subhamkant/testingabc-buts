@@ -257,7 +257,11 @@ def upload_to_youtube(
             "defaultAudioLanguage": language,
         },
         "status": {
-            "privacyStatus": "public",
+            # Env-var override (added 2026-05-14): offline drivers set
+            # YT_PRIVACY=private for first-run testing so videos don't go
+            # public until manually verified. GHA pipelines never set this
+            # var → default "public" preserved for production cron.
+            "privacyStatus":           os.environ.get("YT_PRIVACY", "public"),
             "selfDeclaredMadeForKids": False,
         },
     }
