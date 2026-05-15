@@ -8,7 +8,6 @@
 # each run, so consumed topics persist across runs and the same topic
 # isn't re-used. Don't manually edit during a workflow run.
 
-What if humans could photosynthesize like plants?
 What if the Sahara desert turned green again?
 What if every insect on Earth went extinct?
 What if the Amazon rainforest disappeared?
