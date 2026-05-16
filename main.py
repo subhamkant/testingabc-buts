@@ -442,9 +442,19 @@ async def run_pipeline(language: str = "en", test_mode: bool = False, test_uploa
                 print(f"    YouTube upload failed: {yt_err}")
 
         # ── Done ──────────────────────────────────────────────────
-        if not ck.has("logged.done"):
+        # Fix 2.8 (2026-05-16): only mark topic as "used" when upload
+        # actually returned a video_id. Without this guard, a YouTube
+        # upload failure (OAuth revoked, quota, etc.) still committed
+        # the topic to recent_topics.json — creating "ghost" entries
+        # that block the topic from being retried on the next cron.
+        # (The 2026-05-16 16:19 UTC cron's invalid_grant failure
+        #  created exactly such a ghost for "Bhishma in Kurukshetra war".)
+        if video_id and not ck.has("logged.done"):
             log_video(video_path, script, language)
             ck.mark_done("logged.done")
+        elif not video_id:
+            print("    [skip-log] upload failed/skipped — NOT recording topic "
+                  "as used (prevents ghost entries in recent_topics.json)")
 
         print(f"\nPipeline complete!")
         print(f"    Video saved -> {video_path}")
@@ -636,9 +646,14 @@ async def run_krishna_speech(test_mode: bool = False, test_upload: bool = False)
                 print(f"    YouTube upload failed: {yt_err}")
 
         # ── Done ──────────────────────────────────────────────────
-        if not ck.has("logged.done"):
+        # Fix 2.8 (2026-05-16): same upload-success gate as Mahabharata
+        # path — see comment at run_pipeline().
+        if video_id and not ck.has("logged.done"):
             log_video(video_path, script, "hi")
             ck.mark_done("logged.done")
+        elif not video_id:
+            print("    [skip-log] upload failed/skipped — NOT recording topic "
+                  "as used (prevents ghost entries in recent_topics.json)")
 
         print(f"\nPipeline complete!")
         print(f"    Video saved -> {video_path}")
@@ -975,9 +990,14 @@ async def run_whatif_phase(language: str, test_mode: bool = False, test_upload: 
                 print(f"    YouTube upload failed: {yt_err}")
 
         # ── Done ──────────────────────────────────────────────────
-        if not ck.has(f"logged_{language}.done"):
+        # Fix 2.8 (2026-05-16): same upload-success gate as Mahabharata
+        # path — see comment at run_pipeline().
+        if video_id and not ck.has(f"logged_{language}.done"):
             log_video(video_path, lang_script, language)
             ck.mark_done(f"logged_{language}.done")
+        elif not video_id:
+            print(f"    [skip-log] {language} upload failed/skipped — NOT recording "
+                  f"topic as used (prevents ghost entries in recent_topics.json)")
 
         print(f"\n{lang_name} phase complete!")
         if video_id:
