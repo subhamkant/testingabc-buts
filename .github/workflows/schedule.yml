@@ -99,6 +99,8 @@ jobs:
           gemini-api-key-fallback: ${{ secrets.GEMINI_API_KEY_FALLBACK }}
           gemini-api-key-fallback-2: ${{ secrets.GEMINI_API_KEY_FALLBACK_2 }}
           gemini-api-key-fallback-3: ${{ secrets.GEMINI_API_KEY_FALLBACK_3 }}
+          instagram-access-token: ${{ secrets.IG_ACCESS_TOKEN }}
+          instagram-business-account-id: ${{ secrets.IG_BUSINESS_ACCOUNT_ID }}
           groq-api-key: ${{ secrets.GROQ_API_KEY }}
           fal-key: ${{ secrets.FAL_KEY }}
           replicate-api-token: ${{ secrets.REPLICATE_API_TOKEN }}
@@ -157,6 +159,8 @@ jobs:
           gemini-api-key-fallback: ${{ secrets.GEMINI_API_KEY_FALLBACK }}
           gemini-api-key-fallback-2: ${{ secrets.GEMINI_API_KEY_FALLBACK_2 }}
           gemini-api-key-fallback-3: ${{ secrets.GEMINI_API_KEY_FALLBACK_3 }}
+          instagram-access-token: ${{ secrets.IG_ACCESS_TOKEN }}
+          instagram-business-account-id: ${{ secrets.IG_BUSINESS_ACCOUNT_ID }}
           groq-api-key: ${{ secrets.GROQ_API_KEY }}
           fal-key: ${{ secrets.FAL_KEY }}
           replicate-api-token: ${{ secrets.REPLICATE_API_TOKEN }}
@@ -213,6 +217,8 @@ jobs:
           gemini-api-key-fallback: ${{ secrets.GEMINI_API_KEY_FALLBACK }}
           gemini-api-key-fallback-2: ${{ secrets.GEMINI_API_KEY_FALLBACK_2 }}
           gemini-api-key-fallback-3: ${{ secrets.GEMINI_API_KEY_FALLBACK_3 }}
+          instagram-access-token: ${{ secrets.IG_ACCESS_TOKEN }}
+          instagram-business-account-id: ${{ secrets.IG_BUSINESS_ACCOUNT_ID }}
           groq-api-key: ${{ secrets.GROQ_API_KEY }}
           fal-key: ${{ secrets.FAL_KEY }}
           replicate-api-token: ${{ secrets.REPLICATE_API_TOKEN }}
@@ -269,6 +275,8 @@ jobs:
           gemini-api-key-fallback: ${{ secrets.GEMINI_API_KEY_FALLBACK }}
           gemini-api-key-fallback-2: ${{ secrets.GEMINI_API_KEY_FALLBACK_2 }}
           gemini-api-key-fallback-3: ${{ secrets.GEMINI_API_KEY_FALLBACK_3 }}
+          instagram-access-token: ${{ secrets.IG_ACCESS_TOKEN }}
+          instagram-business-account-id: ${{ secrets.IG_BUSINESS_ACCOUNT_ID }}
           groq-api-key: ${{ secrets.GROQ_API_KEY }}
           fal-key: ${{ secrets.FAL_KEY }}
           replicate-api-token: ${{ secrets.REPLICATE_API_TOKEN }}
@@ -315,6 +323,8 @@ jobs:
           gemini-api-key-fallback: ${{ secrets.GEMINI_API_KEY_FALLBACK }}
           gemini-api-key-fallback-2: ${{ secrets.GEMINI_API_KEY_FALLBACK_2 }}
           gemini-api-key-fallback-3: ${{ secrets.GEMINI_API_KEY_FALLBACK_3 }}
+          instagram-access-token: ${{ secrets.IG_ACCESS_TOKEN }}
+          instagram-business-account-id: ${{ secrets.IG_BUSINESS_ACCOUNT_ID }}
           groq-api-key: ${{ secrets.GROQ_API_KEY }}
           fal-key: ${{ secrets.FAL_KEY }}
           replicate-api-token: ${{ secrets.REPLICATE_API_TOKEN }}
@@ -358,6 +368,8 @@ jobs:
           gemini-api-key-fallback: ${{ secrets.GEMINI_API_KEY_FALLBACK }}
           gemini-api-key-fallback-2: ${{ secrets.GEMINI_API_KEY_FALLBACK_2 }}
           gemini-api-key-fallback-3: ${{ secrets.GEMINI_API_KEY_FALLBACK_3 }}
+          instagram-access-token: ${{ secrets.IG_ACCESS_TOKEN }}
+          instagram-business-account-id: ${{ secrets.IG_BUSINESS_ACCOUNT_ID }}
           groq-api-key: ${{ secrets.GROQ_API_KEY }}
           fal-key: ${{ secrets.FAL_KEY }}
           replicate-api-token: ${{ secrets.REPLICATE_API_TOKEN }}
@@ -401,6 +413,8 @@ jobs:
           gemini-api-key-fallback: ${{ secrets.GEMINI_API_KEY_FALLBACK }}
           gemini-api-key-fallback-2: ${{ secrets.GEMINI_API_KEY_FALLBACK_2 }}
           gemini-api-key-fallback-3: ${{ secrets.GEMINI_API_KEY_FALLBACK_3 }}
+          instagram-access-token: ${{ secrets.IG_ACCESS_TOKEN }}
+          instagram-business-account-id: ${{ secrets.IG_BUSINESS_ACCOUNT_ID }}
           groq-api-key: ${{ secrets.GROQ_API_KEY }}
           fal-key: ${{ secrets.FAL_KEY }}
           replicate-api-token: ${{ secrets.REPLICATE_API_TOKEN }}
@@ -444,6 +458,8 @@ jobs:
           gemini-api-key-fallback: ${{ secrets.GEMINI_API_KEY_FALLBACK }}
           gemini-api-key-fallback-2: ${{ secrets.GEMINI_API_KEY_FALLBACK_2 }}
           gemini-api-key-fallback-3: ${{ secrets.GEMINI_API_KEY_FALLBACK_3 }}
+          instagram-access-token: ${{ secrets.IG_ACCESS_TOKEN }}
+          instagram-business-account-id: ${{ secrets.IG_BUSINESS_ACCOUNT_ID }}
           groq-api-key: ${{ secrets.GROQ_API_KEY }}
           fal-key: ${{ secrets.FAL_KEY }}
           replicate-api-token: ${{ secrets.REPLICATE_API_TOKEN }}
@@ -502,6 +518,8 @@ jobs:
           gemini-api-key-fallback: ${{ secrets.GEMINI_API_KEY_FALLBACK }}
           gemini-api-key-fallback-2: ${{ secrets.GEMINI_API_KEY_FALLBACK_2 }}
           gemini-api-key-fallback-3: ${{ secrets.GEMINI_API_KEY_FALLBACK_3 }}
+          instagram-access-token: ${{ secrets.IG_ACCESS_TOKEN }}
+          instagram-business-account-id: ${{ secrets.IG_BUSINESS_ACCOUNT_ID }}
           groq-api-key: ${{ secrets.GROQ_API_KEY }}
           fal-key: ${{ secrets.FAL_KEY }}
           replicate-api-token: ${{ secrets.REPLICATE_API_TOKEN }}
@@ -545,6 +563,8 @@ jobs:
           gemini-api-key-fallback: ${{ secrets.GEMINI_API_KEY_FALLBACK }}
           gemini-api-key-fallback-2: ${{ secrets.GEMINI_API_KEY_FALLBACK_2 }}
           gemini-api-key-fallback-3: ${{ secrets.GEMINI_API_KEY_FALLBACK_3 }}
+          instagram-access-token: ${{ secrets.IG_ACCESS_TOKEN }}
+          instagram-business-account-id: ${{ secrets.IG_BUSINESS_ACCOUNT_ID }}
           groq-api-key: ${{ secrets.GROQ_API_KEY }}
           fal-key: ${{ secrets.FAL_KEY }}
           replicate-api-token: ${{ secrets.REPLICATE_API_TOKEN }}
@@ -588,6 +608,8 @@ jobs:
           gemini-api-key-fallback: ${{ secrets.GEMINI_API_KEY_FALLBACK }}
           gemini-api-key-fallback-2: ${{ secrets.GEMINI_API_KEY_FALLBACK_2 }}
           gemini-api-key-fallback-3: ${{ secrets.GEMINI_API_KEY_FALLBACK_3 }}
+          instagram-access-token: ${{ secrets.IG_ACCESS_TOKEN }}
+          instagram-business-account-id: ${{ secrets.IG_BUSINESS_ACCOUNT_ID }}
           groq-api-key: ${{ secrets.GROQ_API_KEY }}
           fal-key: ${{ secrets.FAL_KEY }}
           replicate-api-token: ${{ secrets.REPLICATE_API_TOKEN }}
@@ -631,6 +653,8 @@ jobs:
           gemini-api-key-fallback: ${{ secrets.GEMINI_API_KEY_FALLBACK }}
           gemini-api-key-fallback-2: ${{ secrets.GEMINI_API_KEY_FALLBACK_2 }}
           gemini-api-key-fallback-3: ${{ secrets.GEMINI_API_KEY_FALLBACK_3 }}
+          instagram-access-token: ${{ secrets.IG_ACCESS_TOKEN }}
+          instagram-business-account-id: ${{ secrets.IG_BUSINESS_ACCOUNT_ID }}
           groq-api-key: ${{ secrets.GROQ_API_KEY }}
           fal-key: ${{ secrets.FAL_KEY }}
           replicate-api-token: ${{ secrets.REPLICATE_API_TOKEN }}

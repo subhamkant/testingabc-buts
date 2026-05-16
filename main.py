@@ -456,10 +456,29 @@ async def run_pipeline(language: str = "en", test_mode: bool = False, test_uploa
             print("    [skip-log] upload failed/skipped — NOT recording topic "
                   "as used (prevents ghost entries in recent_topics.json)")
 
+        # ── Step 6: Cross-post to Instagram Reels ─────────────────
+        # Same mp4, same caption (derived from script_data['description']).
+        # NON-FATAL — IG failures never break the YT path or the Fix 2.8
+        # state-commit guard above. video_id (YT) stays the source of
+        # truth for "topic used".
+        ig_media_id = None
+        if video_id:
+            try:
+                from pipeline.instagram_uploader import upload_to_instagram
+                ig_media_id = upload_to_instagram(
+                    video_path=video_path,
+                    script_data=script,
+                    youtube_url=f"https://youtube.com/watch?v={video_id}",
+                )
+            except Exception as ig_err:
+                print(f"    Instagram upload failed (non-fatal): {ig_err}")
+
         print(f"\nPipeline complete!")
         print(f"    Video saved -> {video_path}")
         if video_id:
             print(f"    YouTube    -> https://youtube.com/watch?v={video_id}")
+        if ig_media_id:
+            print(f"    Instagram  -> media_id={ig_media_id}")
         if os.path.exists("output/thumbnail.jpg"):
             print(f"    Thumbnail  -> output/thumbnail.jpg")
         print()
@@ -655,10 +674,25 @@ async def run_krishna_speech(test_mode: bool = False, test_upload: bool = False)
             print("    [skip-log] upload failed/skipped — NOT recording topic "
                   "as used (prevents ghost entries in recent_topics.json)")
 
+        # ── Step 6: Cross-post to Instagram Reels (non-fatal) ─────
+        ig_media_id = None
+        if video_id:
+            try:
+                from pipeline.instagram_uploader import upload_to_instagram
+                ig_media_id = upload_to_instagram(
+                    video_path=video_path,
+                    script_data=script,
+                    youtube_url=f"https://youtube.com/watch?v={video_id}",
+                )
+            except Exception as ig_err:
+                print(f"    Instagram upload failed (non-fatal): {ig_err}")
+
         print(f"\nPipeline complete!")
         print(f"    Video saved -> {video_path}")
         if video_id:
             print(f"    YouTube    -> https://youtube.com/watch?v={video_id}")
+        if ig_media_id:
+            print(f"    Instagram  -> media_id={ig_media_id}")
         if os.path.exists("output/thumbnail.jpg"):
             print(f"    Thumbnail  -> output/thumbnail.jpg")
         print()
@@ -999,9 +1033,24 @@ async def run_whatif_phase(language: str, test_mode: bool = False, test_upload: 
             print(f"    [skip-log] {language} upload failed/skipped — NOT recording "
                   f"topic as used (prevents ghost entries in recent_topics.json)")
 
+        # ── Cross-post to Instagram Reels (non-fatal) ─────────────
+        ig_media_id = None
+        if video_id:
+            try:
+                from pipeline.instagram_uploader import upload_to_instagram
+                ig_media_id = upload_to_instagram(
+                    video_path=video_path,
+                    script_data=lang_script,
+                    youtube_url=f"https://youtube.com/watch?v={video_id}",
+                )
+            except Exception as ig_err:
+                print(f"    Instagram upload failed (non-fatal): {ig_err}")
+
         print(f"\n{lang_name} phase complete!")
         if video_id:
-            print(f"    YouTube -> https://youtube.com/watch?v={video_id}")
+            print(f"    YouTube   -> https://youtube.com/watch?v={video_id}")
+        if ig_media_id:
+            print(f"    Instagram -> media_id={ig_media_id}")
         print()
 
     finally:

@@ -36,6 +36,12 @@ inputs:
   gemini-api-key-fallback:       { required: false, default: "" }
   gemini-api-key-fallback-2:     { required: false, default: "" }
   gemini-api-key-fallback-3:     { required: false, default: "" }
+  # Instagram Reels distribution (added 2026-05-17). Both optional — if
+  # absent, the pipeline's IG cross-post step prints "[ig] SKIP" and the
+  # YouTube path runs unchanged. See pipeline/instagram_uploader.py +
+  # setup_instagram_auth.py for the auth flow.
+  instagram-access-token:        { required: false, default: "" }
+  instagram-business-account-id: { required: false, default: "" }
   groq-api-key:                  { required: true }
   fal-key:                       { required: true }
   replicate-api-token:           { required: true }
@@ -73,6 +79,8 @@ runs:
         GEMINI_API_KEY_FALLBACK:       ${{ inputs.gemini-api-key-fallback }}
         GEMINI_API_KEY_FALLBACK_2:     ${{ inputs.gemini-api-key-fallback-2 }}
         GEMINI_API_KEY_FALLBACK_3:     ${{ inputs.gemini-api-key-fallback-3 }}
+        IG_ACCESS_TOKEN:               ${{ inputs.instagram-access-token }}
+        IG_BUSINESS_ACCOUNT_ID:        ${{ inputs.instagram-business-account-id }}
         GROQ_API_KEY:                  ${{ inputs.groq-api-key }}
         FAL_KEY:                       ${{ inputs.fal-key }}
         REPLICATE_API_TOKEN:           ${{ inputs.replicate-api-token }}
