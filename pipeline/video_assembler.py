@@ -763,7 +763,19 @@ def _pick_music_track(series: str = "mahabharata") -> str:
                 if f.lower().endswith(".mp3")
             ]
 
-    real_tracks = [t for t in tracks if "bgmusic" not in os.path.basename(t)]
+    # Copyrighted-music blocklist (2026-05-16): tracks that triggered Content ID
+    # claims on YouTube. The pipeline's GitHub Release may still ship these
+    # files; the blocklist ensures the picker never selects them regardless.
+    #   • mahabharat_sad_theme.mp3 — matched "Ek Maa Ki Santane - Ye Kaisi..."
+    #     (likely from B.R. Chopra's 1988 Mahabharat TV serial; Sony/Doordarshan
+    #     owned). Hit Content ID on the 2026-05-16 manual upload of episode #2.
+    #   • bgmusic.mp3 — generic-named track, no Pixabay attribution. Pre-existing
+    #     filter kept for backwards compat.
+    _BANNED_MUSIC = ("mahabharat_sad_theme.mp3", "bgmusic.mp3")
+    real_tracks = [
+        t for t in tracks
+        if os.path.basename(t).lower() not in _BANNED_MUSIC
+    ]
     pool = real_tracks if real_tracks else tracks
     if not pool:
         return ""
@@ -916,11 +928,16 @@ def _apply_background_music(output_path: str, series: str = "mahabharata"):
     # Sidechain still tightened: attack 80ms, release 450ms, ratio 7.
     valley_end_t   = max(8.0, video_duration - 7.0)   # ~7s of climax tail
     valley_start_t = max(5.0, valley_end_t - 5.0)     # 5s valley window
+    # Valley floor: 0.040 → 0.048 (Tier 2 Fix 2.2.b, 2026-05-16). User
+    # predicted pure 0.040 dip would feel "too empty" for mobile listeners
+    # in noisy environments (bus, street). 0.048 preserves the perceptible
+    # dip vs the 0.085 emotion-section ceiling but stays audible enough
+    # that the scene doesn't read as broken silence.
     music_volume_expr = (
         f"if(lt(t,3),0.050,"
         f"if(lt(t,8),0.067,"
         f"if(lt(t,{valley_start_t:.2f}),0.085,"
-        f"if(lt(t,{valley_end_t:.2f}),0.040,"
+        f"if(lt(t,{valley_end_t:.2f}),0.048,"
         f"0.098))))"
     )
     duck_filter = (
@@ -948,7 +965,7 @@ def _apply_background_music(output_path: str, series: str = "mahabharata"):
     if result.returncode == 0:
         os.replace(music_output, output_path)
         print(f"    [OK] Music mixed (5-section curve w/ valley dip: "
-              f"0.050→0.067→0.085→[VALLEY {valley_start_t:.1f}-{valley_end_t:.1f}s @ 0.040]→0.098, "
+              f"0.050→0.067→0.085→[VALLEY {valley_start_t:.1f}-{valley_end_t:.1f}s @ 0.048]→0.098, "
               f"sidechain a80/r450/ratio7) + audio normalized ({audio_chain})")
         return
 
