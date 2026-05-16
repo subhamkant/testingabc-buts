@@ -31,21 +31,28 @@ _GEMINI_MODELS_FAST = ("gemini-2.5-flash", "gemini-2.5-flash-lite")
 def _gemini_keys():
     """
     Returns list of (label, api_key) tuples for the Gemini API. Walks
-    GEMINI_API_KEY first (primary), then GEMINI_API_KEY_FALLBACK if set
-    (second Google account's project — doubles the 50 RPD Pro quota to
-    100 RPD when both are configured). Mirrors the existing
-    _elevenlabs_keys() pattern.
+    GEMINI_API_KEY first (primary), then GEMINI_API_KEY_FALLBACK,
+    GEMINI_API_KEY_FALLBACK_2, GEMINI_API_KEY_FALLBACK_3 if set — each
+    additional Google account's project adds 50 RPD of Pro quota. With
+    all 4 keys configured: 200 RPD Pro vs 50 with primary alone.
+    Mirrors the existing _elevenlabs_keys() pattern.
 
-    Empty/whitespace-only keys are filtered out so missing fallback
-    doesn't break primary-only operation.
+    Empty/whitespace-only keys (and duplicates) are filtered out so
+    missing fallbacks don't break primary-only operation.
     """
     keys = []
-    primary = os.environ.get("GEMINI_API_KEY", "").strip()
-    if primary:
-        keys.append(("primary", primary))
-    fallback = os.environ.get("GEMINI_API_KEY_FALLBACK", "").strip()
-    if fallback and fallback != primary:
-        keys.append(("fallback", fallback))
+    seen = set()
+    candidates = [
+        ("primary",    "GEMINI_API_KEY"),
+        ("fallback",   "GEMINI_API_KEY_FALLBACK"),
+        ("fallback-2", "GEMINI_API_KEY_FALLBACK_2"),
+        ("fallback-3", "GEMINI_API_KEY_FALLBACK_3"),
+    ]
+    for label, env_name in candidates:
+        val = os.environ.get(env_name, "").strip()
+        if val and val not in seen:
+            seen.add(val)
+            keys.append((label, val))
     return keys
 
 
@@ -455,6 +462,180 @@ def _check_past_aux_tic(scenes: list, threshold: float = 0.35) -> tuple:
                 hits += 1
     ratio = hits / total if total else 0.0
     return (ratio <= threshold), ratio, hits, total
+
+
+# ── Retention-engineering validators (added 2026-05-16) ─────────────────────
+# Tier 1 cinematic upgrade — see plan
+# C:\Users\rjyot\.claude\plans\have-a-look-into-polished-goblet.md. Hook +
+# rehook are HARD gates (block + retry); rhythm + visual are SOFT (warn-only).
+
+# Setup-line openers banned at scene 1 — these signal "documentary intro"
+# and viewers swipe in the first 1.5 seconds.
+_BANNED_HOOK_OPENERS = _re.compile(
+    r"^\s*(यह\s+कहानी|यह\s+एक\s+(?:ऐसी\s+)?कहानी|एक\s+बार|बहुत\s+समय\s+पहले|"
+    r"प्राचीन\s+काल|पुराने\s+ज़माने|कहते\s+हैं|"
+    r"In\s+ancient|This\s+is\s+the\s+story|Long\s+ago|Once\s+upon)",
+    _re.IGNORECASE
+)
+# Pattern B — opens with a question marker / curiosity word
+_HOOK_QUESTION_OPENER = _re.compile(
+    r"^\s*(क्या\s+आप|क्या\s+आपको|जब|कैसे|क्यों|कौन|किसने|"
+    r"Did\s+you|What\s+if|How\s+did|Why\s+did|Who\s+killed)",
+    _re.IGNORECASE
+)
+# Pattern C — first sentence trails off / ends with लेकिन / but
+_HOOK_CLIFFHANGER_END = _re.compile(r"(लेकिन|पर|but|…|\.{3})\s*[।!?\.]?\s*$", _re.IGNORECASE)
+# Pattern A — shocking specific fact (digit + named character)
+_DIGIT_IN_TEXT = _re.compile(r"\d")
+# Lightweight character-name list reused from the prompt
+_CHARACTER_NAMES_LIST = (
+    "Krishna", "Arjuna", "Bhishma", "Karna", "Draupadi", "Yudhishthira",
+    "Bhima", "Nakula", "Sahadeva", "Duryodhana", "Dushasana", "Drona",
+    "Ashwatthama", "Gandhari", "Dhritarashtra", "Vidura", "Kunti", "Shakuni",
+    "Abhimanyu", "Subhadra", "Ghatotkacha", "Jayadratha", "Shikhandi", "Amba",
+    "Satyavati", "Devavrata", "Parashurama", "Ekalavya", "Sanjaya", "Balarama",
+    "Vyasa",
+    "कृष्ण", "अर्जुन", "भीष्म", "कर्ण", "द्रौपदी", "युधिष्ठिर",
+    "भीम", "दुर्योधन", "द्रोण", "अश्वत्थामा", "गांधारी", "धृतराष्ट्र",
+    "विदुर", "कुंती", "शकुनि", "अभिमन्यु", "जयद्रथ", "शिखंडी",
+    "सत्यवती", "देवव्रत", "परशुराम", "एकलव्य", "बलराम", "व्यास",
+)
+
+
+def _check_hook_pattern(scene1_narration: str) -> tuple[bool, str]:
+    """
+    Hook validator (HARD gate). Returns (ok, reason).
+
+    Rejects setup-line openers ("यह कहानी है...", "Long ago...") and requires
+    scene 1's first sentence to match Pattern A (shocking fact with digit +
+    named character), Pattern B (question opener), or Pattern C (cliffhanger
+    trailing with लेकिन/but/...).
+    """
+    if not scene1_narration:
+        return False, "scene 1 narration empty"
+    text = scene1_narration.strip()
+    if _BANNED_HOOK_OPENERS.match(text):
+        return False, "setup-line opener (documentary intro)"
+    # Use only the first sentence for pattern checks
+    first_sentence = _re.split(r"[।!?\.]", text, maxsplit=1)[0].strip()
+    if not first_sentence:
+        return False, "empty first sentence"
+    has_digit = bool(_DIGIT_IN_TEXT.search(first_sentence))
+    has_character = any(name in first_sentence for name in _CHARACTER_NAMES_LIST)
+    pattern_a = has_digit and has_character
+    pattern_b = bool(_HOOK_QUESTION_OPENER.match(first_sentence))
+    pattern_c = bool(_HOOK_CLIFFHANGER_END.search(first_sentence))
+    if pattern_a or pattern_b or pattern_c:
+        which = "A" if pattern_a else ("B" if pattern_b else "C")
+        return True, f"pattern {which}"
+    return False, "no shock-fact / question / cliffhanger pattern detected"
+
+
+# Rehook contrast markers — must appear somewhere in the middle-window scenes
+# to re-spike curiosity at the 40-60% retention drop-off point.
+_REHOOK_MARKERS = _re.compile(
+    r"(लेकिन|परंतु|किंतु|और\s+तभी|उसी\s+क्षण|जो\s+(?:किसी|कोई)\s+ने\s+(?:नहीं|न)\s+सोचा|"
+    r"पर\s+(?:उसे|उन्हें)\s+नहीं\s+पता|But\b|But\s+what|Yet\b|Suddenly|And\s+then)",
+    _re.IGNORECASE
+)
+
+
+def _check_rehook_present(scenes: list) -> tuple[bool, int]:
+    """
+    Mid-video rehook validator (HARD gate). Returns (ok, hit_scene_idx).
+
+    Scans the middle window of narrative scenes (excluding the outro at
+    position N-1) for a contrast marker that resets curiosity at the
+    12-18s drop-off point. Window = scenes [N//2 - 1, N//2, N//2 + 1]
+    where N is the count of non-outro scenes.
+    """
+    # Exclude the static subscribe outro (last scene). Treat the rest as the
+    # narrative.
+    narrative = scenes[:-1] if len(scenes) > 2 else scenes
+    n = len(narrative)
+    if n < 3:
+        return True, -1  # too short to meaningfully rehook
+    mid = n // 2
+    window = {max(0, mid - 1), mid, min(n - 1, mid + 1)}
+    for idx in sorted(window):
+        text = (narrative[idx].get("narration") or "")
+        if _REHOOK_MARKERS.search(text):
+            return True, idx
+    return False, -1
+
+
+def _check_sentence_rhythm(scenes: list) -> tuple[bool, str]:
+    """
+    Sentence-rhythm validator (SOFT gate — warn-only, never blocks retry).
+
+    Looks for evidence of varied sentence lengths across the whole script:
+      - ≥30% of sentences are ≤7 words (short punch)
+      - ≥1 sentence is ≥12 words (cinematic long)
+      - stddev of sentence word-counts ≥3
+    Returns (ok, reason_str). Per plan discipline, this is logged but does
+    NOT block acceptance — prevents prompt-fighting where the LLM satisfies
+    the regex but loses emotional truth.
+    """
+    sent_lengths = []
+    for s in scenes[:-1]:  # skip outro
+        text = (s.get("narration") or "").strip()
+        for sent in _re.split(r"[।!?\.]+", text):
+            sent = sent.strip()
+            if sent:
+                sent_lengths.append(len(sent.split()))
+    if len(sent_lengths) < 4:
+        return True, "too few sentences to evaluate"
+    n = len(sent_lengths)
+    short_count = sum(1 for w in sent_lengths if w <= 7)
+    long_count  = sum(1 for w in sent_lengths if w >= 12)
+    short_pct = short_count / n
+    mean = sum(sent_lengths) / n
+    variance = sum((w - mean) ** 2 for w in sent_lengths) / n
+    stddev = variance ** 0.5
+    fails = []
+    if short_pct < 0.30:
+        fails.append(f"short-line ratio {short_pct:.0%} (need ≥30%)")
+    if long_count < 1:
+        fails.append("no cinematic long line (≥12 words)")
+    if stddev < 3.0:
+        fails.append(f"stddev {stddev:.1f} (need ≥3, flat rhythm)")
+    if fails:
+        return False, "; ".join(fails)
+    return True, f"short={short_pct:.0%} stddev={stddev:.1f}"
+
+
+# Visual-escalation power keywords (English image_prompts only — that's what
+# FLUX consumes). Climax/resolve scenes (last 2 narrative scenes) should hit
+# at least one of these to give FLUX the energy gradient the audio is
+# building toward. Per plan: SOFT gate, warn-only.
+_VISUAL_POWER_KEYWORDS = _re.compile(
+    r"\b(lightning|fire|flames?|storm|cosmic|destruction|battlefield|burning|"
+    r"ashes?|inferno|tempest|thunder|smoke|war|blood|chaos)\b",
+    _re.IGNORECASE
+)
+
+
+def _check_visual_escalation(scenes: list) -> tuple[bool, list]:
+    """
+    Visual-escalation validator (SOFT gate — warn-only).
+
+    Climax scenes (the last 2 narrative scenes before the outro) should
+    contain at least one power keyword in their image_prompt so FLUX renders
+    the energy gradient the audio builds toward. Returns (ok, missing_idx_list).
+    """
+    narrative = scenes[:-1] if len(scenes) > 2 else scenes
+    n = len(narrative)
+    if n < 3:
+        return True, []
+    # Check the climax pair (N-2, N-1 in narrative). For a 6-narrative-scene
+    # script that's scenes 5 and 6.
+    climax_indices = [n - 2, n - 1]
+    missing = []
+    for idx in climax_indices:
+        prompt_text = (narrative[idx].get("image_prompt") or "")
+        if not _VISUAL_POWER_KEYWORDS.search(prompt_text):
+            missing.append(idx + 1)  # 1-indexed for human readability
+    return (not missing), missing
 
 
 # Krishna direct-address mode requires first-person markers (मैं/मैंने) or
@@ -1896,7 +2077,7 @@ def generate_script(
 
     You must strictly follow all rules and NEVER generate invalid or noisy text.
 
-    TASK: Create a 60-90 second vertical (9:16) video script with EXACTLY 5 OR 6 scenes about a well-known incident from the Mahabharata.
+    TASK: Create a 50-58 second vertical (9:16) video script with EXACTLY 6 scenes about a well-known incident from the Mahabharata.
 
     TOPIC: "{topic}"
     EPISODE_NUMBER (use this for title prefix 'महाभारत #{episode_n_str}'): {episode_n_str}
@@ -1936,17 +2117,67 @@ def generate_script(
         sentence must be the hook itself, naming a specific person and
         something dramatic that happened to them.
 
+    Scene N//2 (or N//2 + 1) — MID-VIDEO REHOOK (CRITICAL — added 2026-05-16):
+        Shorts retention drops 30-40% in the 12-18s window as viewers "get
+        the gist" and swipe. ONE scene at the 50% mark MUST reset curiosity
+        with a TWIST line that begins with or contains a contrast marker:
+
+          • "लेकिन..." / "लेकिन उसे नहीं पता था..." / "लेकिन तभी..."
+          • "परंतु..." / "किंतु..."
+          • "जो किसी ने नहीं सोचा था..."
+          • "और तभी..." / "उसी क्षण..."
+          • "But..." / "But what he didn't know..." (for English videos)
+
+        Example for Bhishma's vow:
+          "लेकिन भीष्म को नहीं पता था...
+           कि यही प्रतिज्ञा...
+           पूरे कुरुवंश के विनाश का कारण बनेगी..."
+
+        Without this twist beat the viewer mentally completes the story
+        and swipes mid-video. The rehook is the single biggest retention
+        lever between scenes 2-5.
+
     Scenes 2-3 — SETUP & RISING TENSION:
         Establish the characters, the situation, the conflict. Each
-        sentence must build dread, anticipation, or curiosity.
+        sentence must build dread, anticipation, or curiosity. Either
+        scene 3 OR scene 4 carries the REHOOK contrast marker above.
 
-    Scene 4 (and 5 if 6-scene script) — CLIMAX or REVELATION:
-        The dramatic high point. The viewer should feel something —
-        awe, shock, sorrow, vindication. Vivid sensory detail.
+    Scene 4 — RISE to climax:
+        Stakes peak. Battlefield approaches. Storm clouds gather.
+        Whatever is about to break is visible on the horizon.
 
-    Final scene — RESOLUTION + LESSON:
-        Tie it off cleanly. Leave the viewer with a takeaway, a moral,
-        or an emotional landing that makes the video feel complete.
+    Scene 5 — EMOTIONAL VALLEY (CRITICAL — added 2026-05-16):
+        This is the BREATH before the boom. After all the rising tension,
+        ONE scene MUST drop intensity briefly — intimate, quiet, broken.
+        Short clauses. A single image. Whispered confession or final silence.
+
+        Content cues:
+          • A single emotional reflection or whispered question
+          • A close-up moment: a tear, a trembling hand, broken armor
+          • The character finally being human, not heroic
+          • 18-22 words MAX (shorter than other scenes — this scene breathes)
+
+        Example for Bhishma's vow:
+          "उस रात भीष्म चुप थे...
+           एक आँसू। एक प्रश्न।
+           और एक टूटा हुआ वचन..."
+
+        Image prompt for THIS scene MUST be: tight close-up,
+        candlelight or dim warm tones (NOT lightning/fire/spectacle),
+        single subject, no wide epic compositions. This is the natural
+        place to land a HUMAN PAIN cue (see HUMAN PAIN section below).
+
+        Why: without this dip the climax (scene 6) feels expected. With
+        it, the brain registers "wait, it got quiet... oh god, here it
+        comes." This contrast amplifies the felt energy of the climax.
+
+    Scene 6 — CLIMAX / EPIC SPECTACLE + RESOLUTION:
+        The dramatic high point AND the closing payoff. After the valley's
+        intimate quiet, this scene BREAKS — lightning splits the sky, fire
+        consumes the battlefield, the cosmic consequence lands. The viewer
+        should feel awe, shock, sorrow, vindication. Also ties off the
+        narrative bookend that scene 1's hook posed. Vivid sensory detail
+        + spectacle keywords (lightning / fire / storm / cosmic / etc.).
 
     ═══════════════════════════════════════════════════════════════
     CURIOSITY GAP — STOPS MID-VIDEO SWIPES (CRITICAL)
@@ -2154,14 +2385,112 @@ def generate_script(
     ═══════════════════════════════════════════════════════════════
     NARRATION LENGTH — CRITICAL
     ═══════════════════════════════════════════════════════════════
-    EACH scene's narration must be 25-40 words.
-    NEVER write fewer than 25 words per scene — this produces a too-short video.
-    Aim for 30-35 words per scene as the sweet spot.
-    At natural Hindi/English narration pace this gives ~10-13 seconds per scene.
-    Use 2-3 short sentences per scene for natural breathing pauses.
+    EACH scene's narration must be 22-28 words.
+    NEVER write fewer than 22 words per scene OR more than 28 — going long
+    blows past YouTube's 60s Shorts cap. Aim for 25 words/scene as the sweet
+    spot. Hindi narrates ~3 words/sec (slower than English ~4 wps); 25 words
+    = ~8 seconds spoken.
 
-    Total target: 5 scenes × ~33 words = 165 words OR 6 scenes × ~28 words = 168 words.
-    Spoken duration: ~55-75 seconds (a fixed subscribe outro adds ~6s for 60-80s total video).
+    EXCEPTION: scene 5 (the EMOTIONAL VALLEY — see below) is the only scene
+    that may go shorter: 18-22 words max. It is supposed to breathe.
+
+    Total target: 6 scenes × ~25 words = ~150 spoken words. Spoken duration:
+    ~48-52s at Hindi Charon pace. A fixed subscribe outro adds ~6s for a
+    54-58s total Short, comfortably under YouTube's 60s Shorts hard cap.
+
+    ═══════════════════════════════════════════════════════════════
+    SENTENCE RHYTHM — VARIED LENGTHS, CINEMATIC FEEL
+    ═══════════════════════════════════════════════════════════════
+    Flat-cadence narration ("all sentences ~12 words long") sounds robotic
+    even with good TTS. Cinematic Hindi narration alternates:
+        LONG (12-20 words, sets the emotion) →
+        SHORT (3-7 words, delivers impact) →
+        SHORT (3-7 words, second hit) →
+        STINGER (1-3 words, "त्याग।" "विनाश।" "मृत्यु।")
+
+    Example for Bhishma vow scene:
+        LONG:  "उस दिन देवव्रत ने अपने पिता की खुशी के लिए सब कुछ छोड़ दिया।"
+        SHORT: "उसने सिंहासन छोड़ा।"
+        SHORT: "विवाह छोड़ा।"
+        SHORT: "अपना भविष्य छोड़ दिया।"
+        PUNCH: "उसी दिन देवव्रत बने — भीष्म।"
+
+    Across the whole script aim for ≥30% short punch lines (≤7 words) AND
+    at least one cinematic long line (≥12 words). Don't write 3 sentences
+    in a row all ~12 words long.
+
+    ═══════════════════════════════════════════════════════════════
+    DRAMATIC PAUSE MARKERS — ELLIPSIS BETWEEN BEATS
+    ═══════════════════════════════════════════════════════════════
+    End each scene's narration with "..." (triple ellipsis) where the
+    next scene picks up. The TTS engine treats "..." as a natural breath
+    pause (~300-400ms), creating the anticipation gap that separates
+    "narration over visuals" from "cinematic moment unfolding."
+
+    Also use "..." MID-SCENE before a punch line for emphasis:
+        "उसने सब कुछ छोड़ दिया... सिंहासन भी।"
+        "और तभी... कुरुवंश का सबसे बड़ा योद्धा... चुप हो गया।"
+
+    Don't overuse — 1-2 ellipses per scene is the sweet spot.
+
+    ═══════════════════════════════════════════════════════════════
+    VISUAL INTENSITY ESCALATION — scene-by-scene progression
+    ═══════════════════════════════════════════════════════════════
+    Each scene's image_prompt MUST embed escalation cues matching its
+    narrative position so visuals rise WITH the audio:
+
+        Scene 1 (hook):    dim/mysterious lighting, single character,
+                           tight composition
+        Scene 2 (setup):   golden palace / royal grandeur, wide
+                           composition, warm tones
+        Scene 3 (rehook):  emotional close-up, candle-light or warm
+                           tones, tension building
+        Scene 4 (rise):    storm clouds / fire / battlefield approach,
+                           mid-shot
+        Scene 5 (VALLEY):  intimate close-up — a tear, a trembling hand,
+                           candlelight, broken armor. NO spectacle. This
+                           is the quiet breath before the boom. (Fix 1.10)
+        Scene 6 (CLIMAX):  lightning / fire / cosmic / destruction,
+                           wide epic shot — the boom after the valley.
+
+    Scene 6 (CLIMAX) MUST include at least ONE of these power keywords
+    in image_prompt: "lightning", "fire", "storm", "cosmic", "destruction",
+    "battlefield", "burning sky", "ashes", "inferno", "tempest", "thunder",
+    "smoke", "war". These give FLUX the energy gradient the audio's
+    5-section music curve is building toward.
+
+    Scene 5 (VALLEY) MUST NOT use those power keywords — it is the quiet
+    intimate beat. Use candlelight / dim warm tones / a single close-up
+    of suffering instead.
+
+    ═══════════════════════════════════════════════════════════════
+    HUMAN PAIN — emotion beats beauty (added 2026-05-16, Fix 1.12)
+    ═══════════════════════════════════════════════════════════════
+    The Mahabharata's emotional power comes from CHARACTER suffering,
+    not just spectacle. At least 2 of the non-outro scenes' image_prompts
+    MUST include at least ONE human-suffering cue from this palette:
+
+      • trembling hands / clenched fists / white-knuckled grip
+      • tears streaming down cheeks / single tear catching firelight
+      • broken armor / bloody bandages / cracked shield
+      • ash on face / dust in hair / soot on clothing
+      • silhouette against fire / against setting sun
+      • eyes lowered or closed in grief / averted gaze
+      • hand reaching toward a fallen body / fingers grazing earth
+      • kneeling figure / collapsed posture / shoulders bowed
+      • lips pressed in held-back grief / jaw clenched
+
+    Scene 5 (VALLEY) is the natural home for the strongest HUMAN PAIN
+    cue — it should hit hardest there because the music + motion both
+    drop in that scene, letting the suffering frame breathe.
+
+    Emotion > beauty. A close-up of a trembling hand outperforms a
+    symmetrical throne room shot. Beautiful frames are "AI pretty" —
+    suffering frames are CINEMATIC. The audience connects with PAIN,
+    not grandeur.
+
+    DO NOT prioritize palace symmetry / golden lighting / heroic poses
+    over emotional close-ups when both options fit the beat.
 
     ═══════════════════════════════════════════════════════════════
     COMMENT-BAIT — THE LAST SCENE MUST END WITH A DEBATE QUESTION
@@ -2227,7 +2556,17 @@ def generate_script(
         [shot type] of [specific named character(s)] in [body language /
         emotion], [foreground action or pose], in [specific environment],
         background contains [≥3 specific elements from the palette above],
-        [lighting style], [mood adjective], [palette: jewel-toned colours]
+        [lighting style], [mood adjective], [palette: jewel-toned colours].
+        clean cinematic frame with no text, no letters, no watermarks, no
+        signage, no captions, no banners with writing, no overlay text.
+
+    The "no text" tail is MANDATORY on every image_prompt. FLUX hallucinates
+    garbled letterforms / fake credits / watermark text at the bottom of
+    frames especially when prompts reference banners/scrolls/palace
+    architecture/battlefield signage — front-loading this instruction in
+    every prompt suppresses those artifacts. (2026-05-16 climax-render
+    test: omitting this rule led to visible AI-generated text at frame
+    bottom on epic battlefield shots.)
 
     ═══════════════════════════════════════════════════════════════
     CHARACTER NAMING — CRITICAL FOR VISUAL CONSISTENCY
@@ -2333,8 +2672,8 @@ def generate_script(
       "tags": ["topic-specific long-tail tag 1","topic-specific long-tail tag 2","named character 1 (English)","named character 1 (Hindi/Devanagari)","named character 2","specific incident name","viewer-search query like 'why X happened'","Mahabharata","महाभारत","Shorts","Hindu mythology","Krishna","कृष्ण"],
       "scenes": [
         {{
-          "narration": "25-40 words in the specified LANGUAGE — vivid, present-tense, dramatic. 2-3 short sentences. ~10-13 seconds spoken.",
-          "image_prompt": "Detailed English prompt following the [shot type] of [character(s)] in [emotion/action], in [environment], background contains [≥3 specific architectural/environmental elements: carved pillars, oil lamps, lotus reliefs, etc], [lighting], [mood], jewel-toned palette",
+          "narration": "22-28 words in the specified LANGUAGE — vivid, present-tense, dramatic. MIX of short punch lines and longer cinematic lines (varied rhythm). End each scene with '...' (triple ellipsis) for natural TTS pause. ~7-9 seconds spoken. EXCEPTION: the valley scene (scene 5) is 18-22 words and quiet.",
+          "image_prompt": "Detailed English prompt following the [shot type] of [character(s)] in [emotion/action], in [environment], background contains [≥3 specific architectural/environmental elements: carved pillars, oil lamps, lotus reliefs, etc], [lighting], [mood], jewel-toned palette. MUST end with: 'clean cinematic frame with no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text.'",
           "video_prompt": "Cinematic 5-second shot in English — characters in subtle motion, camera movement, lighting. Vertical 9:16.",
           "mood": "3-6 word English emotional tone phrase"
         }}
@@ -2353,9 +2692,15 @@ def generate_script(
     - Tags MUST include topic-specific long-tail keywords (named characters
       in this topic + specific incident name + viewer-search queries) on
       top of the generic Mahabharata fallbacks.
-    - Narration per scene: 25-40 words, 2-3 sentences, ~10-13 seconds spoken
+    - Narration per scene: 22-28 words, varied rhythm (mix short punch + long cinematic), end with "..." for TTS pause, ~7-9 seconds spoken. EXCEPTION: scene 5 (valley) is 18-22 words.
     - Narration MUST NOT contain URLs, hashtags (#), @mentions, English in Hindi videos, or any social-media text
-    - Generate EXACTLY 5 OR 6 scenes — never fewer, never more
+    - Generate EXACTLY 6 scenes — never fewer, never more (7-scene scripts overshoot the 60s Shorts cap on Hindi TTS pace)
+    - Scene 1 = HOOK, scene 2-3 = setup + RISING TENSION, scene 3 OR 4 = REHOOK (contrast marker), scene 5 = EMOTIONAL VALLEY (intimate quiet), scene 6 = CLIMAX (epic spectacle)
+    - ONE scene around the 50% mark MUST begin or contain a rehook contrast marker
+      ("लेकिन..."/"परंतु..."/"जो किसी ने नहीं सोचा था..."/"और तभी..."/"But..."/"Suddenly")
+    - Scene 5 (VALLEY) MUST be intimate close-up — candlelight / dim warm tones / single subject — NOT lightning/fire/spectacle
+    - Scene 6 (CLIMAX) image_prompt MUST include a visual power keyword (lightning / fire / storm / cosmic / destruction / battlefield / burning / ashes / inferno / tempest / thunder / smoke / war)
+    - At least 2 non-outro scenes' image_prompts MUST include a HUMAN PAIN cue (trembling hands / tears / broken armor / ash on face / silhouette against fire / kneeling figure / etc.)
     - Scene 1's FIRST sentence MUST be a hook in pattern A, B, or C above —
       no setup lines, no "this is the story of...", no meta-narration
     - Every scene EXCEPT the last MUST end with a forward-pulling line
@@ -2394,6 +2739,15 @@ def generate_script(
     last_eng_sensory   = 0
     last_mono_pattern  = None
     last_mono_ratio    = 0.0
+    last_hook_ok       = True
+    last_hook_reason   = ""
+    last_rehook_ok     = True
+    # Best-of-N rescue: track (score, data) per attempt so that if every gate
+    # never passes simultaneously across MAX_ATTEMPTS, we still ship the
+    # highest-scoring attempt instead of the last (potentially worst) one.
+    # Score = count of HARD gates that passed for this attempt.
+    best_score = -1
+    best_data  = None
     MAX_ATTEMPTS = 5
     for attempt in range(MAX_ATTEMPTS):
         full_prompt = prompt
@@ -2403,21 +2757,52 @@ def generate_script(
             # get picked up on the next attempt — the LLM gets one focused
             # reminder instead of a wall of competing instructions.
             #
-            # Priority: length > char-names > bookend > engagement > tha-tic >
-            #           monotony > repetition.
+            # Priority: hook > rehook > length > char-names > bookend >
+            #           engagement > tha-tic > monotony > repetition.
             #
-            # Length is FIRST because the 2026-05-13 test showed the LLM
-            # over-compresses to satisfy style rules when given everything
-            # at once. A 30s video is unrecoverable; the length floor must
-            # be restored before any other reminder is allowed to fire.
+            # Hook and rehook are FIRST because they are structural retention
+            # mechanics — a script that lacks them is "documentary mode"
+            # regardless of word counts. Length is third because the
+            # 2026-05-13 test showed the LLM over-compresses to satisfy style
+            # rules when given everything at once.
             chosen = None
-            if last_short:
+            if not last_hook_ok:
                 chosen = (
-                    "Your previous response had narrations that were TOO SHORT. "
-                    "Each scene MUST be 25-40 words. Below 25 words is unacceptable. "
-                    "THIS IS THE TOP PRIORITY — do NOT shrink the narration to satisfy "
-                    "any other rule. First restore the per-scene word count, THEN "
-                    "the other quality gates will be checked separately."
+                    "Your previous response failed the SCENE 1 HOOK validator: "
+                    f"{last_hook_reason}. Scene 1's FIRST sentence MUST follow ONE "
+                    "of the three hook patterns: (A) shocking specific fact with a "
+                    "digit AND a named character; (B) question opener starting with "
+                    "क्या आप / जब / कैसे / क्यों / Did you / What if; (C) cliffhanger "
+                    "ending with लेकिन / but / triple ellipsis. NEVER open with "
+                    "documentary-mode openers (\"यह कहानी है...\", \"Long ago...\", "
+                    "\"In ancient times...\") — viewers swipe in 1.5s. This is the "
+                    "TOP PRIORITY — rewrite scene 1's first sentence before fixing "
+                    "any other gate."
+                )
+            elif not last_rehook_ok:
+                chosen = (
+                    "Your previous response had NO MID-VIDEO REHOOK. ONE scene "
+                    "around the 50% mark (scene 3 or 4 in a 6-7 scene script) MUST "
+                    "begin or contain a contrast marker that resets curiosity: "
+                    "\"लेकिन...\", \"परंतु...\", \"जो किसी ने नहीं सोचा था...\", "
+                    "\"और तभी...\", \"उसी क्षण...\", or English \"But...\" / "
+                    "\"Suddenly...\". Without this twist beat the viewer mentally "
+                    "completes the story at 12-18s and swipes. Rewrite the middle "
+                    "scene to start with one of those markers and reveal an "
+                    "unexpected consequence."
+                )
+            elif last_short:
+                chosen = (
+                    f"Your previous response failed the LENGTH validator "
+                    f"(n_scenes={n_scenes}, avg_words={avg_words:.1f}). The target "
+                    f"is EXACTLY 6 scenes AND 22-28 words per scene (avg in the "
+                    f"22-30 range). Total: ~150 spoken words for a 50-58s Short. "
+                    f"Hindi Charon narrates ~3 words/sec — going over 28 words/scene "
+                    f"will push the video past YouTube's 60s Shorts hard cap. "
+                    f"EXCEPTION: scene 5 (the emotional valley) may be 18-22 words. "
+                    f"Do NOT add a 7th scene to satisfy any other rule; tighten "
+                    f"existing scenes instead. This is TOP PRIORITY — fix scene "
+                    f"count and word count BEFORE any other gate."
                 )
             elif last_missing_names:
                 scene_list = ", ".join(f"scene {n}" for n in last_missing_names)
@@ -2502,7 +2887,14 @@ def generate_script(
         avg_words = sum(word_counts) / max(len(word_counts), 1)
         n_scenes = len(scenes)
 
-        last_short = (n_scenes < 5 or avg_words < 22)
+        # Length validator (Tier 1.5 re-tune 2026-05-16): now enforces BOTH
+        # bounds. Previously only `< 30 avg words` was checked, so a Tier 1
+        # smoke test that produced 39.3 avg words shipped a 74.5s video —
+        # past YouTube's 60s Shorts cap. The "OR 7 scenes" allowance also
+        # blew duration. Now: exactly 6 scenes, 22-30 word AVG range.
+        # 6 × 25 words / 3.1 wps (Hindi Charon) = ~48s narrative + 6s outro
+        # = ~54s total Short, well inside the 50-58s target.
+        last_short = (n_scenes != 6 or avg_words < 22 or avg_words > 30)
         # Threshold 4: a character at the centre of the story (Bhishma in a
         # Bhishma video) can appear ~4 times naturally. 5+ times signals that
         # supporting characters and details are being skipped in favour of
@@ -2550,8 +2942,33 @@ def generate_script(
         last_mono_pattern = mono_pattern if not mono_ok else None
         last_mono_ratio   = mono_ratio
 
+        # ── Cinematic upgrade validators (added 2026-05-16) ──────────────
+        # Hook + rehook are HARD gates (block + retry). Rhythm + visual are
+        # SOFT (warn-only) by design — over-strict prose validation pushes
+        # the LLM into prompt-fighting mode and the prose loses soul.
+        scene1_text = (scenes[0].get("narration") if scenes else "") or ""
+        last_hook_ok, last_hook_reason = _check_hook_pattern(scene1_text)
+        last_rehook_ok, rehook_idx = _check_rehook_present(scenes)
+        rhythm_ok, rhythm_reason = _check_sentence_rhythm(scenes)
+        visual_ok, visual_missing = _check_visual_escalation(scenes)
+
         print(f"    Script: {n_scenes} scenes, avg {avg_words:.1f} words/scene "
               f"(per-scene: {word_counts})")
+        if last_hook_ok:
+            print(f"    [hook] OK — {last_hook_reason}")
+        else:
+            print(f"    [hook] REJECT — {last_hook_reason}")
+        if last_rehook_ok:
+            print(f"    [rehook] OK — twist marker in narrative scene {rehook_idx + 1}")
+        else:
+            print(f"    [rehook] REJECT — no contrast marker in middle window")
+        if rhythm_ok:
+            print(f"    [rhythm] OK — {rhythm_reason}")
+        else:
+            print(f"    [warn] Sentence rhythm flat — {rhythm_reason}")
+        if not visual_ok:
+            print(f"    [warn] Visual escalation: scenes {visual_missing} lack "
+                  f"power keywords — climax may feel flat")
         if last_offenders:
             top = ", ".join(f"{w}×{n}" for w, n in last_offenders[:5])
             print(f"    [warn] Repetition: {top}")
@@ -2571,13 +2988,40 @@ def generate_script(
             print(f"    [warn] Sentence-ending monotony: '{last_mono_pattern}' at "
                   f"{int(last_mono_ratio * 100)}% ({mono_hits}/{mono_total})")
 
-        # Acceptable if every gate passes.
-        if (not last_short and rep_ok and tha_ok and names_ok
+        # ── Best-of-N rescue tracking ────────────────────────────────────
+        # Even when no attempt passes every gate, ship the highest-scoring
+        # attempt at exhaustion (instead of the last attempt, which may be
+        # the worst — that's how the 2026-05-16 smoke test ended up with
+        # 14.8 words/scene + 0/0 engagement).
+        # Score counts HARD gates passed for this attempt.
+        score = (
+            (0 if last_short else 1)
+            + (1 if last_hook_ok else 0)
+            + (1 if last_rehook_ok else 0)
+            + (1 if rep_ok else 0)
+            + (1 if tha_ok else 0)
+            + (1 if names_ok else 0)
+            + (1 if bookend_ok else 0)
+            + (1 if eng_ok else 0)
+            + (1 if mono_ok else 0)
+        )
+        if score > best_score:
+            best_score = score
+            best_data  = data
+
+        # Acceptable if every HARD gate passes. (Rhythm + visual are soft,
+        # don't gate acceptance.)
+        if (not last_short and last_hook_ok and last_rehook_ok
+                and rep_ok and tha_ok and names_ok
                 and bookend_ok and eng_ok and mono_ok):
             break
 
         if attempt < MAX_ATTEMPTS - 1:
             why = []
+            if not last_hook_ok:
+                why.append(f"hook REJECT ({last_hook_reason})")
+            if not last_rehook_ok:
+                why.append("rehook missing")
             if last_short:
                 why.append(f"too short ({n_scenes} scenes / {avg_words:.1f} avg words)")
             if not rep_ok:
@@ -2593,6 +3037,15 @@ def generate_script(
             if last_mono_pattern:
                 why.append(f"ending monotony '{last_mono_pattern}' {int(last_mono_ratio * 100)}%")
             print(f"    [retry] {'; '.join(why)}. Re-prompting...")
+    else:
+        # Loop exhausted without a break — best-of-N rescue picks the
+        # highest-scoring attempt instead of just returning the last one.
+        # Without this rescue the 2026-05-16 smoke test shipped a script
+        # with all gates failing (the 5th attempt was the worst).
+        if best_data is not None and best_data is not data:
+            print(f"    [rescue] All {MAX_ATTEMPTS} attempts failed every gate; "
+                  f"shipping the best-scoring attempt ({best_score} gates passed)")
+            data = best_data
 
     data["language"] = language
     data["content_type"] = content_type

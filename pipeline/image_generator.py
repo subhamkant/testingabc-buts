@@ -493,11 +493,21 @@ def _cf_is_quota_error(status: int, body_text: str) -> bool:
 
 def _gen_cloudflare(prompt: str, seed: int, width: int, height: int) -> bytes:
     """
-    Multi-account FLUX-schnell call. Walks every configured CF account in
-    order; on quota/auth errors fast-fails to next account, on the LAST
-    account also re-raises any 5xx so the outer cascade can fall to
-    Pollinations. steps=8 is the free-tier max for flux-schnell — 4 is
-    faster but produces more anatomy errors.
+    Multi-account FLUX-schnell call with PER-ACCOUNT RETRY (added 2026-05-16
+    after the Tier 1.5 smoke test showed CF intermittently failing on 3 of
+    18 calls — transient errors that succeeded on retry, but only after the
+    cascade had already fallen to Pollinations. The retry loop catches
+    transient failures BEFORE falling out of CF entirely.)
+
+    Per-account flow:
+      • Up to 3 attempts with backoff (2s, 4s)
+      • Quota / auth errors (429/401/403) break out immediately → next account
+      • Network / 5xx / bad-json / etc. trigger a retry on the same account
+      • Success returns the image immediately
+
+    Walks every configured CF account in order; only falls to Pollinations
+    after ALL accounts × 3 attempts each have failed. steps=8 is the free-
+    tier max for flux-schnell — 4 is faster but produces more anatomy errors.
     """
     accounts = _cloudflare_accounts()
     if not accounts:
@@ -505,48 +515,67 @@ def _gen_cloudflare(prompt: str, seed: int, width: int, height: int) -> bytes:
 
     body = {"prompt": prompt, "steps": 8, "seed": seed, "negative_prompt": _NEGATIVE}
     last_err = "no accounts attempted"
+    MAX_ATTEMPTS_PER_ACCOUNT = 3
     for label, account_id, token in accounts:
         url = (
             f"https://api.cloudflare.com/client/v4/accounts/{account_id}"
             f"/ai/run/@cf/black-forest-labs/flux-1-schnell"
         )
         headers = {"Authorization": f"Bearer {token}"}
-        try:
-            resp = requests.post(url, headers=headers, json=body, timeout=60)
-        except Exception as net_err:
-            last_err = f"{label} network: {net_err}"
-            continue
-
-        if resp.status_code != 200:
-            last_err = f"{label} status={resp.status_code} body={resp.text[:120]}"
-            if _cf_is_quota_error(resp.status_code, resp.text):
-                # Hit quota / auth — move to next account immediately.
+        quota_hit = False
+        for attempt in range(MAX_ATTEMPTS_PER_ACCOUNT):
+            try:
+                resp = requests.post(url, headers=headers, json=body, timeout=60)
+            except Exception as net_err:
+                last_err = f"{label} attempt {attempt+1} network: {net_err}"
+                if attempt < MAX_ATTEMPTS_PER_ACCOUNT - 1:
+                    time.sleep(2 * (attempt + 1))
                 continue
-            # Non-quota non-200 (rare). Still try next account — better than
-            # giving up on Cloudflare entirely and falling to Pollinations.
-            continue
 
-        try:
-            data = resp.json()
-        except Exception as je:
-            last_err = f"{label} bad json: {je}"
-            continue
-        if not data.get("success"):
-            errs = data.get("errors") or []
-            err_str = str(errs).lower()
-            last_err = f"{label} success=false: {errs}"
-            if any(k in err_str for k in ("quota", "neuron", "rate", "limit", "exceeded")):
+            if resp.status_code != 200:
+                last_err = f"{label} attempt {attempt+1} status={resp.status_code} body={resp.text[:120]}"
+                if _cf_is_quota_error(resp.status_code, resp.text):
+                    # Quota / auth — abort this account, fall to next.
+                    quota_hit = True
+                    break
+                # Transient non-200 — retry on same account.
+                if attempt < MAX_ATTEMPTS_PER_ACCOUNT - 1:
+                    time.sleep(2 * (attempt + 1))
                 continue
+
+            try:
+                data = resp.json()
+            except Exception as je:
+                last_err = f"{label} attempt {attempt+1} bad json: {je}"
+                if attempt < MAX_ATTEMPTS_PER_ACCOUNT - 1:
+                    time.sleep(2 * (attempt + 1))
+                continue
+            if not data.get("success"):
+                errs = data.get("errors") or []
+                err_str = str(errs).lower()
+                last_err = f"{label} attempt {attempt+1} success=false: {errs}"
+                if any(k in err_str for k in ("quota", "neuron", "rate", "limit", "exceeded")):
+                    quota_hit = True
+                    break
+                if attempt < MAX_ATTEMPTS_PER_ACCOUNT - 1:
+                    time.sleep(2 * (attempt + 1))
+                continue
+            img_b64 = data.get("result", {}).get("image", "")
+            if not img_b64:
+                last_err = f"{label} attempt {attempt+1} missing result.image"
+                if attempt < MAX_ATTEMPTS_PER_ACCOUNT - 1:
+                    time.sleep(2 * (attempt + 1))
+                continue
+            raw = base64.b64decode(img_b64)
+            if len(raw) < _MIN_BYTES:
+                last_err = f"{label} attempt {attempt+1} bytes={len(raw)}"
+                if attempt < MAX_ATTEMPTS_PER_ACCOUNT - 1:
+                    time.sleep(2 * (attempt + 1))
+                continue
+            return _ensure_dims(raw, width, height)
+        # Account exhausted (either via quota or 3 transient failures) — move on.
+        if quota_hit:
             continue
-        img_b64 = data.get("result", {}).get("image", "")
-        if not img_b64:
-            last_err = f"{label} missing result.image"
-            continue
-        raw = base64.b64decode(img_b64)
-        if len(raw) < _MIN_BYTES:
-            last_err = f"{label} bytes={len(raw)}"
-            continue
-        return _ensure_dims(raw, width, height)
 
     raise RuntimeError(f"cloudflare cascade exhausted: {last_err}")
 

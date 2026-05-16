@@ -56,24 +56,38 @@ def get_audio_duration(audio_path: str) -> float:
 
 # ── Ken Burns motion expressions (portrait 1080×1920) ─────────────────────────
 
-def _ken_burns_expr(motion: str, frames: int) -> str:
+def _ken_burns_expr(motion: str, frames: int, intensity: float = 1.0) -> str:
     """
     Returns the FFmpeg filter string for Ken Burns motion at 1080x1920 portrait.
     Pre-scales to 2160x3840 so pans have canvas without hitting black borders.
+
+    `intensity` scales the zoom delta (defaults to 1.0 = current behavior).
+    Per-scene escalation passes intensity 0.8 for the opening hook and ramps
+    to 1.4 for the climax so visual motion rises with the music's 4-section
+    volume curve. Pan motions are unaffected (they use a fixed zoom = 1.15
+    and just shift x/y — scaling those would just amplify the canvas crop).
     """
     base = (
         "scale=2160:3840:force_original_aspect_ratio=increase:flags=lanczos,"
         "crop=2160:3840,"
     )
     out = f"s=1080x1920:fps={FPS}"
+    # Cap intensity so we never zoom past 1.6 (any further loses too much
+    # canvas and starts looking like a crash-zoom artifact).
+    intensity = max(0.5, min(intensity, 1.6))
+    zi_delta  = 0.30 * intensity   # base zoom_in delta (was hardcoded 0.3)
+    zi_cap    = 1.0 + zi_delta     # final zoom factor
+    zo_start  = zi_cap             # zoom_out starts where zoom_in ends
+    zir_delta = 0.25 * intensity   # zoom_in_left/right delta
+    zir_cap   = 1.0 + zir_delta
 
     expr_map = {
         "zoom_in": (
-            f"zoompan=z='min(1+on/{frames}*0.3,1.3)'"
+            f"zoompan=z='min(1+on/{frames}*{zi_delta:.3f},{zi_cap:.3f})'"
             f":x='(iw-iw/zoom)/2':y='(ih-ih/zoom)/2':d={frames}:{out}"
         ),
         "zoom_out": (
-            f"zoompan=z='max(1.3-on/{frames}*0.3,1)'"
+            f"zoompan=z='max({zo_start:.3f}-on/{frames}*{zi_delta:.3f},1)'"
             f":x='(iw-iw/zoom)/2':y='(ih-ih/zoom)/2':d={frames}:{out}"
         ),
         "pan_left": (
@@ -93,11 +107,11 @@ def _ken_burns_expr(motion: str, frames: int) -> str:
             f":x='(iw-iw/zoom)/2':y='(ih-ih/zoom)*on/{frames}':d={frames}:{out}"
         ),
         "zoom_in_left": (
-            f"zoompan=z='min(1+on/{frames}*0.25,1.25)'"
+            f"zoompan=z='min(1+on/{frames}*{zir_delta:.3f},{zir_cap:.3f})'"
             f":x='0':y='(ih-ih/zoom)/2':d={frames}:{out}"
         ),
         "zoom_in_right": (
-            f"zoompan=z='min(1+on/{frames}*0.25,1.25)'"
+            f"zoompan=z='min(1+on/{frames}*{zir_delta:.3f},{zir_cap:.3f})'"
             f":x='iw-iw/zoom':y='(ih-ih/zoom)/2':d={frames}:{out}"
         ),
     }
@@ -114,11 +128,12 @@ def _render_image_clip(
     fade_in: bool = True,
     fade_out: bool = True,
     with_audio: str = None,
+    intensity: float = 1.0,
 ) -> bool:
     frames = max(int(duration * FPS), 50)
 
     vf_parts = [
-        _ken_burns_expr(motion, frames),
+        _ken_burns_expr(motion, frames, intensity=intensity),
         COLOR_GRADE,
         FILM_GRAIN,
     ]
@@ -566,6 +581,13 @@ _SFX_KEYWORD_MAP = [
 ]
 _SFX_DEFAULT = ("chime.mp3", 0.30)
 
+# Climax SFX boost — added 2026-05-16. The final narrative scene's SFX
+# volume is multiplied by this factor so it lands at the peak of the
+# music's 4-section curve (which hits vol=0.130 at the climax). Without
+# this boost the final SFX gets the same mid-video volume as scene
+# transitions — flat energy curve. Tier 1 Fix 1.8 from the plan.
+_FINAL_SCENE_BOOST = 1.4
+
 
 def _pick_sfx_for_mood(mood: str) -> tuple[str, float] | None:
     """Maps a scene's mood phrase to (sfx_filename, volume) or None on miss."""
@@ -613,14 +635,41 @@ def _inject_scene_boundary_sfx(video_path: str, scene_durations: list,
         starts.append(t)
         t += d
 
-    # Build per-scene SFX entries with delay+volume
+    # Build per-scene SFX entries with delay+volume.
+    #
+    # Tier 1.5 (Fix 1.10): SKIP the VALLEY scene entirely so its silence
+    # can land — pairs with the music's 0.040 dip and the valley scene's
+    # 0.7x motion intensity. The valley creates the contrast that makes
+    # the CLIMAX SFX land harder.
+    #
+    # Layout (n=7: 6 narrative + 1 static outro at the very end):
+    #   index 0  = scene 1 (hook)    — skip (existing)
+    #   index 1  = scene 2 (setup)   — mood-mapped SFX
+    #   index 2  = scene 3 (rehook)  — mood-mapped SFX
+    #   index 3  = scene 4 (rise)    — mood-mapped SFX
+    #   index 4  = scene 5 (VALLEY)  — SKIP (new, Fix 1.10)         → n-3
+    #   index 5  = scene 6 (CLIMAX)  — mood-mapped + ×1.4 boost     → n-2
+    #   index 6  = subscribe outro   — silent transition (existing) → n-1
+    #
+    # For n>=4 valley = n-3, climax = n-2. For n<4 the valley logic
+    # gracefully degrades (valley_idx becomes -1 = disabled).
+    climax_idx = n - 2 if n >= 2 else n - 1
+    valley_idx = n - 3 if n >= 4 else -1   # -1 disables the valley skip
     sfx_inputs = []  # list of (path, start_s, volume)
+    skipped_valley = False
     for i in range(1, n):  # skip scene 0
+        if i == valley_idx:
+            skipped_valley = True
+            continue   # let silence land
         pick = _pick_sfx_for_mood(scene_moods[i])
         if pick:
             sfx_path, vol = pick
+            if i == climax_idx:
+                vol = min(vol * _FINAL_SCENE_BOOST, 1.0)  # clamp to avoid clipping
             sfx_start = max(0.0, starts[i] - lead_in_s)
             sfx_inputs.append((sfx_path, sfx_start, vol))
+    if skipped_valley:
+        print(f"    [sfx] skipping valley scene {valley_idx + 1} — letting silence land before climax")
 
     if not sfx_inputs:
         print("    [sfx] no SFX matched any scene mood — skipping")
@@ -666,7 +715,7 @@ def _inject_scene_boundary_sfx(video_path: str, scene_durations: list,
 
     try:
         os.replace(out_path, video_path)
-        print(f"    [OK] Layered {len(sfx_inputs)} SFX into audio at scene boundaries")
+        print(f"    [OK] Layered {len(sfx_inputs)} SFX into audio at scene boundaries (climax boosted x{_FINAL_SCENE_BOOST})")
         return True
     except Exception as e:
         print(f"    [!] SFX swap failed: {e}")
@@ -851,16 +900,35 @@ def _apply_background_music(output_path: str, series: str = "mahabharata"):
     music_output = output_path.replace(".mp4", "_music.mp4")
     audio_chain = _audio_post_chain(series)
 
-    # volume=0.085 (was 0.10, originally 0.32) — music is atmosphere only,
-    # should never compete with the narrator's voice. Sidechain ducking drops
-    # it further during voice. audio_chain adds dynaudnorm (krishna only)
-    # before loudnorm + aresample.
+    # 5-section emotional volume curve with VALLEY DIP (Tier 1.5, Fix 1.10
+    # + 1.11.b, 2026-05-16). User watched the first 1.5 render and confirmed
+    # music still ~10% too loud — applied an additional across-the-curve
+    # reduction of ~10% so narration carries the emotion and music sits
+    # under it. Music's job is atmosphere; narration is the protagonist.
+    #
+    #   Window                  Volume    Tier 1     Tier 1.5    Tier 1.5.b
+    #   0-3s (mystery)          0.050     was 0.060  was 0.055   now 0.050
+    #   3-8s (tension)          0.067     was 0.080  was 0.075   now 0.067
+    #   8 → valley_start (emot) 0.085     was 0.100  was 0.095   now 0.085
+    #   VALLEY window           0.040     —          was 0.040   now 0.040 (unchanged dip)
+    #   post-valley (climax)    0.098     was 0.130  was 0.110   now 0.098
+    #
+    # Sidechain still tightened: attack 80ms, release 450ms, ratio 7.
+    valley_end_t   = max(8.0, video_duration - 7.0)   # ~7s of climax tail
+    valley_start_t = max(5.0, valley_end_t - 5.0)     # 5s valley window
+    music_volume_expr = (
+        f"if(lt(t,3),0.050,"
+        f"if(lt(t,8),0.067,"
+        f"if(lt(t,{valley_start_t:.2f}),0.085,"
+        f"if(lt(t,{valley_end_t:.2f}),0.040,"
+        f"0.098))))"
+    )
     duck_filter = (
         f"[0:a]asplit=2[voice_mix][voice_sc];"
         f"[1:a]atrim=0:{video_duration:.3f},asetpts=PTS-STARTPTS,"
-        f"volume=0.085[music_raw];"
+        f"volume='{music_volume_expr}':eval=frame[music_raw];"
         f"[music_raw][voice_sc]sidechaincompress="
-        f"threshold=0.02:ratio=6:attack=150:release=600:makeup=1[music_ducked];"
+        f"threshold=0.02:ratio=7:attack=80:release=450:makeup=1[music_ducked];"
         f"[voice_mix][music_ducked]amix=inputs=2:normalize=0,"
         f"{audio_chain}[aout]"
     )
@@ -879,7 +947,9 @@ def _apply_background_music(output_path: str, series: str = "mahabharata"):
 
     if result.returncode == 0:
         os.replace(music_output, output_path)
-        print(f"    [OK] Music mixed + audio normalized ({audio_chain})")
+        print(f"    [OK] Music mixed (5-section curve w/ valley dip: "
+              f"0.050→0.067→0.085→[VALLEY {valley_start_t:.1f}-{valley_end_t:.1f}s @ 0.040]→0.098, "
+              f"sidechain a80/r450/ratio7) + audio normalized ({audio_chain})")
         return
 
     # Flat fallback (no sidechain ducking) — must stay quieter than the ducked
@@ -917,9 +987,14 @@ def _apply_background_music(output_path: str, series: str = "mahabharata"):
 # gives a single uninterrupted voice track with consistent quality (no scene
 # seams from per-scene TTS generations) while visuals still cut to the beat.
 
-def _make_silent_image_scene_clip(image_paths, output_path: str, duration: float):
+def _make_silent_image_scene_clip(image_paths, output_path: str, duration: float, intensity: float = 1.0):
     """Ken Burns over one or more images, silent video output. Mirrors
-    _make_scene_clip but skips the audio muxing step."""
+    _make_scene_clip but skips the audio muxing step.
+
+    `intensity` (added 2026-05-16) scales the per-scene Ken Burns zoom delta.
+    Caller passes 0.8 for opening scenes, ramping to ~1.4 for the climax so
+    the visual motion rises with the music's 4-section emotional curve.
+    """
     import shutil as _sh
 
     if isinstance(image_paths, str):
@@ -949,6 +1024,7 @@ def _make_silent_image_scene_clip(image_paths, output_path: str, duration: float
             img, sub_path, actual_dur, motion,
             fade_in=(j == 0),
             fade_out=(j == n_subs - 1),
+            intensity=intensity,
         )
         if not ok:
             subprocess.run([
@@ -1149,14 +1225,44 @@ def assemble_video_continuous_audio(
     print(f"    Per-scene clip durations: " +
           ", ".join(f"{d:.2f}s" for d in durations))
 
+    # Per-scene Ken Burns intensity (Tier 1.5, Fix 1.10): linear ramp from
+    # 0.8x → 1.4x like Tier 1, but with TWO overrides on the narrative
+    # scenes right before the outro:
+    #   • Valley scene (index n-3):  forced to 0.7x (slow drift — matches
+    #     the audio dip in the music's 5-section curve)
+    #   • Climax scene (index n-2):  forced to 1.5x (boost from ramp's 1.4x
+    #     — compensates for the valley energy drop right before)
+    #   • Outro scene  (index n-1):  static asset (no Ken Burns), so any
+    #     intensity passed in is moot for that scene.
+    # The valley→climax intensity gap (0.7→1.5) is what makes the climax
+    # FEEL more aggressive than mid-video transitions.
+    def _scene_intensity(i: int) -> float:
+        if n <= 1:
+            return 1.0
+        if n >= 4 and i == n - 3:
+            return 0.7   # valley scene
+        if n >= 3 and i == n - 2:
+            return 1.5   # climax scene (the narrative climax, not the outro)
+        return 0.8 + 0.6 * (i / (n - 1))
+
     silent_paths = []
     for i, (imgs, dur) in enumerate(zip(image_files, durations)):
         if isinstance(imgs, str):
             imgs = [imgs]
         silent_path = f"temp/clips/silent_{i:02d}.mp4"
-        print(f"    Scene {i+1}/{n} silent ({dur:.2f}s, {len(imgs)} shot(s))...")
-        _make_silent_image_scene_clip(imgs, silent_path, dur)
+        intensity = _scene_intensity(i)
+        tag = ""
+        if n >= 4 and i == n - 3:
+            tag = " [VALLEY]"
+        elif n >= 3 and i == n - 2:
+            tag = " [CLIMAX]"
+        print(f"    Scene {i+1}/{n} silent ({dur:.2f}s, {len(imgs)} shot(s), KB intensity={intensity:.2f}){tag}...")
+        _make_silent_image_scene_clip(imgs, silent_path, dur, intensity=intensity)
         silent_paths.append(silent_path)
+
+    if n >= 4:
+        print(f"    [OK] Ken Burns intensity: ramp 0.80→1.30 across scenes 1-{n-3}, "
+              f"VALLEY scene {n-2} @ 0.70x, CLIMAX scene {n-1} @ 1.50x, outro scene {n} static")
 
     silent_full = "temp/clips/silent_full.mp4"
     if not _build_silent_video_with_xfades(silent_paths, durations, silent_full):
@@ -1214,6 +1320,21 @@ def assemble_from_video_clips_continuous_audio(
     print(f"    Per-scene clip durations: " +
           ", ".join(f"{d:.2f}s" for d in durations))
 
+    # Per-scene Ken Burns intensity (Tier 1.5, Fix 1.10) — only applies to
+    # fallback Ken Burns scenes; AI clips have their own motion. Same
+    # ramp+overrides as the image-only assembler:
+    #   index n-3 = valley = 0.7x
+    #   index n-2 = climax = 1.5x
+    #   index n-1 = outro (static, intensity moot)
+    def _scene_intensity(i: int) -> float:
+        if n <= 1:
+            return 1.0
+        if n >= 4 and i == n - 3:
+            return 0.7
+        if n >= 3 and i == n - 2:
+            return 1.5
+        return 0.8 + 0.6 * (i / (n - 1))
+
     silent_paths = []
     for i, (clip, dur) in enumerate(zip(clip_files, durations)):
         silent_path = f"temp/clips/silent_clip_{i:02d}.mp4"
@@ -1227,8 +1348,9 @@ def assemble_from_video_clips_continuous_audio(
                     f"Scene {i+1} has no AI clip and no usable fallback image — "
                     "cannot assemble. Pass `fallback_images` from generate_video_clips."
                 )
-            print(f"    Ken Burns {i+1}/{n} silent ({dur:.2f}s) — AI clip missing for this scene")
-            _make_silent_image_scene_clip(img, silent_path, dur)
+            intensity = _scene_intensity(i)
+            print(f"    Ken Burns {i+1}/{n} silent ({dur:.2f}s, intensity={intensity:.2f}) — AI clip missing for this scene")
+            _make_silent_image_scene_clip(img, silent_path, dur, intensity=intensity)
         if not os.path.exists(silent_path):
             raise RuntimeError(f"Silent scene {i+1} missing — FFmpeg produced no output")
         silent_paths.append(silent_path)
