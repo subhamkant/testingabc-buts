@@ -96,6 +96,9 @@ jobs:
           commit-message: "Auto-update pipeline state [skip ci]"
           github-token: ${{ secrets.GITHUB_TOKEN }}
           gemini-api-key: ${{ secrets.GEMINI_API_KEY }}
+          gemini-api-key-fallback: ${{ secrets.GEMINI_API_KEY_FALLBACK }}
+          gemini-api-key-fallback-2: ${{ secrets.GEMINI_API_KEY_FALLBACK_2 }}
+          gemini-api-key-fallback-3: ${{ secrets.GEMINI_API_KEY_FALLBACK_3 }}
           groq-api-key: ${{ secrets.GROQ_API_KEY }}
           fal-key: ${{ secrets.FAL_KEY }}
           replicate-api-token: ${{ secrets.REPLICATE_API_TOKEN }}
@@ -151,6 +154,9 @@ jobs:
           commit-message: "Auto-update pipeline state (retry-1) [skip ci]"
           github-token: ${{ secrets.GITHUB_TOKEN }}
           gemini-api-key: ${{ secrets.GEMINI_API_KEY }}
+          gemini-api-key-fallback: ${{ secrets.GEMINI_API_KEY_FALLBACK }}
+          gemini-api-key-fallback-2: ${{ secrets.GEMINI_API_KEY_FALLBACK_2 }}
+          gemini-api-key-fallback-3: ${{ secrets.GEMINI_API_KEY_FALLBACK_3 }}
           groq-api-key: ${{ secrets.GROQ_API_KEY }}
           fal-key: ${{ secrets.FAL_KEY }}
           replicate-api-token: ${{ secrets.REPLICATE_API_TOKEN }}
@@ -204,6 +210,9 @@ jobs:
           commit-message: "Auto-update pipeline state (retry-2) [skip ci]"
           github-token: ${{ secrets.GITHUB_TOKEN }}
           gemini-api-key: ${{ secrets.GEMINI_API_KEY }}
+          gemini-api-key-fallback: ${{ secrets.GEMINI_API_KEY_FALLBACK }}
+          gemini-api-key-fallback-2: ${{ secrets.GEMINI_API_KEY_FALLBACK_2 }}
+          gemini-api-key-fallback-3: ${{ secrets.GEMINI_API_KEY_FALLBACK_3 }}
           groq-api-key: ${{ secrets.GROQ_API_KEY }}
           fal-key: ${{ secrets.FAL_KEY }}
           replicate-api-token: ${{ secrets.REPLICATE_API_TOKEN }}
@@ -257,6 +266,9 @@ jobs:
           commit-message: "Auto-update pipeline state (retry-3) [skip ci]"
           github-token: ${{ secrets.GITHUB_TOKEN }}
           gemini-api-key: ${{ secrets.GEMINI_API_KEY }}
+          gemini-api-key-fallback: ${{ secrets.GEMINI_API_KEY_FALLBACK }}
+          gemini-api-key-fallback-2: ${{ secrets.GEMINI_API_KEY_FALLBACK_2 }}
+          gemini-api-key-fallback-3: ${{ secrets.GEMINI_API_KEY_FALLBACK_3 }}
           groq-api-key: ${{ secrets.GROQ_API_KEY }}
           fal-key: ${{ secrets.FAL_KEY }}
           replicate-api-token: ${{ secrets.REPLICATE_API_TOKEN }}
@@ -300,6 +312,9 @@ jobs:
           commit-message: "Auto-update pipeline state (whatif-en) [skip ci]"
           github-token: ${{ secrets.GITHUB_TOKEN }}
           gemini-api-key: ${{ secrets.GEMINI_API_KEY }}
+          gemini-api-key-fallback: ${{ secrets.GEMINI_API_KEY_FALLBACK }}
+          gemini-api-key-fallback-2: ${{ secrets.GEMINI_API_KEY_FALLBACK_2 }}
+          gemini-api-key-fallback-3: ${{ secrets.GEMINI_API_KEY_FALLBACK_3 }}
           groq-api-key: ${{ secrets.GROQ_API_KEY }}
           fal-key: ${{ secrets.FAL_KEY }}
           replicate-api-token: ${{ secrets.REPLICATE_API_TOKEN }}
@@ -340,6 +355,9 @@ jobs:
           commit-message: "Auto-update pipeline state (whatif-en retry-1) [skip ci]"
           github-token: ${{ secrets.GITHUB_TOKEN }}
           gemini-api-key: ${{ secrets.GEMINI_API_KEY }}
+          gemini-api-key-fallback: ${{ secrets.GEMINI_API_KEY_FALLBACK }}
+          gemini-api-key-fallback-2: ${{ secrets.GEMINI_API_KEY_FALLBACK_2 }}
+          gemini-api-key-fallback-3: ${{ secrets.GEMINI_API_KEY_FALLBACK_3 }}
           groq-api-key: ${{ secrets.GROQ_API_KEY }}
           fal-key: ${{ secrets.FAL_KEY }}
           replicate-api-token: ${{ secrets.REPLICATE_API_TOKEN }}
@@ -380,6 +398,9 @@ jobs:
           commit-message: "Auto-update pipeline state (whatif-en retry-2) [skip ci]"
           github-token: ${{ secrets.GITHUB_TOKEN }}
           gemini-api-key: ${{ secrets.GEMINI_API_KEY }}
+          gemini-api-key-fallback: ${{ secrets.GEMINI_API_KEY_FALLBACK }}
+          gemini-api-key-fallback-2: ${{ secrets.GEMINI_API_KEY_FALLBACK_2 }}
+          gemini-api-key-fallback-3: ${{ secrets.GEMINI_API_KEY_FALLBACK_3 }}
           groq-api-key: ${{ secrets.GROQ_API_KEY }}
           fal-key: ${{ secrets.FAL_KEY }}
           replicate-api-token: ${{ secrets.REPLICATE_API_TOKEN }}
@@ -420,6 +441,9 @@ jobs:
           commit-message: "Auto-update pipeline state (whatif-en retry-3) [skip ci]"
           github-token: ${{ secrets.GITHUB_TOKEN }}
           gemini-api-key: ${{ secrets.GEMINI_API_KEY }}
+          gemini-api-key-fallback: ${{ secrets.GEMINI_API_KEY_FALLBACK }}
+          gemini-api-key-fallback-2: ${{ secrets.GEMINI_API_KEY_FALLBACK_2 }}
+          gemini-api-key-fallback-3: ${{ secrets.GEMINI_API_KEY_FALLBACK_3 }}
           groq-api-key: ${{ secrets.GROQ_API_KEY }}
           fal-key: ${{ secrets.FAL_KEY }}
           replicate-api-token: ${{ secrets.REPLICATE_API_TOKEN }}
@@ -475,6 +499,9 @@ jobs:
           commit-message: "Auto-update pipeline state (whatif-hi) [skip ci]"
           github-token: ${{ secrets.GITHUB_TOKEN }}
           gemini-api-key: ${{ secrets.GEMINI_API_KEY }}
+          gemini-api-key-fallback: ${{ secrets.GEMINI_API_KEY_FALLBACK }}
+          gemini-api-key-fallback-2: ${{ secrets.GEMINI_API_KEY_FALLBACK_2 }}
+          gemini-api-key-fallback-3: ${{ secrets.GEMINI_API_KEY_FALLBACK_3 }}
           groq-api-key: ${{ secrets.GROQ_API_KEY }}
           fal-key: ${{ secrets.FAL_KEY }}
           replicate-api-token: ${{ secrets.REPLICATE_API_TOKEN }}
@@ -515,6 +542,9 @@ jobs:
           commit-message: "Auto-update pipeline state (whatif-hi retry-1) [skip ci]"
           github-token: ${{ secrets.GITHUB_TOKEN }}
           gemini-api-key: ${{ secrets.GEMINI_API_KEY }}
+          gemini-api-key-fallback: ${{ secrets.GEMINI_API_KEY_FALLBACK }}
+          gemini-api-key-fallback-2: ${{ secrets.GEMINI_API_KEY_FALLBACK_2 }}
+          gemini-api-key-fallback-3: ${{ secrets.GEMINI_API_KEY_FALLBACK_3 }}
           groq-api-key: ${{ secrets.GROQ_API_KEY }}
           fal-key: ${{ secrets.FAL_KEY }}
           replicate-api-token: ${{ secrets.REPLICATE_API_TOKEN }}
@@ -555,6 +585,9 @@ jobs:
           commit-message: "Auto-update pipeline state (whatif-hi retry-2) [skip ci]"
           github-token: ${{ secrets.GITHUB_TOKEN }}
           gemini-api-key: ${{ secrets.GEMINI_API_KEY }}
+          gemini-api-key-fallback: ${{ secrets.GEMINI_API_KEY_FALLBACK }}
+          gemini-api-key-fallback-2: ${{ secrets.GEMINI_API_KEY_FALLBACK_2 }}
+          gemini-api-key-fallback-3: ${{ secrets.GEMINI_API_KEY_FALLBACK_3 }}
           groq-api-key: ${{ secrets.GROQ_API_KEY }}
           fal-key: ${{ secrets.FAL_KEY }}
           replicate-api-token: ${{ secrets.REPLICATE_API_TOKEN }}
@@ -595,6 +628,9 @@ jobs:
           commit-message: "Auto-update pipeline state (whatif-hi retry-3) [skip ci]"
           github-token: ${{ secrets.GITHUB_TOKEN }}
           gemini-api-key: ${{ secrets.GEMINI_API_KEY }}
+          gemini-api-key-fallback: ${{ secrets.GEMINI_API_KEY_FALLBACK }}
+          gemini-api-key-fallback-2: ${{ secrets.GEMINI_API_KEY_FALLBACK_2 }}
+          gemini-api-key-fallback-3: ${{ secrets.GEMINI_API_KEY_FALLBACK_3 }}
           groq-api-key: ${{ secrets.GROQ_API_KEY }}
           fal-key: ${{ secrets.FAL_KEY }}
           replicate-api-token: ${{ secrets.REPLICATE_API_TOKEN }}

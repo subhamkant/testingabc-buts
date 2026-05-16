@@ -26,6 +26,16 @@ inputs:
   # ── secrets passed through ─────────────────────────────────────────────
   github-token:                  { required: true }
   gemini-api-key:                { required: true }
+  # Additional Gemini API keys from other Google Cloud projects — cascaded by
+  # _gemini_keys() in pipeline/script_generator.py. Each adds 50 RPD of Pro
+  # quota. With all 4 keys configured: 200 RPD Pro vs 50 with primary alone,
+  # which is critical under the retry-heavy script-gen (Tier 1.5 added hook +
+  # rehook + length-bounds hard gates on top of existing tha-tic / engagement /
+  # bookend / monotony checks). Optional — defaults to empty so a missing key
+  # doesn't fail the workflow; _gemini_keys() filters empties out.
+  gemini-api-key-fallback:       { required: false, default: "" }
+  gemini-api-key-fallback-2:     { required: false, default: "" }
+  gemini-api-key-fallback-3:     { required: false, default: "" }
   groq-api-key:                  { required: true }
   fal-key:                       { required: true }
   replicate-api-token:           { required: true }
@@ -60,6 +70,9 @@ runs:
       shell: bash
       env:
         GEMINI_API_KEY:                ${{ inputs.gemini-api-key }}
+        GEMINI_API_KEY_FALLBACK:       ${{ inputs.gemini-api-key-fallback }}
+        GEMINI_API_KEY_FALLBACK_2:     ${{ inputs.gemini-api-key-fallback-2 }}
+        GEMINI_API_KEY_FALLBACK_3:     ${{ inputs.gemini-api-key-fallback-3 }}
         GROQ_API_KEY:                  ${{ inputs.groq-api-key }}
         FAL_KEY:                       ${{ inputs.fal-key }}
         REPLICATE_API_TOKEN:           ${{ inputs.replicate-api-token }}
