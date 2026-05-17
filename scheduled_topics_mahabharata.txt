@@ -7,4 +7,3 @@
 # now produce a clean render. Title-prefix forced to #4 via the
 # EPISODE_NUMBER_OVERRIDE env (wired in schedule.yml below this line's
 # consumption — set manually for this one run only).
-Bhishma in the Kurukshetra war — fighting for the side he knew was wrong, killing soldiers from the family he raised
