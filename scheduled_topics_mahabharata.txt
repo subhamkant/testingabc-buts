@@ -1,10 +1,11 @@
 # Manual topic queue — first non-comment line gets consumed by the next
 # Mahabharata cron run and removed after use.
 #
-# 2026-05-17 (run 2): re-rendering #4 Bhishma Kurukshetra with the new
-# continuous-music architecture (commit ff3f5e6 flipped MUSIC_CHUNKING off
-# by default after the chunked test sounded fragmented). User made the
-# previous #4 (I5XROp50C3w) private and plans to delete it once this
-# clean render publishes successfully.
-#
-# Trigger: workflow_dispatch with target=hi, episode_number=4.
+# 2026-05-17: re-rendering #4 Bhishma Kurukshetra via GHA workflow_dispatch
+# (local IP keeps tripping CF's per-IP rate limit). Trigger inputs:
+#   target = hi
+#   episode_number = 4
+#   skip_instagram = true
+# After this consumes the line, the queue will be empty until tomorrow's
+# re-enable of cron + new topic queue.
+Bhishma in the Kurukshetra war — fighting for the side he knew was wrong, killing soldiers from the family he raised
