@@ -895,9 +895,13 @@ def _finalize_audio_no_music(output_path: str, series: str = "mahabharata"):
 
 # Path to the continuous ambient bed that fills gaps between music chunks
 # when MUSIC_CHUNKING=true. Looped to cover the full video duration.
-# Origin must be verified (Pixabay CC0 / public-domain / self-generated) —
-# track in _TRACK_REGISTRY in Tier B.
-_AMBIENT_BED_PATH = "assets/dark_ambient.wav"
+#
+# Origin: SYNTHESIZED procedurally via ffmpeg lavfi (brown noise + 55Hz +
+# 82Hz sine layers + aecho reverb) by tools/synthesize_ambient_bed.py.
+# Procedural origin = guaranteed no Content ID match. The recipe in that
+# tool is fully reproducible — anyone can regenerate the exact bed.
+_AMBIENT_BED_PATH   = "assets/dark_ambient.mp3"
+_AMBIENT_BED_ORIGIN = "SYNTHESIZED (ffmpeg lavfi, see tools/synthesize_ambient_bed.py)"
 
 
 def _build_chunked_music_track(
@@ -1251,7 +1255,7 @@ def _apply_background_music(output_path: str, series: str = "mahabharata"):
         print(f"    [OK] Music mixed (5-section curve w/ valley dip: "
               f"0.050→0.067→0.085→[VALLEY {valley_start_t:.1f}-{valley_end_t:.1f}s @ 0.048]→0.098, "
               f"sidechain a80/r450/ratio7) + audio normalized ({audio_chain})")
-        _print_audio_risk(chunk_schedule, video_duration, ambient_bed_path)
+        _print_audio_risk(chunk_schedule, video_duration, ambient_bed_path, _AMBIENT_BED_ORIGIN)
         return
 
     # Flat fallback (no sidechain ducking) — must stay quieter than the ducked
@@ -1287,7 +1291,7 @@ def _apply_background_music(output_path: str, series: str = "mahabharata"):
     if result2.returncode == 0:
         os.replace(music_output, output_path)
         print(f"    [OK] Music mixed (flat fallback) + audio normalized ({audio_chain})")
-        _print_audio_risk(chunk_schedule, video_duration, ambient_bed_path)
+        _print_audio_risk(chunk_schedule, video_duration, ambient_bed_path, _AMBIENT_BED_ORIGIN)
     else:
         print("    [!] Music mix failed, falling back to voice-only normalization")
         _finalize_audio_no_music(output_path, series=series)

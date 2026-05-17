@@ -44,6 +44,13 @@ scheduled_topics.txt
 assets/*.mp3
 assets/music/
 
+# EXCEPTION: dark_ambient.mp3 is procedurally synthesized (see
+# tools/synthesize_ambient_bed.py), guaranteed Content-ID-safe, and small
+# enough (~1 MB) to track in git. Tracking it means GHA cron gets the
+# ambient bed automatically without needing to update the music-tracks
+# release.
+!assets/dark_ambient.mp3
+
 # Claude Code internal
 .claude/
 
