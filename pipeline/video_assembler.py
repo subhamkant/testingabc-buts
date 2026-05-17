@@ -763,15 +763,25 @@ def _pick_music_track(series: str = "mahabharata") -> str:
                 if f.lower().endswith(".mp3")
             ]
 
-    # Copyrighted-music blocklist (2026-05-16): tracks that triggered Content ID
-    # claims on YouTube. The pipeline's GitHub Release may still ship these
-    # files; the blocklist ensures the picker never selects them regardless.
-    #   • mahabharat_sad_theme.mp3 — matched "Ek Maa Ki Santane - Ye Kaisi..."
-    #     (likely from B.R. Chopra's 1988 Mahabharat TV serial; Sony/Doordarshan
-    #     owned). Hit Content ID on the 2026-05-16 manual upload of episode #2.
-    #   • bgmusic.mp3 — generic-named track, no Pixabay attribution. Pre-existing
-    #     filter kept for backwards compat.
-    _BANNED_MUSIC = ("mahabharat_sad_theme.mp3", "bgmusic.mp3")
+    # Copyrighted-music blocklist: tracks empirically confirmed to trigger
+    # YouTube Content ID claims. Defense-in-depth alongside the physical
+    # quarantine in `assets/quarantine/` (picker doesn't scan that dir).
+    #
+    # Tunetank-wide ban (2026-05-17): #4 Bhishma Kurukshetra was blocked
+    # for matching "Tunetank Inc. - People Of Mughai" — Tunetank licenses
+    # the same compositions through multiple distributors, so EVERY
+    # tunetank-* file is unsafe regardless of their "royalty-free" claim.
+    _BANNED_MUSIC = (
+        # B.R. Chopra Mahabharat OST (Sony/Doordarshan-owned), hit #2
+        "mahabharat_sad_theme.mp3",       # "Ek Maa Ki Santane - Ye Kaisi..."
+        # Generic-named, no Pixabay attribution
+        "bgmusic.mp3",
+        # Tunetank family — banned as a class after #4 block
+        "tunetank-indian-hindi-song-music-349213.mp3",   # "People Of Mughai" (#4 block)
+        "tunetank-indian-hindi-song-music-349033.mp3",
+        "tunetank-india-indian-hingi-music-348347.mp3",
+        "tunetank-epic-indian-hindi-song-music-347195.mp3",
+    )
     real_tracks = [
         t for t in tracks
         if os.path.basename(t).lower() not in _BANNED_MUSIC
@@ -883,6 +893,231 @@ def _finalize_audio_no_music(output_path: str, series: str = "mahabharata"):
         print("    [!] Audio finalization failed, keeping original audio")
 
 
+# Path to the continuous ambient bed that fills gaps between music chunks
+# when MUSIC_CHUNKING=true. Looped to cover the full video duration.
+# Origin must be verified (Pixabay CC0 / public-domain / self-generated) —
+# track in _TRACK_REGISTRY in Tier B.
+_AMBIENT_BED_PATH = "assets/dark_ambient.wav"
+
+
+def _build_chunked_music_track(
+    source_mp3: str, output_mp3: str, total_dur: float, seed: int,
+) -> list[tuple[float, float, float]] | None:
+    """
+    Build a pre-chunked music track from `source_mp3` for `total_dur` seconds.
+
+    Each chunk:
+      - 2.5-4.5 sec random length (seeded)
+      - random non-linear offset into source (chunk N's source position is
+        independent of chunk N-1's — breaks melody continuity for Content ID)
+      - 50ms fade-in + 50ms fade-out per chunk (smooths edges, no clicks)
+    Gaps between chunks: 400-700 ms of silence (anullsrc). Filled in the
+    final mix by the ambient bed layer (so the output never feels like
+    abrupt silence).
+
+    Returns the chunk schedule on success (list of (chunk_dur, src_start, gap_after)
+    tuples — useful for claim-risk scoring), or None if ffmpeg fails. On failure
+    the caller falls back to passing `source_mp3` directly (no chunking).
+    """
+    if not os.path.exists(source_mp3):
+        return None
+    # Probe source duration
+    p = subprocess.run(
+        ["ffprobe", "-v", "quiet", "-print_format", "json", "-show_format", source_mp3],
+        capture_output=True, text=True,
+    )
+    try:
+        source_dur = float(json.loads(p.stdout)["format"]["duration"])
+    except Exception:
+        return None
+    if source_dur < 5.0:
+        return None  # source too short to chunk meaningfully
+
+    rng = random.Random(seed)
+    # Build schedule of (source_start, source_end) for each chunk; gaps go
+    # between in the concat step.
+    schedule: list[tuple[float, float, float]] = []  # (chunk_dur, source_start, gap_after)
+    t_out = 0.0
+    while t_out < total_dur - 0.5:  # leave 0.5s safety margin
+        chunk_dur = rng.uniform(2.5, 4.5)
+        chunk_dur = min(chunk_dur, total_dur - t_out)
+        if chunk_dur < 1.5:
+            break  # tail too short, stop chunking
+        # Random non-linear offset — anywhere in source where chunk fits
+        max_offset = max(0.1, source_dur - chunk_dur - 0.1)
+        src_start = rng.uniform(0.0, max_offset)
+        gap = rng.uniform(0.4, 0.7)
+        schedule.append((chunk_dur, src_start, gap))
+        t_out += chunk_dur + gap
+
+    if not schedule:
+        return None
+
+    # Build filtergraph: extract each chunk via atrim, fade edges, concat
+    # with anullsrc silence gaps in between.
+    filter_parts = []
+    concat_inputs = []
+    for i, (cdur, sstart, _gap) in enumerate(schedule):
+        fade_out_st = max(0.0, cdur - 0.05)
+        filter_parts.append(
+            f"[0:a]atrim=start={sstart:.3f}:end={sstart + cdur:.3f},"
+            f"asetpts=PTS-STARTPTS,"
+            f"afade=t=in:d=0.05,afade=t=out:st={fade_out_st:.3f}:d=0.05"
+            f"[c{i}]"
+        )
+        concat_inputs.append(f"[c{i}]")
+        # Silence gap (except after the last chunk)
+        if i < len(schedule) - 1:
+            _, _, gap = schedule[i]
+            filter_parts.append(
+                f"anullsrc=r=44100:cl=stereo:d={gap:.3f}[g{i}]"
+            )
+            concat_inputs.append(f"[g{i}]")
+
+    n_inputs = len(concat_inputs)
+    filter_parts.append(
+        f"{''.join(concat_inputs)}concat=n={n_inputs}:v=0:a=1[out]"
+    )
+    filtergraph = ";".join(filter_parts)
+
+    cmd = [
+        "ffmpeg", "-y",
+        "-i", source_mp3,
+        "-filter_complex", filtergraph,
+        "-map", "[out]",
+        "-c:a", "libmp3lame", "-b:a", "192k", "-ar", "44100",
+        output_mp3,
+    ]
+    r = subprocess.run(cmd, capture_output=True)
+    ok = r.returncode == 0 and os.path.exists(output_mp3)
+    if ok:
+        n_chunks = len(schedule)
+        total_music_s = sum(c[0] for c in schedule)
+        longest_chunk = max(c[0] for c in schedule)
+        print(f"    [chunking] {n_chunks} chunks, total music {total_music_s:.1f}s "
+              f"(longest={longest_chunk:.2f}s), non-linear offsets from source")
+        return schedule
+    err = r.stderr.decode("utf-8", errors="replace")[-200:] if r.stderr else ""
+    print(f"    [chunking] WARN: chunk build failed — falling back to continuous. {err}")
+    return None
+
+
+def _print_audio_risk(
+    chunk_schedule: list[tuple[float, float, float]] | None,
+    video_duration: float,
+    ambient_bed_path: str,
+    ambient_origin: str = "UNVERIFIED",
+) -> None:
+    """
+    Emit a per-render [audio-risk] log block summarizing Content-ID risk
+    exposure. Tier A heuristic — Tier B adds voice_coverage + pitch_variance
+    fields once those features are implemented.
+
+    Verdict heuristic:
+      LOW    : longest_continuous_chunk < 5.0
+      MEDIUM : longest_continuous_chunk 5.0-7.0 OR ambient_bed UNVERIFIED
+      HIGH   : longest_continuous_chunk > 7.0
+
+    If STRICT_AUDIO_RISK=true and verdict=HIGH, raise to fail the run.
+    Default (false) is print-only so existing crons keep shipping while
+    the heuristic gets calibrated.
+    """
+    if not chunk_schedule:
+        # Continuous music (chunking disabled or fell back) — flag as HIGH
+        # because the entire track plays continuously = Content-ID jackpot.
+        longest = video_duration
+        n_chunks = 1
+        total_music = video_duration
+    else:
+        longest = max(c[0] for c in chunk_schedule)
+        n_chunks = len(chunk_schedule)
+        total_music = sum(c[0] for c in chunk_schedule)
+
+    music_exposure_pct = (total_music / video_duration * 100.0) if video_duration > 0 else 0.0
+
+    bed_label = (
+        f"{os.path.basename(ambient_bed_path)} (origin: {ambient_origin})"
+        if ambient_bed_path else "NONE"
+    )
+
+    # Verdict heuristic. Ambient origin only matters when a bed is actually
+    # active — if no bed file, the origin question is moot.
+    bed_active = bool(ambient_bed_path)
+    if longest > 7.0:
+        verdict = "HIGH"
+    elif longest > 5.0:
+        verdict = "MEDIUM"
+    elif bed_active and ambient_origin == "UNVERIFIED":
+        verdict = "MEDIUM"
+    else:
+        verdict = "LOW"
+
+    print(f"    [audio-risk]")
+    print(f"      music_exposure_s            = {total_music:.1f} / {video_duration:.1f}  ({music_exposure_pct:.1f}%)")
+    print(f"      longest_continuous_chunk_s  = {longest:.2f}")
+    print(f"      num_chunks                  = {n_chunks}")
+    print(f"      ambient_bed                 = {bed_label}")
+    print(f"      verdict                     = {verdict}")
+
+    if verdict == "HIGH" and os.environ.get("STRICT_AUDIO_RISK", "false").strip().lower() == "true":
+        raise RuntimeError(
+            f"audio-risk verdict=HIGH (longest_chunk={longest:.2f}s); "
+            f"STRICT_AUDIO_RISK=true blocks upload. Re-render with shorter chunks "
+            f"or set STRICT_AUDIO_RISK=false to override."
+        )
+
+
+def _enforce_max_duration(output_path: str) -> None:
+    """
+    Hard-cap the final mp4 at MAX_DURATION_S seconds (default 58.5). If
+    the file is already under the cap, no-op.
+
+    YouTube applies tighter Content ID restrictions on Shorts >60s — the
+    2026-05-17 #4 Bhishma Kurukshetra video (70.4s) was blocked partly
+    because its duration triggered the over-60s restriction tier. Capping
+    at 58.5s keeps every upload in the safer <60s bucket.
+
+    WhatIf longform pipeline can opt out by setting MAX_DURATION_S=999 in
+    its workflow env. Default 58.5 applies to Mahabharata + Krishna + WhatIf
+    Shorts.
+    """
+    try:
+        max_s = float(os.environ.get("MAX_DURATION_S", "58.5"))
+    except ValueError:
+        max_s = 58.5
+    if max_s >= 999:
+        return  # opt-out for longform
+    if not os.path.exists(output_path):
+        return
+    dur = get_audio_duration(output_path)
+    if not dur or dur <= max_s + 0.05:  # 50ms safety margin to avoid pointless re-encodes
+        return
+
+    print(f"    [auto-cap] mp4 is {dur:.2f}s, trimming to {max_s:.2f}s (YT Shorts <60s safety)")
+    trimmed = output_path.replace(".mp4", "_capped.mp4")
+    # Re-encode with -t. We re-encode (not -c copy) because copy mode can land
+    # past the requested -t boundary if the cut isn't on a keyframe; re-encode
+    # guarantees an exact duration. This is a 1-pass operation on ~60s, very fast.
+    cmd = [
+        "ffmpeg", "-y", "-i", output_path,
+        "-t", f"{max_s:.3f}",
+        "-c:v", "libx264", "-preset", "veryfast", "-crf", "20",
+        "-c:a", "aac", "-b:a", "192k",
+        "-movflags", "+faststart",
+        trimmed,
+    ]
+    r = subprocess.run(cmd, capture_output=True)
+    if r.returncode == 0 and os.path.exists(trimmed):
+        os.replace(trimmed, output_path)
+        new_dur = get_audio_duration(output_path)
+        print(f"    [auto-cap] new duration: {new_dur:.2f}s")
+    else:
+        err = r.stderr.decode("utf-8", errors="replace")[-300:] if r.stderr else ""
+        print(f"    [auto-cap] WARN: trim failed, keeping original at {dur:.2f}s — {err}")
+        if os.path.exists(trimmed):
+            os.remove(trimmed)
+
+
 def _apply_background_music(output_path: str, series: str = "mahabharata"):
     """
     Mixes a randomly selected background track at 10% base volume with
@@ -908,6 +1143,29 @@ def _apply_background_music(output_path: str, series: str = "mahabharata"):
         video_duration = float(json.loads(probe.stdout)["format"]["duration"])
     except Exception:
         video_duration = 9999.0
+
+    # MUSIC_CHUNKING: pre-build a chunked music track + layer an ambient bed
+    # underneath. Default ON. Set MUSIC_CHUNKING=false to revert to the
+    # 2026-05-16 continuous-music behavior (Tier 1.5 valley curve only).
+    chunking_enabled = os.environ.get("MUSIC_CHUNKING", "true").strip().lower() != "false"
+    ambient_bed_path = _AMBIENT_BED_PATH if os.path.exists(_AMBIENT_BED_PATH) else ""
+
+    chunked_music_path = music_path  # default: use the source as-is
+    chunk_schedule: list[tuple[float, float, float]] | None = None
+    if chunking_enabled:
+        # Seed chunking off the output_path basename — deterministic per-video,
+        # but different across re-renders / different scenes.
+        seed_int = abs(hash(os.path.basename(output_path))) % (2**31)
+        candidate = "temp/_chunked_music.mp3"
+        os.makedirs("temp", exist_ok=True)
+        chunk_schedule = _build_chunked_music_track(music_path, candidate, video_duration, seed_int)
+        if chunk_schedule:
+            chunked_music_path = candidate
+            if ambient_bed_path:
+                print(f"    Ambient bed: {os.path.basename(ambient_bed_path)} (flat 0.020)")
+            else:
+                print(f"    [chunking] WARN: no ambient bed at {_AMBIENT_BED_PATH} — chunk gaps will be silence")
+        # If chunk-build failed, chunked_music_path stays = music_path (graceful fallback)
 
     music_output = output_path.replace(".mp4", "_music.mp4")
     audio_chain = _audio_post_chain(series)
@@ -940,20 +1198,46 @@ def _apply_background_music(output_path: str, series: str = "mahabharata"):
         f"if(lt(t,{valley_end_t:.2f}),0.048,"
         f"0.098))))"
     )
-    duck_filter = (
-        f"[0:a]asplit=2[voice_mix][voice_sc];"
-        f"[1:a]atrim=0:{video_duration:.3f},asetpts=PTS-STARTPTS,"
-        f"volume='{music_volume_expr}':eval=frame[music_raw];"
-        f"[music_raw][voice_sc]sidechaincompress="
-        f"threshold=0.02:ratio=7:attack=80:release=450:makeup=1[music_ducked];"
-        f"[voice_mix][music_ducked]amix=inputs=2:normalize=0,"
-        f"{audio_chain}[aout]"
-    )
+    # Build the filter graph + ffmpeg input list. If chunking is active AND
+    # the ambient bed exists, layer the bed as a 3rd input ([2:a]) at flat
+    # 0.020 volume so chunk gaps don't feel like dead silence. Otherwise
+    # use the 2-input continuous-music graph (Tier 1.5 behavior).
+    use_ambient_layer = chunking_enabled and ambient_bed_path and chunked_music_path != music_path
+    if use_ambient_layer:
+        duck_filter = (
+            f"[0:a]asplit=2[voice_mix][voice_sc];"
+            f"[1:a]atrim=0:{video_duration:.3f},asetpts=PTS-STARTPTS,"
+            f"volume='{music_volume_expr}':eval=frame[music_raw];"
+            f"[music_raw][voice_sc]sidechaincompress="
+            f"threshold=0.02:ratio=7:attack=80:release=450:makeup=1[music_ducked];"
+            f"[2:a]atrim=0:{video_duration:.3f},asetpts=PTS-STARTPTS,"
+            f"volume=0.020[ambient_flat];"
+            f"[voice_mix][music_ducked][ambient_flat]amix=inputs=3:normalize=0,"
+            f"{audio_chain}[aout]"
+        )
+        ffmpeg_inputs = [
+            "-i", output_path,
+            "-stream_loop", "-1", "-i", chunked_music_path,
+            "-stream_loop", "-1", "-i", ambient_bed_path,
+        ]
+    else:
+        duck_filter = (
+            f"[0:a]asplit=2[voice_mix][voice_sc];"
+            f"[1:a]atrim=0:{video_duration:.3f},asetpts=PTS-STARTPTS,"
+            f"volume='{music_volume_expr}':eval=frame[music_raw];"
+            f"[music_raw][voice_sc]sidechaincompress="
+            f"threshold=0.02:ratio=7:attack=80:release=450:makeup=1[music_ducked];"
+            f"[voice_mix][music_ducked]amix=inputs=2:normalize=0,"
+            f"{audio_chain}[aout]"
+        )
+        ffmpeg_inputs = [
+            "-i", output_path,
+            "-stream_loop", "-1", "-i", chunked_music_path,
+        ]
 
     result = subprocess.run([
         "ffmpeg", "-y",
-        "-i", output_path,
-        "-stream_loop", "-1", "-i", music_path,
+        *ffmpeg_inputs,
         "-filter_complex", duck_filter,
         "-map", "0:v", "-map", "[aout]",
         "-c:v", "copy",
@@ -967,20 +1251,31 @@ def _apply_background_music(output_path: str, series: str = "mahabharata"):
         print(f"    [OK] Music mixed (5-section curve w/ valley dip: "
               f"0.050→0.067→0.085→[VALLEY {valley_start_t:.1f}-{valley_end_t:.1f}s @ 0.048]→0.098, "
               f"sidechain a80/r450/ratio7) + audio normalized ({audio_chain})")
+        _print_audio_risk(chunk_schedule, video_duration, ambient_bed_path)
         return
 
     # Flat fallback (no sidechain ducking) — must stay quieter than the ducked
-    # path because there's no auto-attenuation when voice plays.
-    flat_filter = (
-        f"[1:a]volume=0.06,"
-        f"atrim=0:{video_duration:.3f},asetpts=PTS-STARTPTS[music];"
-        f"[0:a][music]amix=inputs=2:normalize=0,"
-        f"{audio_chain}[aout]"
-    )
+    # path because there's no auto-attenuation when voice plays. Still uses
+    # chunked music + ambient bed when available.
+    if use_ambient_layer:
+        flat_filter = (
+            f"[1:a]volume=0.06,"
+            f"atrim=0:{video_duration:.3f},asetpts=PTS-STARTPTS[music];"
+            f"[2:a]atrim=0:{video_duration:.3f},asetpts=PTS-STARTPTS,"
+            f"volume=0.020[ambient_flat];"
+            f"[0:a][music][ambient_flat]amix=inputs=3:normalize=0,"
+            f"{audio_chain}[aout]"
+        )
+    else:
+        flat_filter = (
+            f"[1:a]volume=0.06,"
+            f"atrim=0:{video_duration:.3f},asetpts=PTS-STARTPTS[music];"
+            f"[0:a][music]amix=inputs=2:normalize=0,"
+            f"{audio_chain}[aout]"
+        )
     result2 = subprocess.run([
         "ffmpeg", "-y",
-        "-i", output_path,
-        "-stream_loop", "-1", "-i", music_path,
+        *ffmpeg_inputs,
         "-filter_complex", flat_filter,
         "-map", "0:v", "-map", "[aout]",
         "-c:v", "copy",
@@ -992,6 +1287,7 @@ def _apply_background_music(output_path: str, series: str = "mahabharata"):
     if result2.returncode == 0:
         os.replace(music_output, output_path)
         print(f"    [OK] Music mixed (flat fallback) + audio normalized ({audio_chain})")
+        _print_audio_risk(chunk_schedule, video_duration, ambient_bed_path)
     else:
         print("    [!] Music mix failed, falling back to voice-only normalization")
         _finalize_audio_no_music(output_path, series=series)
@@ -1299,6 +1595,7 @@ def assemble_video_continuous_audio(
 
     _apply_cinematic_polish(output_path, durations)
     _apply_background_music(output_path, series=series)
+    _enforce_max_duration(output_path)
 
     return output_path
 
@@ -1390,6 +1687,7 @@ def assemble_from_video_clips_continuous_audio(
 
     _apply_cinematic_polish(output_path, durations)
     _apply_background_music(output_path, series=series)
+    _enforce_max_duration(output_path)
 
     return output_path
 
@@ -1436,6 +1734,7 @@ def assemble_video(
 
     _apply_cinematic_polish(output_path, clip_durations)
     _apply_background_music(output_path)
+    _enforce_max_duration(output_path)
 
     return output_path
 
@@ -1476,5 +1775,6 @@ def assemble_from_video_clips(
 
     _apply_cinematic_polish(output_path, processed_durations)
     _apply_background_music(output_path)
+    _enforce_max_duration(output_path)
 
     return output_path

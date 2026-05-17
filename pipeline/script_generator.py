@@ -219,11 +219,17 @@ def _load_used_topics() -> set[str]:
         return set()
 
 
-def _pick_next_arc_topic() -> tuple[str, int, str] | None:
+def _pick_next_arc_topic() -> tuple[str, int, str, str | None] | None:
     """
     Walk character arcs sequentially, picking the first topic NOT in
-    recent_topics.json. Returns (topic, episode_n, arc_name) or None when
-    all arcs are exhausted.
+    recent_topics.json. Returns (topic, episode_n, arc_name, next_topic_in_arc)
+    or None when all arcs are exhausted.
+
+    `next_topic_in_arc` (added 2026-05-16, Tier 2 Fix 2.0) is the NEXT
+    unused topic in the SAME arc, used by the cliffhanger prompt to tease
+    the next episode. None if this is the last unused episode of its arc
+    (no cliffhanger to tease in that case — script_generator will fall
+    back to the comment-bait closer alone).
 
     episode_n is the GLOBAL episode count across the channel (sequential
     1, 2, 3 ... across all arcs combined), so titles read like
@@ -236,10 +242,18 @@ def _pick_next_arc_topic() -> tuple[str, int, str] | None:
         return None
     global_n = 0
     for arc in arcs:
-        for topic in arc.get("topics", []):
+        arc_topics = arc.get("topics", [])
+        for idx, topic in enumerate(arc_topics):
             global_n += 1
             if topic not in used:
-                return topic, global_n, arc.get("name", "")
+                # Look ahead within THIS arc for the next unused topic
+                # (skipping any already-used intermediate episodes).
+                next_topic = None
+                for ahead in arc_topics[idx + 1:]:
+                    if ahead not in used:
+                        next_topic = ahead
+                        break
+                return topic, global_n, arc.get("name", ""), next_topic
     return None
 
 
@@ -1909,6 +1923,73 @@ HARD RULES — violation makes the script unusable:
     return data
 
 
+def _build_cliffhanger_block(pattern_letter: str, next_teaser: str) -> str:
+    """
+    Returns the prompt fragment that instructs the LLM to close the final
+    scene with a cliffhanger hook. Picks one of four patterns (A/B/C =
+    explicit "अगले भाग में..." tease; D = haunted lingering, no explicit
+    next-episode mention). Caller passes the selected pattern_letter and
+    the next_episode_teaser (a topic-derived fragment).
+
+    Added 2026-05-16 Tier 2 Fix 2.0 + 2.7.
+    """
+    next_short = (next_teaser or "")[:80]
+    common_intro = (
+        "    ═══════════════════════════════════════════════════════════════\n"
+        "    CLIFFHANGER ENDING — STRUCTURAL REQUIREMENT (Tier 2 Fix 2.0)\n"
+        "    ═══════════════════════════════════════════════════════════════\n"
+        "    This video is part of an arc. The NEXT episode in the same arc\n"
+        "    will be about:\n"
+        f"      → {next_short}\n\n"
+        "    The FINAL narrative scene (scene 6) MUST close with a hook\n"
+        "    that pulls the viewer toward the next episode. Structure:\n"
+        "      1. First, deliver the bookend payoff (existing rule — scene 1\n"
+        "         noun echoes in final scene).\n"
+        "      2. Then PIVOT to the cliffhanger line below.\n"
+        "      3. Then the comment-bait question (existing rule).\n\n"
+    )
+    if pattern_letter in ("A", "B", "C"):
+        patterns_text = (
+            "    THIS VIDEO USES — Pattern " + pattern_letter + " (explicit tease):\n"
+        )
+        if pattern_letter == "A":
+            patterns_text += (
+                '      "लेकिन असली विनाश अभी बाकी था... अगले भाग में, <hook-fragment derived from next topic>..."\n'
+                "      Example hook-fragment: \"भीष्म का पहला युद्ध-दिन\" (4-7 words, derived from the next topic).\n"
+            )
+        elif pattern_letter == "B":
+            patterns_text += (
+                '      "और जो <character> ने अगले <युद्ध|दिन|पल> में किया... आज भी कांप उठाता है।"\n'
+                "      Pick the character central to the NEXT topic, not this one.\n"
+            )
+        else:  # C
+            patterns_text += (
+                '      "यह तो सिर्फ शुरुआत थी... अगले भाग में: <hook-fragment>"\n'
+                "      Hook-fragment is 4-7 words distilled from the next topic.\n"
+            )
+        patterns_text += (
+            "\n    DO NOT use a different pattern letter; this video's pattern is\n"
+            f"    fixed to {pattern_letter} by the rotation system.\n"
+        )
+    else:  # Pattern D — haunted lingering
+        patterns_text = (
+            "    THIS VIDEO USES — Pattern D (HAUNTED LINGERING, 2026-05-16):\n"
+            "    Instead of an explicit \"अगले भाग में, X...\" line, end with an\n"
+            "    unresolved consequence — emotional residue as the hook. The\n"
+            "    next-episode link is handled in the YouTube description, NOT\n"
+            "    in the narration. The narration stays artistic.\n\n"
+            "    Closing-line patterns (pick whichever fits the topic):\n"
+            '      • "और उसके बाद... हस्तिनापुर कभी पहले जैसा नहीं रहा..."\n'
+            '      • "उस रात के बाद... कौरवों की हँसी कभी नहीं लौटी..."\n'
+            '      • "और जो उस दिन हुआ... आज भी कोई बोलने से डरता है..."\n'
+            '      • "उस आँसू के बाद... कुरुक्षेत्र की मिट्टी कभी सूखी नहीं..."\n\n'
+            "    DO NOT mention the next episode by name in Pattern D. The\n"
+            "    emotional aftertaste IS the hook. After the haunted line,\n"
+            "    the comment-bait question follows.\n"
+        )
+    return common_intro + patterns_text + "\n"
+
+
 def generate_script(
     language: str = "en",
     forced_topic: str = None,
@@ -1946,6 +2027,7 @@ def generate_script(
     # weakest signal in the report).
     episode_n = None
     arc_name  = None
+    next_episode_teaser = None  # Tier 2 Fix 2.0 — cliffhanger lookup
     if forced_topic:
         topic = forced_topic
         content_type = (
@@ -1953,12 +2035,37 @@ def generate_script(
             if any(kw in forced_topic.lower() for kw in _MOTIVATIONAL_KEYWORDS)
             else "story"
         )
+        # Tier 2 enhancement: if the forced topic matches an arc entry,
+        # still compute the next-episode teaser so the cliffhanger fires.
+        # Lets manually-queued topics (scheduled_topics_mahabharata.txt or
+        # workflow_dispatch overrides) benefit from the binge mechanic.
+        arcs = _load_arcs()
+        used = _load_used_topics()
+        for arc in arcs:
+            topics_list = arc.get("topics", [])
+            if forced_topic in topics_list:
+                arc_name = arc.get("name", "")
+                idx = topics_list.index(forced_topic)
+                # Look ahead for the next unused topic in this arc
+                for ahead in topics_list[idx + 1:]:
+                    if ahead not in used:
+                        next_episode_teaser = ahead
+                        break
+                # episode_n stays None → falls back to len(used)+1 below
+                print(f"    [arc-forced] matched {arc_name} — cliffhanger eligible")
+                if next_episode_teaser:
+                    print(f"    [cliffhanger] next_episode_teaser: {next_episode_teaser[:80]}")
+                break
     else:
         arc_pick = _pick_next_arc_topic()
         if arc_pick:
-            topic, episode_n, arc_name = arc_pick
+            topic, episode_n, arc_name, next_episode_teaser = arc_pick
             content_type = "story"
             print(f"    [arc] {arc_name} — episode {episode_n}: {topic[:80]}")
+            if next_episode_teaser:
+                print(f"    [cliffhanger] next_episode_teaser: {next_episode_teaser[:80]}")
+            else:
+                print(f"    [cliffhanger] none — this is the last unused episode of the arc")
         else:
             print(f"    [arc] all arcs exhausted in recent_topics.json — falling back to random pool")
             content_type = random.choice(["story", "motivational"])
@@ -2072,6 +2179,30 @@ def generate_script(
         outline_block = ""
         print("    Pass 1: outline failed — falling back to single-pass prompt")
 
+    # ── Cliffhanger pattern selection (Tier 2 Fix 2.0 + 2.7) ────────────────
+    # When the arc walker provides a `next_episode_teaser`, the final scene
+    # closes with a cliffhanger that hooks viewers into the next episode.
+    # Pattern rotation (70/30 explicit/haunted) prevents formula fatigue:
+    #   • Patterns A/B/C: explicit "अगले भाग में..." tease — binge mechanic
+    #   • Pattern D:      haunted lingering — emotional residue as the hook
+    # Selection is deterministic on episode_n so it's predictable + testable.
+    cliffhanger_block = ""
+    if next_episode_teaser and episode_n is not None:
+        ep_mod_10 = episode_n % 10
+        if ep_mod_10 < 7:
+            # 70% explicit tease — rotate A/B/C deterministically
+            pattern_letter = "ABC"[episode_n % 3]
+        else:
+            pattern_letter = "D"  # 30% haunted lingering
+        cliffhanger_block = _build_cliffhanger_block(
+            pattern_letter=pattern_letter,
+            next_teaser=next_episode_teaser,
+        )
+        print(f"    [cliffhanger] selected Pattern {pattern_letter} "
+              f"({'explicit tease' if pattern_letter != 'D' else 'haunted lingering'})")
+    else:
+        print(f"    [cliffhanger] none — last arc episode or non-arc topic")
+
     prompt = f"""
     You are a master storyteller specialising in the Mahabharata epic, writing scripts for vertical YouTube videos that retain viewer attention from the first second to the last.
 
@@ -2157,10 +2288,28 @@ def generate_script(
           • The character finally being human, not heroic
           • 18-22 words MAX (shorter than other scenes — this scene breathes)
 
-        Example for Bhishma's vow:
-          "उस रात भीष्म चुप थे...
-           एक आँसू। एक प्रश्न।
-           और एक टूटा हुआ वचन..."
+        CADENCE — the valley should SOUND like emotional fatigue, not a rule.
+        Pick ONE of these three patterns; don't blend them. Real human
+        grief is irregular — every valley should NOT use the same triple-
+        ellipsis cadence or audiences will detect the formula within 3 videos.
+
+        EXAMPLE A — fragmented grief (4-6 short clauses, ellipses):
+          "उस रात... भीष्म चुप थे..."
+          "एक आँसू..."
+          "एक प्रश्न..."
+          "और एक टूटा हुआ वचन..."
+
+        EXAMPLE B — single long whispered confession (NO ellipses):
+          "वो जानते थे कि जो होने वाला है, उससे कोई बच नहीं सकता।"
+          (One quiet sentence held in held breath. No fragmentation.)
+
+        EXAMPLE C — question and silence (mixed cadence):
+          "क्या यही धर्म था?"
+          "उन्होंने आँखें बंद कर लीं।"
+          (A whispered question, then a single descriptive beat.)
+
+        Pick ONE. The valley is 18-22 words total regardless of pattern.
+        DO NOT default to Pattern A every video — formula detection. Rotate.
 
         Image prompt for THIS scene MUST be: tight close-up,
         candlelight or dim warm tones (NOT lightning/fire/spectacle),
@@ -2198,6 +2347,30 @@ def generate_script(
         "...this is how he became great."  (closure = drop-off)
 
     The FINAL scene is the only one that may end with closure or a moral.
+
+    ONE DANGEROUS LINE — added 2026-05-16 (Tier 2 Fix 2.6):
+        Around scene 3 OR scene 4, ONE sentence should be psychologically
+        DANGEROUS — a line that reframes the entire story or reveals an
+        irreversible truth. This is NOT the rehook contrast marker
+        (curiosity reset) and NOT the climax (epic spectacle). This is
+        the moment that changes the emotional WEIGHT of everything that
+        came before.
+
+        Patterns (pick whichever fits the topic; rotate across videos):
+          • "और उसी क्षण... सब खत्म हो गया।"
+          • "उसे तब भी नहीं पता था... कि वो आखिरी बार मुस्कुरा रही थी।"
+          • "वो जानता था कि अब कुछ नहीं बदल सकता।"
+          • "और इतिहास ने उस पल को कभी माफ़ नहीं किया।"
+
+        These lines are GOLD for retention — they make the viewer
+        re-evaluate what they've seen so far. They turn a story you're
+        watching into a story you're LIVING through.
+
+        DO NOT default to Pattern 1 ("और उसी क्षण...") every video — it's
+        the most quotable but also the most detectable. Rotate. If the
+        cliffhanger pattern this video opens with "और..." (Pattern A),
+        prefer dangerous-line Pattern 2/3/4 to avoid cadence echo.
+        Variation IS the protection against formula fatigue.
 
     ═══════════════════════════════════════════════════════════════
     NARRATIVE BOOKEND — THE FINAL SCENE MUST CLOSE THE HOOK
@@ -2383,20 +2556,23 @@ def generate_script(
                    gives up throne. Stakes raised, no repetition.)
 
     ═══════════════════════════════════════════════════════════════
-    NARRATION LENGTH — CRITICAL
+    NARRATION LENGTH — CRITICAL (hard-enforced downstream)
     ═══════════════════════════════════════════════════════════════
-    EACH scene's narration must be 22-28 words.
-    NEVER write fewer than 22 words per scene OR more than 28 — going long
-    blows past YouTube's 60s Shorts cap. Aim for 25 words/scene as the sweet
-    spot. Hindi narrates ~3 words/sec (slower than English ~4 wps); 25 words
-    = ~8 seconds spoken.
+    EACH scene's narration must be 20-25 words. NOT 28. NOT 26. 25 is the
+    hard ceiling. Going over means the final mp4 gets TRIMMED at 58.5s
+    (video_assembler.MAX_DURATION_S hard cap) — your aftermath/cliffhanger
+    beat will get chopped if you overshoot. Aim for 22 words/scene as the
+    sweet spot. Hindi narrates ~3 words/sec; 22 words = ~7 seconds spoken.
 
     EXCEPTION: scene 5 (the EMOTIONAL VALLEY — see below) is the only scene
-    that may go shorter: 18-22 words max. It is supposed to breathe.
+    that may go shorter: 16-20 words max. It is supposed to breathe.
 
-    Total target: 6 scenes × ~25 words = ~150 spoken words. Spoken duration:
-    ~48-52s at Hindi Charon pace. A fixed subscribe outro adds ~6s for a
-    54-58s total Short, comfortably under YouTube's 60s Shorts hard cap.
+    Total target: 6 scenes × ~22 words = ~132 spoken words. Spoken duration:
+    ~42-46s at Hindi Charon pace. A fixed subscribe outro adds ~6s for a
+    48-52s total Short, well under the 58.5s downstream hard cap. The
+    2026-05-17 #4 Bhishma Kurukshetra video came in at 70.4s — that level
+    of overshoot triggers Content ID restrictions on Shorts >60s. Stay
+    under the cap.
 
     ═══════════════════════════════════════════════════════════════
     SENTENCE RHYTHM — VARIED LENGTHS, CINEMATIC FEEL
@@ -2491,6 +2667,59 @@ def generate_script(
 
     DO NOT prioritize palace symmetry / golden lighting / heroic poses
     over emotional close-ups when both options fit the beat.
+
+    HUMAN PAIN — additional AFTERMATH cues (Tier 2 Fix 2.4, 2026-05-16):
+        At least 1 scene per video (typically scene 5 or 6) SHOULD lean
+        AFTERMATH rather than suffering-in-motion. Suffering shows the
+        pain; aftermath shows the COST. Cost devastates, pain sympathizes.
+
+      • an empty throne with a crown discarded beside it
+      • blood on a queen's jewelry, gold splattered with dark red
+      • a hand letting go of a sword / a letter / a child's hand
+      • a character alone in a vast empty hall AFTER the crowd has gone
+      • a shattered weapon on the marble floor / a torn flag
+      • footprints leading away in ash / soot / blood
+      • silence after the storm — the room exactly as it was, plus loss
+
+    No video should ship with zero aftermath frames.
+
+    IMPERFECTION OVER DIVINE POLISH (Tier 2 Fix 2.5, 2026-05-16):
+        Mortals in grief should look mortal. At least 1 scene's
+        image_prompt MUST include one of these imperfection cues:
+
+      • redness around eyes / puffy eyelids / tear-stained cheeks
+      • shaky / trembling / dirt-stained hands
+      • damaged / torn / soot-stained fabric
+      • hair fallen out of place / sweat-matted / wind-tangled
+      • asymmetric collapsed posture / shoulders uneven from grief
+
+    Do NOT default flawless skin + perfect symmetry + divine framing
+    onto every character. Krishna can stay divine — he is. But Karna,
+    Draupadi, Bhishma, Kunti are MORTALS in suffering. They should
+    LOOK like it. Their dignity comes from carrying the pain, not
+    from being airbrushed past it.
+
+    COUNTER-BALANCE — don't make the whole video "red" (Tier 2 Risk C):
+        Human pain cues are required in at least 2 scenes (above).
+        But at least ONE scene (typically setup scene 2 OR resolve beat
+        in scene 6) MUST carry a quieter human register — DIGNITY,
+        warmth, silence, an ordinary intimate moment. Without this
+        contrast every frame becomes emotionally "red" and the
+        suffering scenes stop landing.
+
+        Examples of dignified-quiet beats:
+          • Kunti holding the infant Karna by candlelight — peace
+            BEFORE the abandonment
+          • Yudhishthira's hand resting on his brother's shoulder
+            BEFORE the gambling defeat
+          • Bhishma laughing once with the young Pandavas
+            BEFORE the war divides them
+
+        A video that is ALL suffering reads as MELODRAMA.
+        A video that earns its suffering through contrast reads as
+        TRAGEDY. Aim for tragedy.
+
+{cliffhanger_block}
 
     ═══════════════════════════════════════════════════════════════
     COMMENT-BAIT — THE LAST SCENE MUST END WITH A DEBATE QUESTION
@@ -2887,14 +3116,13 @@ def generate_script(
         avg_words = sum(word_counts) / max(len(word_counts), 1)
         n_scenes = len(scenes)
 
-        # Length validator (Tier 1.5 re-tune 2026-05-16): now enforces BOTH
-        # bounds. Previously only `< 30 avg words` was checked, so a Tier 1
-        # smoke test that produced 39.3 avg words shipped a 74.5s video —
-        # past YouTube's 60s Shorts cap. The "OR 7 scenes" allowance also
-        # blew duration. Now: exactly 6 scenes, 22-30 word AVG range.
-        # 6 × 25 words / 3.1 wps (Hindi Charon) = ~48s narrative + 6s outro
-        # = ~54s total Short, well inside the 50-58s target.
-        last_short = (n_scenes != 6 or avg_words < 22 or avg_words > 30)
+        # Length validator (Tier 2 re-tune 2026-05-16): upper bound tightened
+        # 30 → 28 to push live runs into the 50-55s sweet spot rather than
+        # 55-60s. REROLL smoke test landed at 64s because best-of-N rescue
+        # shipped an avg=31 attempt; tighter ceiling forces another retry
+        # before that happens. 6 × 25 words / 3.1 wps (Hindi Charon) = ~48s
+        # narrative + 6s outro = ~54s total Short.
+        last_short = (n_scenes != 6 or avg_words < 22 or avg_words > 28)
         # Threshold 4: a character at the centre of the story (Bhishma in a
         # Bhishma video) can appear ~4 times naturally. 5+ times signals that
         # supporting characters and details are being skipped in favour of
@@ -3051,4 +3279,22 @@ def generate_script(
     data["content_type"] = content_type
     data["topic"] = topic
     data["series"] = "mahabharata"
+
+    # Tier 2 Fix 2.0 step 3: when this arc episode has a next-episode
+    # teaser, prepend a "▶️ अगला भाग" line to the YouTube description.
+    # This is the BINGE mechanic at the description level — even when the
+    # narration uses Pattern D (haunted, no explicit next-episode mention),
+    # the description still gives viewers a one-line link to the next beat.
+    if next_episode_teaser:
+        # Derive a compact next-episode title from the teaser (first 60 chars
+        # before the em-dash, OR first 60 chars if no em-dash).
+        teaser_title = next_episode_teaser.split("—")[0].strip()[:60]
+        if not teaser_title:
+            teaser_title = next_episode_teaser[:60]
+        prefix = f"▶️ अगला भाग: {teaser_title}\n\n"
+        existing_desc = data.get("description", "")
+        # Only prepend if not already present (idempotent for retries)
+        if not existing_desc.startswith("▶️ अगला भाग:"):
+            data["description"] = prefix + existing_desc
+
     return data

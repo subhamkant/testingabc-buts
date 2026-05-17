@@ -536,6 +536,7 @@ def _gen_cloudflare(prompt: str, seed: int, width: int, height: int) -> bytes:
                 last_err = f"{label} attempt {attempt+1} status={resp.status_code} body={resp.text[:120]}"
                 if _cf_is_quota_error(resp.status_code, resp.text):
                     # Quota / auth — abort this account, fall to next.
+                    print(f"    [{label}] EXHAUSTED (status={resp.status_code}) — trying next account")
                     quota_hit = True
                     break
                 # Transient non-200 — retry on same account.
@@ -555,6 +556,7 @@ def _gen_cloudflare(prompt: str, seed: int, width: int, height: int) -> bytes:
                 err_str = str(errs).lower()
                 last_err = f"{label} attempt {attempt+1} success=false: {errs}"
                 if any(k in err_str for k in ("quota", "neuron", "rate", "limit", "exceeded")):
+                    print(f"    [{label}] EXHAUSTED (success=false: {str(errs)[:80]}) — trying next account")
                     quota_hit = True
                     break
                 if attempt < MAX_ATTEMPTS_PER_ACCOUNT - 1:
@@ -576,7 +578,11 @@ def _gen_cloudflare(prompt: str, seed: int, width: int, height: int) -> bytes:
         # Account exhausted (either via quota or 3 transient failures) — move on.
         if quota_hit:
             continue
+        # All 3 transient retries failed on this account but no quota signal.
+        # Treat as account-level failure and walk to next.
+        print(f"    [{label}] gave up after {MAX_ATTEMPTS_PER_ACCOUNT} transient failures — trying next account")
 
+    print(f"    [cf-cascade] ALL {len(accounts)} ACCOUNT(S) EXHAUSTED — falling through to HF/Pollinations")
     raise RuntimeError(f"cloudflare cascade exhausted: {last_err}")
 
 
@@ -670,6 +676,29 @@ def _correct_warm_cast(img_bytes: bytes, provider: str) -> bytes:
         return img_bytes
 
 
+# Per-run image-provider tally — incremented on every successful return
+# from generate_image_bytes(). main.py calls reset_provider_tally() at the
+# start of each video and prints the tally at the end via [image-summary].
+# Tracks how many scenes fell to Pollinations so silent CF-quota degradation
+# (the #4 Bhishma Kurukshetra symptom) becomes immediately visible.
+_PROVIDER_TALLY: dict[str, int] = {
+    "cloudflare-flux-schnell":    0,
+    "hf-flux-schnell":            0,
+    "pollinations-flux-realism":  0,
+}
+
+
+def reset_provider_tally() -> None:
+    """Reset the per-run provider tally. Call at start of each video."""
+    for k in _PROVIDER_TALLY:
+        _PROVIDER_TALLY[k] = 0
+
+
+def get_provider_tally() -> dict[str, int]:
+    """Return the current per-run provider tally."""
+    return dict(_PROVIDER_TALLY)
+
+
 def generate_image_bytes(prompt: str, seed: int, width: int, height: int, mood: str = "", style_suffix: str = STYLE_SUFFIX) -> tuple[bytes, str]:
     """
     Tries Cloudflare (multi-account cascade) -> HF -> Pollinations until one
@@ -714,6 +743,11 @@ def generate_image_bytes(prompt: str, seed: int, width: int, height: int, mood: 
         try:
             data = fn()
             data = _correct_warm_cast(data, name)
+            _PROVIDER_TALLY[name] = _PROVIDER_TALLY.get(name, 0) + 1
+            # Loud warning whenever we didn't use Cloudflare — makes silent
+            # quality degradation grep-able in cron logs.
+            if name != "cloudflare-flux-schnell":
+                print(f"    [FALLBACK ⚠] image generated via {name} (cloudflare unavailable)")
             return data, name
         except Exception as e:
             last_err = f"{name}: {e}"

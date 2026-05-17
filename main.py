@@ -23,7 +23,10 @@ load_dotenv()
 
 from pipeline.script_generator import generate_script
 from pipeline.tts_generator import generate_full_narration
-from pipeline.image_generator import generate_images, generate_thumbnail, update_characters
+from pipeline.image_generator import (
+    generate_images, generate_thumbnail, update_characters,
+    reset_provider_tally, get_provider_tally,
+)
 from pipeline.video_assembler import (
     assemble_video_continuous_audio,
     assemble_from_video_clips_continuous_audio,
@@ -215,6 +218,24 @@ def _subscribe_outro(series: str, language: str, listener: str = "") -> dict:
     }
 
 
+def _print_image_summary() -> None:
+    """
+    Emit the per-run [image-summary] line — visible accounting of which
+    provider rendered each scene. Added 2026-05-17 after the #4 Bhishma
+    Kurukshetra cron silently fell to Pollinations for Scene 6 (CF quota
+    exhausted mid-pipeline) without any error log.
+    """
+    t = get_provider_tally()
+    cf = t.get("cloudflare-flux-schnell", 0)
+    hf = t.get("hf-flux-schnell", 0)
+    poll = t.get("pollinations-flux-realism", 0)
+    total = cf + hf + poll
+    if total == 0:
+        return
+    flag = "  ⚠️ HIGH FALLBACK" if poll > 2 else ""
+    print(f"    [image-summary] CF: {cf}/{total}  HF: {hf}/{total}  Pollinations: {poll}/{total}{flag}")
+
+
 def _build_lang_script(dual_script: dict, language: str) -> dict:
     """
     Convert a dual-language WhatIf script into a single-language copy by
@@ -358,6 +379,7 @@ async def run_pipeline(language: str = "en", test_mode: bool = False, test_uploa
                 print("\nStep 3 — Generating images via free cascade (HF -> Cloudflare -> Pollinations)...")
                 # Pass ck so generate_images can checkpoint after EACH scene
                 # completes — survives 29-min cap mid-batch and resumes there.
+                reset_provider_tally()
                 image_files = generate_images(script["scenes"], series="mahabharata", ck=ck)
                 if script.get("thumbnail_prompt"):
                     # Extract Hindi shock-phrase from title for thumbnail overlay.
@@ -473,6 +495,7 @@ async def run_pipeline(language: str = "en", test_mode: bool = False, test_uploa
             except Exception as ig_err:
                 print(f"    Instagram upload failed (non-fatal): {ig_err}")
 
+        _print_image_summary()
         print(f"\nPipeline complete!")
         print(f"    Video saved -> {video_path}")
         if video_id:
@@ -608,6 +631,7 @@ async def run_krishna_speech(test_mode: bool = False, test_upload: bool = False)
             if video_path is None:
                 print("\nStep 3 — Generating images (Krishna+listener two-shots)...")
                 # Per-scene checkpoint via ck — see Mahabharata flow comment above.
+                reset_provider_tally()
                 image_files = generate_images(script["scenes"], series="krishna", ck=ck)
                 if script.get("thumbnail_prompt"):
                     generate_thumbnail(script["thumbnail_prompt"], series="krishna")
@@ -687,6 +711,7 @@ async def run_krishna_speech(test_mode: bool = False, test_upload: bool = False)
             except Exception as ig_err:
                 print(f"    Instagram upload failed (non-fatal): {ig_err}")
 
+        _print_image_summary()
         print(f"\nPipeline complete!")
         print(f"    Video saved -> {video_path}")
         if video_id:
@@ -855,6 +880,7 @@ async def run_whatif_phase(language: str, test_mode: bool = False, test_upload: 
                 # mid-batch preserves completed scenes for the retry job.
                 # The bulk visuals_manifest.json save below remains as the
                 # "all done" marker; partial-resume uses visuals_partial.json.
+                reset_provider_tally()
                 image_files = generate_images(
                     dual_script["scenes"], series="whatif", visual_style=visual_style,
                     ck=ck,
@@ -1046,6 +1072,7 @@ async def run_whatif_phase(language: str, test_mode: bool = False, test_upload: 
             except Exception as ig_err:
                 print(f"    Instagram upload failed (non-fatal): {ig_err}")
 
+        _print_image_summary()
         print(f"\n{lang_name} phase complete!")
         if video_id:
             print(f"    YouTube   -> https://youtube.com/watch?v={video_id}")
