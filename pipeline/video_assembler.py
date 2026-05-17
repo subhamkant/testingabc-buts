@@ -782,9 +782,18 @@ def _pick_music_track(series: str = "mahabharata") -> str:
         "tunetank-india-indian-hingi-music-348347.mp3",
         "tunetank-epic-indian-hindi-song-music-347195.mp3",
     )
+
+    # Reserved-asset list: files that live in `assets/` for other purposes
+    # (ambient bed for chunking mode, future SFX overlays) but must NEVER
+    # be selected as a main music track. Excluded from the picker pool in
+    # addition to the Content-ID ban list.
+    _NON_MUSIC_RESERVED = (
+        "dark_ambient.mp3",   # synthesized drone — ambient bed only, not a melodic music track
+    )
     real_tracks = [
         t for t in tracks
         if os.path.basename(t).lower() not in _BANNED_MUSIC
+        and os.path.basename(t).lower() not in _NON_MUSIC_RESERVED
     ]
     pool = real_tracks if real_tracks else tracks
     if not pool:
@@ -1044,10 +1053,16 @@ def _print_audio_risk(
         if ambient_bed_path else "NONE"
     )
 
-    # Verdict heuristic. Ambient origin only matters when a bed is actually
-    # active — if no bed file, the origin question is moot.
+    # Verdict heuristic. Continuous-music mode (chunk_schedule is None) is
+    # treated as LOW assuming the actual Content-ID defenses are active:
+    # Tunetank ban + <60s cap + narration dominance via sidechain ducking.
+    # That stack is what blocks claims in practice — chunking adds tiny
+    # marginal protection at the cost of cinematic continuity (user
+    # feedback 2026-05-17 after the chunked-#4 sounded fragmented).
     bed_active = bool(ambient_bed_path)
-    if longest > 7.0:
+    if chunk_schedule is None:
+        verdict = "LOW (continuous mode — relies on ban + <60s + ducking)"
+    elif longest > 7.0:
         verdict = "HIGH"
     elif longest > 5.0:
         verdict = "MEDIUM"
@@ -1149,9 +1164,22 @@ def _apply_background_music(output_path: str, series: str = "mahabharata"):
         video_duration = 9999.0
 
     # MUSIC_CHUNKING: pre-build a chunked music track + layer an ambient bed
-    # underneath. Default ON. Set MUSIC_CHUNKING=false to revert to the
-    # 2026-05-16 continuous-music behavior (Tier 1.5 valley curve only).
-    chunking_enabled = os.environ.get("MUSIC_CHUNKING", "true").strip().lower() != "false"
+    # underneath.
+    #
+    # Default: OFF (continuous music). The user-reviewed #4 Bhishma render
+    # 2026-05-17 with 15 chunks at 2.5-4.5s sounded fragmented — the
+    # emotional arc broke at every chunk boundary and the ambient bed was
+    # too exposed in gaps. Cinematic mythological content depends on
+    # tonal continuity that chunking actively destroys.
+    #
+    # The actual Content-ID defenses are now:
+    #   1. Tunetank-class ban + safe-only picker pool (root cause #4 block)
+    #   2. 58.5s auto-cap (the >60s threshold is what triggers stricter scans)
+    #   3. Sidechain ducking + narration dominance (existing 5-section curve)
+    # Those three protect us. Chunking adds tiny marginal protection at the
+    # cost of cinematic quality. Set MUSIC_CHUNKING=true to opt in for
+    # experimentation; production defaults to continuous music.
+    chunking_enabled = os.environ.get("MUSIC_CHUNKING", "false").strip().lower() == "true"
     ambient_bed_path = _AMBIENT_BED_PATH if os.path.exists(_AMBIENT_BED_PATH) else ""
 
     chunked_music_path = music_path  # default: use the source as-is
@@ -1255,7 +1283,11 @@ def _apply_background_music(output_path: str, series: str = "mahabharata"):
         print(f"    [OK] Music mixed (5-section curve w/ valley dip: "
               f"0.050→0.067→0.085→[VALLEY {valley_start_t:.1f}-{valley_end_t:.1f}s @ 0.048]→0.098, "
               f"sidechain a80/r450/ratio7) + audio normalized ({audio_chain})")
-        _print_audio_risk(chunk_schedule, video_duration, ambient_bed_path, _AMBIENT_BED_ORIGIN)
+        # In continuous mode the ambient bed isn't mixed in, so report it as
+        # not active rather than showing a misleading file path.
+        risk_bed_path   = ambient_bed_path if use_ambient_layer else ""
+        risk_bed_origin = _AMBIENT_BED_ORIGIN if use_ambient_layer else "n/a (continuous mode)"
+        _print_audio_risk(chunk_schedule, video_duration, risk_bed_path, risk_bed_origin)
         return
 
     # Flat fallback (no sidechain ducking) — must stay quieter than the ducked
@@ -1291,7 +1323,11 @@ def _apply_background_music(output_path: str, series: str = "mahabharata"):
     if result2.returncode == 0:
         os.replace(music_output, output_path)
         print(f"    [OK] Music mixed (flat fallback) + audio normalized ({audio_chain})")
-        _print_audio_risk(chunk_schedule, video_duration, ambient_bed_path, _AMBIENT_BED_ORIGIN)
+        # In continuous mode the ambient bed isn't mixed in, so report it as
+        # not active rather than showing a misleading file path.
+        risk_bed_path   = ambient_bed_path if use_ambient_layer else ""
+        risk_bed_origin = _AMBIENT_BED_ORIGIN if use_ambient_layer else "n/a (continuous mode)"
+        _print_audio_risk(chunk_schedule, video_duration, risk_bed_path, risk_bed_origin)
     else:
         print("    [!] Music mix failed, falling back to voice-only normalization")
         _finalize_audio_no_music(output_path, series=series)
