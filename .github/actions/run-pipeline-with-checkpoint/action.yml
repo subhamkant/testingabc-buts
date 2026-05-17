@@ -85,6 +85,11 @@ runs:
         GEMINI_API_KEY_FALLBACK_3:     ${{ inputs.gemini-api-key-fallback-3 }}
         IG_ACCESS_TOKEN:               ${{ inputs.instagram-access-token }}
         IG_BUSINESS_ACCOUNT_ID:        ${{ inputs.instagram-business-account-id }}
+        # GITHUB_TOKEN is needed by pipeline/instagram_uploader.py to upload
+        # the mp4 to the `instagram-staging` GitHub Release so the Graph API
+        # can fetch the video_url. Without this export the IG cross-post
+        # fails with "no GitHub token found" while the YT path still works.
+        GITHUB_TOKEN:                  ${{ inputs.github-token }}
         EPISODE_NUMBER_OVERRIDE:       ${{ inputs.episode-number-override }}
         GROQ_API_KEY:                  ${{ inputs.groq-api-key }}
         FAL_KEY:                       ${{ inputs.fal-key }}
