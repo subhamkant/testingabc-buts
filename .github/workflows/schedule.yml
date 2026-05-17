@@ -29,6 +29,11 @@ on:
           - en
           - whatif
           - krishna
+      episode_number:
+        description: "Force episode number in title (e.g. '4' for re-rendering blocked #4). Leave blank for auto."
+        required: false
+        default: ""
+        type: string
 
 # ════════════════════════════════════════════════════════════════════════════
 # WORKFLOW STRUCTURE
@@ -101,6 +106,7 @@ jobs:
           gemini-api-key-fallback-3: ${{ secrets.GEMINI_API_KEY_FALLBACK_3 }}
           instagram-access-token: ${{ secrets.IG_ACCESS_TOKEN }}
           instagram-business-account-id: ${{ secrets.IG_BUSINESS_ACCOUNT_ID }}
+          episode-number-override: ${{ inputs.episode_number || '' }}
           groq-api-key: ${{ secrets.GROQ_API_KEY }}
           fal-key: ${{ secrets.FAL_KEY }}
           replicate-api-token: ${{ secrets.REPLICATE_API_TOKEN }}
@@ -161,6 +167,7 @@ jobs:
           gemini-api-key-fallback-3: ${{ secrets.GEMINI_API_KEY_FALLBACK_3 }}
           instagram-access-token: ${{ secrets.IG_ACCESS_TOKEN }}
           instagram-business-account-id: ${{ secrets.IG_BUSINESS_ACCOUNT_ID }}
+          episode-number-override: ${{ inputs.episode_number || '' }}
           groq-api-key: ${{ secrets.GROQ_API_KEY }}
           fal-key: ${{ secrets.FAL_KEY }}
           replicate-api-token: ${{ secrets.REPLICATE_API_TOKEN }}
@@ -219,6 +226,7 @@ jobs:
           gemini-api-key-fallback-3: ${{ secrets.GEMINI_API_KEY_FALLBACK_3 }}
           instagram-access-token: ${{ secrets.IG_ACCESS_TOKEN }}
           instagram-business-account-id: ${{ secrets.IG_BUSINESS_ACCOUNT_ID }}
+          episode-number-override: ${{ inputs.episode_number || '' }}
           groq-api-key: ${{ secrets.GROQ_API_KEY }}
           fal-key: ${{ secrets.FAL_KEY }}
           replicate-api-token: ${{ secrets.REPLICATE_API_TOKEN }}
@@ -277,6 +285,7 @@ jobs:
           gemini-api-key-fallback-3: ${{ secrets.GEMINI_API_KEY_FALLBACK_3 }}
           instagram-access-token: ${{ secrets.IG_ACCESS_TOKEN }}
           instagram-business-account-id: ${{ secrets.IG_BUSINESS_ACCOUNT_ID }}
+          episode-number-override: ${{ inputs.episode_number || '' }}
           groq-api-key: ${{ secrets.GROQ_API_KEY }}
           fal-key: ${{ secrets.FAL_KEY }}
           replicate-api-token: ${{ secrets.REPLICATE_API_TOKEN }}
@@ -325,6 +334,7 @@ jobs:
           gemini-api-key-fallback-3: ${{ secrets.GEMINI_API_KEY_FALLBACK_3 }}
           instagram-access-token: ${{ secrets.IG_ACCESS_TOKEN }}
           instagram-business-account-id: ${{ secrets.IG_BUSINESS_ACCOUNT_ID }}
+          episode-number-override: ${{ inputs.episode_number || '' }}
           groq-api-key: ${{ secrets.GROQ_API_KEY }}
           fal-key: ${{ secrets.FAL_KEY }}
           replicate-api-token: ${{ secrets.REPLICATE_API_TOKEN }}
@@ -370,6 +380,7 @@ jobs:
           gemini-api-key-fallback-3: ${{ secrets.GEMINI_API_KEY_FALLBACK_3 }}
           instagram-access-token: ${{ secrets.IG_ACCESS_TOKEN }}
           instagram-business-account-id: ${{ secrets.IG_BUSINESS_ACCOUNT_ID }}
+          episode-number-override: ${{ inputs.episode_number || '' }}
           groq-api-key: ${{ secrets.GROQ_API_KEY }}
           fal-key: ${{ secrets.FAL_KEY }}
           replicate-api-token: ${{ secrets.REPLICATE_API_TOKEN }}
@@ -415,6 +426,7 @@ jobs:
           gemini-api-key-fallback-3: ${{ secrets.GEMINI_API_KEY_FALLBACK_3 }}
           instagram-access-token: ${{ secrets.IG_ACCESS_TOKEN }}
           instagram-business-account-id: ${{ secrets.IG_BUSINESS_ACCOUNT_ID }}
+          episode-number-override: ${{ inputs.episode_number || '' }}
           groq-api-key: ${{ secrets.GROQ_API_KEY }}
           fal-key: ${{ secrets.FAL_KEY }}
           replicate-api-token: ${{ secrets.REPLICATE_API_TOKEN }}
@@ -460,6 +472,7 @@ jobs:
           gemini-api-key-fallback-3: ${{ secrets.GEMINI_API_KEY_FALLBACK_3 }}
           instagram-access-token: ${{ secrets.IG_ACCESS_TOKEN }}
           instagram-business-account-id: ${{ secrets.IG_BUSINESS_ACCOUNT_ID }}
+          episode-number-override: ${{ inputs.episode_number || '' }}
           groq-api-key: ${{ secrets.GROQ_API_KEY }}
           fal-key: ${{ secrets.FAL_KEY }}
           replicate-api-token: ${{ secrets.REPLICATE_API_TOKEN }}
@@ -520,6 +533,7 @@ jobs:
           gemini-api-key-fallback-3: ${{ secrets.GEMINI_API_KEY_FALLBACK_3 }}
           instagram-access-token: ${{ secrets.IG_ACCESS_TOKEN }}
           instagram-business-account-id: ${{ secrets.IG_BUSINESS_ACCOUNT_ID }}
+          episode-number-override: ${{ inputs.episode_number || '' }}
           groq-api-key: ${{ secrets.GROQ_API_KEY }}
           fal-key: ${{ secrets.FAL_KEY }}
           replicate-api-token: ${{ secrets.REPLICATE_API_TOKEN }}
@@ -565,6 +579,7 @@ jobs:
           gemini-api-key-fallback-3: ${{ secrets.GEMINI_API_KEY_FALLBACK_3 }}
           instagram-access-token: ${{ secrets.IG_ACCESS_TOKEN }}
           instagram-business-account-id: ${{ secrets.IG_BUSINESS_ACCOUNT_ID }}
+          episode-number-override: ${{ inputs.episode_number || '' }}
           groq-api-key: ${{ secrets.GROQ_API_KEY }}
           fal-key: ${{ secrets.FAL_KEY }}
           replicate-api-token: ${{ secrets.REPLICATE_API_TOKEN }}
@@ -610,6 +625,7 @@ jobs:
           gemini-api-key-fallback-3: ${{ secrets.GEMINI_API_KEY_FALLBACK_3 }}
           instagram-access-token: ${{ secrets.IG_ACCESS_TOKEN }}
           instagram-business-account-id: ${{ secrets.IG_BUSINESS_ACCOUNT_ID }}
+          episode-number-override: ${{ inputs.episode_number || '' }}
           groq-api-key: ${{ secrets.GROQ_API_KEY }}
           fal-key: ${{ secrets.FAL_KEY }}
           replicate-api-token: ${{ secrets.REPLICATE_API_TOKEN }}
@@ -655,6 +671,7 @@ jobs:
           gemini-api-key-fallback-3: ${{ secrets.GEMINI_API_KEY_FALLBACK_3 }}
           instagram-access-token: ${{ secrets.IG_ACCESS_TOKEN }}
           instagram-business-account-id: ${{ secrets.IG_BUSINESS_ACCOUNT_ID }}
+          episode-number-override: ${{ inputs.episode_number || '' }}
           groq-api-key: ${{ secrets.GROQ_API_KEY }}
           fal-key: ${{ secrets.FAL_KEY }}
           replicate-api-token: ${{ secrets.REPLICATE_API_TOKEN }}

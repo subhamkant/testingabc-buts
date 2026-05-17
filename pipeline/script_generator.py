@@ -2076,6 +2076,16 @@ def generate_script(
     # whatever's in recent_topics.json so titles stay numbered consistently.
     if episode_n is None:
         episode_n = len(_load_used_topics()) + 1
+
+    # EPISODE_NUMBER_OVERRIDE: optional env-var override for one-off renders
+    # (e.g. re-rendering a blocked episode with the original number, or
+    # workflow_dispatch test runs where you want a specific title number).
+    # Takes precedence over both arc-pick and the recent_topics len+1 fallback.
+    _override = os.environ.get("EPISODE_NUMBER_OVERRIDE", "").strip()
+    if _override.isdigit():
+        episode_n = int(_override)
+        print(f"    [episode-override] EPISODE_NUMBER_OVERRIDE={episode_n} (env var)")
+
     episode_n_str = str(episode_n)
 
     lang_label = "Hindi (Devanagari script, natural spoken Hindi)" if language == "hi" else "English"

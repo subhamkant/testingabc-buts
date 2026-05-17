@@ -1,0 +1,10 @@
+# Manual topic queue — first non-comment line gets consumed by the next
+# Mahabharata cron run and removed after use.
+#
+# 2026-05-17: re-running #4 Bhishma Kurukshetra after the original upload
+# was YT-blocked for Tunetank "People Of Mughai" Content ID match. Tier A
+# fixes (Tunetank ban + chunked music + ambient bed + auto-cap) should
+# now produce a clean render. Title-prefix forced to #4 via the
+# EPISODE_NUMBER_OVERRIDE env (wired in schedule.yml below this line's
+# consumption — set manually for this one run only).
+Bhishma in the Kurukshetra war — fighting for the side he knew was wrong, killing soldiers from the family he raised

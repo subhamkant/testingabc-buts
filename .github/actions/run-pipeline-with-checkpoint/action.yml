@@ -42,6 +42,10 @@ inputs:
   # setup_instagram_auth.py for the auth flow.
   instagram-access-token:        { required: false, default: "" }
   instagram-business-account-id: { required: false, default: "" }
+  # Optional title-prefix override (e.g. "4" to re-render a blocked episode
+  # with its original number). Empty = use the auto-computed number from
+  # arc-pick or recent_topics len+1 fallback.
+  episode-number-override:       { required: false, default: "" }
   groq-api-key:                  { required: true }
   fal-key:                       { required: true }
   replicate-api-token:           { required: true }
@@ -81,6 +85,7 @@ runs:
         GEMINI_API_KEY_FALLBACK_3:     ${{ inputs.gemini-api-key-fallback-3 }}
         IG_ACCESS_TOKEN:               ${{ inputs.instagram-access-token }}
         IG_BUSINESS_ACCOUNT_ID:        ${{ inputs.instagram-business-account-id }}
+        EPISODE_NUMBER_OVERRIDE:       ${{ inputs.episode-number-override }}
         GROQ_API_KEY:                  ${{ inputs.groq-api-key }}
         FAL_KEY:                       ${{ inputs.fal-key }}
         REPLICATE_API_TOKEN:           ${{ inputs.replicate-api-token }}
