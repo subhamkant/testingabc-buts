@@ -61,6 +61,13 @@ _RELEASE_BODY = (
 # leave room for the appended YouTube backlink.
 _IG_CAPTION_MAX = 2200
 
+# IG silently rejects captions with more than 30 hashtags (caption lands
+# EMPTY when the limit is exceeded — this is what bit the 2026-05-17
+# backfill, where script descriptions had 39 hashtags). Capping at 28
+# leaves a 2-tag safety margin in case the body has inline hashtags we
+# missed counting.
+_IG_HASHTAG_LIMIT = 28
+
 
 # ───────────────────────────────────────────────────────────────────────
 # GitHub release hosting (transient mp4 hosting for IG to fetch)
@@ -161,26 +168,27 @@ def _delete_existing_asset(token: str, repo: str, release_id: int, asset_name: s
             )
 
 
-def _upload_to_github_release(video_path: str) -> str:
-    """Upload mp4 to the instagram-staging release with clobber semantics.
-    Returns the public browser_download_url."""
+def _upload_asset_to_github_release(asset_path: str, content_type: str) -> str:
+    """Upload an asset (mp4 or jpg) to the instagram-staging release with
+    clobber semantics. Returns the public browser_download_url."""
     token = _get_github_token()
     repo = _get_github_repo()
     release = _ensure_release(token, repo)
     release_id = release["id"]
     # Strip the upload_url's template params: ".../assets{?name,label}" → ".../assets"
     upload_url = release["upload_url"].split("{")[0]
-    asset_name = os.path.basename(video_path)
+    asset_name = os.path.basename(asset_path)
 
     # Clobber any previous asset with the same name
     _delete_existing_asset(token, repo, release_id, asset_name)
 
-    print(f"    [ig] uploading {asset_name} to GH release '{_RELEASE_TAG}'...")
-    with open(video_path, "rb") as f:
+    kb = os.path.getsize(asset_path) // 1024
+    print(f"    [ig] uploading {asset_name} ({kb} KB) to GH release '{_RELEASE_TAG}'...")
+    with open(asset_path, "rb") as f:
         data = f.read()
     headers = {
         "Authorization": f"token {token}",
-        "Content-Type": "video/mp4",
+        "Content-Type": content_type,
     }
     r = requests.post(
         f"{upload_url}?name={asset_name}",
@@ -191,13 +199,86 @@ def _upload_to_github_release(video_path: str) -> str:
     public_url = r.json().get("browser_download_url", "")
     if not public_url:
         raise RuntimeError(f"upload OK but no browser_download_url: {r.text[:200]}")
-    print(f"    [ig] mp4 public URL: {public_url}")
     return public_url
+
+
+def _upload_to_github_release(video_path: str) -> str:
+    """Upload mp4 to the instagram-staging release. Backwards-compat
+    wrapper around _upload_asset_to_github_release."""
+    url = _upload_asset_to_github_release(video_path, "video/mp4")
+    print(f"    [ig] mp4 public URL: {url}")
+    return url
+
+
+# ───────────────────────────────────────────────────────────────────────
+# Cover frame extraction (avoids black-thumbnail problem on Reels)
+# ───────────────────────────────────────────────────────────────────────
+
+# Seek to this timestamp (seconds) for the cover. 3.5s lands past the
+# 0.3s opening fade-in + ~2-3s into scene 1's narration = a frame with
+# the lead character clearly visible. Tunable per video via env var.
+_DEFAULT_COVER_OFFSET_S = 3.5
+
+
+def _extract_cover_frame(video_path: str, timestamp_s: float = None) -> str:
+    """Extract a single jpg frame from the video at `timestamp_s` (default
+    3.5s — past the fade-in into scene 1's body). Returns the path to the
+    saved jpg, written next to the source mp4 with suffix `_cover.jpg`.
+
+    Without this, IG defaults to the very first frame which is in the
+    middle of our 0.3s fade-in animation — black cover in the Reels feed.
+    """
+    if timestamp_s is None:
+        try:
+            timestamp_s = float(os.environ.get("IG_COVER_OFFSET_S", _DEFAULT_COVER_OFFSET_S))
+        except ValueError:
+            timestamp_s = _DEFAULT_COVER_OFFSET_S
+
+    output_jpg = video_path.replace(".mp4", "_cover.jpg")
+    # -ss BEFORE -i = fast seek (decoder skips ahead at keyframes)
+    # -frames:v 1 = extract exactly 1 frame
+    # -q:v 2 = high-quality jpg (2 = best, 31 = worst on the jpg scale)
+    cmd = [
+        "ffmpeg", "-y",
+        "-ss", str(timestamp_s),
+        "-i", video_path,
+        "-frames:v", "1",
+        "-q:v", "2",
+        output_jpg,
+    ]
+    r = subprocess.run(cmd, capture_output=True)
+    if r.returncode != 0 or not os.path.exists(output_jpg):
+        err = r.stderr.decode("utf-8", errors="replace")[-300:] if r.stderr else ""
+        raise RuntimeError(f"cover-frame extraction failed: {err}")
+    return output_jpg
+
+
+def _upload_cover_to_github_release(jpg_path: str) -> str:
+    """Upload cover jpg to the instagram-staging release."""
+    url = _upload_asset_to_github_release(jpg_path, "image/jpeg")
+    print(f"    [ig] cover public URL: {url}")
+    return url
 
 
 # ───────────────────────────────────────────────────────────────────────
 # Caption builder
 # ───────────────────────────────────────────────────────────────────────
+
+def _cap_hashtags(text: str, limit: int = _IG_HASHTAG_LIMIT) -> str:
+    """
+    Trim trailing hashtags so the total count is ≤ `limit`.
+
+    IG enforces a 30-hashtag-per-caption limit silently — over the limit,
+    the WHOLE caption gets rejected to empty (no error returned). Cut at
+    the position where the (limit+1)-th hashtag starts so the body stays
+    intact and we only drop excess tags from the trailing block.
+    """
+    hashtags = list(re.finditer(r"#\S+", text))
+    if len(hashtags) <= limit:
+        return text
+    cutoff = hashtags[limit].start()
+    return text[:cutoff].rstrip()
+
 
 def _build_instagram_caption(script_data: dict, youtube_url: str) -> str:
     """
@@ -205,14 +286,19 @@ def _build_instagram_caption(script_data: dict, youtube_url: str) -> str:
     Mirrors the user's "no platform fragmentation" rule — same content,
     only mechanical transforms:
 
-      1. Strip the leading "▶️ अगला भाग: <next title>" line (YouTube-
+      1. Prepend the episode title line ("महाभारत #N: …") so the series
+         number is visible at the top of the IG caption (users scrolling
+         Reels don't see the post title separately the way YT viewers do).
+      2. Strip the leading "▶️ अगला भाग: <next title>" line (YouTube-
          specific Tier 2 cliffhanger header — IG users can't easily click
          description links to jump to the next episode).
-      2. Append "📺 Full video: {youtube_url}" cross-promo at the bottom.
-      3. Cap to 2200 chars (IG limit), trimming from the trailing
+      3. Cap hashtags to 28 (IG silently rejects >30-hashtag captions).
+      4. Append "📺 Full video: {youtube_url}" cross-promo at the bottom.
+      5. Cap to 2200 chars (IG limit), trimming from the trailing
          hashtag block rather than the body if needed.
     """
     desc = (script_data.get("description") or "").strip()
+    title = (script_data.get("title") or "").strip()
 
     # Strip the "▶️ अगला भाग:" prefix line (Fix 2.0 YT-specific header)
     lines = desc.split("\n")
@@ -222,6 +308,16 @@ def _build_instagram_caption(script_data: dict, youtube_url: str) -> str:
         while lines and not lines[0].strip():
             lines = lines[1:]
     desc = "\n".join(lines).strip()
+
+    # Prepend the title (e.g. "महाभारत #2: भीष्म दादा की दुविधा | Bhishma…")
+    # so IG viewers see which episode they're watching. Only prepend if
+    # the title isn't already echoed by the first line of the description.
+    if title and not desc.lower().startswith(title.lower()[:20]):
+        desc = f"{title}\n\n{desc}"
+
+    # Trim excess hashtags BEFORE adding backlink, so we don't accidentally
+    # trim the YouTube URL.
+    desc = _cap_hashtags(desc)
 
     # Build the backlink suffix
     backlink = ""
@@ -256,18 +352,39 @@ def _build_instagram_caption(script_data: dict, youtube_url: str) -> str:
 # ───────────────────────────────────────────────────────────────────────
 
 def _create_reels_container(
-    ig_user_id: str, access_token: str, video_url: str, caption: str
+    ig_user_id: str, access_token: str, video_url: str, caption: str,
+    cover_url: str = "",
 ) -> str:
-    """POST /media → returns container ID."""
+    """POST /media → returns container ID.
+
+    Sends content params (caption, video_url, cover_url, etc.) as
+    **multipart/form-data** instead of URL-encoded form body — both URL
+    params AND application/x-www-form-urlencoded silently dropped the
+    caption on Devanagari + emoji + 1000+ char strings during the
+    2026-05-17 backfill (3 Reels landed with empty captions). Multipart
+    is the only encoding that reliably preserves long Unicode through
+    Meta's Graph API for IG Reels.
+
+    `cover_url` is optional; when provided, IG uses that jpg as the Reel
+    cover instead of grabbing the first frame (which is mid-fade-in =
+    black on our videos). Pass an empty string to fall back to first-frame.
+    """
+    # `files=` triggers multipart/form-data encoding in `requests`. Each
+    # tuple is (filename, value, content_type). filename=None for non-file
+    # fields, content-type explicit text/plain; charset=utf-8 to force
+    # UTF-8 encoding on Devanagari/emoji caption bytes.
+    files = {
+        "media_type":    (None, "REELS"),
+        "video_url":     (None, video_url),
+        "caption":       (None, caption.encode("utf-8"), "text/plain; charset=utf-8"),
+        "share_to_feed": (None, "true"),
+    }
+    if cover_url:
+        files["cover_url"] = (None, cover_url)
     r = requests.post(
         f"{_GRAPH_API}/{ig_user_id}/media",
-        params={
-            "access_token": access_token,
-            "media_type": "REELS",
-            "video_url": video_url,
-            "caption": caption,
-            "share_to_feed": "true",  # Reels also visible in main feed
-        },
+        params={"access_token": access_token},
+        files=files,
         timeout=60,
     )
     if r.status_code != 200:
@@ -361,6 +478,15 @@ def upload_to_instagram(
         # Step 1: host the mp4 publicly on GH release
         public_url = _upload_to_github_release(video_path)
 
+        # Step 1.5: extract + upload a cover frame (avoids fade-in black thumb)
+        cover_url = ""
+        try:
+            cover_jpg = _extract_cover_frame(video_path)
+            cover_url = _upload_cover_to_github_release(cover_jpg)
+        except Exception as cover_err:
+            print(f"    [ig] WARN: cover extraction failed (non-fatal): {cover_err}")
+            # Fall through — IG will use first-frame fallback (likely black)
+
         # Step 2: build the caption (same description, mechanical transform)
         caption = _build_instagram_caption(script_data, youtube_url)
         print(f"    [ig] caption: {len(caption)} chars (limit 2200)")
@@ -368,7 +494,7 @@ def upload_to_instagram(
         # Step 3: create the Reels container
         print(f"    [ig] creating Reels container...")
         container_id = _create_reels_container(
-            ig_user_id, access_token, public_url, caption
+            ig_user_id, access_token, public_url, caption, cover_url=cover_url,
         )
         print(f"    [ig] container_id={container_id}")
 

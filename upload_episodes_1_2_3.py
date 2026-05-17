@@ -49,9 +49,9 @@ from pipeline.instagram_uploader import upload_to_instagram
 # videos so IG captions can include the cross-promo backlink. Get URLs
 # from YouTube Studio's Content listing.
 YOUTUBE_URLS = {
-    1: "",                                            # paste #1 (Bhishma vow) URL
+    1: "https://youtube.com/watch?v=o5L2QNw1L4M",                                            # paste #1 (Bhishma vow) URL
     2: "https://youtube.com/watch?v=WVAYsbm8rvc",    # #2 — known (re-uploaded 2026-05-17)
-    3: "",                                            # paste #3 (Bhishma silence) URL
+    3: "https://youtube.com/watch?v=L1ZPCZJLDe0",                                            # paste #3 (Bhishma silence) URL
 }
 
 
