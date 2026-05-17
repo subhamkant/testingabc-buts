@@ -1,21 +1,19 @@
 name: Mahabharata YouTube Bot
 
 on:
-  schedule:
-    # ── Mahabharata Hindi — 2x/day at OPTIMAL IST evening windows ──
-    # Schedule cut 2026-05-15 after channel analytics showed:
-    #   - Krishna direct-address videos avg 37% retention vs Mahabharata 70%+
-    #     (Krishna was dragging channel-wide reach down — removed)
-    #   - WhatIf series moving to a separate channel — removed
-    #   - 19:00 + 01:00 UTC = 12:30 AM + 6:30 AM IST = mostly off-peak;
-    #     re-targeted to 15:00 + 18:00 UTC = 8:30 PM + 11:30 PM IST = the
-    #     analytics-confirmed prime windows (15:00 UTC: n=6 avg=151 views,
-    #     18:00 UTC: n=5 avg=137 views — most reliable high-traffic slots
-    #     across all uploaded videos this month).
-    # Run 1 ->  8:30 PM IST (15:00 UTC) — prime evening audience
-    - cron: "0 15 * * *"
-    # Run 2 -> 11:30 PM IST (18:00 UTC) — late evening, second peak
-    - cron: "0 18 * * *"
+  # ───────────────────────────────────────────────────────────────
+  # ⚠ TONIGHT 2026-05-17: scheduled cron temporarily REMOVED. User
+  # is doing a manual #4 re-render via workflow_dispatch and does NOT
+  # want #5 Shikhandi to fire automatically tonight. RE-ADD the
+  # `schedule:` block tomorrow by uncommenting the lines below.
+  #
+  # schedule:
+  #   # Mahabharata Hindi — 2x/day at optimal IST evening windows.
+  #   # Run 1 ->  8:30 PM IST (15:00 UTC) — prime evening audience
+  #   - cron: "0 15 * * *"
+  #   # Run 2 -> 11:30 PM IST (18:00 UTC) — late evening, second peak
+  #   - cron: "0 18 * * *"
+  # ───────────────────────────────────────────────────────────────
 
   workflow_dispatch:
     inputs:
@@ -34,6 +32,14 @@ on:
         required: false
         default: ""
         type: string
+      skip_instagram:
+        description: "Skip Instagram cross-post (YouTube-only run)"
+        required: false
+        default: "false"
+        type: choice
+        options:
+          - "false"
+          - "true"
 
 # ════════════════════════════════════════════════════════════════════════════
 # WORKFLOW STRUCTURE
@@ -107,6 +113,7 @@ jobs:
           instagram-access-token: ${{ secrets.IG_ACCESS_TOKEN }}
           instagram-business-account-id: ${{ secrets.IG_BUSINESS_ACCOUNT_ID }}
           episode-number-override: ${{ inputs.episode_number || '' }}
+          skip-instagram: ${{ inputs.skip_instagram || 'false' }}
           groq-api-key: ${{ secrets.GROQ_API_KEY }}
           fal-key: ${{ secrets.FAL_KEY }}
           replicate-api-token: ${{ secrets.REPLICATE_API_TOKEN }}
@@ -168,6 +175,7 @@ jobs:
           instagram-access-token: ${{ secrets.IG_ACCESS_TOKEN }}
           instagram-business-account-id: ${{ secrets.IG_BUSINESS_ACCOUNT_ID }}
           episode-number-override: ${{ inputs.episode_number || '' }}
+          skip-instagram: ${{ inputs.skip_instagram || 'false' }}
           groq-api-key: ${{ secrets.GROQ_API_KEY }}
           fal-key: ${{ secrets.FAL_KEY }}
           replicate-api-token: ${{ secrets.REPLICATE_API_TOKEN }}
@@ -227,6 +235,7 @@ jobs:
           instagram-access-token: ${{ secrets.IG_ACCESS_TOKEN }}
           instagram-business-account-id: ${{ secrets.IG_BUSINESS_ACCOUNT_ID }}
           episode-number-override: ${{ inputs.episode_number || '' }}
+          skip-instagram: ${{ inputs.skip_instagram || 'false' }}
           groq-api-key: ${{ secrets.GROQ_API_KEY }}
           fal-key: ${{ secrets.FAL_KEY }}
           replicate-api-token: ${{ secrets.REPLICATE_API_TOKEN }}
@@ -286,6 +295,7 @@ jobs:
           instagram-access-token: ${{ secrets.IG_ACCESS_TOKEN }}
           instagram-business-account-id: ${{ secrets.IG_BUSINESS_ACCOUNT_ID }}
           episode-number-override: ${{ inputs.episode_number || '' }}
+          skip-instagram: ${{ inputs.skip_instagram || 'false' }}
           groq-api-key: ${{ secrets.GROQ_API_KEY }}
           fal-key: ${{ secrets.FAL_KEY }}
           replicate-api-token: ${{ secrets.REPLICATE_API_TOKEN }}
@@ -335,6 +345,7 @@ jobs:
           instagram-access-token: ${{ secrets.IG_ACCESS_TOKEN }}
           instagram-business-account-id: ${{ secrets.IG_BUSINESS_ACCOUNT_ID }}
           episode-number-override: ${{ inputs.episode_number || '' }}
+          skip-instagram: ${{ inputs.skip_instagram || 'false' }}
           groq-api-key: ${{ secrets.GROQ_API_KEY }}
           fal-key: ${{ secrets.FAL_KEY }}
           replicate-api-token: ${{ secrets.REPLICATE_API_TOKEN }}
@@ -381,6 +392,7 @@ jobs:
           instagram-access-token: ${{ secrets.IG_ACCESS_TOKEN }}
           instagram-business-account-id: ${{ secrets.IG_BUSINESS_ACCOUNT_ID }}
           episode-number-override: ${{ inputs.episode_number || '' }}
+          skip-instagram: ${{ inputs.skip_instagram || 'false' }}
           groq-api-key: ${{ secrets.GROQ_API_KEY }}
           fal-key: ${{ secrets.FAL_KEY }}
           replicate-api-token: ${{ secrets.REPLICATE_API_TOKEN }}
@@ -427,6 +439,7 @@ jobs:
           instagram-access-token: ${{ secrets.IG_ACCESS_TOKEN }}
           instagram-business-account-id: ${{ secrets.IG_BUSINESS_ACCOUNT_ID }}
           episode-number-override: ${{ inputs.episode_number || '' }}
+          skip-instagram: ${{ inputs.skip_instagram || 'false' }}
           groq-api-key: ${{ secrets.GROQ_API_KEY }}
           fal-key: ${{ secrets.FAL_KEY }}
           replicate-api-token: ${{ secrets.REPLICATE_API_TOKEN }}
@@ -473,6 +486,7 @@ jobs:
           instagram-access-token: ${{ secrets.IG_ACCESS_TOKEN }}
           instagram-business-account-id: ${{ secrets.IG_BUSINESS_ACCOUNT_ID }}
           episode-number-override: ${{ inputs.episode_number || '' }}
+          skip-instagram: ${{ inputs.skip_instagram || 'false' }}
           groq-api-key: ${{ secrets.GROQ_API_KEY }}
           fal-key: ${{ secrets.FAL_KEY }}
           replicate-api-token: ${{ secrets.REPLICATE_API_TOKEN }}
@@ -534,6 +548,7 @@ jobs:
           instagram-access-token: ${{ secrets.IG_ACCESS_TOKEN }}
           instagram-business-account-id: ${{ secrets.IG_BUSINESS_ACCOUNT_ID }}
           episode-number-override: ${{ inputs.episode_number || '' }}
+          skip-instagram: ${{ inputs.skip_instagram || 'false' }}
           groq-api-key: ${{ secrets.GROQ_API_KEY }}
           fal-key: ${{ secrets.FAL_KEY }}
           replicate-api-token: ${{ secrets.REPLICATE_API_TOKEN }}
@@ -580,6 +595,7 @@ jobs:
           instagram-access-token: ${{ secrets.IG_ACCESS_TOKEN }}
           instagram-business-account-id: ${{ secrets.IG_BUSINESS_ACCOUNT_ID }}
           episode-number-override: ${{ inputs.episode_number || '' }}
+          skip-instagram: ${{ inputs.skip_instagram || 'false' }}
           groq-api-key: ${{ secrets.GROQ_API_KEY }}
           fal-key: ${{ secrets.FAL_KEY }}
           replicate-api-token: ${{ secrets.REPLICATE_API_TOKEN }}
@@ -626,6 +642,7 @@ jobs:
           instagram-access-token: ${{ secrets.IG_ACCESS_TOKEN }}
           instagram-business-account-id: ${{ secrets.IG_BUSINESS_ACCOUNT_ID }}
           episode-number-override: ${{ inputs.episode_number || '' }}
+          skip-instagram: ${{ inputs.skip_instagram || 'false' }}
           groq-api-key: ${{ secrets.GROQ_API_KEY }}
           fal-key: ${{ secrets.FAL_KEY }}
           replicate-api-token: ${{ secrets.REPLICATE_API_TOKEN }}
@@ -672,6 +689,7 @@ jobs:
           instagram-access-token: ${{ secrets.IG_ACCESS_TOKEN }}
           instagram-business-account-id: ${{ secrets.IG_BUSINESS_ACCOUNT_ID }}
           episode-number-override: ${{ inputs.episode_number || '' }}
+          skip-instagram: ${{ inputs.skip_instagram || 'false' }}
           groq-api-key: ${{ secrets.GROQ_API_KEY }}
           fal-key: ${{ secrets.FAL_KEY }}
           replicate-api-token: ${{ secrets.REPLICATE_API_TOKEN }}

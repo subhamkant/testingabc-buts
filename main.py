@@ -484,7 +484,10 @@ async def run_pipeline(language: str = "en", test_mode: bool = False, test_uploa
         # state-commit guard above. video_id (YT) stays the source of
         # truth for "topic used".
         ig_media_id = None
-        if video_id:
+        skip_ig = os.environ.get("SKIP_INSTAGRAM", "false").strip().lower() == "true"
+        if video_id and skip_ig:
+            print(f"    [ig] SKIPPED via SKIP_INSTAGRAM=true (YouTube-only run)")
+        elif video_id:
             try:
                 from pipeline.instagram_uploader import upload_to_instagram
                 ig_media_id = upload_to_instagram(
@@ -700,7 +703,10 @@ async def run_krishna_speech(test_mode: bool = False, test_upload: bool = False)
 
         # ── Step 6: Cross-post to Instagram Reels (non-fatal) ─────
         ig_media_id = None
-        if video_id:
+        skip_ig = os.environ.get("SKIP_INSTAGRAM", "false").strip().lower() == "true"
+        if video_id and skip_ig:
+            print(f"    [ig] SKIPPED via SKIP_INSTAGRAM=true (YouTube-only run)")
+        elif video_id:
             try:
                 from pipeline.instagram_uploader import upload_to_instagram
                 ig_media_id = upload_to_instagram(
@@ -1061,7 +1067,10 @@ async def run_whatif_phase(language: str, test_mode: bool = False, test_upload: 
 
         # ── Cross-post to Instagram Reels (non-fatal) ─────────────
         ig_media_id = None
-        if video_id:
+        skip_ig = os.environ.get("SKIP_INSTAGRAM", "false").strip().lower() == "true"
+        if video_id and skip_ig:
+            print(f"    [ig] SKIPPED via SKIP_INSTAGRAM=true (YouTube-only run)")
+        elif video_id:
             try:
                 from pipeline.instagram_uploader import upload_to_instagram
                 ig_media_id = upload_to_instagram(

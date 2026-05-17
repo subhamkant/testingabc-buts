@@ -46,6 +46,10 @@ inputs:
   # with its original number). Empty = use the auto-computed number from
   # arc-pick or recent_topics len+1 fallback.
   episode-number-override:       { required: false, default: "" }
+  # Optional Instagram skip — when "true", main.py logs "[ig] SKIPPED" and
+  # the IG cross-post is bypassed even when video_id is present. Useful
+  # for re-rendering an episode that's already on IG, or for YT-only runs.
+  skip-instagram:                { required: false, default: "false" }
   groq-api-key:                  { required: true }
   fal-key:                       { required: true }
   replicate-api-token:           { required: true }
@@ -91,6 +95,7 @@ runs:
         # fails with "no GitHub token found" while the YT path still works.
         GITHUB_TOKEN:                  ${{ inputs.github-token }}
         EPISODE_NUMBER_OVERRIDE:       ${{ inputs.episode-number-override }}
+        SKIP_INSTAGRAM:                ${{ inputs.skip-instagram }}
         GROQ_API_KEY:                  ${{ inputs.groq-api-key }}
         FAL_KEY:                       ${{ inputs.fal-key }}
         REPLICATE_API_TOKEN:           ${{ inputs.replicate-api-token }}

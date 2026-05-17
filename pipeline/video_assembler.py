@@ -1086,6 +1086,103 @@ def _print_audio_risk(
         )
 
 
+_LIGHT_LEAK_PATH = "assets/overlays/lightleaks/synth_warm_sweep.mp4"
+_LENS_FLARE_PATH = "assets/overlays/lensflares/synth_flare.mp4"
+
+
+def _apply_phase3_overlays(output_path: str) -> None:
+    """
+    Phase 3 (2026-05-17) — subtle cinematic motion overlays:
+      • Light leak  (assets/overlays/lightleaks/synth_warm_sweep.mp4)
+        Looped, screen blend, alpha 0.22. Warm atmospheric haze.
+      • Lens flare  (assets/overlays/lensflares/synth_flare.mp4)
+        Looped, screen blend, alpha 0.28. "In the air" rather than
+        "edited in" — conservative intensity per user round-5 feedback.
+      • Synthetic particle layer
+        Sparse twinkling brightness specks above luma=200, blend=addition,
+        alpha 0.03. Adds the "alive" feeling of micro-motion without
+        crossing into cheap-template territory.
+
+    All three intensities calibrated per round-5/6 plan refinements:
+    "subconsciously felt, not consciously noticed".
+
+    Disable via env: CINEMATIC_OVERLAYS=false
+    Override alphas: PHASE3_LEAK_ALPHA / PHASE3_FLARE_ALPHA /
+                     PHASE3_PARTICLE_ALPHA
+
+    No-op if the overlay assets are missing or if disabled by env.
+    """
+    if os.environ.get("CINEMATIC_OVERLAYS", "true").strip().lower() == "false":
+        return
+    if not (os.path.exists(_LIGHT_LEAK_PATH) and os.path.exists(_LENS_FLARE_PATH)):
+        print("    [phase3] overlay assets missing — skipping (light leak / lens flare not found)")
+        return
+    if not os.path.exists(output_path):
+        return
+
+    dur = get_audio_duration(output_path)
+    if not dur or dur < 1.0:
+        return
+
+    try:
+        leak_alpha = float(os.environ.get("PHASE3_LEAK_ALPHA", "0.22"))
+        flare_alpha = float(os.environ.get("PHASE3_FLARE_ALPHA", "0.28"))
+        particle_alpha = float(os.environ.get("PHASE3_PARTICLE_ALPHA", "0.03"))
+    except ValueError:
+        leak_alpha, flare_alpha, particle_alpha = 0.22, 0.28, 0.03
+
+    # Synthetic particle source — sparse brightness specks via lavfi.
+    # noise=alls=30 generates per-pixel noise; geq thresholds it so only
+    # the brightest pixels survive (sparse twinkles, not uniform grain).
+    particle_lavfi = (
+        f"color=c=black:s=1080x1920:d={dur:.3f}:r=30,"
+        f"noise=alls=30:allf=t,"
+        f"format=yuv420p,"
+        f"geq=lum='if(gt(lum(X,Y),230),255,0)':cb=128:cr=128"
+    )
+
+    # Filter graph:
+    #   [0:v] = original video    [1:v] = light leak (looped)
+    #   [2:v] = lens flare (looped)  [3:v] = synthesized particles
+    filter_graph = (
+        f"[1:v]scale=1080:1920,trim=duration={dur:.3f},"
+        f"format=yuva420p,colorchannelmixer=aa={leak_alpha:.3f}[leak];"
+        f"[2:v]scale=1080:1920,trim=duration={dur:.3f},"
+        f"format=yuva420p,colorchannelmixer=aa={flare_alpha:.3f}[flare];"
+        f"[3:v]scale=1080:1920,trim=duration={dur:.3f},"
+        f"format=yuva420p,colorchannelmixer=aa={particle_alpha:.3f}[particles];"
+        f"[0:v][leak]blend=all_mode=screen:all_opacity=1[v1];"
+        f"[v1][flare]blend=all_mode=screen:all_opacity=1[v2];"
+        f"[v2][particles]blend=all_mode=addition:all_opacity=1[vout]"
+    )
+
+    overlaid = output_path.replace(".mp4", "_overlay.mp4")
+    cmd = [
+        "ffmpeg", "-y",
+        "-i", output_path,
+        "-stream_loop", "-1", "-i", _LIGHT_LEAK_PATH,
+        "-stream_loop", "-1", "-i", _LENS_FLARE_PATH,
+        "-f", "lavfi", "-i", particle_lavfi,
+        "-filter_complex", filter_graph,
+        "-map", "[vout]",
+        "-map", "0:a",
+        "-c:v", "libx264", "-preset", "medium", "-crf", "20",
+        "-c:a", "copy",
+        "-movflags", "+faststart",
+        overlaid,
+    ]
+    print(f"    [phase3] applying overlays — leak α={leak_alpha} flare α={flare_alpha} particles α={particle_alpha}")
+    r = subprocess.run(cmd, capture_output=True)
+    if r.returncode == 0 and os.path.exists(overlaid):
+        os.replace(overlaid, output_path)
+        print(f"    [phase3] [OK] subtle cinematic overlays applied")
+    else:
+        err = r.stderr.decode("utf-8", errors="replace")[-300:] if r.stderr else ""
+        print(f"    [phase3] WARN: overlay pass failed, keeping pre-overlay video — {err}")
+        if os.path.exists(overlaid):
+            os.remove(overlaid)
+
+
 def _enforce_max_duration(output_path: str) -> None:
     """
     Hard-cap the final mp4 at MAX_DURATION_S seconds (default 58.5). If
@@ -1635,6 +1732,7 @@ def assemble_video_continuous_audio(
 
     _apply_cinematic_polish(output_path, durations)
     _apply_background_music(output_path, series=series)
+    _apply_phase3_overlays(output_path)
     _enforce_max_duration(output_path)
 
     return output_path
@@ -1727,6 +1825,7 @@ def assemble_from_video_clips_continuous_audio(
 
     _apply_cinematic_polish(output_path, durations)
     _apply_background_music(output_path, series=series)
+    _apply_phase3_overlays(output_path)
     _enforce_max_duration(output_path)
 
     return output_path
@@ -1774,6 +1873,7 @@ def assemble_video(
 
     _apply_cinematic_polish(output_path, clip_durations)
     _apply_background_music(output_path)
+    _apply_phase3_overlays(output_path)
     _enforce_max_duration(output_path)
 
     return output_path
@@ -1815,6 +1915,7 @@ def assemble_from_video_clips(
 
     _apply_cinematic_polish(output_path, processed_durations)
     _apply_background_music(output_path)
+    _apply_phase3_overlays(output_path)
     _enforce_max_duration(output_path)
 
     return output_path
