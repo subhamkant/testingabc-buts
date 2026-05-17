@@ -8,4 +8,3 @@
 # clean render publishes successfully.
 #
 # Trigger: workflow_dispatch with target=hi, episode_number=4.
-Bhishma in the Kurukshetra war — fighting for the side he knew was wrong, killing soldiers from the family he raised
