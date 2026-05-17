@@ -263,156 +263,149 @@ _SHOT_COMPOSITIONS = [
 
 # ─── Hook visual override (Phase 2, 2026-05-17) ──────────────────────────
 # Scene-0-shot-0 gets a mood-routed "scroll-stopping" cinematic moment
-# instead of the generic environment wide. Each entry pairs a mood
-# substring with an intensity tier and a hook-frame prompt.
+# instead of the generic environment wide.
+#
+# Architecture (refactored 2026-05-17 hot patch after first test render):
+#   _HOOK_PROMPTS    — one composition prompt per INTENSITY TIER
+#   _HOOK_KEYWORDS   — many substring triggers → tier mapping (deduped)
+#   _lookup_hook_visual(mood, image_prompt) — checks BOTH fields
+#
+# Why two sources? The LLM produces emotion-tone moods ("Foreboding,
+# solemn, conflicted") more often than event-type moods ("battle, oath").
+# The literal event lives in scene[0]['image_prompt'] ("taking a vow with
+# raised hand"). Checking both fields raises hit rate substantially.
 #
 # Intensity tiers prevent tonal dissonance — grief narration with an
-# explosive battlefield hook breaks immersion. The lookup matches by
-# substring on scene[0]["mood"]; first match wins. Falls through to the
-# standard ENVIRONMENT WIDE SHOT if no mood substring matches.
-#
-# Subject placement biases toward the UPPER-MIDDLE THIRD of frame so
-# the hook's visual punch survives YouTube Shorts UI overlays (bottom
-# 25% covered by captions/subscribe; top ~10% by title).
-_HOOK_VISUALS: list[tuple[str, str, str]] = [
-    # === EXPLOSIVE (war / action / large-scale movement) ===
-    ("battle", "explosive",
+# explosive battlefield hook breaks immersion. Subject placement biases
+# toward the UPPER-MIDDLE THIRD of frame so the hook's visual punch
+# survives YouTube Shorts UI overlays (bottom 25% captions/subscribe;
+# top ~10% title).
+
+_HOOK_PROMPTS: dict[str, str] = {
+    "explosive": (
         "burning battlefield silhouette at golden-hour dawn. arrows mid-flight "
         "in the UPPER MIDDLE of the frame. war banners against dark smoke. "
         "cinematic high-contrast lighting. distant army silhouettes positioned "
         "in the upper-middle third (above the Shorts UI safe zone). no "
-        "central character. PREFER: scale, scope, motion. AVOID: portrait, face. "),
-    ("war", "explosive",
-        "burning battlefield silhouette at golden-hour dawn. arrows mid-flight "
-        "in the UPPER MIDDLE of the frame. war banners against dark smoke. "
-        "cinematic high-contrast lighting. distant army silhouettes positioned "
-        "in the upper-middle third (above the Shorts UI safe zone). no "
-        "central character. PREFER: scale, scope, motion. AVOID: portrait, face. "),
-    ("kurukshetra", "explosive",
-        "burning battlefield silhouette at golden-hour dawn. arrows mid-flight "
-        "in the UPPER MIDDLE of the frame. war banners against dark smoke. "
-        "cinematic high-contrast lighting. distant army silhouettes positioned "
-        "in the upper-middle third (above the Shorts UI safe zone). no "
-        "central character. PREFER: scale, scope, motion. AVOID: portrait, face. "),
-
-    # === SOLEMN-QUIET (oath, ceremony, weight without action) ===
-    ("oath", "solemn-quiet",
+        "central character. PREFER: scale, scope, motion. AVOID: portrait, face. "
+    ),
+    "solemn-quiet": (
         "low-angle dramatic figure raising hand in solemn oath, raised arm "
         "and face positioned in the UPPER MIDDLE of the frame (above Shorts "
         "UI safe zone). rim-lit by torchlight in cavernous palace court. "
         "courtiers as silhouettes in the foreground. stillness, weight, "
-        "ceremonial gravity. no swords drawn. "),
-    ("vow", "solemn-quiet",
-        "low-angle dramatic figure raising hand in solemn oath, raised arm "
-        "and face positioned in the UPPER MIDDLE of the frame (above Shorts "
-        "UI safe zone). rim-lit by torchlight in cavernous palace court. "
-        "courtiers as silhouettes in the foreground. stillness, weight, "
-        "ceremonial gravity. no swords drawn. "),
-    ("promise", "solemn-quiet",
-        "low-angle dramatic figure raising hand in solemn oath, raised arm "
-        "and face positioned in the UPPER MIDDLE of the frame (above Shorts "
-        "UI safe zone). rim-lit by torchlight in cavernous palace court. "
-        "courtiers as silhouettes in the foreground. stillness, weight, "
-        "ceremonial gravity. no swords drawn. "),
-
-    # === HAUNTING-QUIET (grief, mourning, loss, death) ===
-    # No weapons, no motion, no action — emotional stillness only.
-    ("grief", "haunting-quiet",
+        "ceremonial gravity. no swords drawn. "
+    ),
+    "haunting-quiet": (
         "single readable figure silhouetted in vast empty space, positioned in "
         "the UPPER MIDDLE of the frame (above Shorts UI safe zone), recognizable "
         "as a person on a phone screen but small relative to the vastness "
         "around. wind-blown ash or rain falling slowly. dramatic god-rays through "
         "fog. NO action. NO weapons. NO movement implied. emotional stillness, "
-        "haunting silence. "),
-    ("loss", "haunting-quiet",
-        "single readable figure silhouetted in vast empty space, positioned in "
-        "the UPPER MIDDLE of the frame (above Shorts UI safe zone), recognizable "
-        "as a person on a phone screen but small relative to the vastness "
-        "around. wind-blown ash or rain falling slowly. dramatic god-rays through "
-        "fog. NO action. NO weapons. NO movement implied. emotional stillness, "
-        "haunting silence. "),
-    ("death", "haunting-quiet",
-        "single readable figure silhouetted in vast empty space, positioned in "
-        "the UPPER MIDDLE of the frame (above Shorts UI safe zone), recognizable "
-        "as a person on a phone screen but small relative to the vastness "
-        "around. wind-blown ash or rain falling slowly. dramatic god-rays through "
-        "fog. NO action. NO weapons. NO movement implied. emotional stillness, "
-        "haunting silence. "),
-    ("mourning", "haunting-quiet",
-        "single readable figure silhouetted in vast empty space, positioned in "
-        "the UPPER MIDDLE of the frame (above Shorts UI safe zone), recognizable "
-        "as a person on a phone screen but small relative to the vastness "
-        "around. wind-blown ash or rain falling slowly. dramatic god-rays through "
-        "fog. NO action. NO weapons. NO movement implied. emotional stillness, "
-        "haunting silence. "),
-    ("sorrow", "haunting-quiet",
-        "single readable figure silhouetted in vast empty space, positioned in "
-        "the UPPER MIDDLE of the frame (above Shorts UI safe zone), recognizable "
-        "as a person on a phone screen but small relative to the vastness "
-        "around. wind-blown ash or rain falling slowly. dramatic god-rays through "
-        "fog. NO action. NO weapons. NO movement implied. emotional stillness, "
-        "haunting silence. "),
-
-    # === TENSE-ACTION (rage, fury, charged motion) ===
-    ("rage", "tense-action",
+        "haunting silence. "
+    ),
+    "tense-action": (
         "extreme close-up of weapon being drawn in slow motion, weapon body "
         "anchored across the UPPER MIDDLE of the frame (above Shorts UI safe "
-        "zone). sparks, fire reflection on steel. tight focus on metal. no face. "),
-    ("fury", "tense-action",
-        "extreme close-up of weapon being drawn in slow motion, weapon body "
-        "anchored across the UPPER MIDDLE of the frame (above Shorts UI safe "
-        "zone). sparks, fire reflection on steel. tight focus on metal. no face. "),
+        "zone). sparks, fire reflection on steel. tight focus on metal. no face. "
+    ),
+    "awe-scale": (
+        "celestial vista with god-rays piercing dark clouds, the iconography "
+        "placed in the UPPER MIDDLE of the frame (above Shorts UI safe zone). "
+        "distant mythological iconography (chakra, conch, lotus). vast scale. "
+        "no human figure. silent awe. "
+    ),
+    "charged-still": (
+        "two figures in tense stillness, both heads positioned in the UPPER "
+        "MIDDLE of the frame (above Shorts UI safe zone) — one in foreground "
+        "looking away, one in background lit by torch. no movement implied. "
+        "charged silence between them. dramatic side lighting. NO weapons drawn. "
+    ),
+}
 
-    # === AWE-SCALE (divine, revelation, cosmic) ===
-    ("divine", "awe-scale",
-        "celestial vista with god-rays piercing dark clouds, the iconography "
-        "placed in the UPPER MIDDLE of the frame (above Shorts UI safe zone). "
-        "distant mythological iconography (chakra, conch, lotus). vast scale. "
-        "no human figure. silent awe. "),
-    ("revelation", "awe-scale",
-        "celestial vista with god-rays piercing dark clouds, the iconography "
-        "placed in the UPPER MIDDLE of the frame (above Shorts UI safe zone). "
-        "distant mythological iconography (chakra, conch, lotus). vast scale. "
-        "no human figure. silent awe. "),
-    ("cosmic", "awe-scale",
-        "celestial vista with god-rays piercing dark clouds, the iconography "
-        "placed in the UPPER MIDDLE of the frame (above Shorts UI safe zone). "
-        "distant mythological iconography (chakra, conch, lotus). vast scale. "
-        "no human figure. silent awe. "),
+# Substring keyword → intensity tier. First-match-wins; ordered so the
+# most-impactful tiers (explosive scale) match before generic tones. The
+# expanded vocabulary catches the round-1 test-run gap where moods like
+# "Foreboding, solemn, conflicted" missed every keyword and fell back to
+# standard wide. Now those route to solemn-quiet (oath-style hook).
+_HOOK_KEYWORDS: list[tuple[str, str]] = [
+    # === EXPLOSIVE (battle / war / large-scale action) ===
+    ("battle", "explosive"),
+    ("war", "explosive"),
+    ("kurukshetra", "explosive"),
+    ("chaotic", "explosive"),         # NEW — LLM often uses this for war scenes
 
-    # === CHARGED-STILL (betrayal, deception, charged silence, dilemma) ===
-    ("betrayal", "charged-still",
-        "two figures in tense stillness, both heads positioned in the UPPER "
-        "MIDDLE of the frame (above Shorts UI safe zone) — one in foreground "
-        "looking away, one in background lit by torch. no movement implied. "
-        "charged silence between them. dramatic side lighting. NO weapons drawn. "),
-    ("deception", "charged-still",
-        "two figures in tense stillness, both heads positioned in the UPPER "
-        "MIDDLE of the frame (above Shorts UI safe zone) — one in foreground "
-        "looking away, one in background lit by torch. no movement implied. "
-        "charged silence between them. dramatic side lighting. NO weapons drawn. "),
-    ("dilemma", "charged-still",
-        "two figures in tense stillness, both heads positioned in the UPPER "
-        "MIDDLE of the frame (above Shorts UI safe zone) — one in foreground "
-        "looking away, one in background lit by torch. no movement implied. "
-        "charged silence between them. dramatic side lighting. NO weapons drawn. "),
+    # === SOLEMN-QUIET (oath / ceremony / weight without action) ===
+    ("oath", "solemn-quiet"),
+    ("vow", "solemn-quiet"),
+    ("promise", "solemn-quiet"),
+    ("foreboding", "solemn-quiet"),   # NEW — caught the #4 vow-scene miss
+    ("solemn", "solemn-quiet"),       # NEW
+    ("fated", "solemn-quiet"),        # NEW
+    ("resolute", "solemn-quiet"),     # NEW
+
+    # === HAUNTING-QUIET (grief / loss / death / mourning / suffering) ===
+    # NO weapons / NO motion / NO action — emotional stillness only.
+    ("grief", "haunting-quiet"),
+    ("loss", "haunting-quiet"),
+    ("death", "haunting-quiet"),
+    ("mourning", "haunting-quiet"),
+    ("sorrow", "haunting-quiet"),     # also matches "sorrowful" via substring
+    ("suffering", "haunting-quiet"),  # NEW
+    ("painful", "haunting-quiet"),    # NEW
+    ("resignation", "haunting-quiet"),# NEW
+
+    # === TENSE-ACTION (rage / fury / fierce drawn weapon) ===
+    ("rage", "tense-action"),
+    ("fury", "tense-action"),
+    ("fierce", "tense-action"),       # NEW
+
+    # === AWE-SCALE (divine / revelation / cosmic / epic) ===
+    ("divine", "awe-scale"),
+    ("revelation", "awe-scale"),
+    ("cosmic", "awe-scale"),
+    ("epic", "awe-scale"),            # NEW
+    ("awe", "awe-scale"),             # NEW — also matches "awe-struck"
+    ("grand", "awe-scale"),           # NEW
+    ("inspiring", "awe-scale"),       # NEW
+
+    # === CHARGED-STILL (betrayal / deception / dilemma / conflicted) ===
+    ("betrayal", "charged-still"),
+    ("deception", "charged-still"),
+    ("dilemma", "charged-still"),
+    ("conflicted", "charged-still"),  # NEW
+    # NOTE: "tense" deliberately NOT included — too generic, would override
+    # more specific matches in mixed moods like "Resolute, tense, grand".
 ]
 
 
-def _lookup_hook_visual(mood: str) -> tuple[str, str] | None:
+def _lookup_hook_visual(mood: str, image_prompt: str = "") -> tuple[str, str] | None:
     """
-    Match scene[0]['mood'] substring against the _HOOK_VISUALS table.
+    Match scene[0]['mood'] substring against _HOOK_KEYWORDS. Falls back
+    to scene[0]['image_prompt'] when no mood match — the LLM frequently
+    generates emotional-tone moods that miss the keyword list while the
+    literal event keyword lives in the image_prompt. Both sources raise
+    hit rate substantially (round-1 test had 0% hit; round-2 covers vow/
+    battle/grief scenes via either source).
+
     Returns (intensity_tier, hook_prompt) on match, None on no match.
-    Caller falls through to the standard ENVIRONMENT WIDE SHOT composition
-    when this returns None.
+    Caller falls through to standard ENVIRONMENT WIDE SHOT when None.
     """
-    if not mood:
-        return None
-    mood_lower = mood.lower()
-    for keyword, intensity, hook_prompt in _HOOK_VISUALS:
-        if keyword in mood_lower:
-            return intensity, hook_prompt
+    for source in (mood, image_prompt):
+        if not source:
+            continue
+        source_lower = source.lower()
+        for keyword, intensity in _HOOK_KEYWORDS:
+            if keyword in source_lower:
+                return intensity, _HOOK_PROMPTS[intensity]
     return None
+
+
+# Legacy alias kept for any external import that referenced the old name.
+# Refactored 2026-05-17 hot patch: actual logic lives in _HOOK_PROMPTS +
+# _HOOK_KEYWORDS + _lookup_hook_visual() above. This empty list is just
+# a "do not crash if anyone imports the old symbol" stub.
+_HOOK_VISUALS: list[tuple[str, str, str]] = []
 
 # Divine non-golden-skin characters — when one of these is referenced anywhere
 # in an image prompt, swap from STYLE_SUFFIX_MORTAL to STYLE_SUFFIX_DIVINE so
@@ -1081,7 +1074,12 @@ def generate_images(scenes: list, single_shot: bool = False, series: str = "maha
                 "",
             )]
         elif (not single_shot) and i == 0:
-            hook = _lookup_hook_visual(mood)
+            # Pass image_prompt as fallback signal — LLM-generated moods
+            # often miss event-type keywords ("Foreboding, solemn, conflicted")
+            # while the literal event lives in image_prompt ("taking a vow
+            # with raised hand"). Two-source matching dramatically raises
+            # hook-hit rate (round-1 test had 0% hit, post-fix targets 80%+).
+            hook = _lookup_hook_visual(mood, scene.get("image_prompt", ""))
             if hook is not None:
                 intensity, hook_prompt = hook
                 # Override ONLY shot 0; keep shots 1 + 2 of scene 0 as the
