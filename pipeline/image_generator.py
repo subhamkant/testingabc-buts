@@ -713,21 +713,42 @@ def _gen_cloudflare(prompt: str, seed: int, width: int, height: int) -> bytes:
 
     body = {"prompt": prompt, "steps": 8, "seed": seed, "negative_prompt": _NEGATIVE}
     last_err = "no accounts attempted"
-    MAX_ATTEMPTS_PER_ACCOUNT = 3
-    for label, account_id, token in accounts:
+    # CF per-IP rate-limit mitigation (2026-05-17 hot patch).
+    # Symptom: a single successful CF call triggers CF's per-IP burst limit,
+    # then ALL subsequent calls within ~30s fail with timeouts/5xx ("transient").
+    # The old config (3 attempts × 2s/4s backoff × no inter-account pause)
+    # delivered up to 9 rapid retries per shot, sustained the burst, and
+    # locked the IP out for the rest of the run.
+    #
+    # New config: 2 attempts × longer backoff × inter-account cooldown.
+    # Per-shot worst case ≈ 24s (2×2 attempts × 5s+10s + 3 inter-account pauses)
+    # vs prior 30s. Best case (CF healthy, first try succeeds) is unchanged.
+    # All four constants env-tunable so we can dial up/down without redeploying.
+    try:
+        max_attempts = int(os.environ.get("CF_MAX_ATTEMPTS_PER_ACCOUNT", "2"))
+        retry_backoff_s = float(os.environ.get("CF_RETRY_BACKOFF_S", "5.0"))
+        inter_account_cooldown_s = float(os.environ.get("CF_INTER_ACCOUNT_COOLDOWN_S", "3.0"))
+    except ValueError:
+        max_attempts, retry_backoff_s, inter_account_cooldown_s = 2, 5.0, 3.0
+    for acct_idx, (label, account_id, token) in enumerate(accounts):
+        # Inter-account cooldown — give CF's per-IP limit time to forget
+        # the previous account's burst before we hammer a new one. No sleep
+        # before the first account (don't waste time on cold-start runs).
+        if acct_idx > 0 and inter_account_cooldown_s > 0:
+            time.sleep(inter_account_cooldown_s)
         url = (
             f"https://api.cloudflare.com/client/v4/accounts/{account_id}"
             f"/ai/run/@cf/black-forest-labs/flux-1-schnell"
         )
         headers = {"Authorization": f"Bearer {token}"}
         quota_hit = False
-        for attempt in range(MAX_ATTEMPTS_PER_ACCOUNT):
+        for attempt in range(max_attempts):
             try:
                 resp = requests.post(url, headers=headers, json=body, timeout=60)
             except Exception as net_err:
                 last_err = f"{label} attempt {attempt+1} network: {net_err}"
-                if attempt < MAX_ATTEMPTS_PER_ACCOUNT - 1:
-                    time.sleep(2 * (attempt + 1))
+                if attempt < max_attempts - 1:
+                    time.sleep(retry_backoff_s * (attempt + 1))
                 continue
 
             if resp.status_code != 200:
@@ -738,16 +759,16 @@ def _gen_cloudflare(prompt: str, seed: int, width: int, height: int) -> bytes:
                     quota_hit = True
                     break
                 # Transient non-200 — retry on same account.
-                if attempt < MAX_ATTEMPTS_PER_ACCOUNT - 1:
-                    time.sleep(2 * (attempt + 1))
+                if attempt < max_attempts - 1:
+                    time.sleep(retry_backoff_s * (attempt + 1))
                 continue
 
             try:
                 data = resp.json()
             except Exception as je:
                 last_err = f"{label} attempt {attempt+1} bad json: {je}"
-                if attempt < MAX_ATTEMPTS_PER_ACCOUNT - 1:
-                    time.sleep(2 * (attempt + 1))
+                if attempt < max_attempts - 1:
+                    time.sleep(retry_backoff_s * (attempt + 1))
                 continue
             if not data.get("success"):
                 errs = data.get("errors") or []
@@ -757,28 +778,26 @@ def _gen_cloudflare(prompt: str, seed: int, width: int, height: int) -> bytes:
                     print(f"    [{label}] EXHAUSTED (success=false: {str(errs)[:80]}) — trying next account")
                     quota_hit = True
                     break
-                if attempt < MAX_ATTEMPTS_PER_ACCOUNT - 1:
-                    time.sleep(2 * (attempt + 1))
+                if attempt < max_attempts - 1:
+                    time.sleep(retry_backoff_s * (attempt + 1))
                 continue
             img_b64 = data.get("result", {}).get("image", "")
             if not img_b64:
                 last_err = f"{label} attempt {attempt+1} missing result.image"
-                if attempt < MAX_ATTEMPTS_PER_ACCOUNT - 1:
-                    time.sleep(2 * (attempt + 1))
+                if attempt < max_attempts - 1:
+                    time.sleep(retry_backoff_s * (attempt + 1))
                 continue
             raw = base64.b64decode(img_b64)
             if len(raw) < _MIN_BYTES:
                 last_err = f"{label} attempt {attempt+1} bytes={len(raw)}"
-                if attempt < MAX_ATTEMPTS_PER_ACCOUNT - 1:
-                    time.sleep(2 * (attempt + 1))
+                if attempt < max_attempts - 1:
+                    time.sleep(retry_backoff_s * (attempt + 1))
                 continue
             return _ensure_dims(raw, width, height)
-        # Account exhausted (either via quota or 3 transient failures) — move on.
+        # Account exhausted — move on.
         if quota_hit:
             continue
-        # All 3 transient retries failed on this account but no quota signal.
-        # Treat as account-level failure and walk to next.
-        print(f"    [{label}] gave up after {MAX_ATTEMPTS_PER_ACCOUNT} transient failures — trying next account")
+        print(f"    [{label}] gave up after {max_attempts} transient failures — trying next account")
 
     print(f"    [cf-cascade] ALL {len(accounts)} ACCOUNT(S) EXHAUSTED — falling through to HF/Pollinations")
     raise RuntimeError(f"cloudflare cascade exhausted: {last_err}")
@@ -1129,7 +1148,15 @@ def generate_images(scenes: list, single_shot: bool = False, series: str = "maha
                 shot_paths.append(output_path)
                 print(f"    [~] Placeholder (outro-asset fallback) for scene {i+1} shot {j+1}")
 
-            time.sleep(1)
+            # Inter-shot cooldown — give CF's per-IP rate limit time to relax
+            # before the next shot's CF call. Bumped from 1s → 5s (2026-05-17)
+            # after a sustained burst of CF calls reliably triggered the limit
+            # and locked the IP out for the rest of the run. Env-tunable.
+            try:
+                inter_shot_s = float(os.environ.get("INTER_SHOT_COOLDOWN_S", "5.0"))
+            except ValueError:
+                inter_shot_s = 5.0
+            time.sleep(inter_shot_s)
 
         # ── Per-scene checkpoint ──────────────────────────────────────
         # Save the just-finished scene to the cache + update partial manifest
