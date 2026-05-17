@@ -203,11 +203,216 @@ _NEGATIVE = (
 # the eye fills > ~15% of the frame — medium close-up keeps the emotional
 # punch but gives the model enough pixel budget to actually render iris/
 # pupil structure.
-_SHOT_ANGLES = [
-    "WIDE SHOT, ",                  # establishing — env + character together
-    "MEDIUM SHOT, ",                # mid-range character focus
-    "MEDIUM CLOSE-UP, ",            # head-and-shoulders, eyes still readable
+# ─── Shot composition templates (2026-05-17, Phase 1 cinematic upgrade) ──
+# Each tuple is (angle_label, composition_directive). composition_directive
+# injects framing/composition guidance BEFORE the scene prompt, so the
+# LLM's subject content gets framed differently per shot instead of all
+# three landing as centered emotional portraits.
+#
+# Replaces the prior _SHOT_ANGLES (which was just angle prefixes with no
+# real composition variety — all 3 shots ended up portraits because the
+# LLM-generated scene prompt always centered on a named character).
+#
+# Anti-portrait language is intentionally aggressive: diffusion models
+# default hard to faces on named mythological subjects, so weak directives
+# get overridden. Every prohibition is paired with a positive replacement
+# (AVOID X / PREFER Y) to keep prompts stable — diffusion stacks become
+# unpredictable under negation-only constraint stacks.
+_SHOT_COMPOSITIONS = [
+    (
+        "ENVIRONMENT WIDE SHOT, ",
+        # Shot 1: ESTABLISHING — environment + scale + READABLE subject.
+        # The single biggest fix for the "80% close-up portrait" problem.
+        # Critical: subject must remain readable on a phone screen — a
+        # tiny indistinct dot reads as landscape photography, not myth.
+        "wide cinematic landscape. camera pulled FAR BACK. wide focal length. "
+        "atmospheric depth and scale. landscape dominant. "
+        "if a character is present: FULL BODY visible, READABLE SILHOUETTE "
+        "on a phone screen (recognizable shape — armor, posture, weapon — "
+        "NOT a tiny indistinct dot), occupying roughly 1/4 to 1/3 of frame "
+        "height. subject grounded in the environment. ENVIRONMENT DOMINANT — "
+        "show the SETTING explicitly (battlefield, palace court, forest, "
+        "sky, terrain). subject may be partially obscured by terrain, "
+        "foliage, banners, smoke, or architecture. "
+        "AVOID: facial closeup, head-and-shoulders portrait, eye-level "
+        "camera. PREFER: wide vista, environmental storytelling, scale. ",
+    ),
+    (
+        "DYNAMIC SHOT, ",
+        # Shot 2: ACTION / ASYMMETRY — low-angle, off-center, foreground depth.
+        "low-angle dramatic perspective. extended foreground with layered "
+        "depth. FULL BODY or three-quarter body visible (waist up at "
+        "minimum, NOT head-and-shoulders). subject placed in the LEFT "
+        "THIRD or RIGHT THIRD of frame, NEVER centered. strong foreground "
+        "element partially occluding view (weapon, hand, banner, smoke, "
+        "chariot wheel, horse mane, courtier silhouette). asymmetric "
+        "composition. strong sense of motion or tension. "
+        "AVOID: centered portrait, head-and-shoulders framing, eye-level "
+        "camera. PREFER: low-angle dynamic, off-center placement, "
+        "foreground-mid-background layering. ",
+    ),
+    (
+        "EMOTIONAL CLOSE-UP, ",
+        # Shot 3: EMOTIONAL — the existing strength, kept as-is.
+        # This is the one shot per scene where face-dominance is welcome.
+        "medium close-up, head-and-shoulders, eyes readable, dramatic "
+        "side lighting, emotional weight on face. ",
+    ),
 ]
+
+
+# ─── Hook visual override (Phase 2, 2026-05-17) ──────────────────────────
+# Scene-0-shot-0 gets a mood-routed "scroll-stopping" cinematic moment
+# instead of the generic environment wide. Each entry pairs a mood
+# substring with an intensity tier and a hook-frame prompt.
+#
+# Intensity tiers prevent tonal dissonance — grief narration with an
+# explosive battlefield hook breaks immersion. The lookup matches by
+# substring on scene[0]["mood"]; first match wins. Falls through to the
+# standard ENVIRONMENT WIDE SHOT if no mood substring matches.
+#
+# Subject placement biases toward the UPPER-MIDDLE THIRD of frame so
+# the hook's visual punch survives YouTube Shorts UI overlays (bottom
+# 25% covered by captions/subscribe; top ~10% by title).
+_HOOK_VISUALS: list[tuple[str, str, str]] = [
+    # === EXPLOSIVE (war / action / large-scale movement) ===
+    ("battle", "explosive",
+        "burning battlefield silhouette at golden-hour dawn. arrows mid-flight "
+        "in the UPPER MIDDLE of the frame. war banners against dark smoke. "
+        "cinematic high-contrast lighting. distant army silhouettes positioned "
+        "in the upper-middle third (above the Shorts UI safe zone). no "
+        "central character. PREFER: scale, scope, motion. AVOID: portrait, face. "),
+    ("war", "explosive",
+        "burning battlefield silhouette at golden-hour dawn. arrows mid-flight "
+        "in the UPPER MIDDLE of the frame. war banners against dark smoke. "
+        "cinematic high-contrast lighting. distant army silhouettes positioned "
+        "in the upper-middle third (above the Shorts UI safe zone). no "
+        "central character. PREFER: scale, scope, motion. AVOID: portrait, face. "),
+    ("kurukshetra", "explosive",
+        "burning battlefield silhouette at golden-hour dawn. arrows mid-flight "
+        "in the UPPER MIDDLE of the frame. war banners against dark smoke. "
+        "cinematic high-contrast lighting. distant army silhouettes positioned "
+        "in the upper-middle third (above the Shorts UI safe zone). no "
+        "central character. PREFER: scale, scope, motion. AVOID: portrait, face. "),
+
+    # === SOLEMN-QUIET (oath, ceremony, weight without action) ===
+    ("oath", "solemn-quiet",
+        "low-angle dramatic figure raising hand in solemn oath, raised arm "
+        "and face positioned in the UPPER MIDDLE of the frame (above Shorts "
+        "UI safe zone). rim-lit by torchlight in cavernous palace court. "
+        "courtiers as silhouettes in the foreground. stillness, weight, "
+        "ceremonial gravity. no swords drawn. "),
+    ("vow", "solemn-quiet",
+        "low-angle dramatic figure raising hand in solemn oath, raised arm "
+        "and face positioned in the UPPER MIDDLE of the frame (above Shorts "
+        "UI safe zone). rim-lit by torchlight in cavernous palace court. "
+        "courtiers as silhouettes in the foreground. stillness, weight, "
+        "ceremonial gravity. no swords drawn. "),
+    ("promise", "solemn-quiet",
+        "low-angle dramatic figure raising hand in solemn oath, raised arm "
+        "and face positioned in the UPPER MIDDLE of the frame (above Shorts "
+        "UI safe zone). rim-lit by torchlight in cavernous palace court. "
+        "courtiers as silhouettes in the foreground. stillness, weight, "
+        "ceremonial gravity. no swords drawn. "),
+
+    # === HAUNTING-QUIET (grief, mourning, loss, death) ===
+    # No weapons, no motion, no action — emotional stillness only.
+    ("grief", "haunting-quiet",
+        "single readable figure silhouetted in vast empty space, positioned in "
+        "the UPPER MIDDLE of the frame (above Shorts UI safe zone), recognizable "
+        "as a person on a phone screen but small relative to the vastness "
+        "around. wind-blown ash or rain falling slowly. dramatic god-rays through "
+        "fog. NO action. NO weapons. NO movement implied. emotional stillness, "
+        "haunting silence. "),
+    ("loss", "haunting-quiet",
+        "single readable figure silhouetted in vast empty space, positioned in "
+        "the UPPER MIDDLE of the frame (above Shorts UI safe zone), recognizable "
+        "as a person on a phone screen but small relative to the vastness "
+        "around. wind-blown ash or rain falling slowly. dramatic god-rays through "
+        "fog. NO action. NO weapons. NO movement implied. emotional stillness, "
+        "haunting silence. "),
+    ("death", "haunting-quiet",
+        "single readable figure silhouetted in vast empty space, positioned in "
+        "the UPPER MIDDLE of the frame (above Shorts UI safe zone), recognizable "
+        "as a person on a phone screen but small relative to the vastness "
+        "around. wind-blown ash or rain falling slowly. dramatic god-rays through "
+        "fog. NO action. NO weapons. NO movement implied. emotional stillness, "
+        "haunting silence. "),
+    ("mourning", "haunting-quiet",
+        "single readable figure silhouetted in vast empty space, positioned in "
+        "the UPPER MIDDLE of the frame (above Shorts UI safe zone), recognizable "
+        "as a person on a phone screen but small relative to the vastness "
+        "around. wind-blown ash or rain falling slowly. dramatic god-rays through "
+        "fog. NO action. NO weapons. NO movement implied. emotional stillness, "
+        "haunting silence. "),
+    ("sorrow", "haunting-quiet",
+        "single readable figure silhouetted in vast empty space, positioned in "
+        "the UPPER MIDDLE of the frame (above Shorts UI safe zone), recognizable "
+        "as a person on a phone screen but small relative to the vastness "
+        "around. wind-blown ash or rain falling slowly. dramatic god-rays through "
+        "fog. NO action. NO weapons. NO movement implied. emotional stillness, "
+        "haunting silence. "),
+
+    # === TENSE-ACTION (rage, fury, charged motion) ===
+    ("rage", "tense-action",
+        "extreme close-up of weapon being drawn in slow motion, weapon body "
+        "anchored across the UPPER MIDDLE of the frame (above Shorts UI safe "
+        "zone). sparks, fire reflection on steel. tight focus on metal. no face. "),
+    ("fury", "tense-action",
+        "extreme close-up of weapon being drawn in slow motion, weapon body "
+        "anchored across the UPPER MIDDLE of the frame (above Shorts UI safe "
+        "zone). sparks, fire reflection on steel. tight focus on metal. no face. "),
+
+    # === AWE-SCALE (divine, revelation, cosmic) ===
+    ("divine", "awe-scale",
+        "celestial vista with god-rays piercing dark clouds, the iconography "
+        "placed in the UPPER MIDDLE of the frame (above Shorts UI safe zone). "
+        "distant mythological iconography (chakra, conch, lotus). vast scale. "
+        "no human figure. silent awe. "),
+    ("revelation", "awe-scale",
+        "celestial vista with god-rays piercing dark clouds, the iconography "
+        "placed in the UPPER MIDDLE of the frame (above Shorts UI safe zone). "
+        "distant mythological iconography (chakra, conch, lotus). vast scale. "
+        "no human figure. silent awe. "),
+    ("cosmic", "awe-scale",
+        "celestial vista with god-rays piercing dark clouds, the iconography "
+        "placed in the UPPER MIDDLE of the frame (above Shorts UI safe zone). "
+        "distant mythological iconography (chakra, conch, lotus). vast scale. "
+        "no human figure. silent awe. "),
+
+    # === CHARGED-STILL (betrayal, deception, charged silence, dilemma) ===
+    ("betrayal", "charged-still",
+        "two figures in tense stillness, both heads positioned in the UPPER "
+        "MIDDLE of the frame (above Shorts UI safe zone) — one in foreground "
+        "looking away, one in background lit by torch. no movement implied. "
+        "charged silence between them. dramatic side lighting. NO weapons drawn. "),
+    ("deception", "charged-still",
+        "two figures in tense stillness, both heads positioned in the UPPER "
+        "MIDDLE of the frame (above Shorts UI safe zone) — one in foreground "
+        "looking away, one in background lit by torch. no movement implied. "
+        "charged silence between them. dramatic side lighting. NO weapons drawn. "),
+    ("dilemma", "charged-still",
+        "two figures in tense stillness, both heads positioned in the UPPER "
+        "MIDDLE of the frame (above Shorts UI safe zone) — one in foreground "
+        "looking away, one in background lit by torch. no movement implied. "
+        "charged silence between them. dramatic side lighting. NO weapons drawn. "),
+]
+
+
+def _lookup_hook_visual(mood: str) -> tuple[str, str] | None:
+    """
+    Match scene[0]['mood'] substring against the _HOOK_VISUALS table.
+    Returns (intensity_tier, hook_prompt) on match, None on no match.
+    Caller falls through to the standard ENVIRONMENT WIDE SHOT composition
+    when this returns None.
+    """
+    if not mood:
+        return None
+    mood_lower = mood.lower()
+    for keyword, intensity, hook_prompt in _HOOK_VISUALS:
+        if keyword in mood_lower:
+            return intensity, hook_prompt
+    return None
 
 # Divine non-golden-skin characters — when one of these is referenced anywhere
 # in an image prompt, swap from STYLE_SUFFIX_MORTAL to STYLE_SUFFIX_DIVINE so
@@ -787,7 +992,10 @@ def generate_images(scenes: list, single_shot: bool = False, series: str = "maha
     os.makedirs("temp/images", exist_ok=True)
     scene_groups = []
 
-    angles = _SHOT_ANGLES[:1] if single_shot else _SHOT_ANGLES
+    # _SHOT_COMPOSITIONS replaced the prior _SHOT_ANGLES (2026-05-17 Phase 1).
+    # Each entry is (angle_label, composition_directive). In single_shot
+    # mode (I2V path) only the first composition is generated.
+    compositions = _SHOT_COMPOSITIONS[:1] if single_shot else _SHOT_COMPOSITIONS
     style_suffix = _resolve_style_suffix(series, visual_style)
 
     # ── Partial-resume bootstrap ──────────────────────────────────────
@@ -853,23 +1061,45 @@ def generate_images(scenes: list, single_shot: bool = False, series: str = "maha
         shot_paths = []
         mood = scene.get("mood", "")
 
-        # Hook scene gets a dramatic close-up first frame in single-shot mode.
-        # On Shorts the first frame is what stops the swipe; a face mid-emotion
-        # outperforms a wide establishing shot for first-frame retention.
-        scene_angles = angles
+        # Scene-0 hook override (Phase 2, 2026-05-17): for the FIRST shot of
+        # scene 0, swap the standard ENVIRONMENT WIDE composition for a
+        # mood-routed "scroll-stopping" hook visual. Subsequent shots of
+        # scene 0 + all shots of scenes 1+ use the standard composition list.
+        # Only the FIRST shot is hooked — shots 2 and 3 of scene 0 still
+        # provide composition variety via the standard table.
+        #
+        # Falls through to standard ENVIRONMENT WIDE if no mood substring
+        # matches (safe fallback). In single_shot/I2V mode the existing
+        # behavior is preserved to avoid disturbing the I2V path.
+        scene_compositions: list[tuple[str, str]] = list(compositions)
         if single_shot and i == 0:
-            # Hook frame — medium close-up keeps emotional punch but gives
-            # FLUX-schnell room to render eyes (extreme close-ups produced
-            # dead-eye pupils in the 2026-05-14 Karna-arc test).
-            scene_angles = ["MEDIUM CLOSE-UP on face mid-emotion (head and shoulders visible), "]
+            # I2V hook — unchanged from prior behavior. The face-mid-emotion
+            # cue is designed for I2V's first-frame retention, which is a
+            # different optimisation than Ken Burns Phase 2's hook punch.
+            scene_compositions = [(
+                "MEDIUM CLOSE-UP on face mid-emotion (head and shoulders visible), ",
+                "",
+            )]
+        elif (not single_shot) and i == 0:
+            hook = _lookup_hook_visual(mood)
+            if hook is not None:
+                intensity, hook_prompt = hook
+                # Override ONLY shot 0; keep shots 1 + 2 of scene 0 as the
+                # standard dynamic + emotional-closeup compositions so the
+                # hook scene still has shot variety internally.
+                scene_compositions = [
+                    ("HOOK FRAME, ", hook_prompt),
+                ] + list(compositions[1:])
+                print(f"    [hook] scene 0 shot 0 → {intensity} (mood='{mood[:40]}')")
+            # else: scene_compositions stays as the full standard list
 
-        for j, angle_prefix in enumerate(scene_angles):
+        for j, (angle_label, composition_directive) in enumerate(scene_compositions):
             output_path = f"temp/images/scene_{i:02d}_shot_{j:02d}.jpg"
             # Character injection is Mahabharata-specific (Krishna/Arjuna/etc.
             # visual descriptors); skip it for WhatIf science content.
             raw_prompt = scene["image_prompt"]
             base_prompt = raw_prompt if series == "whatif" else _inject_characters(raw_prompt)
-            prompt = f"{angle_prefix}{base_prompt}"
+            prompt = f"{angle_label}{composition_directive}{base_prompt}"
             # Stable per-character seed: same hero across scenes → similar
             # face. Falls back to scene-position seed when no known character
             # is mentioned (WhatIf scenes, environment-only shots).
@@ -886,7 +1116,7 @@ def generate_images(scenes: list, single_shot: bool = False, series: str = "maha
                     with open(output_path, "wb") as f:
                         f.write(img_bytes)
                     shot_paths.append(output_path)
-                    print(f"    [OK] Scene {i+1} shot {j+1}/{len(scene_angles)} via {provider}")
+                    print(f"    [OK] Scene {i+1} shot {j+1}/{len(scene_compositions)} via {provider}")
                     success = True
                     break
                 except Exception as e:
