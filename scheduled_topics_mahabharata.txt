@@ -8,4 +8,3 @@
 #   skip_instagram = true
 # After this consumes the line, the queue will be empty until tomorrow's
 # re-enable of cron + new topic queue.
-Bhishma in the Kurukshetra war — fighting for the side he knew was wrong, killing soldiers from the family he raised
