@@ -1,6 +1,7 @@
 {
   "_note": "Mahabharata character arcs — 7 episodes per character, played sequentially. The script generator walks arcs in order: arc 1 episode 1, 2, ... 7, then arc 2 episode 1, ... etc. State tracking via recent_topics.json (already excludes used topics). Once an arc is fully exhausted (all 7 episodes used in recent_topics), the next arc starts. Designed to train YouTube's Suggested algorithm to pair sequential episodes — channel's RELATED_VIDEO traffic was 0.1% before this system.",
   "_added": "2026-05-15 — channel-focus refactor after 13-day analytics showed topic-salad (random Mahabharata stories per upload) wasn't building Suggested traffic. Sequential character arcs in playlist + episode-numbered titles fix that.",
+  "_tier2_2026-05-16": "Tier 2 plan review: (a) reordered Bhishma/Karna/Draupadi arcs so each leads with its most emotionally devastating episode (first-impression effect drives playlist sub-conversion). Episode strings unchanged — already-used topics in recent_topics.json still match by topic-string. (b) Added Eklavya (devotion + caste injustice) and Ashwatthama (cursed immortal) — user-identified as naturally viral emotional archetypes. Total arcs: 5 → 7. Total topics: 35 → 49.",
 
   "arcs": [
     {
@@ -13,8 +14,8 @@
         "Bhishma's silence during Draupadi's vastraharan — why the greatest warrior of his age could not lift his sword to stop the queen's humiliation",
         "Bhishma in the Kurukshetra war — fighting for the side he knew was wrong, killing soldiers from the family he raised",
         "Shikhandi and Bhishma — the secret promise that revealed the invincible warrior's only weakness",
-        "Bhishma on the bed of arrows — 58 days of waiting for death, choosing the moment of his own departure",
-        "Bhishma's final teachings to Yudhishthira — the Shanti Parva wisdom delivered from a dying bed of arrows"
+        "Bhishma's final teachings to Yudhishthira — the Shanti Parva wisdom delivered from a dying bed of arrows",
+        "Bhishma on the bed of arrows — 58 days of waiting for death, choosing the moment of his own departure"
       ]
     },
     {
@@ -22,8 +23,8 @@
       "character": "कर्ण",
       "playlist_seed": "Mahabharata: The Karna Arc",
       "topics": [
-        "Karna's birth and abandonment — Kunti's secret child, the son of Surya placed in a basket on the Ganges",
         "Karna's rejection at Draupadi's swayamvara — the wound that defined his life when she called him sutaputra",
+        "Karna's birth and abandonment — Kunti's secret child, the son of Surya placed in a basket on the Ganges",
         "Karna's friendship with Duryodhana — the loyalty that bound him to the wrong side of dharma forever",
         "Karna and Parashurama — the curse from a guru who learned his student's true caste at the wrong moment",
         "Karna's gift of kavach and kundal to Indra — the sacrifice of his own protective armor he was born with",
@@ -50,10 +51,10 @@
       "character": "द्रौपदी",
       "playlist_seed": "Mahabharata: The Draupadi Arc",
       "topics": [
+        "Draupadi's vastraharan in the Kuru sabha — the queen pulled by her hair, the elders silent",
         "Draupadi born from the sacrificial fire — the daughter Drupada asked for to destroy Drona",
         "Draupadi's swayamvara — the moment she chose Arjuna (in disguise) and rejected Karna",
         "Draupadi as wife to five Pandavas — the unusual marriage that bound the brothers forever",
-        "Draupadi's vastraharan in the Kuru sabha — the queen pulled by her hair, the elders silent",
         "Draupadi's vow about her hair — never tying it back until washed in Dushasana's blood",
         "Draupadi in the forest exile — twelve years of waiting, refusing to forget the humiliation",
         "Draupadi's grief after the war — winning a kingdom of corpses, losing all five sons in one night"
@@ -71,6 +72,34 @@
         "Yudhishthira's vision of his brothers in hell — the moment heaven tested his attachment",
         "Yudhishthira's rule as king — the prosperous kingdom built on guilt over his cousins' deaths",
         "Yudhishthira's final journey to the Himalayas — walking with his brothers and Draupadi toward death"
+      ]
+    },
+    {
+      "name": "Eklavya — The Devotion That Cost a Thumb",
+      "character": "एकलव्य",
+      "playlist_seed": "Mahabharata: The Eklavya Arc",
+      "topics": [
+        "Eklavya's gurudakshina — the thumb he cut off without hesitation when his guru asked for it, the price of a teacher who had never once taught him",
+        "Eklavya practicing before a statue of Drona — the forest student who became a greater archer than Arjuna by training with mud-clay alone",
+        "Drona's first refusal — turning away the tribal prince at the gates because his caste did not match the royal academy",
+        "The day Arjuna saw a dog with seven arrows in its mouth — the arrows that did not let the dog bark, fired by an archer Arjuna had never met",
+        "Eklavya as the king of the Nishadhas — the warrior whose people still remembered his devotion long after the kshatriyas forgot his name",
+        "Eklavya's death by Krishna's hand — the dharma-defender Krishna had to kill so Arjuna could remain the greatest archer at Kurukshetra",
+        "Eklavya's place in the Bhagavad Gita's silence — the warrior the Gita never named, whose absence haunts every chapter on devotion"
+      ]
+    },
+    {
+      "name": "Ashwatthama — The Cursed One",
+      "character": "अश्वत्थामा",
+      "playlist_seed": "Mahabharata: The Ashwatthama Arc",
+      "topics": [
+        "Ashwatthama and the lie 'Ashwatthama is dead' — the moment Yudhishthira's only lie killed his father Drona from grief, not blade",
+        "Ashwatthama's massacre of the sleeping Pandava sons — the night a son of a Brahmin became a butcher in the Pandava camp",
+        "Ashwatthama's Brahmastra against Uttara's womb — the unborn Parikshit attacked by a weapon that should never have been turned on a child",
+        "Krishna's curse on Ashwatthama — three thousand years of wandering with a wound on his forehead that would never close",
+        "Ashwatthama's gem and the wound — the jewel torn from his forehead that left an exposed scar for the rest of eternity",
+        "Ashwatthama still walking the earth — the immortal warrior some say is still seen near Indian forests asking for oil for his wound",
+        "Ashwatthama's tragedy as a parable — the man who paid the highest price of the Mahabharata war, beyond death itself"
       ]
     }
   ]
