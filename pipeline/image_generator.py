@@ -691,113 +691,105 @@ def _cf_is_quota_error(status: int, body_text: str) -> bool:
 
 def _gen_cloudflare(prompt: str, seed: int, width: int, height: int) -> bytes:
     """
-    Multi-account FLUX-schnell call with PER-ACCOUNT RETRY (added 2026-05-16
-    after the Tier 1.5 smoke test showed CF intermittently failing on 3 of
-    18 calls — transient errors that succeeded on retry, but only after the
-    cascade had already fallen to Pollinations. The retry loop catches
-    transient failures BEFORE falling out of CF entirely.)
+    Multi-account FLUX-schnell call — branding-style flow (2026-05-18 rewrite).
 
-    Per-account flow:
-      • Up to 3 attempts with backoff (2s, 4s)
-      • Quota / auth errors (429/401/403) break out immediately → next account
-      • Network / 5xx / bad-json / etc. trigger a retry on the same account
-      • Success returns the image immediately
+    Strategy: ONE attempt per account, walk to next account on ANY failure.
+    No within-account retry loops. This mirrors generate_branding.py which
+    has been calling the SAME CF endpoint reliably while this pipeline kept
+    tripping CF's per-IP burst rate limit.
 
-    Walks every configured CF account in order; only falls to Pollinations
-    after ALL accounts × 3 attempts each have failed. steps=8 is the free-
-    tier max for flux-schnell — 4 is faster but produces more anatomy errors.
+    Why the rewrite:
+      The previous retry logic (2-3 attempts per account with backoff sleeps)
+      was the threat-model-mismatch case. CF's modern per-IP burst detection
+      treats rapid retries as abuse — even spaced 5s apart. The retry loops
+      were creating the very problem they were meant to mitigate.
+
+      Multiple identical-environment runs (workflow_dispatch 25995643033,
+      25996494447, and local re-renders) reliably failed after the first
+      successful CF call. Single isolated probes succeeded in 2-3s during
+      those same windows — confirming CF service was fine, the request
+      pattern was the issue.
+
+    Per-account flow now:
+      • ONE POST attempt (120s timeout — let CF be slow if it wants)
+      • Quota error  → log EXHAUSTED, try next account
+      • Any other failure → log status/error, try next account
+      • Success → return immediately (deterministic by seed, no retry needed)
+
+    Body includes width + height so CF generates at native target dimensions
+    (768x1344) instead of default 1024x1024 + post-crop. Marginally sharper.
+
+    steps=8 is the free-tier max for flux-schnell. CF_TIMEOUT_S env-tunable.
     """
     accounts = _cloudflare_accounts()
     if not accounts:
         raise RuntimeError("no CLOUDFLARE_ACCOUNT_ID/API_TOKEN pairs configured")
 
-    body = {"prompt": prompt, "steps": 8, "seed": seed, "negative_prompt": _NEGATIVE}
-    last_err = "no accounts attempted"
-    # CF per-IP rate-limit mitigation (2026-05-17 hot patch).
-    # Symptom: a single successful CF call triggers CF's per-IP burst limit,
-    # then ALL subsequent calls within ~30s fail with timeouts/5xx ("transient").
-    # The old config (3 attempts × 2s/4s backoff × no inter-account pause)
-    # delivered up to 9 rapid retries per shot, sustained the burst, and
-    # locked the IP out for the rest of the run.
-    #
-    # New config: 2 attempts × longer backoff × inter-account cooldown.
-    # Per-shot worst case ≈ 24s (2×2 attempts × 5s+10s + 3 inter-account pauses)
-    # vs prior 30s. Best case (CF healthy, first try succeeds) is unchanged.
-    # All four constants env-tunable so we can dial up/down without redeploying.
+    body = {
+        "prompt":          prompt,
+        "negative_prompt": _NEGATIVE,
+        "steps":           8,
+        "seed":            seed,
+        "width":           width,
+        "height":          height,
+    }
     try:
-        max_attempts = int(os.environ.get("CF_MAX_ATTEMPTS_PER_ACCOUNT", "2"))
-        retry_backoff_s = float(os.environ.get("CF_RETRY_BACKOFF_S", "5.0"))
-        inter_account_cooldown_s = float(os.environ.get("CF_INTER_ACCOUNT_COOLDOWN_S", "3.0"))
+        timeout_s = float(os.environ.get("CF_TIMEOUT_S", "120"))
     except ValueError:
-        max_attempts, retry_backoff_s, inter_account_cooldown_s = 2, 5.0, 3.0
-    for acct_idx, (label, account_id, token) in enumerate(accounts):
-        # Inter-account cooldown — give CF's per-IP limit time to forget
-        # the previous account's burst before we hammer a new one. No sleep
-        # before the first account (don't waste time on cold-start runs).
-        if acct_idx > 0 and inter_account_cooldown_s > 0:
-            time.sleep(inter_account_cooldown_s)
+        timeout_s = 120.0
+
+    last_err = "no accounts attempted"
+    for label, account_id, token in accounts:
         url = (
             f"https://api.cloudflare.com/client/v4/accounts/{account_id}"
             f"/ai/run/@cf/black-forest-labs/flux-1-schnell"
         )
         headers = {"Authorization": f"Bearer {token}"}
-        quota_hit = False
-        for attempt in range(max_attempts):
-            try:
-                resp = requests.post(url, headers=headers, json=body, timeout=60)
-            except Exception as net_err:
-                last_err = f"{label} attempt {attempt+1} network: {net_err}"
-                if attempt < max_attempts - 1:
-                    time.sleep(retry_backoff_s * (attempt + 1))
-                continue
-
-            if resp.status_code != 200:
-                last_err = f"{label} attempt {attempt+1} status={resp.status_code} body={resp.text[:120]}"
-                if _cf_is_quota_error(resp.status_code, resp.text):
-                    # Quota / auth — abort this account, fall to next.
-                    print(f"    [{label}] EXHAUSTED (status={resp.status_code}) — trying next account")
-                    quota_hit = True
-                    break
-                # Transient non-200 — retry on same account.
-                if attempt < max_attempts - 1:
-                    time.sleep(retry_backoff_s * (attempt + 1))
-                continue
-
-            try:
-                data = resp.json()
-            except Exception as je:
-                last_err = f"{label} attempt {attempt+1} bad json: {je}"
-                if attempt < max_attempts - 1:
-                    time.sleep(retry_backoff_s * (attempt + 1))
-                continue
-            if not data.get("success"):
-                errs = data.get("errors") or []
-                err_str = str(errs).lower()
-                last_err = f"{label} attempt {attempt+1} success=false: {errs}"
-                if any(k in err_str for k in ("quota", "neuron", "rate", "limit", "exceeded")):
-                    print(f"    [{label}] EXHAUSTED (success=false: {str(errs)[:80]}) — trying next account")
-                    quota_hit = True
-                    break
-                if attempt < max_attempts - 1:
-                    time.sleep(retry_backoff_s * (attempt + 1))
-                continue
-            img_b64 = data.get("result", {}).get("image", "")
-            if not img_b64:
-                last_err = f"{label} attempt {attempt+1} missing result.image"
-                if attempt < max_attempts - 1:
-                    time.sleep(retry_backoff_s * (attempt + 1))
-                continue
-            raw = base64.b64decode(img_b64)
-            if len(raw) < _MIN_BYTES:
-                last_err = f"{label} attempt {attempt+1} bytes={len(raw)}"
-                if attempt < max_attempts - 1:
-                    time.sleep(retry_backoff_s * (attempt + 1))
-                continue
-            return _ensure_dims(raw, width, height)
-        # Account exhausted — move on.
-        if quota_hit:
+        try:
+            resp = requests.post(url, headers=headers, json=body, timeout=timeout_s)
+        except Exception as net_err:
+            last_err = f"{label} network: {net_err}"
+            print(f"    [{label}] network error — trying next account: {str(net_err)[:80]}")
             continue
-        print(f"    [{label}] gave up after {max_attempts} transient failures — trying next account")
+
+        if resp.status_code != 200:
+            last_err = f"{label} status={resp.status_code} body={resp.text[:120]}"
+            if _cf_is_quota_error(resp.status_code, resp.text):
+                print(f"    [{label}] EXHAUSTED (status={resp.status_code}) — trying next account")
+            else:
+                print(f"    [{label}] status={resp.status_code} — trying next account")
+            continue
+
+        try:
+            data = resp.json()
+        except Exception as je:
+            last_err = f"{label} bad json: {je}"
+            print(f"    [{label}] bad JSON — trying next account")
+            continue
+
+        if not data.get("success"):
+            errs = data.get("errors") or []
+            err_str = str(errs).lower()
+            last_err = f"{label} success=false: {errs}"
+            if any(k in err_str for k in ("quota", "neuron", "rate", "limit", "exceeded", "allocation")):
+                print(f"    [{label}] EXHAUSTED (success=false) — trying next account")
+            else:
+                print(f"    [{label}] success=false — trying next account: {str(errs)[:80]}")
+            continue
+
+        img_b64 = data.get("result", {}).get("image", "")
+        if not img_b64:
+            last_err = f"{label} missing result.image"
+            print(f"    [{label}] no image in result — trying next account")
+            continue
+
+        raw = base64.b64decode(img_b64)
+        if len(raw) < _MIN_BYTES:
+            last_err = f"{label} image too small ({len(raw)} bytes)"
+            print(f"    [{label}] image too small — trying next account")
+            continue
+
+        return _ensure_dims(raw, width, height)
 
     print(f"    [cf-cascade] ALL {len(accounts)} ACCOUNT(S) EXHAUSTED — falling through to HF/Pollinations")
     raise RuntimeError(f"cloudflare cascade exhausted: {last_err}")

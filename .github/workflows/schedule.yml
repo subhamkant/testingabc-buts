@@ -1,19 +1,13 @@
 name: Mahabharata YouTube Bot
 
 on:
-  # ───────────────────────────────────────────────────────────────
-  # ⚠ TONIGHT 2026-05-17: scheduled cron temporarily REMOVED. User
-  # is doing a manual #4 re-render via workflow_dispatch and does NOT
-  # want #5 Shikhandi to fire automatically tonight. RE-ADD the
-  # `schedule:` block tomorrow by uncommenting the lines below.
-  #
-  # schedule:
-  #   # Mahabharata Hindi — 2x/day at optimal IST evening windows.
-  #   # Run 1 ->  8:30 PM IST (15:00 UTC) — prime evening audience
-  #   - cron: "0 15 * * *"
-  #   # Run 2 -> 11:30 PM IST (18:00 UTC) — late evening, second peak
-  #   - cron: "0 18 * * *"
-  # ───────────────────────────────────────────────────────────────
+  schedule:
+    # Mahabharata Hindi — 2x/day at optimal IST evening windows.
+    # Re-enabled 2026-05-18 after the manual #4 re-render work concluded.
+    # Run 1 ->  8:30 PM IST (15:00 UTC) — prime evening audience
+    - cron: "0 15 * * *"
+    # Run 2 -> 11:30 PM IST (18:00 UTC) — late evening, second peak
+    - cron: "0 18 * * *"
 
   workflow_dispatch:
     inputs:

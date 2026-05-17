@@ -1,11 +1,7 @@
 # Manual topic queue — first non-comment line gets consumed by the next
 # Mahabharata cron run and removed after use.
 #
-# 2026-05-17: re-queued for retry of #4 Bhishma Kurukshetra via GHA
-# workflow_dispatch. Previous attempt (run 25995643033) was cancelled
-# because CF Workers AI was degraded — even GHA Azure IPs were hitting
-# transient failures across all 3 accounts. Retry once CF recovers.
-# Trigger inputs:
-#   target = hi
-#   episode_number = 4
-#   skip_instagram = true
+# Currently empty: cron picks the next unused Bhishma-arc topic via
+# _pick_next_arc_topic() — Shikhandi #5 is next based on recent_topics.json.
+# Re-add a topic line above this comment block only when you want to
+# force-render a specific topic via cron / workflow_dispatch.
