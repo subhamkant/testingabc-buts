@@ -9,4 +9,3 @@
 #   target = hi
 #   episode_number = 4
 #   skip_instagram = true
-Bhishma in the Kurukshetra war — fighting for the side he knew was wrong, killing soldiers from the family he raised
