@@ -579,8 +579,39 @@ def update_characters(script_data: dict) -> list:
         return []
 
 
+# CF FLUX-schnell hard limit: `/prompt` must be ≤ 2048 chars. We cap at
+# 2000 to leave headroom for the ", " separator between mood prefix and
+# the rest. Pollinations + HF have higher limits but capping at 2000 is
+# safe everywhere.
+#
+# 2026-05-18 fix: scene 2+ renders were getting 400 "Length of '/prompt'
+# must be <= 2048" because Phase 1 composition directives + Phase 4
+# character anchors + style suffix pushed combined prompt to 2147-2731
+# chars. Truncation strategy preserves the HIGH-VALUE anchors (mood,
+# style_suffix) in full and trims only from the END of the variable
+# `prompt` portion (composition directive + scene content + character
+# injection) at the nearest clean sentence boundary.
+_CF_PROMPT_MAX_CHARS = 2000
+
+
 def _build_full_prompt(prompt: str, mood: str = "", style_suffix: str = STYLE_SUFFIX) -> str:
     mood_prefix = f"{mood}, " if mood else ""
+    # Fixed components that always survive: mood_prefix + style_suffix.
+    fixed_cost = len(mood_prefix) + len(", ") + len(style_suffix)
+    available_for_prompt = _CF_PROMPT_MAX_CHARS - fixed_cost - 5  # 5-char safety
+
+    if len(prompt) > available_for_prompt:
+        # Truncate the variable prompt portion at the last clean sentence/
+        # clause boundary (". " or ", ") within the available budget, so we
+        # don't cut mid-word. Keep at least 60% to preserve scene content.
+        cap = prompt[:available_for_prompt]
+        for sep in (". ", ", "):
+            idx = cap.rfind(sep)
+            if idx > available_for_prompt * 0.6:
+                cap = cap[:idx]
+                break
+        prompt = cap.rstrip(' ,.')
+
     return f"{mood_prefix}{prompt}, {style_suffix}"
 
 
