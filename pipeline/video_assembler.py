@@ -38,6 +38,34 @@ SUB_XFADE_DURATION = 0.25
 _MIN_SUB_DURATION  = 2.0   # minimum seconds per sub-clip
 
 
+# ── Explainer channel — locked visual identity ───────────────────────────────
+# The Mahabharata pipeline keeps its existing cinematic grade + xfades + music.
+# Explainer is a different brand: investigative, faster cuts, cooler palette
+# with one warm accent, no melodic music. These constants are the visual
+# half of the Anti-Hype Analyzer identity (script half lives in
+# pipeline/explainer_script.py). Edits are deliberate code commits.
+
+_MOTION_PROFILES = {
+    "explainer": {
+        "segment_duration_range": (1.5, 3.0),  # per Ken-Burns sub-segment
+        "transition":              "hard_cut",  # no xfade — punchier
+        "zoom_intensity":          0.6,         # subtler than mahabharata (0.8-1.5)
+        "glitch_on_retention_hook": True,
+    },
+}
+
+# Investigative LUT: cool desaturated midtones, warm reds/oranges preserved
+# so a red circle / fire / skin warmth still pops against the blue-gray base.
+_EXPLAINER_LUT = (
+    "colorchannelmixer="
+    "rr=0.95:rg=0.05:rb=0.00:"
+    "gr=0.00:gg=0.85:gb=0.15:"
+    "br=0.00:bg=0.10:bb=0.95,"
+    "curves=preset=increase_contrast,"
+    "eq=saturation=0.75:contrast=1.10"
+)
+
+
 # ── Audio helpers ─────────────────────────────────────────────────────────────
 
 def get_audio_duration(audio_path: str) -> float:
@@ -1112,7 +1140,23 @@ def _apply_phase3_overlays(output_path: str) -> None:
 
     No-op if the overlay assets are missing or if disabled by env.
     """
-    if os.environ.get("CINEMATIC_OVERLAYS", "true").strip().lower() == "false":
+    # ⚠ 2026-05-18 EMERGENCY DISABLE: the Phase 3 overlay pass produced a
+    # magenta cast across every frame of the #5 Shikhandi render. Two bugs
+    # stacked:
+    #   (1) `blend=all_mode=screen:all_opacity=1` operates in the input's
+    #       color space, which is YUV420P here. Screen blend is defined for
+    #       RGB — applied to U/V chroma channels it shifts hue wildly
+    #       (orange + yellow overlays → magenta result).
+    #   (2) The intended layer-transparency (`colorchannelmixer=aa=0.22`) is
+    #       overridden by `all_opacity=1`. The overlays effectively blend at
+    #       100% strength, not the 22-28% I documented.
+    # Plus the source overlays themselves are solid-color fills (not the
+    # textured leak/flare assets the names suggest) — even a correctly-
+    # coded blend would tint every frame heavily.
+    # Default flipped from "true" → "false" until the color-space handling
+    # is rewritten (likely: convert base + overlays to gbrp before blending,
+    # use blend's per-input alpha or replace with proper overlay filter).
+    if os.environ.get("CINEMATIC_OVERLAYS", "false").strip().lower() != "true":
         return
     if not (os.path.exists(_LIGHT_LEAK_PATH) and os.path.exists(_LENS_FLARE_PATH)):
         print("    [phase3] overlay assets missing — skipping (light leak / lens flare not found)")
@@ -1648,6 +1692,156 @@ def _per_scene_durations(audio_duration: float, char_weights: list, n: int) -> l
         return [target_sum / max(n, 1)] * n
     total_w = sum(char_weights)
     return [(w / total_w) * target_sum for w in char_weights]
+
+
+# ── Explainer-only assembler ─────────────────────────────────────────────────
+# Lives alongside (not inside) assemble_video_continuous_audio. Same building
+# blocks reused (_make_silent_image_scene_clip, _mux_continuous_audio), but the
+# orchestration is different: hard cuts instead of xfades, lower Ken Burns
+# intensity, explainer LUT applied at the end, and NO mahabharata-specific
+# steps (no background music, no cinematic polish, no light-leak overlays,
+# no scene-boundary SFX). The audio track passed in is expected to be already
+# mixed by pipeline.sound_design so the assembler doesn't touch audio post.
+
+def _per_scene_durations_explainer(audio_duration: float, char_weights: list, n: int) -> list:
+    """Hard-cut version of _per_scene_durations: timeline = sum(durations) =
+    audio_duration exactly (no xfade overlap to compensate for)."""
+    if not char_weights or len(char_weights) != n or sum(char_weights) <= 0:
+        return [audio_duration / max(n, 1)] * n
+    total_w = sum(char_weights)
+    return [(w / total_w) * audio_duration for w in char_weights]
+
+
+def _concat_hard_cuts(clip_paths: list, output_path: str) -> bool:
+    """Concat clips with zero crossfade via FFmpeg concat demuxer. All input
+    clips must share codec/resolution/fps (they do — _make_silent_image_scene_clip
+    standardizes to 1080×1920 H.264 30fps)."""
+    if len(clip_paths) == 1:
+        import shutil as _sh
+        _sh.copy2(clip_paths[0], output_path)
+        return True
+
+    list_file = output_path + ".concat.txt"
+    with open(list_file, "w", encoding="utf-8") as f:
+        for cp in clip_paths:
+            cp_abs = os.path.abspath(cp).replace("\\", "/")
+            f.write(f"file '{cp_abs}'\n")
+
+    result = subprocess.run([
+        "ffmpeg", "-y",
+        "-f", "concat", "-safe", "0",
+        "-i", list_file,
+        "-c", "copy",
+        output_path,
+    ], capture_output=True)
+
+    if os.path.exists(list_file):
+        os.remove(list_file)
+
+    if result.returncode != 0:
+        # `-c copy` fails when codec params drift even slightly — fall back to re-encode
+        print(f"    [explainer] hard-cut concat copy failed, re-encoding...")
+        list_file = output_path + ".concat.txt"
+        with open(list_file, "w", encoding="utf-8") as f:
+            for cp in clip_paths:
+                cp_abs = os.path.abspath(cp).replace("\\", "/")
+                f.write(f"file '{cp_abs}'\n")
+        result = subprocess.run([
+            "ffmpeg", "-y",
+            "-f", "concat", "-safe", "0",
+            "-i", list_file,
+            "-c:v", "libx264", "-preset", "fast", "-crf", "20",
+            "-pix_fmt", "yuv420p", "-r", str(FPS), "-an",
+            output_path,
+        ], capture_output=True)
+        if os.path.exists(list_file):
+            os.remove(list_file)
+
+    if result.returncode != 0:
+        print(f"    [ERROR] explainer hard-cut concat failed:\n{result.stderr.decode()[:400]}")
+        return False
+    return True
+
+
+def _apply_explainer_lut_inplace(video_path: str) -> bool:
+    """Re-encode video with the explainer LUT applied (cool blue-gray base,
+    warm accent preserved). Overwrites in place."""
+    tmp = video_path + ".lut.mp4"
+    result = subprocess.run([
+        "ffmpeg", "-y",
+        "-i", video_path,
+        "-vf", _EXPLAINER_LUT,
+        "-c:v", "libx264", "-preset", "fast", "-crf", "20",
+        "-pix_fmt", "yuv420p",
+        "-c:a", "copy",
+        "-movflags", "+faststart",
+        tmp,
+    ], capture_output=True)
+    if result.returncode != 0:
+        print(f"    [ERROR] explainer LUT failed:\n{result.stderr.decode()[:400]}")
+        if os.path.exists(tmp):
+            os.remove(tmp)
+        return False
+    os.replace(tmp, video_path)
+    return True
+
+
+def assemble_explainer_video(
+    image_files: list,
+    audio_path: str,
+    script_data: dict,
+    char_weights: list = None,
+    output_path: str = "output/video_explainer.mp4",
+) -> str:
+    """
+    Explainer pipeline: hard cuts + low-zoom Ken Burns + cool-LUT grade.
+    Audio (passed in) is expected to be PRE-mixed by pipeline.sound_design with
+    the ambient bed + retention-hook hits. This function does not touch audio
+    beyond muxing it onto the picture.
+    """
+    os.makedirs("output", exist_ok=True)
+    os.makedirs("temp/clips", exist_ok=True)
+
+    n = len(image_files)
+    audio_duration = get_audio_duration(audio_path)
+    durations = _per_scene_durations_explainer(audio_duration, char_weights, n)
+
+    profile = _MOTION_PROFILES["explainer"]
+    zoom_intensity = profile["zoom_intensity"]
+
+    print(f"    [explainer] audio={audio_duration:.2f}s  scenes={n}  zoom_intensity={zoom_intensity}")
+    print(f"    [explainer] per-scene durations: " +
+          ", ".join(f"{d:.2f}s" for d in durations))
+
+    silent_paths = []
+    for i, (imgs, dur) in enumerate(zip(image_files, durations)):
+        if isinstance(imgs, str):
+            imgs = [imgs]
+        silent_path = f"temp/clips/explainer_silent_{i:02d}.mp4"
+        print(f"    [explainer] scene {i+1}/{n} silent ({dur:.2f}s, {len(imgs)} shot(s))...")
+        _make_silent_image_scene_clip(imgs, silent_path, dur, intensity=zoom_intensity)
+        silent_paths.append(silent_path)
+
+    silent_full = "temp/clips/explainer_silent_full.mp4"
+    if not _concat_hard_cuts(silent_paths, silent_full):
+        return output_path
+    if not _mux_continuous_audio(silent_full, audio_path, output_path):
+        return output_path
+
+    # Color identity — the final brand-defining pass.
+    print(f"    [explainer] applying investigative LUT (cool blue-gray + warm accent)")
+    _apply_explainer_lut_inplace(output_path)
+
+    size_mb = os.path.getsize(output_path) / (1024 * 1024)
+    print(f"    [OK] Explainer video -> {output_path} ({size_mb:.1f} MB)")
+
+    # Deliberately skipped (different brand from Mahabharata):
+    #   _apply_cinematic_polish   — warm cinematic LUT conflicts with our cool one
+    #   _apply_background_music   — explainer audio is pre-mixed by sound_design
+    #   _apply_phase3_overlays    — light leaks fight the investigative aesthetic
+    #   _inject_scene_boundary_sfx — sword clangs / bells are mahabharata-only
+
+    return output_path
 
 
 def assemble_video_continuous_audio(
