@@ -1,14 +1,14 @@
 name: Mahabharata YouTube Bot
 
 on:
-  schedule:
-    # Mahabharata Hindi — 2x/day at optimal IST evening windows.
-    # Re-enabled 2026-05-18 after the manual #4 re-render work concluded.
-    # Run 1 ->  8:30 PM IST (15:00 UTC) — prime evening audience
-    - cron: "0 15 * * *"
-    # Run 2 -> 11:30 PM IST (18:00 UTC) — late evening, second peak
-    - cron: "0 18 * * *"
-
+  # Cron temporarily DISABLED 2026-05-19 to prevent tonight's 23:30 IST fire
+  # from publishing a pre-stabilization render. Phase 2/3 + Part F code is
+  # ready in working tree but smoke #2 still validating. Re-enable in the
+  # follow-up commit that lands the full stabilization bundle, with the
+  # new timing:
+  #   - cron: "30 13 * * *"   # nominal 7:00 PM IST, fires ~8:00-9:00 PM IST
+  #   - cron: "30 15 * * *"   # nominal 9:00 PM IST, fires ~10:00-11:00 PM IST
+  # workflow_dispatch (manual trigger) stays available below.
   workflow_dispatch:
     inputs:
       target:
