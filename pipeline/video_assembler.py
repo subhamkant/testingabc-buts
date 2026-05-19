@@ -66,6 +66,21 @@ _EXPLAINER_LUT = (
 )
 
 
+# Per-pipeline temp root. Mahabharata leaves env unset → "temp". The explainer
+# driver sets PIPELINE_TEMP_ROOT="temp/fe" before importing this module so
+# explainer working clips land under temp/fe/clips/ (and don't collide with
+# mahabharata's temp/clips/ when both pipelines share a machine).
+_TEMP_ROOT = os.environ.get("PIPELINE_TEMP_ROOT", "temp")
+
+
+# v3: Cold-open duration (paired with pipeline.sound_design.COLD_OPEN_DURATION_S).
+# Scene 1 absorbs this 0.8s into its Ken Burns clip so the picture has slow
+# drift over the bed-only intro period. sound_design prepends the same 0.8s
+# of bed audio before narration starts. If these drift, audio + video desync
+# at the climax. Keep them numerically identical.
+COLD_OPEN_DURATION_S = 0.8
+
+
 # ── Audio helpers ─────────────────────────────────────────────────────────────
 
 def get_audio_duration(audio_path: str) -> float:
@@ -463,15 +478,21 @@ def _shake_active_expr(boundaries: list, window: float = 0.30) -> str:
     return "(" + "+".join(parts) + ")"
 
 
-def _apply_cinematic_polish(video_path: str, clip_durations: list) -> None:
+def _apply_cinematic_polish(video_path: str, clip_durations: list, series: str = "mahabharata") -> None:
     """
     Final polish pass: camera shake at scene boundaries → 3D LUT grade →
     light-leak overlay (screen blend) → optional FPS bump. In-place modify.
 
+    `series="explainer"` skips the 3D LUT pick because the explainer pipeline
+    has already applied its own cool-blue investigative LUT in
+    assemble_explainer_video; layering the warm cinematic LUT on top would
+    cancel the brand color. The shake + unsharp + lower-CRF re-encode still
+    run (they're brand-agnostic quality wins).
+
     Every step degrades gracefully: missing assets / filter errors leave the
     original file untouched and the pipeline continues.
 
-    Light-leak overlay is now gated behind CINEMATIC_LIGHT_LEAK env var
+    Light-leak overlay is gated behind CINEMATIC_LIGHT_LEAK env var
     (default OFF). The 2026-05-13 local test showed the screen-blended
     overlay was causing ghost / double-exposure artifacts at scene
     boundaries — two adjacent shots' frames bleeding through the leak
@@ -479,7 +500,7 @@ def _apply_cinematic_polish(video_path: str, clip_durations: list) -> None:
     overlapping). Set CINEMATIC_LIGHT_LEAK=true to re-enable if you decide
     the polish-layer look is worth the ghost risk.
     """
-    lut        = _pick_lut()
+    lut        = "" if series == "explainer" else _pick_lut()
     # Light-leak overlay: gated by env var, default OFF to suppress the
     # ghost/double-exposure at scene boundaries.
     leak_enabled = os.environ.get("CINEMATIC_LIGHT_LEAK", "false").lower() in ("1", "true", "yes")
@@ -1227,7 +1248,17 @@ def _apply_phase3_overlays(output_path: str) -> None:
             os.remove(overlaid)
 
 
-def _enforce_max_duration(output_path: str) -> None:
+# Phase 2/3 Part F.3 (2026-05-19): atempo ceilings for the early-section
+# safety net. Per user direction: emotional Hindi narration with restrained
+# pauses + breath-heavy cadence starts sounding subtly rushed above 1.05.
+# 1.07 is the hard ceiling — beyond that we refuse the silent-fix and fall
+# back to end-chop with a loud warning. Most overflow events should land
+# between 1.00 and 1.05 (transparent fix).
+_SAFE_EARLY_ATEMPO_PREFERRED = 1.05
+_SAFE_EARLY_ATEMPO_CEIL      = 1.07
+
+
+def _enforce_max_duration(output_path: str, durations: list | None = None) -> None:
     """
     Hard-cap the final mp4 at MAX_DURATION_S seconds (default 58.5). If
     the file is already under the cap, no-op.
@@ -1236,6 +1267,22 @@ def _enforce_max_duration(output_path: str) -> None:
     2026-05-17 #4 Bhishma Kurukshetra video (70.4s) was blocked partly
     because its duration triggered the over-60s restriction tier. Capping
     at 58.5s keeps every upload in the safer <60s bucket.
+
+    Phase 2/3 Part F.3 (2026-05-19): when `durations` (the per-scene visual
+    clip durations from `_per_scene_durations()`) is provided, this function
+    PROTECTS THE TAIL on overflow. Instead of blind end-chop (which kills
+    aftermath + outro residue), it applies atempo + setpts to the EARLY
+    SECTION only — final scene + outro stay at exactly 1.0x. Three tiers:
+
+      atempo factor ≤ 1.05  → transparent fix, no warning
+      1.05 < factor ≤ 1.07  → soft NOTE log, proceed (still imperceptible
+                              to most listeners but flag for cross-arc
+                              monitoring; tighten F.1 word target if it
+                              keeps firing)
+      factor > 1.07         → WARN + fall through to end-chop (tail will
+                              be chopped; this means F.1 is too generous
+                              and the script-side word target needs to
+                              come down)
 
     WhatIf longform pipeline can opt out by setting MAX_DURATION_S=999 in
     its workflow env. Default 58.5 applies to Mahabharata + Krishna + WhatIf
@@ -1253,11 +1300,93 @@ def _enforce_max_duration(output_path: str) -> None:
     if not dur or dur <= max_s + 0.05:  # 50ms safety margin to avoid pointless re-encodes
         return
 
-    print(f"    [auto-cap] mp4 is {dur:.2f}s, trimming to {max_s:.2f}s (YT Shorts <60s safety)")
+    overshoot = dur - max_s
+
+    # ── Fast path: legacy callers without per-scene durations ─────────
+    # Explainer/WhatIf longform + legacy code paths that don't track scene
+    # boundaries fall back to blind end-trim. This branch should never
+    # fire for Mahabharata renders post-F.2 — all four mahabharata call
+    # sites pass durations.
+    if not durations or len(durations) < 3:
+        return _legacy_end_chop(output_path, dur, max_s,
+                                reason="durations not provided")
+
+    # Protected tail = sum of last 2 visual clip durations (final scene + outro)
+    protected_tail = sum(durations[-2:])
+    early_section_end = max(0.0, dur - protected_tail)
+
+    # Required atempo factor on EARLY section only.
+    target_early_dur = early_section_end - overshoot
+    if target_early_dur <= 0.5:
+        # Overshoot is so large the early section can't absorb it — fall
+        # through to end-chop with explicit reason. F.1 word target needs
+        # to come down significantly.
+        return _legacy_end_chop(output_path, dur, max_s,
+                                reason=f"overshoot {overshoot:.2f}s exceeds early-section "
+                                       f"budget {early_section_end:.2f}s — tighten F.1")
+
+    factor = early_section_end / target_early_dur
+
+    if factor > _SAFE_EARLY_ATEMPO_CEIL:
+        return _legacy_end_chop(output_path, dur, max_s,
+                                reason=f"early-section atempo {factor:.4f}x exceeds "
+                                       f"{_SAFE_EARLY_ATEMPO_CEIL:.2f} HARD ceiling — "
+                                       f"tighten F.1 word target. Residue WILL be chopped.")
+
+    if factor > _SAFE_EARLY_ATEMPO_PREFERRED:
+        print(f"    [auto-cap] NOTE: early-section atempo {factor:.4f}x exceeds 1.05 "
+              f"preferred (Hindi pacing comfort zone). Proceeding because under 1.07 "
+              f"hard ceiling. Watch for audible compression on next renders.")
+
+    # ── Per-segment compress: speed up EARLY section, leave tail untouched ──
+    print(f"    [auto-cap] per-segment compress: early {early_section_end:.2f}s @ "
+          f"{factor:.4f}x → {target_early_dur:.2f}s; protected tail "
+          f"{protected_tail:.2f}s untouched (overshoot {overshoot:.2f}s absorbed)")
+    sped = output_path.replace(".mp4", "_sped.mp4")
+    filter_graph = (
+        f"[0:v]trim=0:{early_section_end:.6f},setpts=PTS-STARTPTS,"
+        f"setpts=PTS/{factor:.6f}[v1];"
+        f"[0:v]trim=start={early_section_end:.6f},setpts=PTS-STARTPTS[v2];"
+        f"[0:a]atrim=0:{early_section_end:.6f},asetpts=PTS-STARTPTS,"
+        f"atempo={factor:.6f}[a1];"
+        f"[0:a]atrim=start={early_section_end:.6f},asetpts=PTS-STARTPTS[a2];"
+        f"[v1][v2]concat=n=2:v=1:a=0[v];"
+        f"[a1][a2]concat=n=2:v=0:a=1[a]"
+    )
+    cmd = [
+        "ffmpeg", "-y", "-i", output_path,
+        "-filter_complex", filter_graph,
+        "-map", "[v]", "-map", "[a]",
+        "-c:v", "libx264", "-preset", "veryfast", "-crf", "20",
+        "-c:a", "aac", "-b:a", "192k",
+        "-movflags", "+faststart",
+        sped,
+    ]
+    r = subprocess.run(cmd, capture_output=True)
+    if r.returncode == 0 and os.path.exists(sped):
+        os.replace(sped, output_path)
+        new_dur = get_audio_duration(output_path)
+        print(f"    [auto-cap] new duration: {new_dur:.2f}s (target {max_s:.2f}s, "
+              f"tail preserved at 1.0x)")
+    else:
+        err = r.stderr.decode("utf-8", errors="replace")[-300:] if r.stderr else ""
+        print(f"    [auto-cap] WARN: per-segment compress failed — falling back to end-chop. {err}")
+        if os.path.exists(sped):
+            os.remove(sped)
+        _legacy_end_chop(output_path, dur, max_s, reason="ffmpeg filter_complex failed")
+
+
+def _legacy_end_chop(output_path: str, dur: float, max_s: float, reason: str = "") -> None:
+    """Blind end-trim fallback used by legacy callers + F.3 safety-net failure
+    cases. This is the OLD pre-F.3 behavior: re-encode with -t to force exact
+    duration. Loses any content past max_s (including aftermath + outro
+    residue on overflow days). Loud warning when invoked so cross-arc
+    monitoring can spot it."""
+    if reason:
+        print(f"    [auto-cap] mp4 is {dur:.2f}s, end-chopping to {max_s:.2f}s — {reason}")
+    else:
+        print(f"    [auto-cap] mp4 is {dur:.2f}s, end-chopping to {max_s:.2f}s")
     trimmed = output_path.replace(".mp4", "_capped.mp4")
-    # Re-encode with -t. We re-encode (not -c copy) because copy mode can land
-    # past the requested -t boundary if the cut isn't on a keyframe; re-encode
-    # guarantees an exact duration. This is a 1-pass operation on ~60s, very fast.
     cmd = [
         "ffmpeg", "-y", "-i", output_path,
         "-t", f"{max_s:.3f}",
@@ -1683,15 +1812,70 @@ def _mux_continuous_audio(silent_video: str, audio_path: str, output_path: str) 
     return True
 
 
-def _per_scene_durations(audio_duration: float, char_weights: list, n: int) -> list:
+# Phase 2/3 Part F.2 (2026-05-19): minimum visual-clip durations for the
+# protected tail (final narrative scene + subscribe outro). These are
+# env-tunable per render. The aftermath validator (Part A) + outro
+# restraint (Part C) only land emotionally if the visual clips hold long
+# enough for the residue to settle. Without minimums, char_weight
+# proportional distribution can shrink either to ~3s on dense-narration
+# days, killing the emotional landing.
+_FINAL_SCENE_MIN_S = float(os.environ.get("FINAL_SCENE_MIN_S", "7.5"))
+_OUTRO_MIN_S       = float(os.environ.get("OUTRO_MIN_S", "3.5"))
+
+
+def _per_scene_durations(audio_duration: float, char_weights: list, n: int,
+                         protect_tail: bool = True) -> list:
     """Per-scene clip durations so the final xfaded timeline = audio_duration.
     Accounts for the (n-1) xfade overlaps. Distributes proportionally to
-    char_weights when provided, otherwise evenly."""
+    char_weights when provided, otherwise evenly.
+
+    Phase 2/3 Part F.2 (2026-05-19): when `protect_tail=True` (default), the
+    final two scenes (scene 6 narrative + subscribe outro) are guaranteed
+    to land AT LEAST `_FINAL_SCENE_MIN_S` / `_OUTRO_MIN_S` seconds. If the
+    proportional split would shrink them below those floors, time is
+    "stolen" from the earlier scenes proportionally — the donor scenes
+    contract, the tail expands. Audio is unchanged (visual-clip retiming
+    only); char_weights still drives the baseline. The protected tail is
+    what gives Parts A-E (aftermath imagery + outro restraint) the
+    emotional-settling time they were architected to need.
+
+    Set `protect_tail=False` for non-mahabharata callers (explainer
+    longform, WhatIf science) that don't follow the aftermath architecture.
+    """
     target_sum = audio_duration + (n - 1) * XFADE_DURATION
     if not char_weights or len(char_weights) != n or sum(char_weights) <= 0:
         return [target_sum / max(n, 1)] * n
     total_w = sum(char_weights)
-    return [(w / total_w) * target_sum for w in char_weights]
+    durs = [(w / total_w) * target_sum for w in char_weights]
+
+    if not protect_tail or n < 3:
+        return durs
+
+    # Compute deficit: how much each protected-tail slot is short of its floor.
+    final_deficit = max(0.0, _FINAL_SCENE_MIN_S - durs[-2])
+    outro_deficit = max(0.0, _OUTRO_MIN_S       - durs[-1])
+    deficit = final_deficit + outro_deficit
+    if deficit <= 0:
+        return durs
+
+    # Steal from earlier scenes proportionally. Require donor scenes to
+    # retain at least 1.0s of total after donation — fall through to
+    # baseline split otherwise (rare; only on very short audio).
+    donor_total = sum(durs[:-2])
+    if donor_total <= deficit + 1.0:
+        print(f"    [per-scene] WARN: tail-protect needs {deficit:.2f}s but "
+              f"early scenes only have {donor_total:.2f}s — keeping baseline "
+              f"split (tail will be short).")
+        return durs
+
+    scale = (donor_total - deficit) / donor_total
+    for i in range(n - 2):
+        durs[i] *= scale
+    durs[-2] = max(durs[-2], _FINAL_SCENE_MIN_S)
+    durs[-1] = max(durs[-1], _OUTRO_MIN_S)
+    print(f"    [per-scene] protected tail: stole {deficit:.2f}s from early "
+          f"scenes (final={durs[-2]:.1f}s, outro={durs[-1]:.1f}s)")
+    return durs
 
 
 # ── Explainer-only assembler ─────────────────────────────────────────────────
@@ -1800,16 +1984,28 @@ def assemble_explainer_video(
     beyond muxing it onto the picture.
     """
     os.makedirs("output", exist_ok=True)
-    os.makedirs("temp/clips", exist_ok=True)
+    os.makedirs(f"{_TEMP_ROOT}/clips", exist_ok=True)
 
     n = len(image_files)
     audio_duration = get_audio_duration(audio_path)
-    durations = _per_scene_durations_explainer(audio_duration, char_weights, n)
+
+    # v3: the audio file from sound_design.apply_explainer_audio_bed includes
+    # a 0.8s bed-only cold open BEFORE narration starts. Per-scene clip
+    # durations distribute the NARRATION portion proportionally to char_weights,
+    # then scene 1 absorbs the cold-open seconds so its Ken Burns clip plays
+    # over both the silent intro and the start of the hook narration. Without
+    # this, scene 1 would be sized for narration-only and scene 2's clip would
+    # start playing during the cold-open silence.
+    narration_duration = max(audio_duration - COLD_OPEN_DURATION_S, 0.1)
+    durations = _per_scene_durations_explainer(narration_duration, char_weights, n)
+    if n > 0:
+        durations[0] += COLD_OPEN_DURATION_S
 
     profile = _MOTION_PROFILES["explainer"]
     zoom_intensity = profile["zoom_intensity"]
 
-    print(f"    [explainer] audio={audio_duration:.2f}s  scenes={n}  zoom_intensity={zoom_intensity}")
+    print(f"    [explainer] audio={audio_duration:.2f}s (incl. {COLD_OPEN_DURATION_S}s cold open)  "
+          f"scenes={n}  zoom_intensity={zoom_intensity}")
     print(f"    [explainer] per-scene durations: " +
           ", ".join(f"{d:.2f}s" for d in durations))
 
@@ -1817,12 +2013,12 @@ def assemble_explainer_video(
     for i, (imgs, dur) in enumerate(zip(image_files, durations)):
         if isinstance(imgs, str):
             imgs = [imgs]
-        silent_path = f"temp/clips/explainer_silent_{i:02d}.mp4"
+        silent_path = f"{_TEMP_ROOT}/clips/explainer_silent_{i:02d}.mp4"
         print(f"    [explainer] scene {i+1}/{n} silent ({dur:.2f}s, {len(imgs)} shot(s))...")
         _make_silent_image_scene_clip(imgs, silent_path, dur, intensity=zoom_intensity)
         silent_paths.append(silent_path)
 
-    silent_full = "temp/clips/explainer_silent_full.mp4"
+    silent_full = f"{_TEMP_ROOT}/clips/explainer_silent_full.mp4"
     if not _concat_hard_cuts(silent_paths, silent_full):
         return output_path
     if not _mux_continuous_audio(silent_full, audio_path, output_path):
@@ -1832,13 +2028,18 @@ def assemble_explainer_video(
     print(f"    [explainer] applying investigative LUT (cool blue-gray + warm accent)")
     _apply_explainer_lut_inplace(output_path)
 
+    # Phase 1 — Cinematic Foundation. Same shake + unsharp + lower-CRF pass
+    # the Mahabharata pipeline runs, with the warm LUT skipped (series flag)
+    # so the explainer's cool blue stays the dominant grade.
+    print(f"    [explainer] Phase 1 — Cinematic Foundation (shake + unsharp + grade preserve)")
+    _apply_cinematic_polish(output_path, durations, series="explainer")
+
     size_mb = os.path.getsize(output_path) / (1024 * 1024)
     print(f"    [OK] Explainer video -> {output_path} ({size_mb:.1f} MB)")
 
-    # Deliberately skipped (different brand from Mahabharata):
-    #   _apply_cinematic_polish   — warm cinematic LUT conflicts with our cool one
+    # Deliberately skipped:
     #   _apply_background_music   — explainer audio is pre-mixed by sound_design
-    #   _apply_phase3_overlays    — light leaks fight the investigative aesthetic
+    #   _apply_phase3_overlays    — globally disabled (magenta-cast bug)
     #   _inject_scene_boundary_sfx — sword clangs / bells are mahabharata-only
 
     return output_path
@@ -1927,7 +2128,7 @@ def assemble_video_continuous_audio(
     _apply_cinematic_polish(output_path, durations)
     _apply_background_music(output_path, series=series)
     _apply_phase3_overlays(output_path)
-    _enforce_max_duration(output_path)
+    _enforce_max_duration(output_path, durations)
 
     return output_path
 
@@ -2020,7 +2221,7 @@ def assemble_from_video_clips_continuous_audio(
     _apply_cinematic_polish(output_path, durations)
     _apply_background_music(output_path, series=series)
     _apply_phase3_overlays(output_path)
-    _enforce_max_duration(output_path)
+    _enforce_max_duration(output_path, durations)
 
     return output_path
 
@@ -2068,7 +2269,7 @@ def assemble_video(
     _apply_cinematic_polish(output_path, clip_durations)
     _apply_background_music(output_path)
     _apply_phase3_overlays(output_path)
-    _enforce_max_duration(output_path)
+    _enforce_max_duration(output_path, clip_durations)
 
     return output_path
 
@@ -2110,6 +2311,6 @@ def assemble_from_video_clips(
     _apply_cinematic_polish(output_path, processed_durations)
     _apply_background_music(output_path)
     _apply_phase3_overlays(output_path)
-    _enforce_max_duration(output_path)
+    _enforce_max_duration(output_path, processed_durations)
 
     return output_path

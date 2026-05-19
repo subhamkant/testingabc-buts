@@ -8,6 +8,14 @@ import io
 import subprocess
 from urllib.parse import quote
 
+
+# Per-pipeline temp root. Mahabharata leaves env unset → "temp". The explainer
+# driver sets PIPELINE_TEMP_ROOT="temp/fe" before importing this module so its
+# generated images land under temp/fe/images/ (and its cached copies under
+# cache/<run_id>/visuals/ — which is unchanged because cache is already
+# per-run-id-namespaced).
+_TEMP_ROOT = os.environ.get("PIPELINE_TEMP_ROOT", "temp")
+
 # Mahabharata style suffix — photorealistic cinematic period film aesthetic
 # tuned for NATURAL color and skin tones. Earlier iterations went too far in
 # either direction:
@@ -146,7 +154,7 @@ def _resolve_style_suffix(series: str, visual_style: str) -> str:
 # front-loaded. The order below reflects what the Volcanoes + Gandhari
 # analysis flagged as the most-recurring visible quality regressions
 # (heavy color wash, plastic skin, CGI-game-character vibe).
-_NEGATIVE = (
+_NEGATIVE_DEFAULT = (
     # ── Eye-detail failure mode (TOP priority — 2026-05-14 Karna-arc local
     # test shipped 7/10 frames with dead-eye / black-void pupils. Distilled
     # FLUX-schnell loses eye micro-detail; front-loaded negatives push it
@@ -195,6 +203,124 @@ _NEGATIVE = (
     "extra limbs,extra arms,malformed limbs,disfigured,"
     "cross-eyed,bad proportions"
 )
+
+# Restraint-mode negative — used when an imperfection cue is active for the
+# scene (mood matches grief/aftermath/witnessed/etc.). 2026-05-18 Phase 2/3
+# stabilization. Strips the skin-condition + face-underexposure rejections
+# because those FIGHT the weathered / dust-streaked / red-rimmed / unevenly-
+# lit anchors that imperfection routing requests. Keeps every real-bug
+# rejection (dead eyes, deformed anatomy, color wash, plastic skin, text,
+# finger/limb).
+#
+# Risk note: distilled FLUX-schnell can produce uncanny skin when the
+# splotchy/scarred negatives are absent. Mitigation — this variant only
+# applies on scenes whose mood matches restraint keywords. Standard scenes
+# (hook, setup, rising tension) keep the full DEFAULT rejection list.
+_NEGATIVE_RESTRAINT = (
+    # Eye-detail — still a real-bug rejection; keep
+    "dead eyes,glassy eyes,vacant stare,blank eyes,soulless eyes,"
+    "missing pupils,missing iris,black void eyes,recessed eye sockets,"
+    "asymmetric eyes,one eye closed,wonky eyes,smeared eyes,blurred eyes,"
+    "eyes without detail,unfocused eyes,"
+    # Face-distortion — keep ONLY structural-anatomy bugs. The skin-texture
+    # bans (splotchy/mottled/scarred/acne/pore-detail/etc.) have been dropped
+    # so weathered / dust-streaked / red-rimmed cues can land.
+    "deformed eyes,broken facial anatomy,extra eye,"
+    "missing eye,crooked eye,droopy eyelid,merged eyebrows,"
+    # Color-wash — still want neutral grade
+    "orange cast,magenta cast,pink cast,purple cast,color wash,"
+    "warm filter,heavy filter,sepia overlay,monochrome filter,"
+    "over-saturated,over-graded,"
+    # Plastic / CGI — still want photoreal
+    "cgi plastic skin,doll-like face,waxy skin,smooth airbrushed skin,"
+    "3d render plastic,video game character,pixar style,"
+    "unreal engine character,over-rendered,"
+    # Cartoon / illustration bans
+    "cartoon,anime,cel shaded,illustration,drawing,comic book,"
+    # Embedded-text — still want clean frames
+    "text,letters,letterforms,typography,calligraphy,handwriting,"
+    "channel name,subscribe text,logo text,bold text,glowing text,"
+    "scribbled letters,garbled text,misspelled text,fake text,"
+    "watermark,signature,caption,subtitle text in image,"
+    # Anatomy
+    "blurry,blur,out of focus,low quality,pixelated,distorted,"
+    "ugly,bad anatomy,logo,duplicate,deformed,"
+    "extra fingers,six fingers,seven fingers,too many fingers,"
+    "mutated hands,malformed hands,fused fingers,missing fingers,"
+    "extra limbs,extra arms,malformed limbs,disfigured,"
+    "cross-eyed,bad proportions"
+)
+
+# Backwards-compat alias — _NEGATIVE was the single global pre-2026-05-18.
+_NEGATIVE = _NEGATIVE_DEFAULT
+
+
+# ─── Imperfection cue routing (Phase 2/3 stabilization, 2026-05-18) ──────
+# Mood-routed cue table analogous to _HOOK_VISUALS. When scene.mood contains
+# any of these keywords, the corresponding cue gets APPENDED to the scene's
+# image_prompt (additive, not a replacement) AND _NEGATIVE_RESTRAINT is used
+# for that scene's provider calls in place of _NEGATIVE_DEFAULT.
+#
+# Three cue families (earlier slots win first-match):
+#   grief/loss/mourning  — pain-in-motion: red-rimmed eyes, trembling hand
+#   aftermath/haunting/  — cost: weathered skin, dust on fingers, weapon
+#     hollow/irreversible/  held loosely as if about to be dropped, knees
+#     weary/severed         barely supporting weight
+#   witnessed/abandoned/ — frozen vulnerability: posture of one who has
+#     unresolved            seen too much, eyes that look past the viewer,
+#                           frozen mid-motion as if forgotten how to step
+#
+# The cues encode PHYSICAL VULNERABILITY (inability, hesitation, weakness)
+# not just "weathered" surface — per 2026-05-18 user feedback distinguishing
+# "warrior staring sadly at battlefield" (composed grief) from "warrior
+# unable to lift weapon anymore" (cost embodied).
+_IMPERFECTION_GRIEF = (
+    "dust-streaked face, eyes red-rimmed but not crying, "
+    "hair displaced by wind, garment torn at one edge, "
+    "asymmetric posture, hand trembling slightly, "
+    "shoulders slumped under invisible weight"
+)
+_IMPERFECTION_AFTERMATH = (
+    "weathered skin with visible age lines, ash on shoulders, "
+    "dust on bowstring fingers, weapon held loosely as if about to be "
+    "dropped, knees barely supporting weight, the weariness of years "
+    "visible in stance, unevenly lit by dying light"
+)
+_IMPERFECTION_WITNESSED = (
+    "single figure in vast empty space, posture of one who has seen too "
+    "much, eyes that look past the viewer, imperfect symmetry, frozen "
+    "mid-motion as if forgotten how to step forward"
+)
+
+_IMPERFECTION_CUES: list[tuple[str, str]] = [
+    ("grief",        _IMPERFECTION_GRIEF),
+    ("loss",         _IMPERFECTION_GRIEF),
+    ("mourning",     _IMPERFECTION_GRIEF),
+    ("aftermath",    _IMPERFECTION_AFTERMATH),
+    ("haunting",     _IMPERFECTION_AFTERMATH),
+    ("hollow",       _IMPERFECTION_AFTERMATH),
+    ("irreversible", _IMPERFECTION_AFTERMATH),
+    ("weary",        _IMPERFECTION_AFTERMATH),
+    ("severed",      _IMPERFECTION_AFTERMATH),
+    ("witnessed",    _IMPERFECTION_WITNESSED),
+    ("abandoned",    _IMPERFECTION_WITNESSED),
+    ("unresolved",   _IMPERFECTION_WITNESSED),
+]
+
+
+def _lookup_imperfection_cue(mood: str) -> str:
+    """
+    Substring-match scene.mood against _IMPERFECTION_CUES. Returns the cue
+    string on first match; empty string when no match (graceful fallback —
+    standard composition only, no cue append, no negative split).
+    """
+    if not mood:
+        return ""
+    mood_lower = mood.lower()
+    for keyword, cue in _IMPERFECTION_CUES:
+        if keyword in mood_lower:
+            return cue
+    return ""
 
 # 3 compositional angles per scene — gives genuine visual variety.
 # "dramatic close-up" was walked back to "medium close-up" on 2026-05-14
@@ -259,6 +385,20 @@ _SHOT_COMPOSITIONS = [
         "side lighting, emotional weight on face. ",
     ),
 ]
+
+
+# ─── Explainer visual_track categories (v2) ──────────────────────────────
+# When a scene has a `visual_track` list (explainer series only), the LLM
+# supplies one prompt per shot with a category tag. Each category prepends
+# its own composition directive so FLUX gets a consistent framing per type.
+# This is what shifts the channel from 80% portrait montage to investigative
+# systems-thinking visuals.
+_CATEGORY_PREFIX = {
+    "human":    "close-up portrait, single human subject, dramatic single-source lighting, shallow depth of field, intense expression, ",
+    "system":   "wide architectural photograph of large-scale infrastructure, no humans visible, no text, no logos, dark moody atmosphere, ",
+    "symbolic": "conceptual editorial photograph, single iconic object as metaphor, no humans, no text, dramatic isolation lighting, ",
+    "ui":       "stylized vertical screen UI mock, dark interface, looks like a captured frame from an investigative documentary or news terminal, minimal blurred body text, no logos, no readable proper-noun strings, ",
+}
 
 
 # ─── Hook visual override (Phase 2, 2026-05-17) ──────────────────────────
@@ -650,7 +790,8 @@ def _ensure_dims(img_bytes: bytes, width: int, height: int) -> bytes:
         return img_bytes
 
 
-def _gen_hf(prompt: str, seed: int, width: int, height: int) -> bytes:
+def _gen_hf(prompt: str, seed: int, width: int, height: int,
+            negative: str = _NEGATIVE_DEFAULT) -> bytes:
     token = os.environ.get("HF_TOKEN", "").strip()
     if not token:
         raise RuntimeError("HF_TOKEN not set")
@@ -666,7 +807,7 @@ def _gen_hf(prompt: str, seed: int, width: int, height: int) -> bytes:
             "height": height,
             "num_inference_steps": 4,
             "seed": seed,
-            "negative_prompt": _NEGATIVE,
+            "negative_prompt": negative,
         },
     }
     resp = requests.post(_HF_URL, headers=headers, json=body, timeout=60)
@@ -720,7 +861,8 @@ def _cf_is_quota_error(status: int, body_text: str) -> bool:
     return False
 
 
-def _gen_cloudflare(prompt: str, seed: int, width: int, height: int) -> bytes:
+def _gen_cloudflare(prompt: str, seed: int, width: int, height: int,
+                    negative: str = _NEGATIVE_DEFAULT) -> bytes:
     """
     Multi-account FLUX-schnell call — branding-style flow (2026-05-18 rewrite).
 
@@ -758,7 +900,7 @@ def _gen_cloudflare(prompt: str, seed: int, width: int, height: int) -> bytes:
 
     body = {
         "prompt":          prompt,
-        "negative_prompt": _NEGATIVE,
+        "negative_prompt": negative,
         "steps":           8,
         "seed":            seed,
         "width":           width,
@@ -826,9 +968,10 @@ def _gen_cloudflare(prompt: str, seed: int, width: int, height: int) -> bytes:
     raise RuntimeError(f"cloudflare cascade exhausted: {last_err}")
 
 
-def _gen_pollinations(prompt: str, seed: int, width: int, height: int) -> bytes:
+def _gen_pollinations(prompt: str, seed: int, width: int, height: int,
+                      negative: str = _NEGATIVE_DEFAULT) -> bytes:
     encoded  = quote(prompt)
-    negative = quote(_NEGATIVE)
+    negative = quote(negative)
     # model=flux: bare FLUX-schnell, no postprocessing filter applied.
     # Was model=flux-realism — that variant adds a "realism" LoRA + heavy
     # warm/saturated filter on top of FLUX-schnell, which is what gave the
@@ -939,7 +1082,10 @@ def get_provider_tally() -> dict[str, int]:
     return dict(_PROVIDER_TALLY)
 
 
-def generate_image_bytes(prompt: str, seed: int, width: int, height: int, mood: str = "", style_suffix: str = STYLE_SUFFIX) -> tuple[bytes, str]:
+def generate_image_bytes(prompt: str, seed: int, width: int, height: int,
+                         mood: str = "",
+                         style_suffix: str = STYLE_SUFFIX,
+                         negative_prompt: str = _NEGATIVE_DEFAULT) -> tuple[bytes, str]:
     """
     Tries Cloudflare (multi-account cascade) -> HF -> Pollinations until one
     returns a usable image. Returns (image_bytes, provider_name).
@@ -974,9 +1120,9 @@ def generate_image_bytes(prompt: str, seed: int, width: int, height: int, mood: 
             style_suffix = STYLE_SUFFIX_DIVINE
     full_prompt = _build_full_prompt(prompt, mood, style_suffix=style_suffix)
     providers = [
-        ("cloudflare-flux-schnell", lambda: _gen_cloudflare(full_prompt, seed, width, height)),
-        ("hf-flux-schnell",         lambda: _gen_hf(full_prompt, seed, width, height)),
-        ("pollinations-flux-realism", lambda: _gen_pollinations(full_prompt, seed, width, height)),
+        ("cloudflare-flux-schnell", lambda: _gen_cloudflare(full_prompt, seed, width, height, negative=negative_prompt)),
+        ("hf-flux-schnell",         lambda: _gen_hf(full_prompt, seed, width, height, negative=negative_prompt)),
+        ("pollinations-flux-realism", lambda: _gen_pollinations(full_prompt, seed, width, height, negative=negative_prompt)),
     ]
     last_err = None
     for name, fn in providers:
@@ -1024,7 +1170,7 @@ def generate_images(scenes: list, single_shot: bool = False, series: str = "maha
     When `ck` is provided returned paths point into the cache directory;
     otherwise they point into temp/images.
     """
-    os.makedirs("temp/images", exist_ok=True)
+    os.makedirs(f"{_TEMP_ROOT}/images", exist_ok=True)
     scene_groups = []
 
     # _SHOT_COMPOSITIONS replaced the prior _SHOT_ANGLES (2026-05-17 Phase 1).
@@ -1072,7 +1218,7 @@ def generate_images(scenes: list, single_shot: bool = False, series: str = "maha
         # observed in production on 2026-05-14).
         static_path = scene.get("image_path", "")
         if static_path and os.path.exists(static_path):
-            output_path = f"temp/images/scene_{i:02d}_shot_00.jpg"
+            output_path = f"{_TEMP_ROOT}/images/scene_{i:02d}_shot_00.jpg"
             try:
                 import shutil
                 shutil.copy2(static_path, output_path)
@@ -1095,6 +1241,92 @@ def generate_images(scenes: list, single_shot: bool = False, series: str = "maha
 
         shot_paths = []
         mood = scene.get("mood", "")
+
+        # ── v2 EXPLAINER FAST PATH ───────────────────────────────────────
+        # When the script supplies a `visual_track` (explainer series), the LLM
+        # has already authored 3 distinct prompts with category tags. Use those
+        # directly with category-specific framing instead of the generic
+        # _SHOT_COMPOSITIONS triplet. This delivers the visual diversity that
+        # the wide/dynamic/closeup pattern can't (every shot was a riff on the
+        # same human-centric image_prompt).
+        if series == "explainer" and isinstance(scene.get("visual_track"), list) and scene["visual_track"]:
+            track = scene["visual_track"]
+            for shot_idx, shot in enumerate(track):
+                if not isinstance(shot, dict):
+                    continue
+                cat = shot.get("category", "system")
+                subject = (shot.get("prompt") or "").strip()
+                if not subject:
+                    continue
+                framing = _CATEGORY_PREFIX.get(cat, _CATEGORY_PREFIX["system"])
+                full_prompt = framing + subject
+                # Seed: stable per (scene, shot, category) so re-runs reproduce
+                seed = i * 211 + shot_idx * 37 + (hash(cat) & 0xFFF)
+                output_path = f"{_TEMP_ROOT}/images/scene_{i:02d}_shot_{shot_idx:02d}.jpg"
+                success = False
+                for attempt in range(3):
+                    try:
+                        img_bytes, provider = generate_image_bytes(
+                            full_prompt, seed=seed, width=768, height=1344,
+                            mood="", style_suffix="",  # explainer has its own LUT downstream
+                        )
+                        with open(output_path, "wb") as f:
+                            f.write(img_bytes)
+                        shot_paths.append(output_path)
+                        print(f"    [OK] Scene {i+1} shot {shot_idx+1}/3 ({cat}) via {provider}")
+                        success = True
+                        break
+                    except Exception as e:
+                        print(f"    [!] Scene {i+1} shot {shot_idx+1} ({cat}) attempt {attempt+1}: {e}")
+                    time.sleep((attempt + 1) * 3)
+                if not success:
+                    _create_placeholder(output_path, i * 3 + shot_idx, series=series)
+                    shot_paths.append(output_path)
+                    print(f"    [~] Placeholder for scene {i+1} shot {shot_idx+1} ({cat})")
+                try:
+                    inter_shot_s = float(os.environ.get("INTER_SHOT_COOLDOWN_S", "5.0"))
+                except ValueError:
+                    inter_shot_s = 5.0
+                time.sleep(inter_shot_s)
+
+            # Per-scene checkpoint + skip the legacy loop below
+            if ck is not None:
+                cached_paths = []
+                for j_idx, temp_path in enumerate(shot_paths):
+                    ext = os.path.splitext(temp_path)[1] or ".jpg"
+                    cache_name = f"visuals/scene_{i:02d}_shot_{j_idx:02d}{ext}"
+                    try:
+                        cached_paths.append(ck.save_file(cache_name, temp_path))
+                    except Exception as _e:
+                        print(f"    [warn] Could not checkpoint scene {i+1} shot {j_idx+1}: {_e}")
+                        cached_paths.append(temp_path)
+                shot_paths = cached_paths
+                try:
+                    current = ck.load_json(partial_key) if ck.has(partial_key) else {}
+                    current[str(i)] = cached_paths
+                    ck.save_json(partial_key, current)
+                except Exception as _e:
+                    print(f"    [warn] Could not update partial manifest for scene {i+1}: {_e}")
+
+            scene_groups.append(shot_paths)
+            print(f"    [OK] Scene {i+1}/{len(scenes)} complete via visual_track — {len(shot_paths)} shots")
+            continue
+
+        # Phase 2/3 stabilization (2026-05-18): mood-routed imperfection cue.
+        # When mood matches a restraint keyword (grief/aftermath/witnessed/etc.)
+        # the cue gets APPENDED to the scene's image_prompt and the negative
+        # prompt switches to _NEGATIVE_RESTRAINT (skin-condition rejections
+        # stripped) so weathered / dust-streaked / red-rimmed anchors can land
+        # without getting fought by the negative. Mahabharata only — WhatIf
+        # science content does not carry mythology grief moods.
+        if series == "mahabharata":
+            imperfection_cue = _lookup_imperfection_cue(mood)
+        else:
+            imperfection_cue = ""
+        scene_negative = _NEGATIVE_RESTRAINT if imperfection_cue else _NEGATIVE_DEFAULT
+        if imperfection_cue:
+            print(f"    [imperfection] scene {i+1} mood='{mood[:40]}' → "
+                  f"physical-vulnerability cue + restraint negative")
 
         # Scene-0 hook override (Phase 2, 2026-05-17): for the FIRST shot of
         # scene 0, swap the standard ENVIRONMENT WIDE composition for a
@@ -1134,11 +1366,17 @@ def generate_images(scenes: list, single_shot: bool = False, series: str = "maha
             # else: scene_compositions stays as the full standard list
 
         for j, (angle_label, composition_directive) in enumerate(scene_compositions):
-            output_path = f"temp/images/scene_{i:02d}_shot_{j:02d}.jpg"
+            output_path = f"{_TEMP_ROOT}/images/scene_{i:02d}_shot_{j:02d}.jpg"
             # Character injection is Mahabharata-specific (Krishna/Arjuna/etc.
             # visual descriptors); skip it for WhatIf science content.
             raw_prompt = scene["image_prompt"]
             base_prompt = raw_prompt if series == "whatif" else _inject_characters(raw_prompt)
+            # Append the imperfection cue AFTER character injection so it
+            # rides on top of the character's existing descriptors instead
+            # of getting buried by them. Additive — does not replace any
+            # part of the scene prompt. Empty cue = no-op.
+            if imperfection_cue:
+                base_prompt = f"{base_prompt}. {imperfection_cue}"
             prompt = f"{angle_label}{composition_directive}{base_prompt}"
             # Stable per-character seed: same hero across scenes → similar
             # face. Falls back to scene-position seed when no known character
@@ -1152,6 +1390,7 @@ def generate_images(scenes: list, single_shot: bool = False, series: str = "maha
                     img_bytes, provider = generate_image_bytes(
                         prompt, seed=seed, width=768, height=1344, mood=mood,
                         style_suffix=style_suffix,
+                        negative_prompt=scene_negative,
                     )
                     with open(output_path, "wb") as f:
                         f.write(img_bytes)

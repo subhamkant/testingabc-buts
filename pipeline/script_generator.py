@@ -27,14 +27,28 @@ _GEMINI_TRANSIENT_MARKERS = (
 _GEMINI_MODELS_BEST = ("gemini-2.5-pro", "gemini-2.5-flash", "gemini-2.5-flash-lite")
 _GEMINI_MODELS_FAST = ("gemini-2.5-flash", "gemini-2.5-flash-lite")
 
+# Process-wide cache of models confirmed unavailable on free tier (limit: 0).
+# Set on first encounter to skip ~5 wasted 429 attempts on every subsequent
+# call. Discovered 2026-05-19: Google removed gemini-2.5-pro from the free
+# tier entirely (free-tier limit is 0, not 50 RPD). All 5 of our API keys
+# are on free-tier-only GCP projects, so Pro hits this wall every time.
+# Once-and-skip preserves the cascade for the day Google may re-enable it.
+_FREE_TIER_DISABLED_MODELS: set[str] = set()
+
 
 def _gemini_keys():
     """
     Returns list of (label, api_key) tuples for the Gemini API. Walks
     GEMINI_API_KEY first (primary), then GEMINI_API_KEY_FALLBACK,
-    GEMINI_API_KEY_FALLBACK_2, GEMINI_API_KEY_FALLBACK_3 if set — each
-    additional Google account's project adds 50 RPD of Pro quota. With
-    all 4 keys configured: 200 RPD Pro vs 50 with primary alone.
+    GEMINI_API_KEY_FALLBACK_2, _3, _4, _5 if set — each additional Google
+    account's project adds 50 RPD of Pro quota. With all 6 keys configured:
+    300 RPD Pro vs 50 with primary alone.
+
+    Range bumped 2026-05-18: previously hard-coded to primary + 3 fallbacks
+    (4 keys total). User had GEMINI_API_KEY_FALLBACK_4 set in .env but the
+    code wasn't reading it. Extended to _4 + _5 so any keys present in the
+    env actually get picked up.
+
     Mirrors the existing _elevenlabs_keys() pattern.
 
     Empty/whitespace-only keys (and duplicates) are filtered out so
@@ -42,12 +56,9 @@ def _gemini_keys():
     """
     keys = []
     seen = set()
-    candidates = [
-        ("primary",    "GEMINI_API_KEY"),
-        ("fallback",   "GEMINI_API_KEY_FALLBACK"),
-        ("fallback-2", "GEMINI_API_KEY_FALLBACK_2"),
-        ("fallback-3", "GEMINI_API_KEY_FALLBACK_3"),
-    ]
+    candidates = [("primary", "GEMINI_API_KEY"), ("fallback", "GEMINI_API_KEY_FALLBACK")]
+    for n in range(2, 6):  # _2, _3, _4, _5
+        candidates.append((f"fallback-{n}", f"GEMINI_API_KEY_FALLBACK_{n}"))
     for label, env_name in candidates:
         val = os.environ.get(env_name, "").strip()
         if val and val not in seen:
@@ -124,6 +135,13 @@ def _gemini_call_with_retry(keys, prompt: str, config, models=None) -> str:
     last_err = ""
 
     for model_idx, model_name in enumerate(models):
+        # Once-and-skip for models confirmed free-tier-disabled this process
+        # (2026-05-19: gemini-2.5-pro free-tier limit is 0 across all keys).
+        # Saves ~3-5s of wasted 429s per script call.
+        if model_name in _FREE_TIER_DISABLED_MODELS:
+            print(f"    {model_name} skipped — free-tier disabled this run "
+                  f"(detected earlier; falling through to next model)")
+            continue
         for key_idx, (key_label, api_key) in enumerate(keys):
             client = genai.Client(api_key=api_key)
             # First (model, key) combo gets full retry-with-backoff.
@@ -147,6 +165,19 @@ def _gemini_call_with_retry(keys, prompt: str, config, models=None) -> str:
                     last_err = f"{model_name}/{key_label}: {err_str[:140]}"
                     is_transient = any(m in err_str for m in _GEMINI_TRANSIENT_MARKERS)
                     is_quota = "RESOURCE_EXHAUSTED" in err_str or "exceeded your current quota" in err_str
+
+                    # Detect free-tier-disabled state (limit: 0 in quota error).
+                    # Google's response includes the literal "limit: 0" string
+                    # when a model is structurally unavailable to free tier.
+                    # When detected, cache it process-wide so subsequent script
+                    # generations skip this model entirely.
+                    if is_quota and "limit: 0" in err_str and model_name not in _FREE_TIER_DISABLED_MODELS:
+                        _FREE_TIER_DISABLED_MODELS.add(model_name)
+                        print(f"    [!] {model_name} free-tier limit is 0 — caching as "
+                              f"unavailable for this run (will skip Pro on subsequent calls). "
+                              f"Google removed free-tier access; enable billing on a GCP "
+                              f"project to unlock paid Pro.")
+
                     if not is_transient and not (model_idx == 0 and key_idx == 0):
                         # Non-transient on a fallback combo — move to next combo
                         print(f"    {model_name}/{key_label} non-transient: {err_str[:100]}")
@@ -158,12 +189,19 @@ def _gemini_call_with_retry(keys, prompt: str, config, models=None) -> str:
                         # Quota 429 — don't retry on this key, the daily reset
                         # won't happen in our 73s backoff window. Move to next
                         # key (different GCP project) or next model.
+                        # If we just cached this model as free-tier-disabled,
+                        # break the KEY loop entirely (all keys hit same limit).
+                        if model_name in _FREE_TIER_DISABLED_MODELS:
+                            break
                         print(f"    {model_name}/{key_label} quota exhausted — skipping retries")
                         break
                     # Transient but not quota: per-minute rate limit, 5xx, network.
                     # Retry with backoff if attempts remain.
                     print(f"    {model_name}/{key_label} transient: {err_str[:100]}")
-            # Loop continues to next key on same model.
+            # If model was cached as free-tier-disabled mid-loop, stop trying
+            # other keys on this model — they all share the same free-tier wall.
+            if model_name in _FREE_TIER_DISABLED_MODELS:
+                break
         # If we've tried all keys on this model, fall to the next model.
         if model_idx < len(models) - 1:
             print(f"    {model_name} exhausted on all {len(keys)} key(s) — falling over to {models[model_idx + 1]}...")
@@ -650,6 +688,294 @@ def _check_visual_escalation(scenes: list) -> tuple[bool, list]:
         if not _VISUAL_POWER_KEYWORDS.search(prompt_text):
             missing.append(idx + 1)  # 1-indexed for human readability
     return (not missing), missing
+
+
+# ════════════════════════════════════════════════════════════════════
+# Phase 2/3 stabilization validators (added 2026-05-18)
+# ════════════════════════════════════════════════════════════════════
+# These enforce the "cost over pain" storytelling principle: the final
+# scene must land aftermath (consequence), mid-section must destabilize,
+# and no video may turn into a "poetic sadness engine."
+# See: C:\Users\rjyot\.claude\plans\have-a-look-into-polished-goblet.md
+
+# Aftermath cues — scene 6 image_prompt MUST contain at least one.
+# These describe emotion AFTER destruction (what was left behind), not
+# emotion in motion (the destruction itself).
+#
+# Pattern design (2026-05-19 v2 after smoke #2):
+# The regex is intentionally permissive — the LLM paraphrases ("abandoned
+# Gandiva bow", "single figure (Bhishma) staring", "wind moving through
+# empty cloth") and v1 was rejecting valid aftermath content because the
+# exact phrase didn't match. Now we allow optional words/parens between
+# the core aftermath nouns so natural variations land.
+_AFTERMATH_CUES = _re.compile(
+    r"\b("
+    r"empty battlefield|"
+    # "abandoned weapon" OR specific weapons (Gandiva, bow, sword, chariot, etc.)
+    r"abandoned[\s\w()\-,]{0,40}(weapon|bow|sword|gandiva|spear|mace|shield|chariot|throne|armou?r|standard)|"
+    r"discarded[\s\w()\-,]{0,40}(weapon|bow|sword|gandiva|crown|throne|armou?r)|"
+    # Thrones and crowns
+    r"lonely throne|empty throne|throne[\s\w()\-,]{0,30}(beside|abandoned|discarded|empty)|"
+    r"crown[\s\w()\-,]{0,30}(beside|on the floor|discarded|fallen|abandoned)|"
+    # Trembling hand releasing
+    r"trembling[\s\w()\-,]{0,30}releas|hand[\s\w()\-,]{0,15}releas|"
+    r"hand[\s\w()\-,]{0,30}letting go|fingers[\s\w()\-,]{0,15}releas|grip loosening|"
+    r"hand near[\s\w()\-,]{0,20}not touching|"
+    r"releasing the (bow|sword|sacred thread|thread|wrist|reins?)|"
+    # Single-figure isolation imagery (permissive — allows parens/clarifications)
+    r"single figure[\s\w()\-,]{0,40}(staring|gazing|alone|silhouetted|standing|walking)|"
+    r"a lone figure|alone in[\s\w()\-,]{0,20}(vast|empty|silence)|"
+    r"figure[\s\w()\-,]{0,30}staring at the (distance|horizon|emptiness|battlefield|sky|void)|"
+    # Wind through emptiness (allows "wind moving through ...", "wind blows through ...")
+    r"wind[\s\w()\-,]{0,15}through[\s\w()\-,]{0,20}(empty|cloth|halls?|banners?)|"
+    r"wind moving[\s\w()\-,]{0,30}empty|wind in empty halls?|"
+    # Footprints / aftermath ground details
+    r"footprints in (ash|dust|blood|soot|snow)|footsteps fading|"
+    # Broken thread imagery
+    r"broken (sacred )?thread|snapped (sacred )?thread|"
+    # Eyes-stopped-weeping
+    r"stopped weeping but cannot look away|eyes that have stopped weeping|"
+    r"eyes[\s\w()\-,]{0,30}cannot look away|"
+    # Mourning emptiness
+    r"nobody left to mourn|no one (left )?to mourn|"
+    # Silence-after imagery
+    r"silence after the storm|after the silence|after the battle ends|"
+    r"haunting[\s\w()\-,]{0,15}(quiet|silence|landscape|emptiness|stillness)|"
+    # Empty interiors
+    r"empty (hall|courtyard|palace|battlefield|chamber|throne room|landscape)|"
+    # Shattered / torn aftermath
+    r"shattered weapon|torn flag|torn banner|broken bow lies|"
+    # Fallen weapons
+    r"weapon[\s\w()\-,]{0,20}fallen|sword fallen|bow[\s\w()\-,]{0,15}(fallen|lies broken|lies abandoned)|"
+    # Body-on-arrows-like imagery
+    r"bed of arrows|lying on[\s\w()\-,]{0,15}arrows"
+    r")\b",
+    _re.IGNORECASE
+)
+
+# Closure tropes — scene 6 narration MUST NOT contain these. They kill
+# emotional residue by giving the viewer closure-pleasure right when we
+# want the weight to linger.
+_CLOSURE_TROPES = _re.compile(
+    r"\b("
+    r"rises? triumphant|rose triumphant|dawn of (a |the )?new era|"
+    r"glory shone|in glory|"
+    r"victorious|victory was|"
+    r"hope rekindled|battle won|won the (battle|war)|"
+    r"peace restored|blessing of the gods|"
+    r"stands? tall|shines bright"
+    r")\b|"
+    # Hindi closure tropes
+    r"नया युग|प्रकाश की किरण|जय हो|"
+    r"विजयी हुए|विजयी हुआ|विजय मिली|"
+    r"महिमा से|उगता है|उगा सूरज|नया सवेरा",
+    _re.IGNORECASE
+)
+
+# Allowed scene-6 mood keywords (substring match, case-insensitive).
+_AFTERMATH_MOODS_ALLOWED = (
+    "haunting", "hollow", "weary", "irreversible",
+    "severed", "witnessed", "abandoned", "unresolved",
+    "quiet", "lingering", "broken", "empty", "still",
+    "weight", "ash", "after", "silenced",
+)
+
+# Forbidden scene-6 mood keywords (would kill residue).
+_AFTERMATH_MOODS_FORBIDDEN = (
+    "inspiring", "triumphant", "dignified", "peaceful",
+    "glorious", "majestic", "uplifting", "hopeful",
+    "rejoice", "victorious",
+)
+
+# Old spectacle keywords that scene 6 MUST NOT use anymore.
+# These are kept allowed for scenes 4-5 if they fit, but scene 6 has been
+# repurposed from CLIMAX to AFTERMATH (2026-05-18 stabilization).
+_SCENE6_SPECTACLE_FORBIDDEN = _re.compile(
+    r"\b("
+    r"lightning splits?|lightning strikes?|inferno|tempest|"
+    r"burning sky|skies? on fire|fiery climax|"
+    r"war thunders|cosmic destruction|cosmic apocalypse|"
+    r"raging fire|raging inferno|fire consumes|"
+    r"thunder roars|storm rages"
+    r")\b",
+    _re.IGNORECASE
+)
+
+
+def _check_final_scene_aftermath(scenes: list) -> tuple[bool, str]:
+    """
+    Scene 6 must land aftermath imagery — not spectacle, not triumph.
+    Returns (ok, reason). HARD gate.
+
+    Five sub-checks:
+      1. image_prompt contains at least ONE aftermath cue
+      2. image_prompt does NOT contain old spectacle keywords
+      3. mood matches an allowed aftermath keyword
+      4. mood does NOT contain a forbidden closure-tone keyword
+      5. narration does NOT contain a closure trope ("rises triumphant", etc.)
+    """
+    if not scenes:
+        return False, "no scenes"
+    final = scenes[-1]
+    img  = (final.get("image_prompt") or "")
+    mood = (final.get("mood") or "").lower()
+    narr = (final.get("narration") or "")
+
+    if not _AFTERMATH_CUES.search(img):
+        return False, (
+            "scene 6 image_prompt lacks aftermath cue. Required: one of "
+            "'empty battlefield', 'abandoned weapon', 'lonely throne', "
+            "'trembling hand releasing', 'single figure staring', "
+            "'discarded crown', 'wind through empty cloth', 'footprints "
+            "in ash', 'broken thread', 'stopped weeping but cannot look "
+            "away', 'hand letting go'. Aftermath = what destruction LEFT "
+            "BEHIND, not destruction itself."
+        )
+
+    if _SCENE6_SPECTACLE_FORBIDDEN.search(img):
+        m = _SCENE6_SPECTACLE_FORBIDDEN.search(img)
+        return False, (
+            f"scene 6 image_prompt uses forbidden spectacle keyword "
+            f"'{m.group(0)}'. Aftermath shows what destruction LEFT, not "
+            f"destruction itself. Remove the spectacle phrase and replace "
+            f"with one aftermath end-state."
+        )
+
+    if any(forbidden in mood for forbidden in _AFTERMATH_MOODS_FORBIDDEN):
+        return False, (
+            f"scene 6 mood '{mood}' is a closure tone. Use one of: "
+            f"haunting-quiet / hollow / weary / irreversible / severed / "
+            f"witnessed / abandoned / unresolved instead."
+        )
+
+    if not any(allowed in mood for allowed in _AFTERMATH_MOODS_ALLOWED):
+        return False, (
+            f"scene 6 mood '{mood}' is not an aftermath mood. Must be "
+            f"one of: haunting-quiet / hollow / weary / irreversible / "
+            f"severed / witnessed / abandoned / unresolved / quiet / "
+            f"lingering / broken / still / empty."
+        )
+
+    if _CLOSURE_TROPES.search(narr):
+        offender = _CLOSURE_TROPES.search(narr).group(0)
+        return False, (
+            f"scene 6 narration contains closure trope '{offender}'. "
+            f"These give the viewer pleasure-resolution right when we "
+            f"want weight to linger. Rewrite without it — the bookend "
+            f"payoff should land as COST, not as triumph."
+        )
+
+    return True, "aftermath dominance landed"
+
+
+# Dangerous-line destabilization signature patterns (Hindi).
+# Permissive matching: substring-find any of the destabilization cores.
+# Realization-after-the-fact, irreversibility, finality, permanence,
+# temporal closure, severance.
+_DANGEROUS_LINE_PATTERNS_HI = _re.compile(
+    r"नहीं पता था|"            # didn't know (M)
+    r"नहीं पता थी|"            # didn't know (F)
+    r"पता ही नहीं|"            # never even knew
+    r"नहीं बदल|बदल नहीं|"      # can't change / won't change (either order)
+    r"खत्म हो गय|"             # ended / was over (matches गया/गई/गयी/गये)
+    r"सब खत्म|"                # everything ended
+    r"माफ़ नहीं|कभी माफ़|"     # never forgave
+    r"आखिरी बार|"             # last time
+    r"अंतिम बार|"              # last/final time (synonym)
+    r"वापस नहीं आय|"           # never came back
+    r"कभी लौट|लौट नहीं"        # never returned
+)
+
+_DANGEROUS_LINE_PATTERNS_EN = _re.compile(
+    r"\b(didn'?t know|never knew|"
+    r"could not change|couldn'?t change|cannot be changed|"
+    r"was over|it ended|all ended|everything ended|"
+    r"never forgave|never forgiven|"
+    r"last time|final time|for the last time|"
+    r"never came back|never returned|did not return)\b",
+    _re.IGNORECASE
+)
+
+
+def _check_dangerous_line(scenes: list, language: str) -> tuple[bool, int, str]:
+    """
+    Scene 3 OR scene 4 narration must contain a destabilization signature.
+    Returns (ok, found_scene_1indexed_or_0, reason). HARD gate.
+
+    The dangerous line shifts emotional gravity — it makes the viewer
+    realize something irreversible. Position matters: the 24-38s window
+    (scenes 3-4 at ~6-8s/scene pacing) is the spot where retention dips
+    and a destabilization beat anchors the viewer.
+    """
+    if len(scenes) < 4:
+        return False, 0, f"only {len(scenes)} scenes — dangerous-line needs scenes 3-4"
+
+    candidates = (scenes[2], scenes[3])  # 0-indexed: scenes 3 and 4
+    pattern = (_DANGEROUS_LINE_PATTERNS_HI
+               if language == "hi"
+               else _DANGEROUS_LINE_PATTERNS_EN)
+
+    for offset, scene in enumerate(candidates):
+        narr = scene.get("narration") or ""
+        if pattern.search(narr):
+            return True, 3 + offset, f"dangerous-line found in scene {3 + offset}"
+
+    return False, 0, (
+        "no destabilization signature in scenes 3-4. Required patterns "
+        "(pick ONE; pattern below MUST appear in scene 3 OR scene 4 "
+        "narration): "
+        "नहीं पता था / नहीं बदल सकता / खत्म हो गया / माफ़ नहीं किया / "
+        "आखिरी बार / वापस नहीं आया (Hindi) — or 'didn't know' / 'could "
+        "not change' / 'was over' / 'never forgave' / 'last time' / "
+        "'never came back' (English). This is the line that shifts "
+        "emotional gravity — irreversibility, finality, realization-"
+        "after-the-fact. Without it the mid-video destabilization beat "
+        "never lands and the climax/aftermath has nothing to weigh "
+        "against. Add ONE such sentence to scene 3 OR scene 4."
+    )
+
+
+# Heavy decorative-poetic symbolism patterns (Part E — anti-over-curation).
+# These target "AI-poetic" frames (broken sacred thread, falling petals,
+# divine light fading). They do NOT target concrete aftermath end-states
+# (empty battlefield, abandoned weapon, lonely throne with crown beside it
+# — those are concrete cost imagery, not decorative symbolism).
+_HEAVY_SYMBOLIC_PATTERNS = _re.compile(
+    r"\b("
+    r"broken sacred thread|snapped sacred thread|janeu (snapped|breaking|torn)|"
+    r"falling petals|wilted petals|withered petals|petals falling|"
+    r"divine light (fading|dimming|extinguished|going out|dying)|"
+    r"eternal flame (fading|dimming|going out|extinguishing|dying)|"
+    r"sacred flame (fading|dimming|going out|dying)|"
+    r"celestial alignment|cosmic alignment|stars aligning|"
+    r"wilted lotus|lotus closing|lotus petals scattered|"
+    r"darkened sun|eclipsed sun|sun darkening|sun blotted out|"
+    r"blood moon|moon eclipsing|crimson moon|"
+    r"singing winds|weeping skies|skies wept|"
+    r"shattered crystal|broken mirror of (heaven|fate|destiny)|"
+    r"divine veil|veil of the gods (fading|tearing)"
+    r")\b",
+    _re.IGNORECASE
+)
+
+
+def _check_anti_over_curation(scenes: list) -> tuple[bool, int, list]:
+    """
+    SOFT gate (warn-only). Count scenes whose image_prompt uses heavy
+    decorative-poetic symbolism. At most 1 such scene per video; more
+    turns the pipeline into a "poetic sadness engine" per 2026-05-18 user
+    feedback. Returns (ok, count, scene_1indexed_indices).
+
+    Devastation is NOT a poem — real devastation looks plain, awkward,
+    physically uncomfortable. A trembling hand outperforms a falling
+    petal. Symbolism should be RARE so the one time it lands, it lands.
+    """
+    hits = []
+    for i, s in enumerate(scenes, start=1):
+        img = s.get("image_prompt") or ""
+        if _HEAVY_SYMBOLIC_PATTERNS.search(img):
+            hits.append(i)
+    return (len(hits) <= 1), len(hits), hits
 
 
 # Krishna direct-address mode requires first-person markers (मैं/मैंने) or
@@ -2318,7 +2644,9 @@ def generate_script(
           "उन्होंने आँखें बंद कर लीं।"
           (A whispered question, then a single descriptive beat.)
 
-        Pick ONE. The valley is 18-22 words total regardless of pattern.
+        Pick ONE. The valley is 14-18 words total regardless of pattern
+        (Phase 2/3 stabilization 2026-05-19: tightened from 18-22 to
+        protect the emotional-residue budget at the end of the video).
         DO NOT default to Pattern A every video — formula detection. Rotate.
 
         Image prompt for THIS scene MUST be: tight close-up,
@@ -2330,13 +2658,41 @@ def generate_script(
         it, the brain registers "wait, it got quiet... oh god, here it
         comes." This contrast amplifies the felt energy of the climax.
 
-    Scene 6 — CLIMAX / EPIC SPECTACLE + RESOLUTION:
-        The dramatic high point AND the closing payoff. After the valley's
-        intimate quiet, this scene BREAKS — lightning splits the sky, fire
-        consumes the battlefield, the cosmic consequence lands. The viewer
-        should feel awe, shock, sorrow, vindication. Also ties off the
-        narrative bookend that scene 1's hook posed. Vivid sensory detail
-        + spectacle keywords (lightning / fire / storm / cosmic / etc.).
+    Scene 6 — AFTERMATH / IRREVERSIBLE COST + RESOLUTION (rewritten 2026-05-18):
+        The closing payoff. After the valley's intimate quiet, this scene
+        does NOT show destruction in motion — it shows what destruction
+        LEFT BEHIND. Emotion AFTER destruction, NOT emotion in motion.
+
+        The narration still delivers the bookend payoff that scene 1's
+        hook posed (same noun, same actor, consequence delivered). But
+        the IMAGE shows cost — the price the action just paid.
+
+        Choose ONE aftermath end-state for the image_prompt:
+          • Empty battlefield AFTER the silence has fallen; a single
+            figure staring at the distance
+          • Abandoned weapon at the feet of someone who can no longer
+            lift it; the hand near it but not touching
+          • Lonely throne with the crown discarded beside it; cloth
+            on the floor
+          • A trembling hand RELEASING — bow / sword / sacred thread /
+            a loved one's wrist — the moment the grip lets go
+          • Eyes that have stopped weeping but cannot look away
+          • Nobody left to mourn — wind moving through empty cloth
+
+        Suffering shows the pain. Aftermath shows the COST. Cost
+        devastates; pain sympathizes. We want devastation, not sympathy.
+
+        REJECTED closure tropes — DO NOT use any of these phrases in
+        narration OR image_prompt: "rises triumphant", "dawn of a new
+        era", "glory", "victorious", "hope rekindled", "battle won",
+        "peace restored", "blessing of the gods", "stands tall",
+        "उगता है", "विजय", "महिमा". These kill emotional residue —
+        the viewer feels closure-pleasure and walks away. We want the
+        weight to LINGER after the video ends.
+
+        The scene's mood MUST be one of: haunting-quiet, hollow, weary,
+        irreversible, severed, witnessed, abandoned, unresolved. NOT
+        inspiring / dignified / peaceful / triumphant.
 
     ═══════════════════════════════════════════════════════════════
     CURIOSITY GAP — STOPS MID-VIDEO SWIPES (CRITICAL)
@@ -2358,29 +2714,46 @@ def generate_script(
 
     The FINAL scene is the only one that may end with closure or a moral.
 
-    ONE DANGEROUS LINE — added 2026-05-16 (Tier 2 Fix 2.6):
-        Around scene 3 OR scene 4, ONE sentence should be psychologically
-        DANGEROUS — a line that reframes the entire story or reveals an
-        irreversible truth. This is NOT the rehook contrast marker
-        (curiosity reset) and NOT the climax (epic spectacle). This is
-        the moment that changes the emotional WEIGHT of everything that
-        came before.
+    ONE DANGEROUS LINE — added 2026-05-16 (Tier 2 Fix 2.6),
+                          tightened 2026-05-18 (Phase 2/3 stabilization):
+        Scene 3 OR scene 4 narration MUST contain ONE sentence with a
+        destabilization signature — a line that shifts emotional gravity
+        by revealing irreversibility, finality, or realization-after-
+        the-fact. This is NOT the rehook contrast marker (curiosity
+        reset) and NOT the climax. This is the moment that changes the
+        emotional WEIGHT of everything that came before.
 
-        Patterns (pick whichever fits the topic; rotate across videos):
+        ENFORCED PATTERNS — the line MUST contain ONE of these phrases
+        (Hindi narration):
+          • "नहीं पता था" / "नहीं पता थी"  → realization-after-the-fact
+          • "नहीं बदल सकता" / "बदल नहीं"   → irreversibility
+          • "खत्म हो गया" / "खत्म हो गई"   → finality
+          • "माफ़ नहीं किया" / "कभी माफ़"   → permanence
+          • "आखिरी बार"                    → temporal closure
+          • "वापस नहीं आया"                → severance
+
+        English narration patterns: "didn't know" / "could not change"
+        / "was over" / "never forgave" / "last time" / "never came back".
+
+        Example placements (any of these works as scene 3 OR scene 4):
           • "और उसी क्षण... सब खत्म हो गया।"
           • "उसे तब भी नहीं पता था... कि वो आखिरी बार मुस्कुरा रही थी।"
           • "वो जानता था कि अब कुछ नहीं बदल सकता।"
           • "और इतिहास ने उस पल को कभी माफ़ नहीं किया।"
+          • "उन्होंने हाथ छोड़ दिया — और वापस नहीं आया।"
 
-        These lines are GOLD for retention — they make the viewer
-        re-evaluate what they've seen so far. They turn a story you're
-        watching into a story you're LIVING through.
+        Position is enforced — a destabilization sentence in scene 5 or
+        scene 6 does NOT satisfy this requirement. The line must hit at
+        the 24-38s viewing window (scenes 3-4 at ~6-8s/scene pacing).
+        That's when retention dips and the destabilization beat anchors
+        the viewer for the aftermath that lands in scene 6.
 
         DO NOT default to Pattern 1 ("और उसी क्षण...") every video — it's
-        the most quotable but also the most detectable. Rotate. If the
-        cliffhanger pattern this video opens with "और..." (Pattern A),
-        prefer dangerous-line Pattern 2/3/4 to avoid cadence echo.
-        Variation IS the protection against formula fatigue.
+        the most quotable but also the most detectable. Rotate across
+        the six patterns. If the cliffhanger this video opens with
+        "और..." (Pattern A), prefer a different destabilization
+        signature to avoid cadence echo. Variation IS the protection
+        against formula fatigue.
 
     ═══════════════════════════════════════════════════════════════
     NARRATIVE BOOKEND — THE FINAL SCENE MUST CLOSE THE HOOK
@@ -2568,17 +2941,23 @@ def generate_script(
     ═══════════════════════════════════════════════════════════════
     NARRATION LENGTH — CRITICAL (hard-enforced downstream)
     ═══════════════════════════════════════════════════════════════
-    EACH scene's narration must be 20-25 words. NOT 28. NOT 26. 25 is the
-    hard ceiling. Going over means the final mp4 gets TRIMMED at 58.5s
-    (video_assembler.MAX_DURATION_S hard cap) — your aftermath/cliffhanger
-    beat will get chopped if you overshoot. Aim for 22 words/scene as the
-    sweet spot. Hindi narrates ~3 words/sec; 22 words = ~7 seconds spoken.
+    Phase 2/3 stabilization 2026-05-19 (Part F.1): targets tightened from
+    20-25 → 18-22 words/scene. Reason: aftermath + outro residue need
+    ~10s of protected runtime budget at the END of the video; older
+    targets pushed audio past 58.5s and the residue got chopped.
+
+    EACH scene's narration must be 18-22 words. NOT 23, NOT 24, NOT 25.
+    22 is the hard ceiling. Going over means the final mp4 gets TRIMMED
+    at 58.5s (video_assembler.MAX_DURATION_S hard cap) — your aftermath
+    scene + restrained outro will get chopped if you overshoot.
+    Aim for 20 words/scene as the sweet spot. Hindi narrates ~3 words/sec;
+    20 words = ~6.5 seconds spoken.
 
     EXCEPTION: scene 5 (the EMOTIONAL VALLEY — see below) is the only scene
-    that may go shorter: 16-20 words max. It is supposed to breathe.
+    that may go shorter: 14-18 words max. It is supposed to breathe.
 
-    Total target: 6 scenes × ~22 words = ~132 spoken words. Spoken duration:
-    ~42-46s at Hindi Charon pace. A fixed subscribe outro adds ~6s for a
+    Total target: 6 scenes × ~20 words = ~120 spoken words. Spoken duration:
+    ~38-42s at Hindi Charon pace. A fixed subscribe outro adds ~5s for a
     48-52s total Short, well under the 58.5s downstream hard cap. The
     2026-05-17 #4 Bhishma Kurukshetra video came in at 70.4s — that level
     of overshoot triggers Content ID restrictions on Shorts >60s. Stay
@@ -2636,18 +3015,27 @@ def generate_script(
         Scene 5 (VALLEY):  intimate close-up — a tear, a trembling hand,
                            candlelight, broken armor. NO spectacle. This
                            is the quiet breath before the boom. (Fix 1.10)
-        Scene 6 (CLIMAX):  lightning / fire / cosmic / destruction,
-                           wide epic shot — the boom after the valley.
+        Scene 6 (AFTERMATH): empty battlefield / abandoned weapon /
+                           lonely throne / a trembling hand releasing —
+                           emotion AFTER destruction (rewritten 2026-05-18,
+                           was "lightning / fire / cosmic"). Wide enough
+                           to show emptiness; not so wide it becomes
+                           spectacle. The viewer should feel COST, not awe.
 
-    Scene 6 (CLIMAX) MUST include at least ONE of these power keywords
-    in image_prompt: "lightning", "fire", "storm", "cosmic", "destruction",
-    "battlefield", "burning sky", "ashes", "inferno", "tempest", "thunder",
-    "smoke", "war". These give FLUX the energy gradient the audio's
-    5-section music curve is building toward.
+    Scene 6 (AFTERMATH) MUST include at least ONE aftermath cue in
+    image_prompt: "empty battlefield", "abandoned weapon", "lonely throne",
+    "trembling hand releasing", "single figure staring", "discarded crown",
+    "wind through empty cloth", "footprints in ash", "hand near but not
+    touching", "broken thread", "stopped weeping but cannot look away".
 
-    Scene 5 (VALLEY) MUST NOT use those power keywords — it is the quiet
-    intimate beat. Use candlelight / dim warm tones / a single close-up
-    of suffering instead.
+    Scene 6 MUST NOT use the OLD spectacle keywords (lightning / fire /
+    storm / cosmic / destruction / inferno / tempest / burning sky).
+    Those create awe-pleasure that breaks emotional residue. The
+    destruction has ALREADY happened off-frame — show what it left.
+
+    Scene 5 (VALLEY) MUST NOT use either spectacle keywords OR aftermath
+    cues — it is the quiet intimate beat. Use candlelight / dim warm
+    tones / a single close-up of suffering instead.
 
     ═══════════════════════════════════════════════════════════════
     HUMAN PAIN — emotion beats beauty (added 2026-05-16, Fix 1.12)
@@ -2728,6 +3116,47 @@ def generate_script(
         A video that is ALL suffering reads as MELODRAMA.
         A video that earns its suffering through contrast reads as
         TRAGEDY. Aim for tragedy.
+
+    ═══════════════════════════════════════════════════════════════
+    RESIST POETIC OVER-CURATION (added 2026-05-18, Phase 2/3 stabilization)
+    ═══════════════════════════════════════════════════════════════
+    AI tends toward "meaningful-looking emotion" — symbolic frames,
+    poetic abstractions, decorative sadness. Real devastation often
+    looks awkward, plain, unresolved, physically uncomfortable. A
+    still hand outperforms a falling petal. A foot that won't step
+    forward outperforms divine light fading.
+
+    AT MOST ONE scene per video may use heavy symbolic imagery in
+    its image_prompt. The decorative-symbol list (use at most once):
+      • broken sacred thread / janeu snapping
+      • falling petals / wilted petals / lotus closing
+      • divine light fading / dimming / extinguished
+      • eternal flame fading / sacred flame dying
+      • blood moon / eclipsed sun / cosmic alignment
+      • singing winds / weeping skies
+      • shattered crystal / broken mirror of fate
+
+    The OTHER 5 narrative scenes MUST stay grounded in human-scale
+    imperfection — concrete, physical, plain:
+      • a hand that won't stop trembling
+      • a breath held too long
+      • a foot that doesn't step forward
+      • dust on a sleeve / soot on a knuckle
+      • an unsent letter / a half-eaten meal
+      • an unmoved chair / footprints stopping mid-stride
+      • knees barely holding weight
+      • a weapon held loosely as if about to be dropped
+
+    Devastation is NOT a poem. It is something plainer and more
+    uncomfortable. If a scene reads "beautifully sad", rewrite it
+    toward "awkwardly empty" or "quietly broken". The bookend
+    payoff lands harder when scene 6 is the ONE symbolic moment the
+    video earned, not the fifth in a row.
+
+    Concrete aftermath imagery in scene 6 (empty battlefield,
+    abandoned weapon, lonely throne with crown beside it) is NOT
+    decorative symbolism — it is the actual cost. Don't conflate the
+    two; the rule above limits the DECORATIVE list specifically.
 
 {cliffhanger_block}
 
@@ -2911,7 +3340,7 @@ def generate_script(
       "tags": ["topic-specific long-tail tag 1","topic-specific long-tail tag 2","named character 1 (English)","named character 1 (Hindi/Devanagari)","named character 2","specific incident name","viewer-search query like 'why X happened'","Mahabharata","महाभारत","Shorts","Hindu mythology","Krishna","कृष्ण"],
       "scenes": [
         {{
-          "narration": "22-28 words in the specified LANGUAGE — vivid, present-tense, dramatic. MIX of short punch lines and longer cinematic lines (varied rhythm). End each scene with '...' (triple ellipsis) for natural TTS pause. ~7-9 seconds spoken. EXCEPTION: the valley scene (scene 5) is 18-22 words and quiet.",
+          "narration": "18-22 words in the specified LANGUAGE — vivid, present-tense, dramatic. MIX of short punch lines and longer cinematic lines (varied rhythm). End each scene with '...' (triple ellipsis) for natural TTS pause. ~6-7 seconds spoken. EXCEPTION: the valley scene (scene 5) is 14-18 words and quiet. Phase 2/3 stabilization 2026-05-19: tighter than before to protect aftermath + outro residue at the END of the video.",
           "image_prompt": "Detailed English prompt following the [shot type] of [character(s)] in [emotion/action], in [environment], background contains [≥3 specific architectural/environmental elements: carved pillars, oil lamps, lotus reliefs, etc], [lighting], [mood], jewel-toned palette. MUST end with: 'clean cinematic frame with no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text.'",
           "video_prompt": "Cinematic 5-second shot in English — characters in subtle motion, camera movement, lighting. Vertical 9:16.",
           "mood": "3-6 word English emotional tone phrase"
@@ -2931,14 +3360,16 @@ def generate_script(
     - Tags MUST include topic-specific long-tail keywords (named characters
       in this topic + specific incident name + viewer-search queries) on
       top of the generic Mahabharata fallbacks.
-    - Narration per scene: 22-28 words, varied rhythm (mix short punch + long cinematic), end with "..." for TTS pause, ~7-9 seconds spoken. EXCEPTION: scene 5 (valley) is 18-22 words.
+    - Narration per scene: 18-22 words, varied rhythm (mix short punch + long cinematic), end with "..." for TTS pause, ~6-7 seconds spoken. EXCEPTION: scene 5 (valley) is 14-18 words. (Phase 2/3 stabilization 2026-05-19 — tighter to protect aftermath + outro residue at the END.)
     - Narration MUST NOT contain URLs, hashtags (#), @mentions, English in Hindi videos, or any social-media text
     - Generate EXACTLY 6 scenes — never fewer, never more (7-scene scripts overshoot the 60s Shorts cap on Hindi TTS pace)
-    - Scene 1 = HOOK, scene 2-3 = setup + RISING TENSION, scene 3 OR 4 = REHOOK (contrast marker), scene 5 = EMOTIONAL VALLEY (intimate quiet), scene 6 = CLIMAX (epic spectacle)
+    - Scene 1 = HOOK, scene 2-3 = setup + RISING TENSION, scene 3 OR 4 = REHOOK (contrast marker), scene 5 = EMOTIONAL VALLEY (intimate quiet), scene 6 = AFTERMATH (emotion AFTER destruction, not spectacle)
     - ONE scene around the 50% mark MUST begin or contain a rehook contrast marker
       ("लेकिन..."/"परंतु..."/"जो किसी ने नहीं सोचा था..."/"और तभी..."/"But..."/"Suddenly")
     - Scene 5 (VALLEY) MUST be intimate close-up — candlelight / dim warm tones / single subject — NOT lightning/fire/spectacle
-    - Scene 6 (CLIMAX) image_prompt MUST include a visual power keyword (lightning / fire / storm / cosmic / destruction / battlefield / burning / ashes / inferno / tempest / thunder / smoke / war)
+    - Scene 6 (AFTERMATH) image_prompt MUST include an aftermath cue (empty battlefield / abandoned weapon / lonely throne / trembling hand releasing / single figure staring / discarded crown / wind through empty cloth / footprints in ash / hand near but not touching / broken thread). MUST NOT include the old spectacle keywords (lightning / fire / storm / cosmic / destruction / inferno / tempest / burning sky).
+    - Scene 6 mood MUST be one of: haunting-quiet, hollow, weary, irreversible, severed, witnessed, abandoned, unresolved. NOT inspiring / triumphant / dignified / peaceful.
+    - Scene 6 narration MUST NOT contain closure tropes ("rises triumphant", "dawn of a new era", "glory", "victorious", "hope rekindled", "battle won", "peace restored", "blessing of the gods", "उगता है", "विजय", "महिमा") — these kill emotional residue.
     - At least 2 non-outro scenes' image_prompts MUST include a HUMAN PAIN cue (trembling hands / tears / broken armor / ash on face / silhouette against fire / kneeling figure / etc.)
     - Scene 1's FIRST sentence MUST be a hook in pattern A, B, or C above —
       no setup lines, no "this is the story of...", no meta-narration
@@ -3030,15 +3461,53 @@ def generate_script(
                     "scene to start with one of those markers and reveal an "
                     "unexpected consequence."
                 )
+            elif not last_aftermath_ok:
+                chosen = (
+                    "Your previous response failed the SCENE 6 AFTERMATH validator: "
+                    f"{last_aftermath_reason}\n\n"
+                    "REWRITE scene 6 as AFTERMATH, not spectacle. Emotion AFTER "
+                    "destruction, NOT emotion in motion. The image_prompt MUST "
+                    "contain ONE of: 'empty battlefield', 'abandoned weapon', "
+                    "'lonely throne', 'trembling hand releasing', 'single figure "
+                    "staring at the distance', 'discarded crown', 'wind through "
+                    "empty cloth', 'footprints in ash', 'hand letting go', "
+                    "'stopped weeping but cannot look away'. The mood MUST be "
+                    "one of: haunting-quiet / hollow / weary / irreversible / "
+                    "severed / witnessed / abandoned / unresolved (NOT inspiring "
+                    "/ triumphant / dignified). The narration MUST NOT use "
+                    "closure tropes ('rises triumphant', 'dawn of new era', "
+                    "'glory', 'victorious', 'विजय', 'महिमा', 'जय हो'). "
+                    "Suffering shows pain. Aftermath shows COST. We want cost."
+                )
+            elif not last_danger_ok:
+                chosen = (
+                    "Your previous response failed the DANGEROUS-LINE validator: "
+                    f"{last_danger_reason}\n\n"
+                    "Scene 3 OR scene 4 narration MUST contain ONE destabilization "
+                    "signature — a sentence that shifts emotional gravity by "
+                    "revealing irreversibility, finality, or realization-after-"
+                    "the-fact. Required patterns (pick ONE, place it in scene 3 "
+                    "or scene 4): \"नहीं पता था\", \"नहीं बदल सकता\", \"खत्म हो "
+                    "गया\", \"माफ़ नहीं किया\", \"आखिरी बार\", \"वापस नहीं "
+                    "आया\" (Hindi) — or \"didn't know\", \"could not change\", "
+                    "\"was over\", \"never forgave\", \"last time\", \"never "
+                    "came back\" (English). Examples: \"उसे तब भी नहीं पता था "
+                    "कि वो आखिरी बार मुस्कुरा रही थी।\" or \"वो जानता था कि अब "
+                    "कुछ नहीं बदल सकता।\". This single line is what makes the "
+                    "audience FEEL the irreversibility before the aftermath "
+                    "scene shows it."
+                )
             elif last_short:
                 chosen = (
                     f"Your previous response failed the LENGTH validator "
                     f"(n_scenes={n_scenes}, avg_words={avg_words:.1f}). The target "
-                    f"is EXACTLY 6 scenes AND 22-28 words per scene (avg in the "
-                    f"22-30 range). Total: ~150 spoken words for a 50-58s Short. "
-                    f"Hindi Charon narrates ~3 words/sec — going over 28 words/scene "
-                    f"will push the video past YouTube's 60s Shorts hard cap. "
-                    f"EXCEPTION: scene 5 (the emotional valley) may be 18-22 words. "
+                    f"is EXACTLY 6 scenes AND 18-22 words per scene (avg in the "
+                    f"18-22 range). Total: ~120 spoken words for a 50s Short. "
+                    f"Hindi Charon narrates ~3 words/sec — going over 22 words/scene "
+                    f"pushes audio past the 58.5s cap and the AFTERMATH SCENE + "
+                    f"OUTRO RESIDUE get chopped. The aftermath is the emotional "
+                    f"payload of the entire video — protect it by staying under 22. "
+                    f"EXCEPTION: scene 5 (the emotional valley) may be 14-18 words. "
                     f"Do NOT add a 7th scene to satisfy any other rule; tighten "
                     f"existing scenes instead. This is TOP PRIORITY — fix scene "
                     f"count and word count BEFORE any other gate."
@@ -3126,13 +3595,15 @@ def generate_script(
         avg_words = sum(word_counts) / max(len(word_counts), 1)
         n_scenes = len(scenes)
 
-        # Length validator (Tier 2 re-tune 2026-05-16): upper bound tightened
-        # 30 → 28 to push live runs into the 50-55s sweet spot rather than
-        # 55-60s. REROLL smoke test landed at 64s because best-of-N rescue
-        # shipped an avg=31 attempt; tighter ceiling forces another retry
-        # before that happens. 6 × 25 words / 3.1 wps (Hindi Charon) = ~48s
-        # narrative + 6s outro = ~54s total Short.
-        last_short = (n_scenes != 6 or avg_words < 22 or avg_words > 28)
+        # Length validator (Phase 2/3 Part F.1, 2026-05-19): tightened from
+        # 22-28 to 18-22 words/scene to PROTECT the aftermath + outro
+        # residue at the END of the video. Smoke #1 verified the previous
+        # 22-28 range pushed audio past the 58.5s cap on dense-narration
+        # days, chopping the emotional landing. New target produces
+        # ~38-42s narrative + ~5s outro = ~45s total → leaves ~13s buffer
+        # for TTS drift, ellipsis pauses, and the protected final-scene
+        # silence required by Part F.2.
+        last_short = (n_scenes != 6 or avg_words < 18 or avg_words > 22)
         # Threshold 4: a character at the centre of the story (Bhishma in a
         # Bhishma video) can appear ~4 times naturally. 5+ times signals that
         # supporting characters and details are being skipped in favour of
@@ -3190,6 +3661,14 @@ def generate_script(
         rhythm_ok, rhythm_reason = _check_sentence_rhythm(scenes)
         visual_ok, visual_missing = _check_visual_escalation(scenes)
 
+        # ── Phase 2/3 stabilization validators (added 2026-05-18) ────────
+        # Aftermath + dangerous-line are HARD gates. Anti-over-curation
+        # is SOFT (warn-only) — the rule lives in the prompt; the check
+        # measures drift over time without forcing extra retries.
+        last_aftermath_ok, last_aftermath_reason = _check_final_scene_aftermath(scenes)
+        last_danger_ok, danger_scene_idx, last_danger_reason = _check_dangerous_line(scenes, language)
+        curation_ok, curation_count, curation_scenes = _check_anti_over_curation(scenes)
+
         print(f"    Script: {n_scenes} scenes, avg {avg_words:.1f} words/scene "
               f"(per-scene: {word_counts})")
         if last_hook_ok:
@@ -3226,6 +3705,20 @@ def generate_script(
             print(f"    [warn] Sentence-ending monotony: '{last_mono_pattern}' at "
                   f"{int(last_mono_ratio * 100)}% ({mono_hits}/{mono_total})")
 
+        # Phase 2/3 stabilization validators (2026-05-18) — print status
+        if last_aftermath_ok:
+            print(f"    [aftermath] OK — scene 6 lands aftermath")
+        else:
+            print(f"    [aftermath] REJECT — {last_aftermath_reason[:120]}")
+        if last_danger_ok:
+            print(f"    [danger-line] OK — found in scene {danger_scene_idx}")
+        else:
+            print(f"    [danger-line] REJECT — no destabilization signature in scenes 3-4")
+        if not curation_ok:
+            print(f"    [warn] Over-curation: {curation_count} scenes use heavy "
+                  f"symbolic imagery (scenes {curation_scenes}) — max 1 per video. "
+                  f"Devastation is NOT a poem.")
+
         # ── Best-of-N rescue tracking ────────────────────────────────────
         # Even when no attempt passes every gate, ship the highest-scoring
         # attempt at exhaustion (instead of the last attempt, which may be
@@ -3242,16 +3735,19 @@ def generate_script(
             + (1 if bookend_ok else 0)
             + (1 if eng_ok else 0)
             + (1 if mono_ok else 0)
+            + (1 if last_aftermath_ok else 0)
+            + (1 if last_danger_ok else 0)
         )
         if score > best_score:
             best_score = score
             best_data  = data
 
-        # Acceptable if every HARD gate passes. (Rhythm + visual are soft,
-        # don't gate acceptance.)
+        # Acceptable if every HARD gate passes. (Rhythm + visual + curation
+        # are soft, don't gate acceptance.)
         if (not last_short and last_hook_ok and last_rehook_ok
                 and rep_ok and tha_ok and names_ok
-                and bookend_ok and eng_ok and mono_ok):
+                and bookend_ok and eng_ok and mono_ok
+                and last_aftermath_ok and last_danger_ok):
             break
 
         if attempt < MAX_ATTEMPTS - 1:
@@ -3260,6 +3756,10 @@ def generate_script(
                 why.append(f"hook REJECT ({last_hook_reason})")
             if not last_rehook_ok:
                 why.append("rehook missing")
+            if not last_aftermath_ok:
+                why.append(f"aftermath REJECT")
+            if not last_danger_ok:
+                why.append("dangerous-line missing")
             if last_short:
                 why.append(f"too short ({n_scenes} scenes / {avg_words:.1f} avg words)")
             if not rep_ok:

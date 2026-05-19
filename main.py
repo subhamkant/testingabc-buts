@@ -205,16 +205,39 @@ def _subscribe_outro(series: str, language: str, listener: str = "") -> dict:
         "no text, no lettering, no logos"
     )
     maha_video = "Cinematic zoom out from Om symbol to full Mahabharata tableau, golden light rays"
-    if language == "hi":
-        narration = "ऐसी कहानियों के लिए... Vyasa AI को Subscribe करें। Bell Icon ज़रूर दबाएँ!"
+
+    # OUTRO_RESTRAINT_MODE (Phase 2/3 stabilization, 2026-05-18).
+    # Default ON: the legacy "inspiring + Bell Icon" outro was the single
+    # loudest residue-killer — viewers walk away in CTA-dopamine instead of
+    # carrying the aftermath weight. Restraint mode preserves the residue
+    # by inviting the story to KEEP working on the viewer ("अगर ये कहानी
+    # आपके मन में रह जाए..." → "if this story lingers in your mind...").
+    # Drops the "Bell Icon ज़रूर दबाएँ!" exclamation entirely — that
+    # high-energy beat is what breaks the spell on tragic content.
+    #
+    # Set OUTRO_RESTRAINT_MODE=false to revert to the legacy "inspiring +
+    # Bell Icon" outro (rollback path if cross-arc Subscribe rate drops).
+    restraint_mode = os.environ.get("OUTRO_RESTRAINT_MODE", "true").strip().lower() != "false"
+    if restraint_mode:
+        if language == "hi":
+            narration = "अगर ये कहानी आपके मन में रह जाए... Vyasa AI को Subscribe करें।"
+        else:
+            narration = "If this story stays with you... Subscribe to Vyasa AI."
+        mood = "quiet weight, lingering, witnessed"
     else:
-        narration = "For more Mahabharata stories... Subscribe to Vyasa AI. Hit the bell!"
+        # Legacy outro — kept for env-flag rollback.
+        if language == "hi":
+            narration = "ऐसी कहानियों के लिए... Vyasa AI को Subscribe करें। Bell Icon ज़रूर दबाएँ!"
+        else:
+            narration = "For more Mahabharata stories... Subscribe to Vyasa AI. Hit the bell!"
+        mood = "inspiring and inviting"
+
     return {
         "narration":    narration,
         "image_path":   _OUTRO_ASSETS["mahabharata"],
         "image_prompt": maha_image,
         "video_prompt": maha_video,
-        "mood":         "inspiring and inviting",
+        "mood":         mood,
     }
 
 
@@ -435,11 +458,18 @@ async def run_pipeline(language: str = "en", test_mode: bool = False, test_uploa
         # Idempotency: if uploaded.json exists, the upload already finished
         # (possibly in a previous attempt). Skip and reuse the video_id —
         # never double-upload to YouTube.
+        # LOCAL_ONLY=true skips both YT + IG (added 2026-05-19 after a
+        # smoke render accidentally shipped to the live channel because
+        # `main.py hi` runs the full publish pipeline). The mp4 still
+        # gets rendered + saved to output/; just no upload occurs.
+        local_only = os.environ.get("LOCAL_ONLY", "false").strip().lower() == "true"
         video_id = None
         if ck.has("uploaded.json"):
             uploaded = ck.load_json("uploaded.json")
             video_id = uploaded.get("video_id")
             print(f"\nStep 5 — [resume] already uploaded as https://youtube.com/watch?v={video_id}")
+        elif local_only:
+            print("\nStep 5 — SKIPPED via LOCAL_ONLY=true (mp4 saved locally only)")
         elif (not test_mode or test_upload) and os.path.exists("client_secrets.json"):
             try:
                 print("\nStep 5 — Uploading to YouTube...")
@@ -483,9 +513,14 @@ async def run_pipeline(language: str = "en", test_mode: bool = False, test_uploa
         # NON-FATAL — IG failures never break the YT path or the Fix 2.8
         # state-commit guard above. video_id (YT) stays the source of
         # truth for "topic used".
+        # When LOCAL_ONLY=true, video_id stays None (YT was skipped above)
+        # so the `elif video_id:` guard naturally short-circuits IG. The
+        # explicit message below makes that visible in the log.
         ig_media_id = None
         skip_ig = os.environ.get("SKIP_INSTAGRAM", "false").strip().lower() == "true"
-        if video_id and skip_ig:
+        if local_only:
+            print(f"    [ig] SKIPPED via LOCAL_ONLY=true")
+        elif video_id and skip_ig:
             print(f"    [ig] SKIPPED via SKIP_INSTAGRAM=true (YouTube-only run)")
         elif video_id:
             try:

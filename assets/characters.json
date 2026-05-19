@@ -7,8 +7,8 @@
   },
 
   "Arjuna": {
-    "_revised": "Phase 4 identity-anchor rewrite 2026-05-17. Identity-only. Gandiva + crown kept as canonical iconic identifiers. Fits within 250-char injector cap.",
-    "visual": "Arjuna — tall athletic warrior, broad shoulders, wheatish golden-brown skin, dark wavy hair, late 20s-30s. ornate kshatriya armor with gold-trimmed breastplate and jeweled crown. carries divine bow Gandiva and inexhaustible arrow quiver.",
+    "_revised": "Phase 4 identity-anchor rewrite 2026-05-17. Phase 2/3 burden anchor added 2026-05-18 (calloused bow-hands). Identity-only. Gandiva + crown kept as canonical iconic identifiers. Fits within 250-char injector cap.",
+    "visual": "Arjuna — tall athletic warrior, broad shoulders, calloused bow-hands. wheatish golden-brown skin, dark wavy hair, late 20s-30s. ornate kshatriya armor, gold-trimmed breastplate, jeweled crown. carries divine bow Gandiva and quiver.",
     "colors": "wheatish golden-bronze skin, silver-gold armor, jeweled crown, dark wavy hair, glowing Gandiva bow"
   },
 
@@ -18,15 +18,15 @@
   },
 
   "Bhishma": {
-    "_revised": "Phase 4 identity-anchor rewrite 2026-05-17. Identity-only (silhouette + age band + armor motif). NO pose/expression/location so Phase 1 shot variety stays unaffected. Fits within 250-char injector cap.",
-    "visual": "Bhishma — tall imposing elder warrior. full silver-white beard to mid-chest, no mustache. weathered late-50s-to-60s face, presence of authority. saffron-bronze dhoti, brown leather chest plate with silver sun-emblem at center.",
-    "colors": "silver-white hair and beard, saffron-bronze dhoti, brown leather chest plate, silver sun-emblem, weathered noble complexion"
+    "_revised": "Phase 4 identity-anchor rewrite 2026-05-17. Phase 2/3 burden anchor added 2026-05-18 (burdened shoulders, haunted eyes carrying authority — adds cost-visibility without replacing nobility). Fits within 250-char injector cap.",
+    "visual": "Bhishma — tall imposing elder warrior, burdened shoulders. silver-white beard to mid-chest, no mustache. weathered late-50s-to-60s face, haunted eyes carrying authority. saffron-bronze dhoti, brown leather chest plate, silver sun-emblem.",
+    "colors": "silver-white hair and beard, saffron-bronze dhoti, brown leather chest plate, silver sun-emblem, weathered noble complexion, burdened bearing"
   },
 
   "Karna": {
-    "_revised": "Phase 4 identity-anchor rewrite 2026-05-17. Identity-only. Kavacha (golden chest armor) + kundala (golden earrings) kept as canonical solar-born identifiers. Fits within 250-char injector cap.",
-    "visual": "Karna — broad-shouldered warrior with strong muscular chest, luminous golden-bronze radiant skin. natural divine armor (kavacha) fused to chest and golden earrings (kundala) on his ears — ALWAYS visible. sharp features, late 20s-30s.",
-    "colors": "luminous golden-bronze radiant skin, divine golden kavacha glow, golden kundala earrings, red warrior attire"
+    "_revised": "Phase 4 identity-anchor rewrite 2026-05-17. Phase 2/3 burden anchor added 2026-05-18 (weary stance, haunted eyes — Karna carries the weight of an unspoken parentage). Fits within 250-char injector cap.",
+    "visual": "Karna — broad-shouldered warrior, strong muscular chest with weary stance, luminous golden-bronze radiant skin. natural divine armor (kavacha) fused to chest, golden earrings (kundala) — ALWAYS visible. late 20s-30s, haunted eyes.",
+    "colors": "luminous golden-bronze radiant skin, divine golden kavacha glow, golden kundala earrings, red warrior attire, weary haunted bearing"
   },
 
   "Bhima": {
