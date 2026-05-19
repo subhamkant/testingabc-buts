@@ -3161,42 +3161,52 @@ def generate_script(
 {cliffhanger_block}
 
     ═══════════════════════════════════════════════════════════════
-    COMMENT-BAIT — THE LAST SCENE MUST END WITH A DEBATE QUESTION
+    REFLECTIVE QUESTION — THE LAST SCENE MUST END WITH AN OPEN QUESTION
     ═══════════════════════════════════════════════════════════════
-    Added 2026-05-15 after channel analytics showed only 3 comments across
-    58 videos. Comments are the strongest engagement signal YouTube uses to
-    decide whether to push a video. Every video MUST end with a question
-    that VIEWERS WANT TO ANSWER IN THE COMMENTS.
+    Added 2026-05-15 (then comment-bait CTA-tagged). REPHRASED 2026-05-20
+    (Part G.1) — explicit "Comment में बताओ" / "Comment me batao" CTA tags
+    removed because they ruptured the emotional residue Parts A-F built up.
+    The question mechanic stays (still the strongest engagement signal),
+    but the phrasing becomes reflective, not transactional.
 
     The FINAL scene's narration MUST end with a debate-triggering question
-    tied to the specific story you just told. Patterns that work:
+    tied to the specific story you just told. The question alone is the ask
+    — DO NOT prefix or suffix it with "Comment में बताओ" / "Comment में
+    लिखो" / "तुम्हारी क्या राय है?" / "सोचो". The viewer answers in their
+    head or in comments organically; the explicit CTA breaks emotional
+    continuity.
 
     PATTERN A — moral dilemma:
-      "क्या भीष्म ने सही किया? Comment में बताओ।"
-      "क्या कर्ण का दान सही था, या मूर्खता? तुम्हारी क्या राय है?"
+      "क्या भीष्म ने सही किया?"
+      "क्या कर्ण का दान सही था, या मूर्खता?"
 
     PATTERN B — character take:
-      "तुम होते भीष्म की जगह तो क्या करते? Comment में बताओ।"
-      "अगर अर्जुन ने प्रतिज्ञा तोड़ी होती तो क्या होता? सोचो।"
+      "तुम होते भीष्म की जगह तो क्या करते?"
+      "अगर अर्जुन ने प्रतिज्ञा तोड़ी होती तो क्या होता?"
 
     PATTERN C — emotional reaction:
-      "ये कहानी सुनकर तुम्हें कैसा लगा? Comment में लिखो।"
-      "क्या तुम्हें कर्ण के लिए दुख होता है? बताओ।"
+      "ये कहानी सुनकर तुम्हें क्या लगा?"
+      "क्या तुम्हें कर्ण के लिए दुख होता है?"
 
     REQUIREMENT: The question must:
-    - Be 6-12 Hindi words
+    - Be 5-10 Hindi words (tighter than before — every word is heavy in
+      the aftermath beat)
     - Tie to the SPECIFIC characters/incident in this video (not generic)
     - Be answerable with a one-line opinion (not require a paragraph)
-    - Use "Comment में बताओ" / "Comment में लिखो" / "तुम्हारी क्या राय है?"
-      as the explicit ask
+    - End with "?" only — NO trailing CTA tag, NO "Comment में बताओ"
+    - Read like a thought you would have asked yourself, not a creator's
+      ask for engagement
 
-    Including this question in the final scene's narration is what gets
-    viewers to actually comment. Without it the channel grows ~3% engagement
-    rate; with it expected ~8-12%. This is the single biggest growth lever
-    for an under-1k-subs channel.
+    The reflective question still drives comments. Pre-2026-05-15 the
+    channel was 3 comments / 58 videos; even without the CTA tag the
+    question mechanic itself is the lever, not the tag. The tag was just
+    making engagement feel transactional. (Cross-arc validation 2026-05-20
+    onward measures whether the bare question holds the comment-rate the
+    CTA tag built.)
 
-    NEVER use generic prompts like "Subscribe karein" in the narration —
-    that's already in the outro and doesn't trigger comments.
+    NEVER use generic prompts like "Subscribe karein" or "Bell Icon
+    dabaayein" in scene 6 narration — those belong NOWHERE in the video
+    anymore (outro restraint mode handles channel identity visually now).
 
     ═══════════════════════════════════════════════════════════════
     IMAGE PROMPT QUALITY — RICH BACKGROUNDS ARE NON-NEGOTIABLE
@@ -3789,6 +3799,10 @@ def generate_script(
     data["content_type"] = content_type
     data["topic"] = topic
     data["series"] = "mahabharata"
+    # Part G.3 (2026-05-20): expose episode_n so the outro builder
+    # (main.py:_subscribe_outro) can rotate the reflective question
+    # deterministically per render. Integer; JSON-serializable.
+    data["episode_n"] = episode_n
 
     # Tier 2 Fix 2.0 step 3: when this arc episode has a next-episode
     # teaser, prepend a "▶️ अगला भाग" line to the YouTube description.

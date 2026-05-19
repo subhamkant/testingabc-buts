@@ -100,6 +100,30 @@ _KRISHNA_LISTENER_VOCATIVE = {
 }
 
 
+# Part G.2 (2026-05-20): reflective ending questions rotated deterministically
+# by episode_n. Pre-G the outro spoke "Vyasa AI को Subscribe करें।" — quieter
+# than the legacy "Bell Icon" but still CTA-shifted. Post-G the outro narration
+# IS only the reflective question; brand identity comes from the static brand
+# image (assets/outro/mahabharata.jpg, Mahabharata tableau around Om). Five
+# question archetypes (moral / emotional / philosophical / character-judgment /
+# perspective) — same arc's 7 episodes never see the same variant twice in a
+# row at episode_n % 5 indexing.
+_REFLECTIVE_QUESTIONS_HI = [
+    "धर्म बड़ा था... या उसका परिणाम?",                   # moral
+    "क्या कुछ वचन बहुत महंगे पड़ते हैं?",                  # emotional
+    "क्या सही निर्णय भी विनाश ला सकता है?",                # philosophical
+    "किसकी गलती सबसे बड़ी थी?",                          # character-judgment
+    "अगर आप उस क्षण में होते... तो क्या करते?",            # perspective
+]
+_REFLECTIVE_QUESTIONS_EN = [
+    "Was duty greater than its cost?",
+    "Do some promises cost too much?",
+    "Can the right choice still destroy?",
+    "Whose fault was greatest?",
+    "What would you have done?",
+]
+
+
 _OUTRO_ASSETS = {
     "mahabharata": "assets/outro/mahabharata.jpg",
     "krishna":     "assets/outro/krishna.jpg",
@@ -107,13 +131,19 @@ _OUTRO_ASSETS = {
 }
 
 
-def _subscribe_outro(series: str, language: str, listener: str = "") -> dict:
+def _subscribe_outro(series: str, language: str, listener: str = "",
+                     episode_n: int | None = None) -> dict:
     """
-    Returns a scene dict for the fixed subscribe-CTA outro. Series-aware so the
+    Returns a scene dict for the outro scene. Series-aware so the
     Mahabharata and What If videos don't end with mismatched copy/imagery.
 
     `listener` is used by the Krishna outro to address the right person (e.g.
     "उद्धव" when the speech was to Uddhava, not the hardcoded "पार्थ").
+
+    `episode_n` (Part G.2, 2026-05-20) is used by the Mahabharata restraint-
+    mode branch to rotate the reflective ending question deterministically.
+    Falls back to index 0 when None (krishna / whatif callers don't pass it
+    — they have their own outro flows that don't use the rotation).
 
     NEW 2026-05-14: outro scenes now carry a static `image_path` pointing to
     a hand-picked asset in assets/outro/. The image pipeline detects this and
@@ -207,25 +237,31 @@ def _subscribe_outro(series: str, language: str, listener: str = "") -> dict:
     maha_video = "Cinematic zoom out from Om symbol to full Mahabharata tableau, golden light rays"
 
     # OUTRO_RESTRAINT_MODE (Phase 2/3 stabilization, 2026-05-18).
-    # Default ON: the legacy "inspiring + Bell Icon" outro was the single
-    # loudest residue-killer — viewers walk away in CTA-dopamine instead of
-    # carrying the aftermath weight. Restraint mode preserves the residue
-    # by inviting the story to KEEP working on the viewer ("अगर ये कहानी
-    # आपके मन में रह जाए..." → "if this story lingers in your mind...").
-    # Drops the "Bell Icon ज़रूर दबाएँ!" exclamation entirely — that
-    # high-energy beat is what breaks the spell on tragic content.
+    # Default ON. Two iterations:
+    #   Pre-G (Part C, 2026-05-18): narration "अगर ये कहानी आपके मन में रह
+    #     जाए... Vyasa AI को Subscribe करें।" Quieter than the legacy
+    #     "Bell Icon" outro but still ended with the Subscribe verb that
+    #     ruptured the held-breath silence Parts A-F built up.
+    #   Post-G (Part G.2, 2026-05-20): narration is ONLY the reflective
+    #     question, rotated deterministically by episode_n. No spoken
+    #     "Vyasa AI", no "Subscribe" verb. Channel identity is delivered
+    #     visually via the static brand image (Mahabharata tableau around
+    #     the Om symbol). Engagement emerges FROM the emotion, not after.
     #
-    # Set OUTRO_RESTRAINT_MODE=false to revert to the legacy "inspiring +
-    # Bell Icon" outro (rollback path if cross-arc Subscribe rate drops).
+    # Set OUTRO_RESTRAINT_MODE=false to revert to the LEGACY "Bell Icon"
+    # outro entirely (deepest rollback — restores both spoken brand name
+    # and the energetic CTA tag).
     restraint_mode = os.environ.get("OUTRO_RESTRAINT_MODE", "true").strip().lower() != "false"
     if restraint_mode:
-        if language == "hi":
-            narration = "अगर ये कहानी आपके मन में रह जाए... Vyasa AI को Subscribe करें।"
-        else:
-            narration = "If this story stays with you... Subscribe to Vyasa AI."
-        mood = "quiet weight, lingering, witnessed"
+        # Part G.2: rotate reflective question by episode_n % 5.
+        # Falls back to index 0 when episode_n is None (e.g., legacy
+        # callers, test paths) — still emotionally valid, just non-rotating.
+        questions = _REFLECTIVE_QUESTIONS_HI if language == "hi" else _REFLECTIVE_QUESTIONS_EN
+        idx = (episode_n or 0) % len(questions)
+        narration = questions[idx]
+        mood = "quiet weight, reflective, witnessed"
     else:
-        # Legacy outro — kept for env-flag rollback.
+        # Legacy outro — kept for env-flag rollback (deepest rollback path).
         if language == "hi":
             narration = "ऐसी कहानियों के लिए... Vyasa AI को Subscribe करें। Bell Icon ज़रूर दबाएँ!"
         else:
@@ -331,7 +367,12 @@ async def run_pipeline(language: str = "en", test_mode: bool = False, test_uploa
 
             # Append fixed subscribe outro before caching so the resumed run
             # doesn't re-append (which would produce two outros)
-            script["scenes"].append(_subscribe_outro("mahabharata", language))
+            # Pass episode_n so the outro rotates the reflective question
+            # deterministically (Part G.2, 2026-05-20). script_generator's
+            # generate_script() populates data["episode_n"] via Part G.3.
+            script["scenes"].append(_subscribe_outro(
+                "mahabharata", language, episode_n=script.get("episode_n"),
+            ))
             update_characters(script)
             ck.save_json("script.json", script)
 
