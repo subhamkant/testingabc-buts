@@ -4,4 +4,3 @@
 # active. After this consumes, the cron resumes regular arc rotation
 # at the next 7:00 PM IST or 9:00 PM IST nominal fire (with GHA delay
 # ~1-2h to actual fire).
-Bhishma on the bed of arrows — 58 days of waiting for death, choosing the moment of his own departure
