@@ -1,6 +1,7 @@
-# Manual topic queue — first non-comment line gets consumed.
-# Queued 2026-05-19 for manual workflow_dispatch run of #7 (Bhishma
-# bed of arrows — 58 days). Phase 2/3 + Part F stabilization
-# active. After this consumes, the cron resumes regular arc rotation
-# at the next 7:00 PM IST or 9:00 PM IST nominal fire (with GHA delay
-# ~1-2h to actual fire).
+# Manual topic queue.
+# Cross-arc validation render #1 (Phase 4 unlock gate):
+# Karna arc position #6 — Kunti meeting before the war.
+# Tests irreversible-loyalty grief + mother-abandonment register
+# (furthest from Bhishma's burden-of-vow register that smoke #1+2+#7
+# already validated). Phase 2/3 + Part F stabilization active.
+Karna's meeting with Kunti before the war — the mother revealing she abandoned him, asking him to spare her sons
