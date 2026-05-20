@@ -15,7 +15,11 @@ on:
     # Re-enabled 2026-05-19 after the full Phase 2/3 + Part F stabilization
     # bundle landed in this commit (was temporarily disabled in 3e69c55).
     - cron: "30 13 * * *"   # nominal 7:00 PM IST, fires ~8:00-9:00 PM IST
-    - cron: "30 15 * * *"   # nominal 9:00 PM IST, fires ~10:00-11:00 PM IST
+    # Second slot DISABLED 2026-05-20: user direction is "one render per
+    # day during cross-arc validation" (Karna #6 ongoing). Avoids
+    # second-cron-firing-late-while-first-slot-was-skipped scenario.
+    # Re-enable after cross-arc batch completes if 2x/day cadence resumes.
+    # - cron: "30 15 * * *"
 
   workflow_dispatch:
     inputs:
