@@ -1610,6 +1610,24 @@ def _apply_background_music(output_path: str, series: str = "mahabharata"):
 # gives a single uninterrupted voice track with consistent quality (no scene
 # seams from per-scene TTS generations) while visuals still cut to the beat.
 
+def _make_freeze_clip(image_path: str, duration: float, output_path: str) -> bool:
+    """Static (no Ken Burns) freeze frame at 1080x1920. Used for the Phase 24
+    cold-open prepend: a 1.0s flash of the climax scene's first image,
+    crossfading into scene 0's Ken Burns motion. Pure ffmpeg fallback —
+    matches the encoding spec of `_render_image_clip`'s fallback path so
+    `_build_silent_video_with_xfades` can concat the result cleanly."""
+    result = subprocess.run([
+        "ffmpeg", "-y",
+        "-loop", "1", "-framerate", str(FPS), "-i", image_path,
+        "-c:v", "libx264", "-preset", "fast", "-crf", "23",
+        "-pix_fmt", "yuv420p", "-t", str(duration), "-an",
+        "-vf", "scale=1080:1920:force_original_aspect_ratio=increase:flags=lanczos,"
+               "crop=1080:1920,setsar=1",
+        output_path,
+    ], capture_output=True)
+    return result.returncode == 0
+
+
 def _make_silent_image_scene_clip(image_paths, output_path: str, duration: float, intensity: float = 1.0):
     """Ken Burns over one or more images, silent video output. Mirrors
     _make_scene_clip but skips the audio muxing step.
@@ -2090,6 +2108,23 @@ def assemble_video_continuous_audio(
             return 1.5   # climax scene (the narrative climax, not the outro)
         return 0.8 + 0.6 * (i / (n - 1))
 
+    # Phase 24 (2026-05-21): cold-open prepend — flash the climax scene's
+    # first frame for ~0.5s of pure freeze + 0.5s xfade into scene 0's hook.
+    # Decides Shorts swipe rate: most viewers see one frame before deciding to
+    # stay. Climax frame is far more attention-grabbing than the typical
+    # establishing-shot scene 1 image. Audio plays continuously; scene 0's
+    # visual is shortened by (COLD_OPEN_S - XFADE_DURATION) so the total
+    # video timeline still matches audio_duration exactly. The trim is
+    # VISUAL ONLY — narration audio for scene 1 is unaffected, which is why
+    # we preserve `original_durations` for scene-boundary SFX timing below.
+    COLD_OPEN_S      = 1.0
+    SCENE_0_TRIM     = COLD_OPEN_S - XFADE_DURATION   # 0.5s
+    original_durations = list(durations)  # audio-timing reference for SFX
+    apply_cold_open  = n >= 3 and durations[0] > SCENE_0_TRIM + 0.5
+    if apply_cold_open:
+        durations[0] -= SCENE_0_TRIM
+        print(f"    [Phase 24] Scene 1 visual trimmed -{SCENE_0_TRIM:.2f}s to absorb cold-open prepend")
+
     silent_paths = []
     for i, (imgs, dur) in enumerate(zip(image_files, durations)):
         if isinstance(imgs, str):
@@ -2109,6 +2144,20 @@ def assemble_video_continuous_audio(
         print(f"    [OK] Ken Burns intensity: ramp 0.80→1.30 across scenes 1-{n-3}, "
               f"VALLEY scene {n-2} @ 0.70x, CLIMAX scene {n-1} @ 1.50x, outro scene {n} static")
 
+    if apply_cold_open:
+        climax_idx = n - 2
+        climax_imgs = image_files[climax_idx]
+        climax_first = climax_imgs[0] if isinstance(climax_imgs, list) else climax_imgs
+        cold_open_path = "temp/clips/silent_cold_open.mp4"
+        if _make_freeze_clip(climax_first, COLD_OPEN_S, cold_open_path):
+            silent_paths = [cold_open_path] + silent_paths
+            durations    = [COLD_OPEN_S] + list(durations)
+            print(f"    [Phase 24] Cold-open prepend: {COLD_OPEN_S:.1f}s static of climax (scene {climax_idx+1}) image")
+        else:
+            # Roll back the scene-0 trim if the freeze clip failed to generate
+            durations[0] += SCENE_0_TRIM
+            print(f"    [Phase 24] Cold-open prepend FAILED; falling back to original scene-1 cold open")
+
     silent_full = "temp/clips/silent_full.mp4"
     if not _build_silent_video_with_xfades(silent_paths, durations, silent_full):
         return output_path
@@ -2121,14 +2170,17 @@ def assemble_video_continuous_audio(
     # Scene-boundary SFX (mood-mapped): sword clang on battle, divine bell on
     # Krishna, war drum on Kurukshetra, conch on vows, chime default. Layered
     # into narration audio BEFORE music mix so SFX gets sidechain ducking too.
+    # Phase 24 (2026-05-21): uses `original_durations` (pre-cold-open-trim) so
+    # SFX/shake/duration-cap all align to narrative scene boundaries, not to
+    # the cold-open visual prepend.
     scene_moods = [s.get("mood", "") for s in (script_data.get("scenes") or [])]
     if len(scene_moods) == n:
-        _inject_scene_boundary_sfx(output_path, durations, scene_moods)
+        _inject_scene_boundary_sfx(output_path, original_durations, scene_moods)
 
-    _apply_cinematic_polish(output_path, durations)
+    _apply_cinematic_polish(output_path, original_durations)
     _apply_background_music(output_path, series=series)
     _apply_phase3_overlays(output_path)
-    _enforce_max_duration(output_path, durations)
+    _enforce_max_duration(output_path, original_durations)
 
     return output_path
 

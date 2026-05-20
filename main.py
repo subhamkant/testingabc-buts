@@ -447,15 +447,15 @@ async def run_pipeline(language: str = "en", test_mode: bool = False, test_uploa
                 image_files = generate_images(script["scenes"], series="mahabharata", ck=ck)
                 if script.get("thumbnail_prompt"):
                     # Extract Hindi shock-phrase from title for thumbnail overlay.
-                    # Title format from prompt: "महाभारत #N: <Hindi half> | <English half>"
+                    # Title format from prompt: "<English half> | <Hindi half>"
+                    # (Phase 1 — 2026-05-20 — order standardized to English-first to
+                    # match top organic performer in analytics + long-form convention.)
                     _ov_text = ""
                     _title = script.get("title", "")
                     if "|" in _title:
-                        _hindi_half = _title.split("|")[0].strip()
-                        if ":" in _hindi_half:
-                            _ov_text = _hindi_half.split(":", 1)[1].strip()
-                        else:
-                            _ov_text = _hindi_half
+                        _parts = _title.split("|", 1)
+                        _hindi_half = _parts[1].strip() if len(_parts) > 1 else _parts[0].strip()
+                        _ov_text = _hindi_half
                     generate_thumbnail(
                         script["thumbnail_prompt"], series="mahabharata",
                         overlay_text=_ov_text[:25],  # 25-char cap for thumbnail legibility

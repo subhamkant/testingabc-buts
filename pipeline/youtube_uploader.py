@@ -1,6 +1,7 @@
 import os
 import json
 import pickle
+import re
 from google.auth.transport.requests import Request
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
@@ -28,11 +29,13 @@ _PLAYLIST_TITLES = {
     "mahabharata": "Mahabharata Stories",
     "krishna":     "Krishna Speaks — First-Person Wisdom",
     "whatif":      "What If — Vyasa AI",
+    "explainer":   "Kant Decodes — Hindi Explainers",
 }
 _PLAYLIST_DESCRIPTIONS = {
     "mahabharata": "Cinematic short stories from the Mahabharata epic — Krishna, Arjuna, Karna, Draupadi, and the eternal lessons of dharma.",
     "krishna":     "Lord Krishna speaks directly to Arjuna, Uddhava, Karna, Bhishma — first-person wisdom from the Mahabharata. हिंदी में।",
     "whatif":      "What if reality bent for a moment? Curiosity-driven thought experiments about Earth, science, nature, and the cosmos.",
+    "explainer":   "Hindi explainers separating facts from internet hype. AI, scams, productivity myths, work culture, psychology — what's actually going on behind the noise.",
 }
 
 # Pinned-comment template per series. After upload, the bot auto-replies its
@@ -40,24 +43,33 @@ _PLAYLIST_DESCRIPTIONS = {
 # weighs first-hour interactions heavily for Shorts. The comment also acts
 # as additional SEO real estate for keywords / hashtags.
 _PINNED_COMMENT_TEMPLATES = {
+    # Fallback templates used when script_data has no per-video `pinned_question`.
+    # Designed to invite *disagreement*, not creator-decision input. Comments per
+    # view on this channel are 0.35 (11 / 31 videos) — engagement is the
+    # structural weak point per assets/channel_analysis_2026-05-20.md.
     "mahabharata": (
-        "📖 Which Mahabharata story should we tell next?\n"
-        "Drop a character or incident in the comments — कौनसी कहानी सबसे ज़्यादा याद है?\n\n"
-        "🔔 Subscribe for daily Mahabharata Shorts in हिंदी\n"
+        "❓ इस video का character — सही था या गलत?\n"
+        "Honest take comment में drop करो। किसी एक side पर खड़े रहो।\n\n"
+        "🔔 Daily Mahabharata Shorts in हिंदी\n"
         "#Mahabharata #महाभारत #Shorts"
     ),
     "krishna": (
-        "🪷 Did this message reach your heart?\n"
-        "Type \"जय श्री कृष्ण\" if you felt it.\n"
-        "Comment which lesson Krishna should give next 👇\n\n"
-        "🔔 Subscribe for daily Krishna wisdom — हिंदी में।\n"
+        "🪷 कृष्ण ने जो कहा — क्या आप भी मानते हैं?\n"
+        "Type \"जय श्री कृष्ण\" if you do. Honest disagreement भी welcome है।\n\n"
+        "🔔 Daily Krishna wisdom — हिंदी में।\n"
         "#Krishna #कृष्ण #BhagavadGita #Shorts"
     ),
     "whatif": (
-        "🌍 What other 'what if' scenario should we explore?\n"
-        "Drop your wildest hypothetical in the comments 👇\n\n"
-        "🔔 Subscribe for daily science what-ifs.\n"
+        "🌍 Would humanity actually survive this? Be honest.\n"
+        "Drop your scenario — wildest one becomes next video.\n\n"
+        "🔔 Daily science what-ifs.\n"
         "#WhatIf #Science #Shorts"
+    ),
+    "explainer": (
+        "Iss video mein jo bola — kya tum agree karte ho?\n"
+        "Apna take comment mein drop karo. Honest takes only.\n\n"
+        "🔔 Subscribe — Kant Decodes har hype sabse pehle.\n"
+        "#KantDecodes #Hindi #Explainer"
     ),
 }
 _PLAYLIST_CACHE_PATH = os.path.join("assets", "playlist_ids.json")
@@ -65,16 +77,24 @@ _PLAYLIST_CACHE_PATH = os.path.join("assets", "playlist_ids.json")
 
 # ── Auth ──────────────────────────────────────────────────────────────────────
 
-def get_youtube_service():
+def get_youtube_service(token_path: str = "token.pickle"):
     """
-    Loads or refreshes OAuth2 credentials.
-    First run: opens browser for consent.
-    Subsequent runs: auto-refreshes from token.pickle.
+    Loads or refreshes OAuth2 credentials from `token_path` and returns a
+    YouTube service client.
+
+    `token_path` defaults to "token.pickle" (the existing Vyasa AI channel),
+    so all current callers keep working unchanged. The explainer pipeline
+    passes "token_explainer.pickle" to point at the second channel's token.
+    Same client_secrets.json is reused; OAuth consent flow lets you pick the
+    channel on first run.
+
+    First run: opens browser for consent and writes back to `token_path`.
+    Subsequent runs: auto-refreshes from `token_path`.
     """
     creds = None
 
-    if os.path.exists("token.pickle"):
-        with open("token.pickle", "rb") as f:
+    if os.path.exists(token_path):
+        with open(token_path, "rb") as f:
             creds = pickle.load(f)
 
     if not creds or not creds.valid:
@@ -86,7 +106,7 @@ def get_youtube_service():
             )
             creds = flow.run_local_server(port=0)
 
-        with open("token.pickle", "wb") as f:
+        with open(token_path, "wb") as f:
             pickle.dump(creds, f)
 
     return build("youtube", "v3", credentials=creds)
@@ -95,13 +115,12 @@ def get_youtube_service():
 # ── Series-specific tag bundles ──────────────────────────────────────────────
 
 _TAGS_MAHABHARATA = [
-    "Mahabharata", "महाभारत", "Shorts", "Hindu mythology",
+    "Mahabharata", "महाभारत", "Hindu mythology",
     "Ancient India", "Bhagavad Gita", "भगवद गीता",
     "Krishna", "कृष्ण", "Arjuna", "अर्जुन",
     "epic story", "dharma", "spiritual", "Indian history",
-    "Mahabharata shorts", "mythology shorts", "trending shorts",
     "Hindu dharma", "vedic wisdom", "kurukshetra", "krishna stories",
-    "Indian mythology", "spiritual shorts",
+    "Indian mythology",
 ]
 _TAGS_WHATIF = [
     "what if", "hypothetical", "thought experiment", "Shorts",
@@ -110,6 +129,14 @@ _TAGS_WHATIF = [
     "future earth", "mind blowing", "trending shorts",
     "science facts", "speculative science", "imagine",
     "क्या होगा अगर", "विज्ञान", "कल्पना",
+]
+_TAGS_EXPLAINER = [
+    "Kant Decodes", "kant decodes", "explainer", "hindi explainer",
+    "anti hype", "fact check", "internet hype", "indian creator",
+    "Shorts", "hindi shorts", "trending shorts", "psychology",
+    "social commentary", "हिंदी एक्सप्लेनर", "हिंदी शॉर्ट्स",
+    "सोशल मीडिया", "एनालिसिस", "real story", "behind the noise",
+    "ai hype", "scams explained",
 ]
 
 
@@ -122,13 +149,63 @@ def _series_tag_pack(series: str, language: str) -> list:
         else:
             base += ["English shorts", "science explained", "what if questions"]
         return base
+    if series == "explainer":
+        # Hindi-only channel; no English variant.
+        return list(_TAGS_EXPLAINER)
     # Default: Mahabharata
     base = list(_TAGS_MAHABHARATA)
     if language == "hi":
-        base += ["हिंदी शॉर्ट्स", "हिंदी कहानी", "पौराणिक कथा", "महाकाव्य", "हिंदू धर्म"]
+        base += ["हिंदी कहानी", "पौराणिक कथा", "महाकाव्य", "हिंदू धर्म"]
     else:
-        base += ["English shorts", "mythology explained", "epic history", "Hindu stories"]
+        base += ["mythology explained", "epic history", "Hindu stories"]
     return base
+
+
+# ── Title + description sanitizers ───────────────────────────────────────────
+# Phase 1 (2026-05-21): episode-numbered titles suppress reach 5–20x per the
+# analytics baseline at assets/channel_analysis_2026-05-20.md. The script-
+# generator prompt was updated to stop emitting `#N:` prefixes; this strip is
+# belt-and-suspenders for any LLM leak.
+_BANNED_TITLE_PATTERN = re.compile(
+    r"(?:महाभारत|Mahabharata|Mahabharat)\s*#?\s*\d+\s*[:\-—]?\s*"
+    r"|\b(?:Episode|Ep\.?|Part)\s*#?\s*\d+\s*[:\-—]?\s*",
+    re.IGNORECASE,
+)
+
+
+def _sanitize_title(title: str) -> str:
+    cleaned = _BANNED_TITLE_PATTERN.sub("", title).strip()
+    cleaned = re.sub(r"^[:\-—|\s]+", "", cleaned)
+    return cleaned
+
+
+def _cap_description_hashtags(description: str, top_n: int = 3) -> str:
+    """Drop the trailing hashtag spam block (was 31 tags); keep top_n at the
+    end. >15 hashtags suppresses ranking; the inline 5-hashtag block above
+    the body is preserved."""
+    lines = description.rstrip().split("\n")
+    block_start = len(lines)
+    for i in range(len(lines) - 1, -1, -1):
+        stripped = lines[i].strip()
+        if not stripped:
+            block_start = i
+            continue
+        if all(tok.startswith("#") for tok in stripped.split()):
+            block_start = i
+            continue
+        break
+
+    if block_start == len(lines):
+        return description
+
+    trailing = " ".join(lines[block_start:])
+    hashtags = [tok for tok in trailing.split() if tok.startswith("#")]
+    if not hashtags:
+        return description
+
+    kept = hashtags[:top_n]
+    body = "\n".join(lines[:block_start]).rstrip()
+    return f"{body}\n\n{' '.join(kept)}" if body else " ".join(kept)
 
 
 # ── Playlist helpers ─────────────────────────────────────────────────────────
@@ -212,10 +289,15 @@ def upload_to_youtube(
     thumbnail_path: str = "",
     series: str = None,
     on_video_id=None,
+    token_path: str = "token.pickle",
 ) -> str:
     """
     Uploads video to YouTube, sets thumbnail, and adds to the series playlist.
     Returns the YouTube video ID.
+
+    `token_path` (default "token.pickle") selects which channel to upload to.
+    The Vyasa AI channel uses the default; the Explainer channel passes
+    "token_explainer.pickle". Generated by `python setup_auth.py --channel <name>`.
 
     `on_video_id` (callable, optional) is invoked with the new video_id IMMEDIATELY
     after `videos.insert` returns — before any post-upload work (thumbnail, playlist,
@@ -223,7 +305,7 @@ def upload_to_youtube(
     upload (video posted, but a downstream step failed) doesn't trigger a duplicate
     re-upload on retry. Failures inside the callback do NOT abort the upload.
     """
-    youtube = get_youtube_service()
+    youtube = get_youtube_service(token_path=token_path)
 
     # Series can be passed explicitly or read from script_data
     if series is None:
@@ -233,13 +315,15 @@ def upload_to_youtube(
     base_tags = _series_tag_pack(series, language)
     all_tags  = list(dict.fromkeys(script_data.get("tags", []) + base_tags))[:30]
 
-    # Ensure #Shorts is in description — required for Shorts algorithm classification
+    # Description: cap trailing hashtag block at top 3 (was 31 → suppression risk),
+    # then ensure #Shorts for Shorts algorithm classification.
     description = script_data.get("description", "")
+    description = _cap_description_hashtags(description, top_n=3)
     if "#Shorts" not in description:
         description += "\n\n#Shorts"
 
-    # Trim title to 60 chars (Shorts display limit). Ensure What If prefix.
-    title = script_data["title"][:60]
+    # Title: strip any leaked episode/part numbering, then trim to 60 chars.
+    title = _sanitize_title(script_data["title"])[:60]
     if series == "whatif" and not title.lower().startswith("what if"):
         title = ("What If: " + title)[:60]
 
@@ -315,12 +399,17 @@ def upload_to_youtube(
     # Post + pin a series-specific comment to drive the early engagement
     # signal. Non-fatal — re-auth is required for the wider scope, and even
     # without pinning the comment helps with keyword density.
-    _post_pinned_comment(youtube, video_id, series)
+    _post_pinned_comment(
+        youtube, video_id, series,
+        override=script_data.get("pinned_question"),
+    )
 
     return video_id
 
 
-def _post_pinned_comment(youtube, video_id: str, series: str) -> None:
+def _post_pinned_comment(
+    youtube, video_id: str, series: str, override: str = None,
+) -> None:
     """
     Post a series-specific top-level comment from the channel itself.
     Acts as the algorithm's first interaction signal (engagement = early
@@ -328,9 +417,18 @@ def _post_pinned_comment(youtube, video_id: str, series: str) -> None:
     the comments tab. Pinning requires the moderator role on the channel
     (which the channel owner has by default).
 
+    `override` lets the script_generator supply a per-video contestable
+    question that mirrors the in-video provocative line (Phase 4/9). When
+    provided, it replaces the default series template entirely; the
+    generator is expected to include its own brand footer. Falls back to
+    the series default when missing.
+
     Failure modes are non-fatal — the upload itself has already succeeded.
     """
-    template = _PINNED_COMMENT_TEMPLATES.get(series)
+    template = (
+        override.strip() if (override and override.strip())
+        else _PINNED_COMMENT_TEMPLATES.get(series)
+    )
     if not template:
         return
 

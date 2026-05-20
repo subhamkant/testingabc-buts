@@ -2547,7 +2547,6 @@ def generate_script(
     TASK: Create a 50-58 second vertical (9:16) video script with EXACTLY 6 scenes about a well-known incident from the Mahabharata.
 
     TOPIC: "{topic}"
-    EPISODE_NUMBER (use this for title prefix 'महाभारत #{episode_n_str}'): {episode_n_str}
     LANGUAGE: {lang_label}
     STYLE: {style_note}
     {language_rules}
@@ -3345,7 +3344,7 @@ def generate_script(
     OUTPUT — return ONLY valid JSON, no markdown fences, no preamble:
     ═══════════════════════════════════════════════════════════════
     {{
-      "title": "SEARCH-OPTIMIZED bilingual title under 75 chars (allows episode prefix), no hashtags. Format: 'महाभारत #N: [Dramatic Hindi half] | [English half]' where N is the episode number passed as {episode_n}. The first 1-2 Hindi words MUST be a high-search keyword viewers type: 'महाभारत कथा', 'भीष्म प्रतिज्ञा', 'कर्ण की कहानी', 'अर्जुन का प्रण', 'कृष्ण का सच', 'द्रौपदी का अपमान', 'कुरुक्षेत्र युद्ध'. Episode numbering (e.g. 'महाभारत #12: कर्ण की पीड़ा | Karna's Hidden Pain') trains the Suggested algorithm to pair sequential episodes — the channel's #1 weakest traffic source right now is RELATED_VIDEO at 0.1%. NEVER lead with English half — Hindi keyword first.",
+      "title": "Bilingual Short title UNDER 60 CHARACTERS, format: '[English half] | [Hindi half]'. ABSOLUTELY NO episode/part/sequence numbering anywhere: no 'Mahabharata #N:', no 'महाभारत #N:', no 'Episode N', no 'Part N', no 'Ep N', no 'X of Y'. NO 'Story of X' / 'Tale of X' / 'The Saga of X' framings — those are dead keywords. The English half MUST be a curiosity-gap or stakes claim built around a named character + power word (good power words: Why / Untold / Real / Hidden / Broke / Never / Last / Refused / Killed / Stopped / Betrayed). The Hindi half mirrors the English half using high-search keywords ('प्रतिज्ञा', 'मृत्यु', 'सच', 'पाप', 'गलती', 'धोखा', 'अनकहा', 'रहस्य', 'वो', 'क्यों', 'असली', 'अंतिम'). NO hashtags in title. Examples of GOOD titles: 'Why Bhishma Never Married | भीष्म ने क्यों कभी विवाह नहीं किया' / 'Karna's Real Father | कर्ण का असली पिता कौन था' / 'The Vow That Broke Hastinapur | वो प्रतिज्ञा जिसने हस्तिनापुर तोड़ा' / 'Bhishma's Untold Sacrifice | भीष्म का अनकहा बलिदान'. Examples of BAD titles to NEVER produce: 'महाभारत #4: ...' / 'Mahabharata Episode 12: ...' / 'Part 3 of Karna's Story' / 'The Story of Bhishma'.",
       "description": "Hook sentence under 90 chars that expands the title's promise with concrete detail.\\n\\n#Shorts #Mahabharata #महाभारत #Krishna #HinduMythology\\n\\n100-150 words about the story, weaving in named characters and the specific incident. Build curiosity. Don't spoil the ending in the description.\\n\\n#Shorts #Mahabharata #महाभारत #Hindu #HinduStory #BhagavadGita #भगवद_गीता #Krishna #कृष्ण #Arjuna #अर्जुन #Karna #कर्ण #Bhishma #भीष्म #Draupadi #द्रौपदी #Kurukshetra #कुरुक्षेत्र #AncientIndia #IndianMythology #Dharma #EpicStory #MythologyShorts #VedicWisdom #HinduDharma #IndianHistory #SpiritualShorts #PauranikKathayein #भारतीयइतिहास #SanatanDharma #सनातनधर्म #HindiShorts #trending",
       "tags": ["topic-specific long-tail tag 1","topic-specific long-tail tag 2","named character 1 (English)","named character 1 (Hindi/Devanagari)","named character 2","specific incident name","viewer-search query like 'why X happened'","Mahabharata","महाभारत","Shorts","Hindu mythology","Krishna","कृष्ण"],
       "scenes": [
@@ -3362,8 +3361,15 @@ def generate_script(
     HARD RULES — violation makes the script unusable:
     - All narration MUST be in {lang_label}
     - All image_prompt, video_prompt, thumbnail_prompt MUST be in English
-    - Title: under 60 chars, MUST follow `[English] | [Hindi]` format with a
-      named character + power keyword in the English half. NO hashtags in title.
+    - Title: under 60 chars, MUST follow `[English half] | [Hindi half]` format.
+      NO episode/part/sequence numbering ANYWHERE in title (no 'Mahabharata #N:',
+      no 'महाभारत #N:', no 'Episode N', no 'Part N', no 'Ep N', no 'X of Y').
+      NO 'Story of X' / 'Tale of X' / 'The Saga of X' framings. The English half
+      MUST contain a named character + a power keyword (Why / Untold / Real /
+      Hidden / Broke / Never / Last / Refused / Killed / Stopped / Betrayed).
+      The Hindi half MUST mirror it with a curiosity-gap claim using
+      ('प्रतिज्ञा', 'मृत्यु', 'सच', 'पाप', 'गलती', 'धोखा', 'अनकहा', 'रहस्य',
+      'वो', 'क्यों', 'असली'). NO hashtags in title.
     - Description MUST follow the 3-block structure: hook line ≤90 chars,
       blank line, 5 inline hashtags, blank line, body, blank line, full
       hashtag block (high-volume hashtags first).
