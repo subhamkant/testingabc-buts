@@ -1,6 +1,10 @@
 # Manual topic queue.
-# Cross-arc validation render #1 (Phase 4 unlock gate):
-# Karna arc position #6 — Kunti meeting before the war.
-# Tests irreversible-loyalty grief + mother-abandonment register
-# (furthest from Bhishma's burden-of-vow register that smoke #1+2+#7
-# already validated). Phase 2/3 + Part F stabilization active.
+# Cross-arc validation render #2 (Phase 4 unlock gate):
+# Karna arc position #1 — Draupadi's swayamvara rejection.
+# Tests identity-wound register (public humiliation, social
+# caste rupture). Different emotional axis from Karna #6 Kunti
+# meeting (mother-abandonment) — verifies Phase 2/3 holds across
+# distinct Karna-arc emotional moments.
+# Forced-topic path produces episode_n = len(used)+1, expected
+# ~#18 (clean continuation from yesterday's #17).
+Karna's rejection at Draupadi's swayamvara — the wound that defined his life when she called him sutaputra
