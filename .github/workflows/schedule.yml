@@ -1,26 +1,14 @@
 name: Mahabharata YouTube Bot
 
 on:
-  schedule:
-    # Mahabharata Hindi — 2x/day. Nominal times offset EARLIER to compensate
-    # for GitHub Actions free-tier scheduled-job delay (typically 1-2 hours).
-    # Recent fires confirmed the delay pattern (yesterday: "15:00 UTC" cron
-    # actually fired 17:23 UTC ~2h 23m late; "18:00 UTC" fired 19:54 UTC
-    # ~1h 54m late). Today's 15:00 UTC slot was SKIPPED entirely — :00
-    # slots land in GHA's highest-contention window.
-    #
-    # Schedule adjusted 2026-05-19 (per user direction): pushed to :30 of
-    # the hour to dodge top-of-hour congestion + offset 1.5h earlier than
-    # target so actual fires land near 8:30 PM IST and 10:00-10:30 PM IST.
-    # Re-enabled 2026-05-19 after the full Phase 2/3 + Part F stabilization
-    # bundle landed in this commit (was temporarily disabled in 3e69c55).
-    - cron: "30 13 * * *"   # nominal 7:00 PM IST, fires ~8:00-9:00 PM IST
-    # Second slot DISABLED 2026-05-20: user direction is "one render per
-    # day during cross-arc validation" (Karna #6 ongoing). Avoids
-    # second-cron-firing-late-while-first-slot-was-skipped scenario.
-    # Re-enable after cross-arc batch completes if 2x/day cadence resumes.
-    # - cron: "30 15 * * *"
-
+  # SCHEDULE TEMPORARILY REMOVED 2026-05-21 for today's manual Karna #1
+  # trigger. Empty `schedule:` block fails YAML parsing, so the whole
+  # block is removed instead of commented-out entries.
+  #
+  # Re-add tomorrow (with cron 1 only — cron 2 disabled during cross-arc
+  # pacing):
+  #   schedule:
+  #     - cron: "30 13 * * *"   # nominal 7:00 PM IST, fires ~8:00-9:00 PM IST
   workflow_dispatch:
     inputs:
       target:
