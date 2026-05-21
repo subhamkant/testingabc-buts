@@ -7,4 +7,3 @@
 # distinct Karna-arc emotional moments.
 # Forced-topic path produces episode_n = len(used)+1, expected
 # ~#18 (clean continuation from yesterday's #17).
-Karna's rejection at Draupadi's swayamvara — the wound that defined his life when she called him sutaputra
