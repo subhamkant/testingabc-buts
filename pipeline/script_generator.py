@@ -3344,7 +3344,7 @@ def generate_script(
     OUTPUT — return ONLY valid JSON, no markdown fences, no preamble:
     ═══════════════════════════════════════════════════════════════
     {{
-      "title": "Bilingual Short title UNDER 60 CHARACTERS, format: '[English half] | [Hindi half]'. ABSOLUTELY NO episode/part/sequence numbering anywhere: no 'Mahabharata #N:', no 'महाभारत #N:', no 'Episode N', no 'Part N', no 'Ep N', no 'X of Y'. NO 'Story of X' / 'Tale of X' / 'The Saga of X' framings — those are dead keywords. The English half MUST be a curiosity-gap or stakes claim built around a named character + power word (good power words: Why / Untold / Real / Hidden / Broke / Never / Last / Refused / Killed / Stopped / Betrayed). The Hindi half mirrors the English half using high-search keywords ('प्रतिज्ञा', 'मृत्यु', 'सच', 'पाप', 'गलती', 'धोखा', 'अनकहा', 'रहस्य', 'वो', 'क्यों', 'असली', 'अंतिम'). NO hashtags in title. Examples of GOOD titles: 'Why Bhishma Never Married | भीष्म ने क्यों कभी विवाह नहीं किया' / 'Karna's Real Father | कर्ण का असली पिता कौन था' / 'The Vow That Broke Hastinapur | वो प्रतिज्ञा जिसने हस्तिनापुर तोड़ा' / 'Bhishma's Untold Sacrifice | भीष्म का अनकहा बलिदान'. Examples of BAD titles to NEVER produce: 'महाभारत #4: ...' / 'Mahabharata Episode 12: ...' / 'Part 3 of Karna's Story' / 'The Story of Bhishma'.",
+      "title": "Bilingual Short title UNDER 60 CHARACTERS TOTAL, format: '[Hindi half] | [English half]'. Hindi half MUST come FIRST — Indian audience reads Hindi first; English half is a secondary discovery tag. Each half MUST be 24–28 characters MAX so neither gets truncated by YouTube's 60-char display cap. COUNT CAREFULLY before emitting. ABSOLUTELY NO episode/part/sequence numbering anywhere: no 'Mahabharata #N:', no 'महाभारत #N:', no 'Episode N', no 'Part N', no 'Ep N', no 'X of Y'. NO 'Story of X' / 'Tale of X' / 'The Saga of X' framings — those are dead keywords. The Hindi half (primary) MUST be a curiosity-gap claim using high-search keywords ('प्रतिज्ञा', 'मृत्यु', 'सच', 'पाप', 'गलती', 'धोखा', 'अनकहा', 'रहस्य', 'वो', 'क्यों', 'असली', 'अंतिम', 'अपमान'). The English half mirrors it CONCISELY with a named character + power word (Why / Untold / Real / Hidden / Broke / Never / Last / Refused / Killed / Stopped / Betrayed). NO hashtags in title. Examples of GOOD titles (each half ≤28 chars, total ≤60): 'भीष्म ने क्यों विवाह न किया | Why Bhishma Refused' / 'कर्ण का असली पिता कौन था | Karna's Real Father' / 'भीष्म का अनकहा बलिदान | Bhishma's Untold Sacrifice' / 'कर्ण का अपमान स्वयंवर में | Karna's Real Wound'. Examples of BAD titles to NEVER produce: 'Karna's Real Wound at Draupadi's Swayamvara | कर्ण के जीवन क…' (English half too long, Hindi gets cut at 60-char cap) / 'महाभारत #4: ...' / 'The Story of Bhishma'.",
       "description": "Hook sentence under 90 chars that expands the title's promise with concrete detail.\\n\\n#Shorts #Mahabharata #महाभारत #Krishna #HinduMythology\\n\\n100-150 words about the story, weaving in named characters and the specific incident. Build curiosity. Don't spoil the ending in the description.\\n\\n#Shorts #Mahabharata #महाभारत #Hindu #HinduStory #BhagavadGita #भगवद_गीता #Krishna #कृष्ण #Arjuna #अर्जुन #Karna #कर्ण #Bhishma #भीष्म #Draupadi #द्रौपदी #Kurukshetra #कुरुक्षेत्र #AncientIndia #IndianMythology #Dharma #EpicStory #MythologyShorts #VedicWisdom #HinduDharma #IndianHistory #SpiritualShorts #PauranikKathayein #भारतीयइतिहास #SanatanDharma #सनातनधर्म #HindiShorts #trending",
       "tags": ["topic-specific long-tail tag 1","topic-specific long-tail tag 2","named character 1 (English)","named character 1 (Hindi/Devanagari)","named character 2","specific incident name","viewer-search query like 'why X happened'","Mahabharata","महाभारत","Shorts","Hindu mythology","Krishna","कृष्ण"],
       "scenes": [
@@ -3361,15 +3361,18 @@ def generate_script(
     HARD RULES — violation makes the script unusable:
     - All narration MUST be in {lang_label}
     - All image_prompt, video_prompt, thumbnail_prompt MUST be in English
-    - Title: under 60 chars, MUST follow `[English half] | [Hindi half]` format.
-      NO episode/part/sequence numbering ANYWHERE in title (no 'Mahabharata #N:',
+    - Title: UNDER 60 chars TOTAL, MUST follow `[Hindi half] | [English half]`
+      format (Hindi FIRST — primary audience). Each half MUST be 24–28 chars
+      MAX so neither gets truncated at YouTube's 60-char display cap. COUNT
+      carefully — if either half overflows, YouTube chops the title mid-word.
+      NO episode/part/sequence numbering ANYWHERE (no 'Mahabharata #N:',
       no 'महाभारत #N:', no 'Episode N', no 'Part N', no 'Ep N', no 'X of Y').
-      NO 'Story of X' / 'Tale of X' / 'The Saga of X' framings. The English half
-      MUST contain a named character + a power keyword (Why / Untold / Real /
-      Hidden / Broke / Never / Last / Refused / Killed / Stopped / Betrayed).
-      The Hindi half MUST mirror it with a curiosity-gap claim using
-      ('प्रतिज्ञा', 'मृत्यु', 'सच', 'पाप', 'गलती', 'धोखा', 'अनकहा', 'रहस्य',
-      'वो', 'क्यों', 'असली'). NO hashtags in title.
+      NO 'Story of X' / 'Tale of X' / 'The Saga of X' framings. The HINDI half
+      (primary) MUST be a curiosity-gap claim using ('प्रतिज्ञा', 'मृत्यु', 'सच',
+      'पाप', 'गलती', 'धोखा', 'अनकहा', 'रहस्य', 'वो', 'क्यों', 'असली', 'अपमान').
+      The ENGLISH half mirrors CONCISELY with a named character + power keyword
+      (Why / Untold / Real / Hidden / Broke / Never / Last / Refused / Killed).
+      NO hashtags in title.
     - Description MUST follow the 3-block structure: hook line ≤90 chars,
       blank line, 5 inline hashtags, blank line, body, blank line, full
       hashtag block (high-volume hashtags first).

@@ -447,14 +447,16 @@ async def run_pipeline(language: str = "en", test_mode: bool = False, test_uploa
                 image_files = generate_images(script["scenes"], series="mahabharata", ck=ck)
                 if script.get("thumbnail_prompt"):
                     # Extract Hindi shock-phrase from title for thumbnail overlay.
-                    # Title format from prompt: "<English half> | <Hindi half>"
-                    # (Phase 1 — 2026-05-20 — order standardized to English-first to
-                    # match top organic performer in analytics + long-form convention.)
+                    # Title format from prompt: "<Hindi half> | <English half>"
+                    # (Phase 1 corrected 2026-05-21 — reverted to Hindi-FIRST after
+                    # the user's analytics-validated push: backfilled Hindi-first
+                    # videos jumped 4→93 and 31→45 views; English-first attempt
+                    # produced a 60-char-truncated title on Karna #6.)
                     _ov_text = ""
                     _title = script.get("title", "")
                     if "|" in _title:
                         _parts = _title.split("|", 1)
-                        _hindi_half = _parts[1].strip() if len(_parts) > 1 else _parts[0].strip()
+                        _hindi_half = _parts[0].strip()
                         _ov_text = _hindi_half
                     generate_thumbnail(
                         script["thumbnail_prompt"], series="mahabharata",
