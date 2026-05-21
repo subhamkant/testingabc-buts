@@ -3355,7 +3355,10 @@ def generate_script(
           "mood": "3-6 word English emotional tone phrase"
         }}
       ],
-      "thumbnail_prompt": "Dramatic Mahabharata thumbnail — vibrant colours, cinematic, portrait composition"
+      "thumbnail_prompt": "Dramatic Mahabharata thumbnail — vibrant colours, cinematic, portrait composition",
+      "quotable_line": "ONE contestable claim from THIS specific story (≤14 words, Hindi). Designed to be REPOSTED + commented + remembered — stands alone, readable without video context. MUST contain at least one charged word (बलिदान / ज़िद / धोखा / मजबूरी / गलती / पाप / अपमान / झूठ / सच / विश्वासघात). Examples of GOOD quotable lines: 'कर्ण हार युद्ध में नहीं… जन्म में गया था।' / 'भीष्म जीत सकते थे — पर जीतना उनका धर्म नहीं था।' / 'द्रौपदी का अपमान पाँडवों ने भी किया था।' Examples of BAD (generic platitudes): 'धर्म की जीत होती है' / 'अच्छाई हमेशा जीतती है'.",
+      "pinned_question": "Full pinned-comment BODY for the channel to auto-post. Opens with '❓ ' + the quotable_line verbatim, then ONE line inviting the viewer to take a side (e.g. 'Honest take comment में drop करो। किसी एक side पर खड़े रहो।'). DO NOT include subscribe CTA, DO NOT include hashtags — the uploader appends those automatically. Just the question + invitation.",
+      "next_seed": "ONE specific named-future-consequence hook (≤12 words, Hindi). Points at a SPECIFIC later event this channel will eventually publish — a character, place, betrayal, vow, death, revelation. Vague philosophical foreshadowing FAILS. Examples of GOOD seeds: 'कुंती ने कर्ण से एक बात कभी नहीं कही' / 'और यही प्रतिज्ञा एक दिन हस्तिनापुर को तोड़ देगी' / 'उस दिन सभा में जो हुआ, वो अभी बाकी था'. Examples of BAD seeds: 'और भी कई कहानियाँ' / 'जारी रहेगा' / 'अगले video में और गहराई'."
     }}
 
     HARD RULES — violation makes the script unusable:
@@ -3376,6 +3379,23 @@ def generate_script(
     - Description MUST follow the 3-block structure: hook line ≤90 chars,
       blank line, 5 inline hashtags, blank line, body, blank line, full
       hashtag block (high-volume hashtags first).
+    - quotable_line: ≤14 words, Hindi, ONE contestable claim about THIS
+      story. NEVER a generic platitude. MUST contain at least one charged
+      word from ('बलिदान', 'ज़िद', 'धोखा', 'मजबूरी', 'गलती', 'पाप', 'अपमान',
+      'झूठ', 'सच', 'विश्वासघात'). Phase 21-Lite (2026-05-21) — drives
+      engagement velocity by giving the viewer a take to agree with or
+      defend against.
+    - pinned_question: MUST start with '❓ ' followed by the quotable_line
+      VERBATIM, then exactly ONE invitation line. NO subscribe CTA, NO
+      hashtags here — the uploader appends both automatically. Keeping the
+      composition split lets the channel's brand footer stay consistent
+      while the per-video question varies.
+    - next_seed: ≤12 words, Hindi. Names a SPECIFIC future event (a
+      character, place, betrayal, vow, death, or revelation). FORBIDDEN
+      patterns: 'और भी कई कहानियाँ' / 'जारी रहेगा' / 'अगले video में और
+      गहराई' / 'बहुत कुछ बाकी है' — vague continuation phrases. REQUIRED:
+      one named noun + one named consequence. Phase 17-Lite (2026-05-21) —
+      becomes the pinned-comment subscribe-CTA tease ('🔔 कल — {seed}').
     - Tags MUST include topic-specific long-tail keywords (named characters
       in this topic + specific incident name + viewer-search queries) on
       top of the generic Mahabharata fallbacks.

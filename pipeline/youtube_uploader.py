@@ -74,6 +74,87 @@ _PINNED_COMMENT_TEMPLATES = {
 }
 _PLAYLIST_CACHE_PATH = os.path.join("assets", "playlist_ids.json")
 
+# Phase 21-Lite + 17-Lite (2026-05-21): per-series pinned-comment footer
+# pieces. When script_data emits a `pinned_question` (override), we compose
+# the full comment as: override + (subscribe with next_seed tease) + hashtags.
+# The fallback templates in _PINNED_COMMENT_TEMPLATES remain for scripts
+# that haven't been re-run under the new schema yet.
+_PINNED_HASHTAGS_BY_SERIES = {
+    "mahabharata": "#Mahabharata #महाभारत #Shorts",
+    "krishna":     "#Krishna #कृष्ण #BhagavadGita #Shorts",
+    "whatif":      "#WhatIf #Science #Shorts",
+    "explainer":   "#KantDecodes #Hindi #Explainer",
+}
+_PINNED_SUBSCRIBE_FALLBACK = {
+    "mahabharata": "🔔 Daily Mahabharata Shorts in हिंदी",
+    "krishna":     "🔔 Daily Krishna wisdom — हिंदी में।",
+    "whatif":      "🔔 Daily science what-ifs.",
+    "explainer":   "🔔 Subscribe — Kant Decodes har hype sabse pehle.",
+}
+# Only the Hindi-targeted series get the next_seed subscribe-tease format.
+# WhatIf + Explainer use a different language register where a Hindi seed
+# would be jarring; they fall back to the generic subscribe line.
+_PINNED_SUBSCRIBE_WITH_SEED = {
+    "mahabharata": "🔔 कल — {seed} Subscribe to not miss it.",
+    "krishna":     "🔔 कल — {seed} Subscribe — हिंदी में।",
+}
+_STORY_THREADS_PATH = os.path.join("assets", "story_threads.json")
+
+
+def _compose_pinned_comment(series: str, override: str, next_seed: str) -> str:
+    """Build the full pinned-comment text from a per-video override + brand
+    footer. If `override` is empty, fall back to the static series template.
+    If `next_seed` is provided and the series supports it, the subscribe line
+    names tomorrow's hook; otherwise the generic subscribe fallback is used."""
+    override = (override or "").strip()
+    next_seed = (next_seed or "").strip()
+    if not override:
+        return _PINNED_COMMENT_TEMPLATES.get(series, "")
+
+    hashtags  = _PINNED_HASHTAGS_BY_SERIES.get(series, "")
+    if next_seed and series in _PINNED_SUBSCRIBE_WITH_SEED:
+        # Strip trailing terminators so the formatted line's period lands cleanly.
+        clean_seed = next_seed.rstrip(" .।!?")
+        subscribe = _PINNED_SUBSCRIBE_WITH_SEED[series].format(seed=clean_seed + ".")
+    else:
+        subscribe = _PINNED_SUBSCRIBE_FALLBACK.get(series, "")
+
+    parts = [override]
+    if subscribe:
+        parts += ["", subscribe]
+    if hashtags:
+        parts.append(hashtags)
+    return "\n".join(parts)
+
+
+def _append_story_thread(video_id: str, series: str, topic: str, next_seed: str) -> None:
+    """Phase 17-Lite: append the planted seed to assets/story_threads.json
+    so future videos can pay it off. Lazy create the file. Non-fatal —
+    never breaks the upload path."""
+    if not next_seed or not next_seed.strip():
+        return
+    try:
+        from datetime import datetime, timezone
+        if os.path.exists(_STORY_THREADS_PATH):
+            with open(_STORY_THREADS_PATH, encoding="utf-8") as f:
+                data = json.load(f)
+        else:
+            data = {"planted": []}
+        data.setdefault("planted", []).append({
+            "video_id":    video_id,
+            "series":      series,
+            "topic":       topic,
+            "next_seed":   next_seed.strip(),
+            "planted_at":  datetime.now(timezone.utc).isoformat(),
+            "paid_off_by": None,
+        })
+        os.makedirs(os.path.dirname(_STORY_THREADS_PATH), exist_ok=True)
+        with open(_STORY_THREADS_PATH, "w", encoding="utf-8") as f:
+            json.dump(data, f, ensure_ascii=False, indent=2)
+        print(f"    [thread-registry] planted seed: {next_seed.strip()[:60]}")
+    except Exception as e:
+        print(f"    [thread-registry] warn: {str(e)[:120]}")
+
 
 # ── Auth ──────────────────────────────────────────────────────────────────────
 
@@ -399,16 +480,25 @@ def upload_to_youtube(
     # Post + pin a series-specific comment to drive the early engagement
     # signal. Non-fatal — re-auth is required for the wider scope, and even
     # without pinning the comment helps with keyword density.
+    _append_story_thread(
+        video_id, series,
+        script_data.get("title", ""),
+        script_data.get("next_seed", ""),
+    )
+
     _post_pinned_comment(
         youtube, video_id, series,
         override=script_data.get("pinned_question"),
+        next_seed=script_data.get("next_seed"),
     )
 
     return video_id
 
 
 def _post_pinned_comment(
-    youtube, video_id: str, series: str, override: str = None,
+    youtube, video_id: str, series: str,
+    override: str = None,
+    next_seed: str = None,
 ) -> None:
     """
     Post a series-specific top-level comment from the channel itself.
@@ -417,18 +507,17 @@ def _post_pinned_comment(
     the comments tab. Pinning requires the moderator role on the channel
     (which the channel owner has by default).
 
-    `override` lets the script_generator supply a per-video contestable
-    question that mirrors the in-video provocative line (Phase 4/9). When
-    provided, it replaces the default series template entirely; the
-    generator is expected to include its own brand footer. Falls back to
-    the series default when missing.
+    Composition (Phase 21-Lite + 17-Lite, 2026-05-21):
+      • `override` = the LLM-emitted per-video question body (quotable_line
+        + invite-to-take-a-side). No subscribe CTA / hashtags expected.
+      • `next_seed` = the LLM-emitted named-future-consequence hook for the
+        subscribe-CTA tease ('🔔 कल — {seed} Subscribe.').
+      • _compose_pinned_comment() wraps both into the final comment text,
+        falling back to the static series template if `override` is missing.
 
     Failure modes are non-fatal — the upload itself has already succeeded.
     """
-    template = (
-        override.strip() if (override and override.strip())
-        else _PINNED_COMMENT_TEMPLATES.get(series)
-    )
+    template = _compose_pinned_comment(series, override, next_seed)
     if not template:
         return
 

@@ -387,17 +387,22 @@ _SHOT_COMPOSITIONS = [
 ]
 
 
-# ─── Explainer visual_track categories (v2) ──────────────────────────────
+# ─── Explainer visual_track categories (v4 — documentary realism) ────────
 # When a scene has a `visual_track` list (explainer series only), the LLM
 # supplies one prompt per shot with a category tag. Each category prepends
 # its own composition directive so FLUX gets a consistent framing per type.
-# This is what shifts the channel from 80% portrait montage to investigative
-# systems-thinking visuals.
+#
+# v2 used "cinematic / dramatic" framings — every shot looked beautifully
+# composed and FLUX-rendered, brain pattern-matched as AI imagery after a
+# few shots. v4 shifts toward DOCUMENTARY REALISM — security-camera angles,
+# fluorescent / sodium-vapor lighting, slight grain, handheld imperfect
+# framing. The intent: shots read as "leaked / discovered / observed"
+# instead of "beautifully rendered." Brain stops pattern-matching to AI.
 _CATEGORY_PREFIX = {
-    "human":    "close-up portrait, single human subject, dramatic single-source lighting, shallow depth of field, intense expression, ",
-    "system":   "wide architectural photograph of large-scale infrastructure, no humans visible, no text, no logos, dark moody atmosphere, ",
-    "symbolic": "conceptual editorial photograph, single iconic object as metaphor, no humans, no text, dramatic isolation lighting, ",
-    "ui":       "stylized vertical screen UI mock, dark interface, looks like a captured frame from an investigative documentary or news terminal, minimal blurred body text, no logos, no readable proper-noun strings, ",
+    "human":    "candid documentary photograph, ordinary person, fluorescent or natural light, slightly grainy, handheld feel, imperfect framing, no dramatic lighting, ",
+    "system":   "documentary photograph of industrial infrastructure, security camera angle OR handheld investigative shot, fluorescent or sodium-vapor lighting, slightly grainy, no people, no text, no logos, NO cinematic dramatic lighting — feels captured not staged, ",
+    "symbolic": "documentary still-life photograph, observed object in a real setting, natural or fluorescent light, slightly imperfect framing, no dramatic isolation lighting, no people, no text, ",
+    "ui":       "low-fi screen capture from an investigative documentary OR a photographed-off-monitor shot of a news terminal, slight moire or screen glare, looks filmed off a real screen, no logos, no readable proper-noun text, ",
 }
 
 
@@ -1555,6 +1560,24 @@ def generate_thumbnail(
               "of the frame, dramatic single light source, dark moody backdrop "
               "with strong contrast, no small text, no UI elements, no logos, "
               "phone-feed legible at thumbnail size"
+        )
+    elif series in ("mahabharata", "krishna"):
+        # Phase 11 (2026-05-21): Shorts thumbnails are seen at ~200px on the
+        # phone feed and channel page; cinematic wide shots die at that size.
+        # Force single-face close-up with EXTREME emotion + high contrast.
+        # "Beautiful" is not "clickable" on Shorts — AI thumbnails default to
+        # noble/contemplative which look identical across every mythology
+        # channel and read as generic stock. The intensity rider counters that.
+        style_suffix = (
+            style_suffix
+            + ", thumbnail composition — extreme close-up of ONE character's "
+              "face filling at least 60% of the frame, intense emotional "
+              "expression (rage, anguish, shock, defiance, or grief — never "
+              "peaceful, never contemplative, never noble-and-distant), single "
+              "dramatic light source on the face with deep shadow elsewhere, "
+              "high contrast between subject and a dark moody background, no "
+              "small text, no UI elements, no logos, no battlefield wide shots, "
+              "no multi-figure compositions, phone-feed legible at thumbnail size"
         )
 
     # Vary seeds across attempts so a poor first composition doesn't repeat.
