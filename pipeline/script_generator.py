@@ -3395,7 +3395,7 @@ def generate_script(
       patterns: 'और भी कई कहानियाँ' / 'जारी रहेगा' / 'अगले video में और
       गहराई' / 'बहुत कुछ बाकी है' — vague continuation phrases. REQUIRED:
       one named noun + one named consequence. Phase 17-Lite (2026-05-21) —
-      becomes the pinned-comment subscribe-CTA tease ('🔔 कल — {seed}').
+      becomes the pinned-comment subscribe-CTA tease ('🔔 कल — {{seed}}').
     - Tags MUST include topic-specific long-tail keywords (named characters
       in this topic + specific incident name + viewer-search queries) on
       top of the generic Mahabharata fallbacks.
