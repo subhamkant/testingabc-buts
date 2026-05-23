@@ -260,38 +260,70 @@ def _load_used_topics() -> set[str]:
 def _pick_next_arc_topic() -> tuple[str, int, str, str | None] | None:
     """
     Walk character arcs sequentially, picking the first topic NOT in
-    recent_topics.json. Returns (topic, episode_n, arc_name, next_topic_in_arc)
-    or None when all arcs are exhausted.
+    recent_topics.json AND NOT overlapping any recently-published video
+    title on the channel. Returns (topic, episode_n, arc_name,
+    next_topic_in_arc) or None when all arcs are exhausted.
+
+    Two-stage dedup (2026-05-23):
+      1. Exact-string match against recent_topics.json (existing logic)
+      2. Runtime signature overlap against last 50 published titles via
+         the YouTube API (topic_signatures.fetch_recent_title_signatures).
+         Fail-safe — if the API is unavailable, the runtime check is
+         skipped and only stage 1 runs.
+
+    The runtime check catches:
+      - Topics with slightly different exact strings (manual-trigger paths,
+        legacy STORY_TOPICS entries used before the arc system, etc.)
+      - Drift between recent_topics.json and the actual channel
+      - Same character + same incident expressed in different topic strings
 
     `next_topic_in_arc` (added 2026-05-16, Tier 2 Fix 2.0) is the NEXT
     unused topic in the SAME arc, used by the cliffhanger prompt to tease
-    the next episode. None if this is the last unused episode of its arc
-    (no cliffhanger to tease in that case — script_generator will fall
-    back to the comment-bait closer alone).
+    the next episode. None if this is the last unused episode of its arc.
 
     episode_n is the GLOBAL episode count across the channel (sequential
     1, 2, 3 ... across all arcs combined), so titles read like
     "महाभारत #14: कर्ण की पीड़ा" giving viewers a clear progression cue.
     The arc_name is for logging / future per-arc playlist routing.
     """
+    from pipeline.topic_signatures import (
+        fetch_recent_title_signatures,
+        topic_overlaps_published,
+    )
+
     arcs = _load_arcs()
     used = _load_used_topics()
     if not arcs:
         return None
+
+    # Stage 2 dedup data — fetched once per process. Returns [] on any error.
+    published_sigs = fetch_recent_title_signatures()
+
     global_n = 0
+    runtime_skipped = []
     for arc in arcs:
         arc_topics = arc.get("topics", [])
         for idx, topic in enumerate(arc_topics):
             global_n += 1
-            if topic not in used:
-                # Look ahead within THIS arc for the next unused topic
-                # (skipping any already-used intermediate episodes).
-                next_topic = None
-                for ahead in arc_topics[idx + 1:]:
-                    if ahead not in used:
-                        next_topic = ahead
-                        break
-                return topic, global_n, arc.get("name", ""), next_topic
+            if topic in used:
+                continue
+            if published_sigs and topic_overlaps_published(topic, published_sigs):
+                runtime_skipped.append(topic)
+                continue
+            # Look ahead within THIS arc for the next unused & non-overlapping
+            # topic (skipping any already-used or runtime-rejected ones).
+            next_topic = None
+            for ahead in arc_topics[idx + 1:]:
+                if ahead in used:
+                    continue
+                if published_sigs and topic_overlaps_published(ahead, published_sigs):
+                    continue
+                next_topic = ahead
+                break
+            if runtime_skipped:
+                print(f"    [runtime-dedup] skipped {len(runtime_skipped)} arc "
+                      f"topic(s) due to title overlap with published videos")
+            return topic, global_n, arc.get("name", ""), next_topic
     return None
 
 
