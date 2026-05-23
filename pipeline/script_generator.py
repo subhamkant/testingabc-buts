@@ -3391,7 +3391,7 @@ def generate_script(
       "scenes": [
         {{
           "narration": "18-22 words in the specified LANGUAGE — vivid, present-tense, dramatic. MIX of short punch lines and longer cinematic lines (varied rhythm). End each scene with '...' (triple ellipsis) for natural TTS pause. ~6-7 seconds spoken. EXCEPTION: the valley scene (scene 5) is 14-18 words and quiet. Phase 2/3 stabilization 2026-05-19: tighter than before to protect aftermath + outro residue at the END of the video.",
-          "image_prompt": "Detailed English prompt following the [shot type] of [character(s)] in [emotion/action], in [environment], background contains [≥3 specific architectural/environmental elements: carved pillars, oil lamps, lotus reliefs, etc], [lighting], [mood], jewel-toned palette. MUST end with: 'clean cinematic frame with no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text.'",
+          "image_prompt": "Detailed English prompt, EMOTION-FIRST structure: [Named character's specific facial state — eyes / mouth / posture carrying the scene's emotional truth, e.g. 'Bhishma's eyes shut tight against a tear running down his cheek, jaw clenched white'], [shot type — favor extreme close-up, asymmetric framing, or uncomfortable proximity], in [environment with ≥3 specific architectural/environmental elements: carved pillars, oil lamps, lotus reliefs, etc], [lighting — favor harsh edge lighting / single dramatic source / dim shadow-heavy], [mood], jewel-toned palette. The face is the scene; the environment is secondary. FORBID balanced or centered compositions when the scene's mood is anguish / rage / shock / guilt / grief. MUST end with: 'clean cinematic frame with no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text.'",
           "video_prompt": "Cinematic 5-second shot in English — characters in subtle motion, camera movement, lighting. Vertical 9:16.",
           "mood": "3-6 word English emotional tone phrase"
         }}
@@ -3437,11 +3437,10 @@ def generate_script(
       गहराई' / 'बहुत कुछ बाकी है' — vague continuation phrases. REQUIRED:
       one named noun + one named consequence. Phase 17-Lite (2026-05-21) —
       becomes the pinned-comment subscribe-CTA tease ('🔔 कल — {{seed}}').
-    - EMOTIONAL VIOLENCE LAYER (Phase 26, 2026-05-23 — soft prompt
-      guidance, not a validator). Across the 6 scenes the script SHOULD
-      include ALL FIVE of these — they overlay the existing rubric, they
-      do not replace it. If satisfying both, the existing rubric wins;
-      if a script can't fit all five, prioritise (a)→(b)→(c)→(d)→(e):
+    - EMOTIONAL VIOLENCE LAYER (Phase 26, 2026-05-23 + iter-2 2026-05-24 —
+      soft prompt guidance, not a validator). Across the 6 scenes the script
+      SHOULD include ALL SIX of these. They overlay the existing rubric;
+      if a script can't fit all six, prioritise (a)→(b)→(c)→(d)→(e)→(f):
         (a) ONE emotionally painful line — a NAMED character feeling a
             SPECIFIC named pain (not abstract sorrow). E.g., 'कर्ण को
             हर बार जन्म पर ताना दिया गया।'
@@ -3452,28 +3451,75 @@ def generate_script(
         (d) ONE identity wound — a character's sense of self attacked:
             caste / parentage / gender / rejection. E.g., Karna's birth,
             Eklavya's caste, Draupadi's gendered humiliation.
-        (e) PATTERN INTERRUPTS every 8–12 seconds (across scenes 2–5):
-            each of those scenes SHOULD contain at least one of —
-            sudden accusation, tonal drop, deliberate silence beat,
-            contradiction marker ('लेकिन…' / 'पर…'), shocking reveal,
-            emotional reversal. NARRATION-level interrupts only —
-            assembly-side pattern interrupts are out of scope this wave.
-    - SCENE 1 EMOTIONAL COLLISION (Phase 26 companion, 2026-05-23 — soft
-      preference, NOT a new validator). The Pattern A/B/C hook validator
-      stays unchanged. WHEN POSSIBLE within those patterns, scene 1's
-      FIRST sentence should be an ACCUSATION or PAINFUL CLAIM that hits
-      the viewer in the first 2 seconds, not a setup line. Good first-
-      sentence shapes: 'कर्ण पूरी जिंदगी झूठ जीता रहा।' / 'भीष्म जानते थे…
-      वो गलत थे।' / 'द्रौपदी को सिर्फ पाँडवों ने नहीं तोड़ा।' Avoid
-      scene-setup openings like 'यमुना के तट पर…' when an accusation can
-      stand in its place.
-    - VIEWER SELF-INSERTION (Phase 27, 2026-05-23). Scene 6 (AFTERMATH)
-      MUST contain ONE line that breaks the fourth wall by universalising
-      the story into the viewer's own life. Pattern: 'हर इंसान के अंदर
-      एक X होता है' / 'कभी-कभी सबसे बड़ा अपमान अपने ही देते हैं' / 'ये
-      X की कहानी नहीं — हर अनदेखे की कहानी है।' This pulls the mythology
-      out of past-tense into the viewer's personal life. Coexists with
-      the existing scene 6 aftermath / mood / no-closure-tropes rules.
+        (e) MANDATORY PATTERN INTERRUPTS (iter-2 2026-05-24 — replaces
+            the earlier menu-list spec which the LLM was satisfying with
+            the safest option):
+              • Scene 3 MUST CONTRADICT scene 2's emotional direction.
+                If scene 2 sets up sympathy for character X, scene 3
+                reveals X did something destructive. Use a marker like
+                'लेकिन सच यह था…' / 'पर अंदर ही अंदर…'.
+              • Scene 4 MUST contain an EMOTIONAL REVERSAL — the
+                character sympathised with in scenes 2–3 is now
+                implicated, OR a perceived villain is revealed as
+                victim. Marker like 'और यह सब उसी का दोष था…' or its
+                inverse.
+              • Scene 5 (valley) MUST hold the SILENCE BEAT — 1–2
+                sentences of stillness, no new plot info. Pattern:
+                'X आँखें बंद कर लेता है, और कुछ नहीं कहता।' (Adds
+                narration constraint on top of the existing scene 5
+                intimate-close-up imagery rule.)
+        (f) ONE CHARACTER COLLAPSE moment (iter-2 2026-05-24) in scenes
+            3, 4, or 5 — a named character's physical/emotional break:
+              • 'X की आवाज़ काँप गई' (voice trembled)
+              • 'X गिर पड़े' (collapsed)
+              • 'X की आँखों से बहने लगा' (tears began running)
+              • 'X चीख उठे' (cried out)
+            NOT abstract "grief filled the hall" — a physical break
+            tied to a named subject.
+    - ANTI-ELEGANCE FORBIDDEN LIST (iter-2 2026-05-24, Phase 26 companion).
+      The LLM's safe-mode default is "elegant grief" — beautiful, dignified,
+      noble suffering. That's exactly the failure mode of the channel right
+      now. FORBID by name:
+        • 'महानता' (greatness), 'गरिमा' (dignity), 'धैर्य' (composure as a
+          virtue applied to suffering), 'महिमामय' (glorious-grief)
+        • English phrases creeping into Hindi: 'cinematic grief',
+          'composed sorrow', 'dignified silence', 'noble suffering',
+          'epic tragedy'
+        • Framings that aestheticise pain: 'सुंदर पीड़ा' (beautiful pain),
+          'काव्यमय दुख' (poetic sorrow)
+      Replace these defaults with raw / unstable / ugly emotional registers.
+    - SCENE 1 EMOTIONAL COLLISION (Phase 26 companion, 2026-05-23 +
+      iter-2 2026-05-24 — soft preference, NOT a new validator). The
+      Pattern A/B/C hook validator stays unchanged.
+      ITER-2 TIGHTENING: scene 1's FIRST sentence MUST contain a
+      PRESENT-TENSE EMOTIONAL VERB acting on a NAMED character. Past-tense
+      narrative setup is forbidden as the opening sentence even if it
+      satisfies Pattern A/B/C.
+      ✓ GOOD: 'भीष्म चुप रहते हैं — और कुरुवंश काँप उठता है।' (present
+        tense, emotional verb 'काँप उठता है', named action)
+      ✓ GOOD: 'कर्ण रोता है — पर कोई सुनता नहीं।' (present tense, named
+        emotional action)
+      ✗ BAD: 'भीष्म ने कभी नहीं सोचा था कि एक दिन यह दिन आएगा।' (past
+        tense, narrative setup, no emotional verb)
+      ✗ BAD: 'यमुना के तट पर…' (atmospheric scene-setting, no character
+        emotional action)
+      ✗ BAD: 'कर्ण पूरी जिंदगी झूठ जीता रहा।' (past tense — was good for
+        2026-05-23 iter-1 but ITER-2 prefers present tense to land
+        emotional collision in the first 2 seconds)
+    - VIEWER SELF-INSERTION (Phase 27, 2026-05-23 + iter-2 2026-05-24).
+      The script MUST contain ONE line that breaks the fourth wall by
+      universalising the story into the viewer's own life.
+      ITER-2 TIGHTENING: this line MUST land in SCENE 4 OR SCENE 5 (NOT
+      scene 6). Mid-arc placement projects the viewer into the story
+      WHILE the emotional pull is rising; scene 6 was too late — the
+      emotional arc had already discharged and the line landed as a
+      coda rather than a connection.
+      Pattern: 'हर इंसान के अंदर एक X होता है' / 'कभी-कभी सबसे बड़ा
+      अपमान अपने ही देते हैं' / 'ये X की कहानी नहीं — हर अनदेखे की कहानी
+      है।' / 'X के अंदर हम सब हैं।' Coexists with the existing scene 6
+      aftermath / mood / no-closure-tropes rules (scene 6 still owns
+      aftermath imagery + irreversible-mood; just doesn't carry the
+      self-insertion line anymore).
     - Tags MUST include topic-specific long-tail keywords (named characters
       in this topic + specific incident name + viewer-search queries) on
       top of the generic Mahabharata fallbacks.
@@ -3487,7 +3533,24 @@ def generate_script(
     - Scene 6 (AFTERMATH) image_prompt MUST include an aftermath cue (empty battlefield / abandoned weapon / lonely throne / trembling hand releasing / single figure staring / discarded crown / wind through empty cloth / footprints in ash / hand near but not touching / broken thread). MUST NOT include the old spectacle keywords (lightning / fire / storm / cosmic / destruction / inferno / tempest / burning sky).
     - Scene 6 mood MUST be one of: haunting-quiet, hollow, weary, irreversible, severed, witnessed, abandoned, unresolved. NOT inspiring / triumphant / dignified / peaceful.
     - Scene 6 narration MUST NOT contain closure tropes ("rises triumphant", "dawn of a new era", "glory", "victorious", "hope rekindled", "battle won", "peace restored", "blessing of the gods", "उगता है", "विजय", "महिमा") — these kill emotional residue.
-    - At least 2 non-outro scenes' image_prompts MUST include a HUMAN PAIN cue (trembling hands / tears / broken armor / ash on face / silhouette against fire / kneeling figure / etc.)
+    - ALL 5 non-outro scenes' image_prompts MUST include a HUMAN PAIN cue
+      OR an ANTICIPATION cue (iter-2 2026-05-24 — was "at least 2"; tightened
+      because the LLM was concentrating pain in scenes 5–6 and leaving
+      scenes 1–3 as composed atmosphere). PAIN cues (use when the scene's
+      mood is anguish / grief / rage / shock):
+        • tears actively running down a cheek (visible streaks, not "a tear")
+        • mouth open in scream-shape (the shape, not necessarily sound)
+        • accusation finger-point at another character in frame
+        • forehead clenched in hand or pressed against a pillar
+        • collapsed posture — knees buckling, holding self against wall
+        • fists clenched until knuckles white
+        • eyes shut tight AGAINST pain (not meditative-closed)
+        • trembling hands / clenched jaw / bared teeth / ash on face /
+          broken armor / silhouette against fire / kneeling figure
+      ANTICIPATION cues (use for early scenes before tragedy lands —
+      scene 1 or 2 setup beats): subject staring at something off-frame
+      we can't yet see, jaw tense, breath visibly held, hand reaching
+      partway to a weapon or a person but not touching.
     - Scene 1's FIRST sentence MUST be a hook in pattern A, B, or C above —
       no setup lines, no "this is the story of...", no meta-narration
     - Every scene EXCEPT the last MUST end with a forward-pulling line

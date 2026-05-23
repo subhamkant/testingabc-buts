@@ -1562,13 +1562,15 @@ def generate_thumbnail(
               "phone-feed legible at thumbnail size"
         )
     elif series in ("mahabharata", "krishna"):
-        # Phase 11-Plus (2026-05-23): the original Phase 11 rider said
-        # "intense emotional expression" but the AI model kept defaulting
-        # to BEAUTIFUL versions of those emotions — soft-focus rage, noble
-        # anguish, contemplative shock — which still read as art, not
-        # Shorts compulsion. Tightening to mandate face/eye dominance and
-        # explicit pain artifacts so the AI can't fall back to "stoic
-        # warrior" composition. "Beautiful" is not "clickable" on Shorts.
+        # Phase 11-Plus (2026-05-23) + iter-2 (2026-05-24): the original
+        # Phase 11 said "intense emotional expression" — face dominance
+        # landed but thumbnails were still aesthetically *balanced*. The
+        # iter-1 rider added pain artifacts; iter-2 mandates VISUAL
+        # INSTABILITY (asymmetry, harsh edge lighting, uncomfortable
+        # proximity, mid-motion posture) because user analysis of the
+        # first Wave-3 render confirmed: faces are now expressive but
+        # compositions are still "carefully designed" / "cinematic-
+        # symmetric" / "centered." Forbid the symmetry default.
         style_suffix = (
             style_suffix
             + ", thumbnail composition — extreme close-up of ONE character's "
@@ -1578,17 +1580,28 @@ def generate_thumbnail(
               "no eyes-closed), camera at face level for full-frontal "
               "emotional collision, intense emotional expression (rage, "
               "anguish, shock, defiance, grief, accusation, or open-mouth "
-              "anger). VISIBLE PAIN ARTIFACTS ENCOURAGED: tear tracks on "
-              "cheeks, sweat on brow, dust or ash smeared across the face, "
-              "blood smear, trembling lips, clenched jaw, bared teeth, "
-              "veins visible at the temple. EXPLICITLY FORBIDDEN: peaceful "
-              "gazes, contemplative distance, noble warrior stoicism, "
-              "half-smiles, devotional serenity, soft-focus beauty, "
-              "diffused dreamy lighting. Single dramatic light source on "
-              "the face with deep shadow elsewhere, high contrast between "
-              "subject and a dark moody background, no small text, no UI "
-              "elements, no logos, no battlefield wide shots, no multi-"
-              "figure compositions, phone-feed legible at thumbnail size"
+              "anger). ASYMMETRIC FRAMING REQUIRED — subject NOT centered; "
+              "place subject off-center (rule of thirds OR closer-to-edge "
+              "crop). UNCOMFORTABLE PROXIMITY — subject's face close enough "
+              "that part of it may crop at the frame edge (forehead, chin, "
+              "or one ear cropped at the edge is GOOD). MID-MOTION POSTURE — "
+              "hair displaced, fabric awkward, weight caught between steps, "
+              "NOT static portrait stillness. HARSH EDGE LIGHTING — single "
+              "hard light source from above-left OR below, casting deep "
+              "cheek/jaw shadows; the lit half of the face is sharp, the "
+              "shadow half is near-black. VISIBLE PAIN ARTIFACTS ENCOURAGED: "
+              "tear tracks on cheeks, sweat on brow, dust or ash smeared "
+              "across the face, blood smear, trembling lips, clenched jaw, "
+              "bared teeth, veins visible at the temple. EXPLICITLY "
+              "FORBIDDEN: bilateral symmetry, centered subjects, even / "
+              "wraparound lighting, soft-focus beauty, diffused dreamy "
+              "lighting, peaceful gazes, contemplative distance, noble "
+              "warrior stoicism, half-smiles, devotional serenity, fully-"
+              "visible-with-all-features-intact portrait composition. High "
+              "contrast between subject and a dark moody background, no "
+              "small text, no UI elements, no logos, no battlefield wide "
+              "shots, no multi-figure compositions, phone-feed legible "
+              "at thumbnail size"
         )
 
     # Vary seeds across attempts so a poor first composition doesn't repeat.
