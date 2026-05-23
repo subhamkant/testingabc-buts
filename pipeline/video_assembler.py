@@ -1478,27 +1478,30 @@ def _apply_background_music(output_path: str, series: str = "mahabharata"):
     # reduction of ~10% so narration carries the emotion and music sits
     # under it. Music's job is atmosphere; narration is the protagonist.
     #
-    #   Window                  Volume    Tier 1     Tier 1.5    Tier 1.5.b
-    #   0-3s (mystery)          0.050     was 0.060  was 0.055   now 0.050
-    #   3-8s (tension)          0.067     was 0.080  was 0.075   now 0.067
-    #   8 → valley_start (emot) 0.085     was 0.100  was 0.095   now 0.085
-    #   VALLEY window           0.040     —          was 0.040   now 0.040 (unchanged dip)
-    #   post-valley (climax)    0.098     was 0.130  was 0.110   now 0.098
+    #   Window                  Tier1   T1.5    T1.5.b  T1.5.c (now, 2026-05-23)
+    #   0-3s (mystery)          0.060   0.055   0.050   0.042
+    #   3-8s (tension)          0.080   0.075   0.067   0.057
+    #   8 → valley_start (emot) 0.100   0.095   0.085   0.072
+    #   VALLEY window           —       0.040   0.048   0.041
+    #   post-valley (climax)    0.130   0.110   0.098   0.083
+    #
+    # Tier 1.5.c (2026-05-23): another -15% across the board per user
+    # feedback that music still felt prominent against narration. The
+    # curve shape (mystery → tension → emotion → valley dip → climax)
+    # is preserved; only the overall ceiling shifts down.
     #
     # Sidechain still tightened: attack 80ms, release 450ms, ratio 7.
     valley_end_t   = max(8.0, video_duration - 7.0)   # ~7s of climax tail
     valley_start_t = max(5.0, valley_end_t - 5.0)     # 5s valley window
-    # Valley floor: 0.040 → 0.048 (Tier 2 Fix 2.2.b, 2026-05-16). User
-    # predicted pure 0.040 dip would feel "too empty" for mobile listeners
-    # in noisy environments (bus, street). 0.048 preserves the perceptible
-    # dip vs the 0.085 emotion-section ceiling but stays audible enough
-    # that the scene doesn't read as broken silence.
+    # Valley floor stays a perceptible dip vs the emotion-section ceiling
+    # but loud enough to not read as broken silence on mobile speakers in
+    # noisy environments.
     music_volume_expr = (
-        f"if(lt(t,3),0.050,"
-        f"if(lt(t,8),0.067,"
-        f"if(lt(t,{valley_start_t:.2f}),0.085,"
-        f"if(lt(t,{valley_end_t:.2f}),0.048,"
-        f"0.098))))"
+        f"if(lt(t,3),0.042,"
+        f"if(lt(t,8),0.057,"
+        f"if(lt(t,{valley_start_t:.2f}),0.072,"
+        f"if(lt(t,{valley_end_t:.2f}),0.041,"
+        f"0.083))))"
     )
     # Build the filter graph + ffmpeg input list. If chunking is active AND
     # the ambient bed exists, layer the bed as a 3rd input ([2:a]) at flat
@@ -1565,7 +1568,7 @@ def _apply_background_music(output_path: str, series: str = "mahabharata"):
     # chunked music + ambient bed when available.
     if use_ambient_layer:
         flat_filter = (
-            f"[1:a]volume=0.06,"
+            f"[1:a]volume=0.05,"
             f"atrim=0:{video_duration:.3f},asetpts=PTS-STARTPTS[music];"
             f"[2:a]atrim=0:{video_duration:.3f},asetpts=PTS-STARTPTS,"
             f"volume=0.020[ambient_flat];"
@@ -1574,7 +1577,7 @@ def _apply_background_music(output_path: str, series: str = "mahabharata"):
         )
     else:
         flat_filter = (
-            f"[1:a]volume=0.06,"
+            f"[1:a]volume=0.05,"
             f"atrim=0:{video_duration:.3f},asetpts=PTS-STARTPTS[music];"
             f"[0:a][music]amix=inputs=2:normalize=0,"
             f"{audio_chain}[aout]"
