@@ -33,6 +33,13 @@ import subprocess
 import requests
 
 
+# Per-pipeline temp root. Mahabharata leaves the env unset → "temp". The
+# explainer driver sets PIPELINE_TEMP_ROOT="temp/fe" BEFORE importing this
+# module so its working audio files land under temp/fe/audio/, isolated
+# from any concurrent or future mahabharata run.
+_TEMP_ROOT = os.environ.get("PIPELINE_TEMP_ROOT", "temp")
+
+
 # ── Voice config ──────────────────────────────────────────────────────────────
 
 # Edge TTS fallback voices
@@ -58,6 +65,12 @@ _GEMINI_VOICE_BY_SERIES = {
     "whatif":      "Puck",
     "mahabharata": _GEMINI_VOICE,
     "krishna":     _GEMINI_VOICE,
+    # Explainer = Anti-Hype Analyzer. Charon (the default) is too cinematic /
+    # mythology-coded for a "smart friend talking" register. Orus is warm,
+    # male, mature — the most natural-sounding conversational option in the
+    # Gemini palette. Override with NARRATOR_VOICE_EXPLAINER if you want Puck
+    # (energetic) or Fenrir (strong/commanding).
+    "explainer":   "Orus",
 }
 
 
@@ -598,7 +611,7 @@ async def _generate_per_scene_krishna_tts(
         return False
     primary_label, primary_key = keys[0]
 
-    os.makedirs("temp/audio/krishna_scenes", exist_ok=True)
+    os.makedirs(f"{_TEMP_ROOT}/audio/krishna_scenes", exist_ok=True)
     scene_paths = []
 
     for i, scene in enumerate(scenes):
@@ -610,7 +623,7 @@ async def _generate_per_scene_krishna_tts(
             i,
             _VOICE_SETTINGS_BY_SERIES.get("krishna", _DEFAULT_VOICE_SETTINGS),
         )
-        scene_path = f"temp/audio/krishna_scenes/scene_{i:02d}.mp3"
+        scene_path = f"{_TEMP_ROOT}/audio/krishna_scenes/scene_{i:02d}.mp3"
 
         # First attempt: v3 with audio tags on the peak scene
         v3_text = _krishna_scene_text(text, i)
@@ -695,7 +708,7 @@ async def generate_full_narration(
     Once a provider succeeds, the entire video is consistent voice (no
     half-Gemini / half-Edge seams).
     """
-    os.makedirs("temp/audio", exist_ok=True)
+    os.makedirs(f"{_TEMP_ROOT}/audio", exist_ok=True)
 
     # Concatenate per-scene narrations with a sentence delimiter so the model
     # produces a natural breath / pause between scenes.
@@ -711,7 +724,7 @@ async def generate_full_narration(
     full_text = delim.join(cleaned_parts)
     print(f"    Full narration: {len(full_text)} chars across {len(scenes)} scene(s)")
 
-    output_path = "temp/audio/narration_full.mp3"
+    output_path = f"{_TEMP_ROOT}/audio/narration_full.mp3"
 
     # ── 0. Krishna per-scene TTS (only when an ElevenLabs key is set) ──
     # Each scene gets its own ElevenLabs request with per-scene voice_settings
@@ -785,11 +798,11 @@ async def generate_voiceover(scenes: list, language: str = "en") -> list:
     voice    = _EDGE_VOICES.get(language, _EDGE_VOICES["en"])
     fallback = _EDGE_FALLBACK.get(language, _EDGE_FALLBACK["en"])
 
-    os.makedirs("temp/audio", exist_ok=True)
+    os.makedirs(f"{_TEMP_ROOT}/audio", exist_ok=True)
     audio_files = []
 
     for i, scene in enumerate(scenes):
-        output_path = f"temp/audio/scene_{i:02d}.mp3"
+        output_path = f"{_TEMP_ROOT}/audio/scene_{i:02d}.mp3"
         text = _clean_narration(scene["narration"])
         success = False
 
