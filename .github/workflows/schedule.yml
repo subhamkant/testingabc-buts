@@ -2,15 +2,24 @@ name: Mahabharata YouTube Bot
 
 on:
   schedule:
-    # Posting-hour shift 2026-05-21 (Phase 11+ batch, post-0d0205b): moved
-    # from 13:30 UTC (landing ~14–15 UTC actual) to 17:00 UTC.
-    # Phase 0 analytics (assets/channel_analysis_2026-05-20.md) showed
-    # 17 UTC = 251 avg views (n=7, strongest historical slot) vs the dead
-    # 16/19 UTC slots at 26–27 avg. 17 UTC nominal = ~10:30 PM IST actual
-    # after GHA queue delay = peak Indian late-evening scroll session.
+    # Posting-hour cron, calibrated for GHA queue delay (2026-05-24 update).
+    #
+    # First shift 2026-05-21: 13:30 UTC → 17:00 UTC, targeting the proven
+    # 17 UTC publish slot (251 avg views, n=7 — strongest historical bucket
+    # per assets/channel_analysis_2026-05-20.md).
+    #
+    # Empirical correction 2026-05-24: GHA queue delay on this account
+    # measured ~50–80 min (today's cron at 17:00 UTC published at 18:09 UTC
+    # = 23:39 IST). That pushes publishes into the soft tail of 18 UTC and
+    # occasionally into the dead 19 UTC slot (26 avg views) on slow-queue
+    # days. Moving cron 1 hour earlier — 17:00 → 16:00 UTC — re-centers
+    # publishes on the 17 UTC peak bucket across the typical queue-delay
+    # spread. 15 UTC was considered but rejected: fast-queue days would
+    # land publishes in the dead 16 UTC slot (27 avg views, 9x penalty).
+    #
     # Cron 2 (15:30 UTC) remains DISABLED during cross-arc validation
     # pacing per project_cross_arc_validation_active.md and commit a55002f.
-    - cron: "0 17 * * *"
+    - cron: "0 16 * * *"
   workflow_dispatch:
     inputs:
       target:
