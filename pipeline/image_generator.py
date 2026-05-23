@@ -1562,22 +1562,33 @@ def generate_thumbnail(
               "phone-feed legible at thumbnail size"
         )
     elif series in ("mahabharata", "krishna"):
-        # Phase 11 (2026-05-21): Shorts thumbnails are seen at ~200px on the
-        # phone feed and channel page; cinematic wide shots die at that size.
-        # Force single-face close-up with EXTREME emotion + high contrast.
-        # "Beautiful" is not "clickable" on Shorts — AI thumbnails default to
-        # noble/contemplative which look identical across every mythology
-        # channel and read as generic stock. The intensity rider counters that.
+        # Phase 11-Plus (2026-05-23): the original Phase 11 rider said
+        # "intense emotional expression" but the AI model kept defaulting
+        # to BEAUTIFUL versions of those emotions — soft-focus rage, noble
+        # anguish, contemplative shock — which still read as art, not
+        # Shorts compulsion. Tightening to mandate face/eye dominance and
+        # explicit pain artifacts so the AI can't fall back to "stoic
+        # warrior" composition. "Beautiful" is not "clickable" on Shorts.
         style_suffix = (
             style_suffix
             + ", thumbnail composition — extreme close-up of ONE character's "
-              "face filling at least 60% of the frame, intense emotional "
-              "expression (rage, anguish, shock, defiance, or grief — never "
-              "peaceful, never contemplative, never noble-and-distant), single "
-              "dramatic light source on the face with deep shadow elsewhere, "
-              "high contrast between subject and a dark moody background, no "
-              "small text, no UI elements, no logos, no battlefield wide shots, "
-              "no multi-figure compositions, phone-feed legible at thumbnail size"
+              "face filling AT LEAST 60% of the frame, EYES filling AT LEAST "
+              "30% of the frame and looking directly at the camera or just "
+              "past it (no profile shots, no half-turns, no overhead angles, "
+              "no eyes-closed), camera at face level for full-frontal "
+              "emotional collision, intense emotional expression (rage, "
+              "anguish, shock, defiance, grief, accusation, or open-mouth "
+              "anger). VISIBLE PAIN ARTIFACTS ENCOURAGED: tear tracks on "
+              "cheeks, sweat on brow, dust or ash smeared across the face, "
+              "blood smear, trembling lips, clenched jaw, bared teeth, "
+              "veins visible at the temple. EXPLICITLY FORBIDDEN: peaceful "
+              "gazes, contemplative distance, noble warrior stoicism, "
+              "half-smiles, devotional serenity, soft-focus beauty, "
+              "diffused dreamy lighting. Single dramatic light source on "
+              "the face with deep shadow elsewhere, high contrast between "
+              "subject and a dark moody background, no small text, no UI "
+              "elements, no logos, no battlefield wide shots, no multi-"
+              "figure compositions, phone-feed legible at thumbnail size"
         )
 
     # Vary seeds across attempts so a poor first composition doesn't repeat.

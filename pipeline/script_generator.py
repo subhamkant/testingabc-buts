@@ -2542,6 +2542,15 @@ def generate_script(
     prompt = f"""
     You are a master storyteller specialising in the Mahabharata epic, writing scripts for vertical YouTube videos that retain viewer attention from the first second to the last.
 
+    CHANNEL THESIS (the worldview every video MUST frame the moral through):
+    "Every hero in Mahabharata destroyed someone."
+    Treat every Mahabharata story as a story about what the hero broke, lost,
+    or destroyed — not what they achieved. Bhishma's vow destroyed the
+    Kuru lineage's future. Arjuna's victory destroyed Karna and a piece
+    of Arjuna himself. Krishna's strategy destroyed warriors' codes of
+    honor. NO video presents a hero as purely admirable. The cost is the
+    point — that is this channel's identity.
+
     You must strictly follow all rules and NEVER generate invalid or noisy text.
 
     TASK: Create a 50-58 second vertical (9:16) video script with EXACTLY 6 scenes about a well-known incident from the Mahabharata.
@@ -3344,7 +3353,7 @@ def generate_script(
     OUTPUT — return ONLY valid JSON, no markdown fences, no preamble:
     ═══════════════════════════════════════════════════════════════
     {{
-      "title": "Bilingual Short title UNDER 60 CHARACTERS TOTAL, format: '[Hindi half] | [English half]'. Hindi half MUST come FIRST — Indian audience reads Hindi first; English half is a secondary discovery tag. Each half MUST be 24–28 characters MAX so neither gets truncated by YouTube's 60-char display cap. COUNT CAREFULLY before emitting. ABSOLUTELY NO episode/part/sequence numbering anywhere: no 'Mahabharata #N:', no 'महाभारत #N:', no 'Episode N', no 'Part N', no 'Ep N', no 'X of Y'. NO 'Story of X' / 'Tale of X' / 'The Saga of X' framings — those are dead keywords. The Hindi half (primary) MUST be a curiosity-gap claim using high-search keywords ('प्रतिज्ञा', 'मृत्यु', 'सच', 'पाप', 'गलती', 'धोखा', 'अनकहा', 'रहस्य', 'वो', 'क्यों', 'असली', 'अंतिम', 'अपमान'). The English half mirrors it CONCISELY with a named character + power word (Why / Untold / Real / Hidden / Broke / Never / Last / Refused / Killed / Stopped / Betrayed). NO hashtags in title. Examples of GOOD titles (each half ≤28 chars, total ≤60): 'भीष्म ने क्यों विवाह न किया | Why Bhishma Refused' / 'कर्ण का असली पिता कौन था | Karna's Real Father' / 'भीष्म का अनकहा बलिदान | Bhishma's Untold Sacrifice' / 'कर्ण का अपमान स्वयंवर में | Karna's Real Wound'. Examples of BAD titles to NEVER produce: 'Karna's Real Wound at Draupadi's Swayamvara | कर्ण के जीवन क…' (English half too long, Hindi gets cut at 60-char cap) / 'महाभारत #4: ...' / 'The Story of Bhishma'.",
+      "title": "Bilingual Short title UNDER 60 CHARACTERS TOTAL, format: '[Hindi half] | [English half]'. Hindi half MUST come FIRST — Indian audience reads Hindi first; English half is a secondary discovery tag. Each half MUST be 24–28 characters MAX so neither gets truncated by YouTube's 60-char display cap. COUNT CAREFULLY before emitting. GOLD STANDARD — the title MUST do ONE of these: (a) CHALLENGE a known assumption ('कर्ण की मौत का असली कारण अर्जुन नहीं था'), (b) POINT AT A HIDDEN CAUSE ('भीष्म की प्रतिज्ञा का असली सच'), (c) POSE A PAINFUL QUESTION ('मरने से पहले कर्ण ने ये क्यों कहा?'), or (d) INVERT A HERO'S MORAL ('भीष्म ने हस्तिनापुर बचाया नहीं… खत्म किया'). FORBIDDEN PATTERNS — pure incident-naming ('कर्ण की अंतिम प्रतिज्ञा' / 'देवव्रत का महा-त्याग' / 'X की कहानी' / 'X की प्रतिज्ञा'), admiring tones, documentary-summary framings. ABSOLUTELY NO episode/part/sequence numbering: no 'Mahabharata #N:', no 'महाभारत #N:', no 'Episode N', no 'Part N', no 'Ep N', no 'X of Y'. NO 'Story of X' / 'Tale of X' / 'The Saga of X' framings. The Hindi half (primary) MUST use high-search keywords ('प्रतिज्ञा', 'मृत्यु', 'सच', 'पाप', 'गलती', 'धोखा', 'अनकहा', 'रहस्य', 'वो', 'क्यों', 'असली', 'अंतिम', 'अपमान', 'खत्म'). The English half mirrors CONCISELY with a named character + power word (Why / Untold / Real / Hidden / Broke / Never / Last / Refused / Killed / Stopped / Betrayed / Destroyed). NO hashtags in title. GOOD examples (challenge / hidden cause / painful question / inversion): 'कर्ण की मौत का असली कारण | Karna's Real Killer' / 'भीष्म की प्रतिज्ञा का असली सच | What Bhishma Hid' / 'मरने से पहले कर्ण ने क्या कहा | Karna's Last Words' / 'भीष्म ने हस्तिनापुर खत्म किया | Bhishma Destroyed Hastinapur'. BAD examples (pure naming — DO NOT emit): 'कर्ण की अंतिम प्रतिज्ञा' / 'देवव्रत का महा-त्याग' / 'महाभारत #4: ...' / 'The Story of Bhishma'.",
       "description": "Hook sentence under 90 chars that expands the title's promise with concrete detail.\\n\\n#Shorts #Mahabharata #महाभारत #Krishna #HinduMythology\\n\\n100-150 words about the story, weaving in named characters and the specific incident. Build curiosity. Don't spoil the ending in the description.\\n\\n#Shorts #Mahabharata #महाभारत #Hindu #HinduStory #BhagavadGita #भगवद_गीता #Krishna #कृष्ण #Arjuna #अर्जुन #Karna #कर्ण #Bhishma #भीष्म #Draupadi #द्रौपदी #Kurukshetra #कुरुक्षेत्र #AncientIndia #IndianMythology #Dharma #EpicStory #MythologyShorts #VedicWisdom #HinduDharma #IndianHistory #SpiritualShorts #PauranikKathayein #भारतीयइतिहास #SanatanDharma #सनातनधर्म #HindiShorts #trending",
       "tags": ["topic-specific long-tail tag 1","topic-specific long-tail tag 2","named character 1 (English)","named character 1 (Hindi/Devanagari)","named character 2","specific incident name","viewer-search query like 'why X happened'","Mahabharata","महाभारत","Shorts","Hindu mythology","Krishna","कृष्ण"],
       "scenes": [
@@ -3356,7 +3365,7 @@ def generate_script(
         }}
       ],
       "thumbnail_prompt": "Dramatic Mahabharata thumbnail — vibrant colours, cinematic, portrait composition",
-      "quotable_line": "ONE contestable claim from THIS specific story (≤14 words, Hindi). Designed to be REPOSTED + commented + remembered — stands alone, readable without video context. MUST contain at least one charged word (बलिदान / ज़िद / धोखा / मजबूरी / गलती / पाप / अपमान / झूठ / सच / विश्वासघात). Examples of GOOD quotable lines: 'कर्ण हार युद्ध में नहीं… जन्म में गया था।' / 'भीष्म जीत सकते थे — पर जीतना उनका धर्म नहीं था।' / 'द्रौपदी का अपमान पाँडवों ने भी किया था।' Examples of BAD (generic platitudes): 'धर्म की जीत होती है' / 'अच्छाई हमेशा जीतती है'.",
+      "quotable_line": "ONE TRIBAL-SPLIT claim from THIS specific story (≤14 words, Hindi). MUST divide the audience into two camps — one offended, one defensive. Designed to be REPOSTED + argued in comments + remembered. MUST contain at least one charged word (बलिदान / ज़िद / धोखा / मजबूरी / गलती / पाप / अपमान / झूठ / सच / विश्वासघात / घमंड / खत्म). GOLD STANDARD — the line MUST do ONE of: (a) ACCUSE a beloved hero ('भीष्म ने हस्तिनापुर बचाया नहीं… खत्म किया'), (b) INVERT a popular sympathy ('कर्ण सबसे दुखी नहीं… सबसे घमंडी था'), (c) IMPLICATE the heroes themselves ('द्रौपदी का अपमान पाँडवों ने भी किया था'), or (d) SET UP TEAM-VS-TEAM ('कृष्ण ने धर्म बचाया… या नियम तोड़े?' = Krishna justified vs manipulative; 'अर्जुन हार गया जब उसने कर्ण को निहत्था मारा' = Team Karna vs Team Arjuna). Not fake controversy — emotionally oppositional framing of a real moral question. BAD examples (generic platitudes — DO NOT emit): 'धर्म की जीत होती है' / 'अच्छाई हमेशा जीतती है' / 'महाभारत हमें सिखाता है'.",
       "pinned_question": "Full pinned-comment BODY for the channel to auto-post. Opens with '❓ ' + the quotable_line verbatim, then ONE line inviting the viewer to take a side (e.g. 'Honest take comment में drop करो। किसी एक side पर खड़े रहो।'). DO NOT include subscribe CTA, DO NOT include hashtags — the uploader appends those automatically. Just the question + invitation.",
       "next_seed": "ONE specific named-future-consequence hook (≤12 words, Hindi). Points at a SPECIFIC later event this channel will eventually publish — a character, place, betrayal, vow, death, revelation. Vague philosophical foreshadowing FAILS. Examples of GOOD seeds: 'कुंती ने कर्ण से एक बात कभी नहीं कही' / 'और यही प्रतिज्ञा एक दिन हस्तिनापुर को तोड़ देगी' / 'उस दिन सभा में जो हुआ, वो अभी बाकी था'. Examples of BAD seeds: 'और भी कई कहानियाँ' / 'जारी रहेगा' / 'अगले video में और गहराई'."
     }}
@@ -3396,6 +3405,43 @@ def generate_script(
       गहराई' / 'बहुत कुछ बाकी है' — vague continuation phrases. REQUIRED:
       one named noun + one named consequence. Phase 17-Lite (2026-05-21) —
       becomes the pinned-comment subscribe-CTA tease ('🔔 कल — {{seed}}').
+    - EMOTIONAL VIOLENCE LAYER (Phase 26, 2026-05-23 — soft prompt
+      guidance, not a validator). Across the 6 scenes the script SHOULD
+      include ALL FIVE of these — they overlay the existing rubric, they
+      do not replace it. If satisfying both, the existing rubric wins;
+      if a script can't fit all five, prioritise (a)→(b)→(c)→(d)→(e):
+        (a) ONE emotionally painful line — a NAMED character feeling a
+            SPECIFIC named pain (not abstract sorrow). E.g., 'कर्ण को
+            हर बार जन्म पर ताना दिया गया।'
+        (b) ONE accusation — a character blamed BY NAME for an
+            irreversible act. E.g., 'कुंती ने कर्ण से अपना नाम छुपाया।'
+        (c) ONE irreversible consequence — a death / vow / betrayal that
+            cannot be undone, named EXPLICITLY in scene 3, 4, or 5.
+        (d) ONE identity wound — a character's sense of self attacked:
+            caste / parentage / gender / rejection. E.g., Karna's birth,
+            Eklavya's caste, Draupadi's gendered humiliation.
+        (e) PATTERN INTERRUPTS every 8–12 seconds (across scenes 2–5):
+            each of those scenes SHOULD contain at least one of —
+            sudden accusation, tonal drop, deliberate silence beat,
+            contradiction marker ('लेकिन…' / 'पर…'), shocking reveal,
+            emotional reversal. NARRATION-level interrupts only —
+            assembly-side pattern interrupts are out of scope this wave.
+    - SCENE 1 EMOTIONAL COLLISION (Phase 26 companion, 2026-05-23 — soft
+      preference, NOT a new validator). The Pattern A/B/C hook validator
+      stays unchanged. WHEN POSSIBLE within those patterns, scene 1's
+      FIRST sentence should be an ACCUSATION or PAINFUL CLAIM that hits
+      the viewer in the first 2 seconds, not a setup line. Good first-
+      sentence shapes: 'कर्ण पूरी जिंदगी झूठ जीता रहा।' / 'भीष्म जानते थे…
+      वो गलत थे।' / 'द्रौपदी को सिर्फ पाँडवों ने नहीं तोड़ा।' Avoid
+      scene-setup openings like 'यमुना के तट पर…' when an accusation can
+      stand in its place.
+    - VIEWER SELF-INSERTION (Phase 27, 2026-05-23). Scene 6 (AFTERMATH)
+      MUST contain ONE line that breaks the fourth wall by universalising
+      the story into the viewer's own life. Pattern: 'हर इंसान के अंदर
+      एक X होता है' / 'कभी-कभी सबसे बड़ा अपमान अपने ही देते हैं' / 'ये
+      X की कहानी नहीं — हर अनदेखे की कहानी है।' This pulls the mythology
+      out of past-tense into the viewer's personal life. Coexists with
+      the existing scene 6 aftermath / mood / no-closure-tropes rules.
     - Tags MUST include topic-specific long-tail keywords (named characters
       in this topic + specific incident name + viewer-search queries) on
       top of the generic Mahabharata fallbacks.

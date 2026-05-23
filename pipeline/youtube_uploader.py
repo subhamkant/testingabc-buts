@@ -100,18 +100,30 @@ _PINNED_SUBSCRIBE_WITH_SEED = {
 }
 _STORY_THREADS_PATH = os.path.join("assets", "story_threads.json")
 
+# Wave 3 (2026-05-23): channel-thesis tagline appended above hashtags in
+# every per-video pinned-comment composition. The thesis is the channel's
+# recurring worldview anchor (every video frames the moral through this
+# lens). Per-series so Krishna / WhatIf / Explainer can have their own
+# eventually; for now only mahabharata has a thesis defined.
+_PINNED_CHANNEL_THESIS = {
+    "mahabharata": "— Every hero in Mahabharata destroyed someone.",
+}
+
 
 def _compose_pinned_comment(series: str, override: str, next_seed: str) -> str:
     """Build the full pinned-comment text from a per-video override + brand
     footer. If `override` is empty, fall back to the static series template.
     If `next_seed` is provided and the series supports it, the subscribe line
-    names tomorrow's hook; otherwise the generic subscribe fallback is used."""
+    names tomorrow's hook; otherwise the generic subscribe fallback is used.
+    Wave 3 adds the channel-thesis tagline between the subscribe line and
+    the hashtag block when the series has one defined."""
     override = (override or "").strip()
     next_seed = (next_seed or "").strip()
     if not override:
         return _PINNED_COMMENT_TEMPLATES.get(series, "")
 
     hashtags  = _PINNED_HASHTAGS_BY_SERIES.get(series, "")
+    thesis    = _PINNED_CHANNEL_THESIS.get(series, "")
     if next_seed and series in _PINNED_SUBSCRIBE_WITH_SEED:
         # Strip trailing terminators so the formatted line's period lands cleanly.
         clean_seed = next_seed.rstrip(" .।!?")
@@ -122,6 +134,8 @@ def _compose_pinned_comment(series: str, override: str, next_seed: str) -> str:
     parts = [override]
     if subscribe:
         parts += ["", subscribe]
+    if thesis:
+        parts.append(thesis)
     if hashtags:
         parts.append(hashtags)
     return "\n".join(parts)
