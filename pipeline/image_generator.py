@@ -1562,46 +1562,34 @@ def generate_thumbnail(
               "phone-feed legible at thumbnail size"
         )
     elif series in ("mahabharata", "krishna"):
-        # Phase 11-Plus (2026-05-23) + iter-2 (2026-05-24): the original
-        # Phase 11 said "intense emotional expression" — face dominance
-        # landed but thumbnails were still aesthetically *balanced*. The
-        # iter-1 rider added pain artifacts; iter-2 mandates VISUAL
-        # INSTABILITY (asymmetry, harsh edge lighting, uncomfortable
-        # proximity, mid-motion posture) because user analysis of the
-        # first Wave-3 render confirmed: faces are now expressive but
-        # compositions are still "carefully designed" / "cinematic-
-        # symmetric" / "centered." Forbid the symmetry default.
+        # Phase 11-Plus (2026-05-23) + iter-2 tightenings (2026-05-24) +
+        # CF-prompt-cap compression (2026-05-24): same mandates as iter-2
+        # but compressed ~65% — the previous verbose rider pushed combined
+        # style_suffix past CF FLUX-schnell's 2048-char prompt limit, so
+        # every CF account 400'd on every thumbnail and we always fell
+        # through to Pollinations. Compressed version preserves all the
+        # iter-2 mandates (face dominance, eye dominance, asymmetric framing,
+        # uncomfortable proximity, mid-motion, harsh edge lighting, pain
+        # artifacts, the forbidden list) but drops redundant emphasis words
+        # and explanatory phrasing.
         style_suffix = (
             style_suffix
-            + ", thumbnail composition — extreme close-up of ONE character's "
-              "face filling AT LEAST 60% of the frame, EYES filling AT LEAST "
-              "30% of the frame and looking directly at the camera or just "
-              "past it (no profile shots, no half-turns, no overhead angles, "
-              "no eyes-closed), camera at face level for full-frontal "
-              "emotional collision, intense emotional expression (rage, "
-              "anguish, shock, defiance, grief, accusation, or open-mouth "
-              "anger). ASYMMETRIC FRAMING REQUIRED — subject NOT centered; "
-              "place subject off-center (rule of thirds OR closer-to-edge "
-              "crop). UNCOMFORTABLE PROXIMITY — subject's face close enough "
-              "that part of it may crop at the frame edge (forehead, chin, "
-              "or one ear cropped at the edge is GOOD). MID-MOTION POSTURE — "
-              "hair displaced, fabric awkward, weight caught between steps, "
-              "NOT static portrait stillness. HARSH EDGE LIGHTING — single "
-              "hard light source from above-left OR below, casting deep "
-              "cheek/jaw shadows; the lit half of the face is sharp, the "
-              "shadow half is near-black. VISIBLE PAIN ARTIFACTS ENCOURAGED: "
-              "tear tracks on cheeks, sweat on brow, dust or ash smeared "
-              "across the face, blood smear, trembling lips, clenched jaw, "
-              "bared teeth, veins visible at the temple. EXPLICITLY "
-              "FORBIDDEN: bilateral symmetry, centered subjects, even / "
-              "wraparound lighting, soft-focus beauty, diffused dreamy "
-              "lighting, peaceful gazes, contemplative distance, noble "
-              "warrior stoicism, half-smiles, devotional serenity, fully-"
-              "visible-with-all-features-intact portrait composition. High "
-              "contrast between subject and a dark moody background, no "
-              "small text, no UI elements, no logos, no battlefield wide "
-              "shots, no multi-figure compositions, phone-feed legible "
-              "at thumbnail size"
+            + ", phone-feed thumbnail composition: ONE face extreme close-up, "
+              "face filling ≥60% of frame, eyes ≥30% of frame, camera at "
+              "face level looking at or just past the lens (no profile, no "
+              "half-turn, no overhead, eyes open); asymmetric off-center "
+              "framing, uncomfortable proximity (forehead/chin/ear may crop "
+              "at edge), mid-motion (hair displaced, fabric awkward); harsh "
+              "edge lighting from above-left OR below, deep cheek/jaw shadow, "
+              "lit half sharp + shadow half near-black; extreme emotion "
+              "(rage, anguish, shock, defiance, grief, accusation, open-mouth "
+              "anger); visible pain artifacts (tear tracks, sweat, dust, ash, "
+              "blood smear, trembling lips, clenched jaw, bared teeth, temple "
+              "veins); FORBID bilateral symmetry, centered subjects, even / "
+              "wraparound lighting, soft-focus beauty, peaceful gazes, noble "
+              "stoicism, half-smiles, devotional serenity, battlefield wide "
+              "shots, multi-figure compositions; dark moody background, high "
+              "contrast, no text, no UI, no logos"
         )
 
     # Vary seeds across attempts so a poor first composition doesn't repeat.
