@@ -1613,6 +1613,77 @@ def _apply_background_music(output_path: str, series: str = "mahabharata"):
 # gives a single uninterrupted voice track with consistent quality (no scene
 # seams from per-scene TTS generations) while visuals still cut to the beat.
 
+# Phase 24-Plus mood-scoring (2026-05-24) — pick the cold-open frame from
+# the highest-emotional-intensity scene by scoring its `mood` string against
+# high/low keyword banks. Replaces the static `climax_idx = n - 2` selection
+# which picked the AFTERMATH scene (scene 6 in 6-narrative-scene scripts,
+# per the script_generator HARD RULES) — that scene is by design quiet/
+# resolution-leaning, not visceral. Today's local render proved this: scene 6
+# mood was "Bittersweet, adoption, unresolved destiny" while scene 3 was
+# "Painful, desperate, irreversible" — scene 3 was the obvious cold-open
+# candidate but the static selector missed it.
+_HIGH_INTENSITY_MOOD_WORDS = {
+    # Pain / collapse
+    "pain", "painful", "anguish", "anguished", "agony", "grief", "despair",
+    "heartbreak", "heartbroken", "shattering", "shattered", "collapse",
+    "collapsed", "broken", "devastating", "devastation", "tragic", "raw",
+    "desperate", "irreversible", "wrenching", "harrowing",
+    # Rage / accusation / betrayal
+    "rage", "raging", "fury", "furious", "wrath", "betrayal", "betrayed",
+    "accusation", "accused", "vengeance", "vindictive",
+    # Shock / fear / horror
+    "shock", "shocked", "fear", "fearful", "terror", "horror", "panic",
+    "anxious", "anxiety",
+    # Loss / shame / guilt
+    "sorrow", "sorrowful", "regret", "regretful", "abandonment", "abandoned",
+    "helpless", "helplessness", "ashamed", "shame", "guilt", "guilty",
+    "humiliation", "humiliated", "isolation", "isolated",
+}
+_LOW_INTENSITY_MOOD_WORDS = {
+    # Resolution / peace / soft tones — these are POOR cold-open candidates
+    # because they lack the visceral pull needed in the first 0.5s of a Short.
+    "peaceful", "contemplative", "noble", "serene", "hopeful", "divine",
+    "calm", "gentle", "tender", "bittersweet", "reflective", "quiet",
+    "witnessed", "weary", "hollow", "resolved", "triumphant", "dignified",
+    "wisdom", "graceful", "warm",
+}
+
+
+def _score_scene_intensity(mood_str: str) -> int:
+    """Score a scene's `mood` string for cold-open candidacy. Higher = more
+    visually visceral = better cold-open frame. Pure word-counting, no NLP.
+    Returns 0 when the mood string is empty or contains no scorable words —
+    triggers the fallback to position-based selection."""
+    if not mood_str:
+        return 0
+    import re as _re
+    tokens = _re.findall(r"[a-z]+", mood_str.lower())
+    score = 0
+    for t in tokens:
+        if t in _HIGH_INTENSITY_MOOD_WORDS:
+            score += 1
+        elif t in _LOW_INTENSITY_MOOD_WORDS:
+            score -= 1
+    return score
+
+
+def _pick_cold_open_scene_idx(scene_moods: list, n: int) -> tuple:
+    """Phase 24-Plus: returns (climax_idx, source) where source is one of
+    'mood-scored' (positive winner from the candidate band) or 'fallback-n-2'
+    (no scene scored positive, returns the original static index).
+    Excludes scene 0 (the hook — using its frame as cold-open would duplicate
+    what plays immediately after) and scene n-1 (the static outro asset).
+    For n < 4 there are no valid candidates; falls back to n-2."""
+    if n < 4 or len(scene_moods) != n:
+        return (max(0, n - 2), "fallback-n-2")
+    candidate_idxs = list(range(1, n - 1))
+    best_idx = max(candidate_idxs, key=lambda i: _score_scene_intensity(scene_moods[i]))
+    best_score = _score_scene_intensity(scene_moods[best_idx])
+    if best_score > 0:
+        return (best_idx, "mood-scored")
+    return (n - 2, "fallback-n-2")
+
+
 def _make_freeze_clip(image_path: str, duration: float, output_path: str) -> bool:
     """Static (no Ken Burns) freeze frame at 1080x1920. Used for the Phase 24
     cold-open prepend: a 1.0s flash of the climax scene's first image,
@@ -2148,14 +2219,22 @@ def assemble_video_continuous_audio(
               f"VALLEY scene {n-2} @ 0.70x, CLIMAX scene {n-1} @ 1.50x, outro scene {n} static")
 
     if apply_cold_open:
-        climax_idx = n - 2
+        # Phase 24-Plus (2026-05-24): score each scene's mood for visual
+        # intensity and pick the highest-scorer as the cold-open frame source.
+        # Excludes scene 0 (hook — using its frame would duplicate what plays
+        # next) and scene n-1 (static outro asset). Falls back to n-2 if no
+        # scene scores positive (preserves original Phase 24 behavior).
+        cold_open_moods = [s.get("mood", "") for s in (script_data.get("scenes") or [])]
+        climax_idx, _src = _pick_cold_open_scene_idx(cold_open_moods, n)
         climax_imgs = image_files[climax_idx]
         climax_first = climax_imgs[0] if isinstance(climax_imgs, list) else climax_imgs
         cold_open_path = "temp/clips/silent_cold_open.mp4"
         if _make_freeze_clip(climax_first, COLD_OPEN_S, cold_open_path):
             silent_paths = [cold_open_path] + silent_paths
             durations    = [COLD_OPEN_S] + list(durations)
-            print(f"    [Phase 24] Cold-open prepend: {COLD_OPEN_S:.1f}s static of climax (scene {climax_idx+1}) image")
+            _mood_label = cold_open_moods[climax_idx][:40] if climax_idx < len(cold_open_moods) else "?"
+            print(f"    [Phase 24-Plus] Cold-open prepend: {COLD_OPEN_S:.1f}s static of scene {climax_idx+1} image "
+                  f"(source={_src}, mood='{_mood_label}')")
         else:
             # Roll back the scene-0 trim if the freeze clip failed to generate
             durations[0] += SCENE_0_TRIM
