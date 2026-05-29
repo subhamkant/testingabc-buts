@@ -1585,14 +1585,20 @@ def generate_thumbnail(
               "(rage, anguish, shock, defiance, grief, accusation, open-mouth "
               "anger); visible pain artifacts (tear tracks, sweat, dust, ash, "
               "blood smear, trembling lips, clenched jaw, bared teeth, temple "
-              "veins); CLARITY FLOOR — at least ONE eye fully visible and "
+              "veins); CAPTURED-NOT-CRAFTED (iter-3 2026-05-29 / Issue #4) — "
+              "visible film grain overlay, subtle motion blur on hair or fabric "
+              "edge while face stays sharp, slight imperfect focus on one "
+              "peripheral element, NOT crystal-clean digital sharpness; "
+              "CLARITY FLOOR — at least ONE eye fully visible and "
               "emotionally readable, face occupies ≥40% of frame, contrast "
               "preserves mid-tone gradient (no full silhouette, no double "
               "blowout); FORBID bilateral symmetry, centered subjects, even / "
               "wraparound lighting, soft-focus beauty, peaceful gazes, noble "
               "stoicism, half-smiles, devotional serenity, battlefield wide "
-              "shots, multi-figure compositions, both-eyes-obscured crops; "
-              "dark moody background, high contrast, no text, no UI, no logos"
+              "shots, multi-figure compositions, both-eyes-obscured crops, "
+              "studio portrait quality, magazine-cover composition, AI-render "
+              "polish; dark moody background, high contrast, no text, no UI, "
+              "no logos"
         )
 
     # Vary seeds across attempts so a poor first composition doesn't repeat.

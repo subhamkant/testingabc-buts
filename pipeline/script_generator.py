@@ -3434,7 +3434,7 @@ def generate_script(
       "scenes": [
         {{
           "narration": "18-22 words in the specified LANGUAGE — vivid, present-tense, dramatic. MIX of short punch lines and longer cinematic lines (varied rhythm). End each scene with '...' (triple ellipsis) for natural TTS pause. ~6-7 seconds spoken. EXCEPTION: the valley scene (scene 5) is 14-18 words and quiet. Phase 2/3 stabilization 2026-05-19: tighter than before to protect aftermath + outro residue at the END of the video.",
-          "image_prompt": "Detailed English prompt, EMOTION-FIRST structure: [Named character's specific facial state — eyes / mouth / posture carrying the scene's emotional truth, e.g. 'Bhishma's eyes shut tight against a tear running down his cheek, jaw clenched white'], [shot type — favor extreme close-up, asymmetric framing, or uncomfortable proximity], in [environment with ≥3 specific architectural/environmental elements: carved pillars, oil lamps, lotus reliefs, etc], [lighting — favor harsh edge lighting / single dramatic source / dim shadow-heavy], [mood], jewel-toned palette. The face is the scene; the environment is secondary. FORBID balanced or centered compositions when the scene's mood is anguish / rage / shock / guilt / grief. MUST end with: 'clean cinematic frame with no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text.'",
+          "image_prompt": "Detailed English prompt, EMOTION-FIRST structure: [Named character's specific facial state — eyes / mouth / posture carrying the scene's emotional truth, e.g. 'Bhishma's eyes shut tight against a tear running down his cheek, jaw clenched white'], [shot type — favor extreme close-up, asymmetric framing, or uncomfortable proximity], in [environment with ≥3 specific architectural/environmental elements: carved pillars, oil lamps, lotus reliefs, etc], [lighting — favor harsh edge lighting / single dramatic source / dim shadow-heavy], [mood], jewel-toned palette. FACE DOMINANCE FLOOR (Phase 1 iter-3 2026-05-29 / Issue #1) — for scenes 1-5 the human face MUST occupy ≥50% of the frame area. Sky / landscape / atmospheric backdrops may not exceed 25% of frame in scenes 1-5. Scene 6 (aftermath) is the ONLY exception — it may use wide landscape composition for emotional emptiness. The face is the scene; the environment is secondary. TEXTURE + IMPERFECTION MANDATES (Phase 1 iter-3 2026-05-29 / Issue #4) — visible film grain on the image (not the smooth FLUX default), imperfect focus (one element may be slightly soft), motion blur on emotional moments (running tears smear, hair displaced mid-turn, hand caught mid-reach), hair caught mid-motion or fabric mid-flow (never frozen-portrait stillness), dust / ash / particles in the light when mood permits. FORBID balanced or centered compositions when the scene's mood is anguish / rage / shock / guilt / grief. FORBID 'magazine quality', 'studio-lit', 'polished AI render', 'wraparound bokeh', 'stock photo elegance', 'commercial photography', 'editorial portrait'. MUST end with: 'clean cinematic frame with no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text.'",
           "video_prompt": "Cinematic 5-second shot in English — characters in subtle motion, camera movement, lighting. Vertical 9:16.",
           "mood": "3-6 word English emotional tone phrase"
         }}
@@ -3469,6 +3469,17 @@ def generate_script(
       'झूठ', 'सच', 'विश्वासघात'). Phase 21-Lite (2026-05-21) — drives
       engagement velocity by giving the viewer a take to agree with or
       defend against.
+    - quotable_line MUST also be SPOKEN verbatim (or near-verbatim — ≥80%
+      word overlap) within scene 4 OR scene 5 narration (Phase 1 iter-3
+      2026-05-29 / Issue #5 — Comment Detonator landing). Composing it
+      only for the pinned comment is insufficient — the LINE must HIT
+      VIEWERS DURING THE VIDEO, not after. Ideal landing: the quotable_line
+      IS the scene 4 SINGLE-SENTENCE BOMB (Phase 26(e)), serving both
+      structural functions at once. Acceptable alternative: scene 5
+      delivers it as the closing argument before the silence beat. NOT
+      acceptable: quotable_line appears in pinned but never in narration.
+      The whole point is that a viewer who never reads the pinned should
+      STILL leave wanting to argue.
     - pinned_question: MUST start with '❓ ' followed by the quotable_line
       VERBATIM, then exactly ONE invitation line. NO subscribe CTA, NO
       hashtags here — the uploader appends both automatically. Keeping the
@@ -3503,24 +3514,49 @@ def generate_script(
                 If scene 2 sets up sympathy for character X, scene 3
                 reveals X did something destructive. Use a marker like
                 'लेकिन सच यह था…' / 'पर अंदर ही अंदर…'.
-              • Scene 4 MUST contain an EMOTIONAL REVERSAL — the
-                character sympathised with in scenes 2–3 is now
-                implicated, OR a perceived villain is revealed as
-                victim. Marker like 'और यह सब उसी का दोष था…' or its
-                inverse.
+              • Scene 4 MUST detonate a SINGLE-SENTENCE BOMB (iter-3
+                2026-05-29 / Issue #3 sharpening). One sentence that
+                emotionally INVERTS everything scenes 1-3 set up. NOT
+                a gradual reveal across multiple lines — ONE sentence,
+                landing like a struck bell. The viewer's mental model
+                of the story must flip on this line alone. Patterns:
+                  ✓ 'पर सच यह था — X जानता था, और फिर भी चुप रहा।'
+                  ✓ 'और यह सब उसी का दोष था जो खुद को सबसे बड़ा मानता था।'
+                  ✓ 'जिसे विश्व ने हीरो माना — वो ही असली खलनायक था।'
+                  ✓ 'पर वो दर्द जो X ने सहा — वो X ने खुद चुना था।'
+                Forbidden: multi-sentence build-up to the reversal,
+                qualifying clauses ('हालाँकि', 'लेकिन शायद'), softening
+                phrases. The bomb is a hard cut in the script's
+                emotional logic. Make scene 4 the loudest sentence.
               • Scene 5 (valley) MUST hold the SILENCE BEAT — 1–2
                 sentences of stillness, no new plot info. Pattern:
                 'X आँखें बंद कर लेता है, और कुछ नहीं कहता।' (Adds
                 narration constraint on top of the existing scene 5
                 intimate-close-up imagery rule.)
-        (f) ONE CHARACTER COLLAPSE moment (iter-2 2026-05-24) in scenes
-            3, 4, or 5 — a named character's physical/emotional break:
+        (f) ONE CHARACTER COLLAPSE moment (iter-2 2026-05-24 + iter-3
+            2026-05-29 emotional-texture extension / Issue #2) in scenes
+            3, 4, or 5 — a named character's physical/emotional break.
+            Required: at least ONE physical-event verb PLUS at least ONE
+            emotional-texture phrase (not just one or the other — the
+            texture is what makes the break feel human, not cinematic).
+            Physical-event verbs:
               • 'X की आवाज़ काँप गई' (voice trembled)
               • 'X गिर पड़े' (collapsed)
               • 'X की आँखों से बहने लगा' (tears began running)
               • 'X चीख उठे' (cried out)
-            NOT abstract "grief filled the hall" — a physical break
-            tied to a named subject.
+              • 'X के हाथ काँप रहे थे' (hands were trembling)
+            Emotional-texture phrases (NEW iter-3) — the TEXTURE of
+            breaking, not just the event:
+              • 'काँपते स्वर में' (in a trembling voice)
+              • 'टूटी हुई आँखों से' (with broken eyes)
+              • 'रुंधे गले से' (with a choked throat)
+              • 'अधीरता से' (frantically / desperately)
+              • 'रोते हुए कहते हैं' (says while crying)
+              • 'साँस अटक गई' (breath caught / hitched)
+            NOT abstract "grief filled the hall" — a physical break + the
+            TEXTURE of it, tied to a named subject. Pair both: 'X की
+            आवाज़ काँपते स्वर में निकली, फिर रुंधे गले से…' lands the human
+            break; 'X की आवाज़ काँप गई' alone lands as cinematic-tragic.
         (g) ONE in-video COMMENT TRIGGER LINE (Phase 1 Stabilization
             2026-05-29, RULE 7 — promotes Doctrine 3 from documented
             doctrine to enforced HARD RULE). MUST land in scene 4 OR 5
