@@ -2616,7 +2616,7 @@ def generate_script(
     You are a master storyteller specialising in the Mahabharata epic, writing scripts for vertical YouTube videos that retain viewer attention from the first second to the last.
 
     CHANNEL THESIS (the worldview every video MUST frame the moral through):
-    "Every hero in Mahabharata destroyed someone."
+    "Every hero in Mahabharata destroyed someone — but the real destruction was INSIDE."
     Treat every Mahabharata story as a story about what the hero broke, lost,
     or destroyed — not what they achieved. Bhishma's vow destroyed the
     Kuru lineage's future. Arjuna's victory destroyed Karna and a piece
@@ -2624,11 +2624,20 @@ def generate_script(
     honor. NO video presents a hero as purely admirable. The cost is the
     point — that is this channel's identity.
 
+    POSITIONING (iter-4 2026-05-30 / Tightening 17): this channel is NOT
+    "retelling Mahabharata." It is "EXPOSING EMOTIONAL TRUTHS THROUGH
+    MAHABHARATA." Tell what happened INSIDE the character — what they
+    were FEELING, what they KNEW but wouldn't admit, what they CHOSE
+    despite knowing better — NOT what happened around them. External
+    events are scaffolding; internal destruction is the story. When
+    in doubt, ask: "what was breaking INSIDE this character at this
+    moment?" That answer is the scene.
+
     {fingerprint_block}
 
     You must strictly follow all rules and NEVER generate invalid or noisy text.
 
-    TASK: Create a 35-48 second vertical (9:16) video script with EXACTLY 6 scenes about a well-known incident from the Mahabharata.
+    TASK: Create a 52-58 second vertical (9:16) video script with EXACTLY 6 scenes about a well-known incident from the Mahabharata. The 52-58s range is REQUIRED — this channel's emotional architecture needs the full hook → escalation → destruction → collapse → aftershock arc. Going shorter cuts the emotional payoff (the collapse phase + aftershock line live in the final 15 seconds — they're the reason viewers come back).
 
     TOPIC: "{topic}"
     LANGUAGE: {lang_label}
@@ -3433,7 +3442,7 @@ def generate_script(
       "tags": ["topic-specific long-tail tag 1","topic-specific long-tail tag 2","named character 1 (English)","named character 1 (Hindi/Devanagari)","named character 2","specific incident name","viewer-search query like 'why X happened'","Mahabharata","महाभारत","Shorts","Hindu mythology","Krishna","कृष्ण"],
       "scenes": [
         {{
-          "narration": "18-22 words in the specified LANGUAGE — vivid, present-tense, dramatic. MIX of short punch lines and longer cinematic lines (varied rhythm). End each scene with '...' (triple ellipsis) for natural TTS pause. ~6-7 seconds spoken. EXCEPTION: the valley scene (scene 5) is 14-18 words and quiet. Phase 2/3 stabilization 2026-05-19: tighter than before to protect aftermath + outro residue at the END of the video.",
+          "narration": "22-28 words in the specified LANGUAGE — vivid, present-tense, dramatic. MIX of short punch lines and longer cinematic lines (varied rhythm). End each scene with '...' (triple ellipsis) for natural TTS pause. ~7-9 seconds spoken. EXCEPTION: the valley scene (scene 5) is 16-20 words and quiet. iter-4 2026-05-30: word target restored from Day-1's tighter 18-22 to support the full 52-58s emotional architecture (hook → escalation → destruction → collapse → aftershock). Going shorter cuts the emotional payoff.",
           "image_prompt": "Detailed English prompt, EMOTION-FIRST structure: [Named character's specific facial state — eyes / mouth / posture carrying the scene's emotional truth, e.g. 'Bhishma's eyes shut tight against a tear running down his cheek, jaw clenched white'], [shot type — favor extreme close-up, asymmetric framing, or uncomfortable proximity], in [environment with ≥3 specific architectural/environmental elements: carved pillars, oil lamps, lotus reliefs, etc], [lighting — favor harsh edge lighting / single dramatic source / dim shadow-heavy], [mood], jewel-toned palette. FACE DOMINANCE FLOOR (Phase 1 iter-3 2026-05-29 / Issue #1) — for scenes 1-5 the human face MUST occupy ≥50% of the frame area. Sky / landscape / atmospheric backdrops may not exceed 25% of frame in scenes 1-5. Scene 6 (aftermath) is the ONLY exception — it may use wide landscape composition for emotional emptiness. The face is the scene; the environment is secondary. TEXTURE + IMPERFECTION MANDATES (Phase 1 iter-3 2026-05-29 / Issue #4) — visible film grain on the image (not the smooth FLUX default), imperfect focus (one element may be slightly soft), motion blur on emotional moments (running tears smear, hair displaced mid-turn, hand caught mid-reach), hair caught mid-motion or fabric mid-flow (never frozen-portrait stillness), dust / ash / particles in the light when mood permits. FORBID balanced or centered compositions when the scene's mood is anguish / rage / shock / guilt / grief. FORBID 'magazine quality', 'studio-lit', 'polished AI render', 'wraparound bokeh', 'stock photo elegance', 'commercial photography', 'editorial portrait'. MUST end with: 'clean cinematic frame with no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text.'",
           "video_prompt": "Cinematic 5-second shot in English — characters in subtle motion, camera movement, lighting. Vertical 9:16.",
           "mood": "3-6 word English emotional tone phrase"
@@ -3469,6 +3478,23 @@ def generate_script(
       'झूठ', 'सच', 'विश्वासघात'). Phase 21-Lite (2026-05-21) — drives
       engagement velocity by giving the viewer a take to agree with or
       defend against.
+    - quotable_line MUST identify an INTERNAL psychological cause, NOT
+      narrate an EXTERNAL event (iter-4 2026-05-30 / Tightening 15 —
+      "iconic dialogue" upgrade). The line names the WOUND, not the
+      INCIDENT. This is the difference between descriptive lines and
+      memory-sticking lines.
+        ✗ Descriptive (external event): "कर्ण युद्ध में मारा गया।"
+          (Karna was killed in battle — what happened)
+        ✓ Psychological (internal cause): "कर्ण युद्ध में नहीं हारा था —
+          वो सम्मान की भूख में हार चुका था।" (Karna didn't lose in
+          battle — he had already lost to his hunger for respect)
+        ✗ Descriptive: "द्रौपदी का अपमान हुआ।" (Draupadi was humiliated)
+        ✓ Psychological: "द्रौपदी का अपमान सभा में नहीं हुआ — पाँडवों
+          की चुप्पी में हुआ।" (Draupadi was humiliated not in the
+          sabha, but in the Pandavas' silence)
+      The internal cause is the wound the character carries INSIDE.
+      The external event is the surface story. Only the internal
+      cause creates replay, comments, and memory.
     - quotable_line MUST also be SPOKEN verbatim (or near-verbatim — ≥80%
       word overlap) within scene 4 OR scene 5 narration (Phase 1 iter-3
       2026-05-29 / Issue #5 — Comment Detonator landing). Composing it
@@ -3528,11 +3554,19 @@ def generate_script(
                 qualifying clauses ('हालाँकि', 'लेकिन शायद'), softening
                 phrases. The bomb is a hard cut in the script's
                 emotional logic. Make scene 4 the loudest sentence.
-              • Scene 5 (valley) MUST hold the SILENCE BEAT — 1–2
-                sentences of stillness, no new plot info. Pattern:
-                'X आँखें बंद कर लेता है, और कुछ नहीं कहता।' (Adds
-                narration constraint on top of the existing scene 5
-                intimate-close-up imagery rule.)
+              • Scene 5 (valley) MUST hold the COLLAPSE PHASE (iter-4
+                2026-05-30 / Tightening 12 — restored from over-tight
+                Day-1 cut). This is NOT silence-for-its-own-sake. This
+                is the moment the viewer FEELS the consequence of
+                scenes 1-4. The character emotionally breaks INWARDLY
+                while environmental quiet holds. Pattern:
+                  ✓ 'X आँखें बंद कर लेता है — पर अंदर का तूफान कभी नहीं
+                    रुकता।' (silence + visible inner storm)
+                  ✓ 'भीष्म चुप रहे। पर उनकी चुप्पी ने पूरे कुरुक्षेत्र
+                    को जला दिया।' (silence + named consequence)
+                Forbidden: 'X कुछ नहीं कहता' alone (silence without
+                inner storm reads as cinematic-pretty); generic
+                'grief filled the air'.
         (f) ONE CHARACTER COLLAPSE moment (iter-2 2026-05-24 + iter-3
             2026-05-29 emotional-texture extension / Issue #2) in scenes
             3, 4, or 5 — a named character's physical/emotional break.
@@ -3584,6 +3618,113 @@ def generate_script(
                 comment' is wrong. The question lands as PART of the
                 story's moral fabric, not as an addressed-to-audience
                 aside.
+        (h) AT MOST ONE Channel Ideology Phrase per video (iter-4
+            2026-05-30 / Tightening 13). The channel needs recurring
+            emotional beliefs that viewers identify with — that's how
+            fandom forms (`alpha quote pages, dark philosophy channels,
+            psychology channels` build cult audiences via repeated
+            worldview lines). Curated list (use ONE of these or a
+            story-specific variant per video, NEVER MORE THAN ONE):
+              • "वफादारी इंसान को बर्बाद कर देती है।" (loyalty destroys people)
+              • "चुप्पी भी एक तरह का पाप है।" (silence is also a kind of sin)
+              • "सम्मान की भूख एक श्राप है।" (the hunger for respect is a curse)
+              • "धर्म कभी-कभी सबसे क्रूर होता है।" (dharma is sometimes the cruelest)
+              • "जो रिश्ता बचाने के लिए सब छोड़ दे, वही सबसे बड़ा धोखा देता है।"
+                (the relationship one sacrifices everything for becomes the
+                greatest betrayal)
+              • "अपने ही सबसे गहरा घाव देते हैं।" (one's own give the deepest wounds)
+            ANTI-DRIFT GUARD 2 (2026-05-30 — "Dark Quote Page
+            Syndrome" guard): the phrase MUST EMERGE from the story
+            moment, not be inserted AS the story. Ask: "could the
+            story moment land without this line?" If yes (story
+            complete on its own), the line is earned. If no (line
+            is doing the emotional work the story should), rewrite
+            the story moment instead. EXCEEDING 1 ideology phrase
+            per video makes the channel feel like a sigma-edit
+            quote page — forbidden. Ideal placement: scene 5 valley
+            (the collapse phase) OR scene 6 aftershock line.
+        (i) ONE UGLY EMOTION moment in scenes 2-5 (iter-4 2026-05-30 /
+            Tightening 14 — Issue #1 fix: too controlled). At least
+            ONE scene MUST render UGLY emotion — wounded pride, public
+            humiliation, rage suppressed, jealousy seething, denial
+            as cowardice. NOT "noble grief" or "dignified suffering"
+            (these are anti-elegance-list violations — reinforced
+            here at the narration level).
+            Patterns:
+              ✓ "कर्ण के होंठ हिले — पर शब्द नहीं निकले। अंदर की
+                आग जल रही थी।" (rage suppressed, visible inner wound)
+              ✓ "भीष्म ने मुँह फेर लिया — जैसे अपमान को न देखने
+                से वो टल जाएगा।" (denial as cowardice, not nobility)
+              ✓ "अर्जुन की आँखें गीली थीं — पर उसने पोंछी नहीं।
+                जलने दिया।" (raw emotion deliberately uncontrolled)
+            Forbidden:
+              ✗ "कर्ण ने धीरज से सहा।" (composed endurance)
+              ✗ "भीष्म का चेहरा शांत था।" (peaceful face)
+              ✗ Any framing where the character is COMPOSED in the
+                face of destruction — Mahabharata is messy, not
+                cinematic.
+        (j) EMOTIONAL TEXTURE VARIANCE across scenes 2-5 (iter-4
+            2026-05-30 / Tightening 16). Each of scenes 2-5 carries
+            a DIFFERENT primary emotional register from this menu:
+            SHOCK / SILENCE / RAGE / GUILT / REALIZATION.
+            Don't repeat a register across two adjacent scenes
+            (e.g., scene 2 RAGE + scene 3 RAGE = forbidden; viewer
+            adapts). The viewer cannot adapt because the texture
+            keeps shifting. Example assignment for a Karna script:
+              Scene 2: SHOCK (Krishna reveals the secret)
+              Scene 3: RAGE (Karna's suppressed fury)
+              Scene 4: SILENCE (the long pause before the choice)
+              Scene 5: GUILT (the inner collapse of knowing)
+              Scene 6: REALIZATION (the aftershock truth)
+            LLM picks the per-script assignment; mandate is just
+            VARIANCE not specific positions.
+        (k) RHYTHM-BREAK MARKERS — at least 2 of 6 scenes (iter-4
+            2026-05-30 / Tightening 19 — anti-flat-AI-cadence). Real
+            human emotion has rhythm variance. At least 2 scenes
+            MUST contain ONE rhythm-break marker each. Don't ship
+            the same marker type twice in adjacent scenes:
+              • Abrupt mid-sentence cut:
+                "X ने कहा — और रुक गए।" (X said — and stopped)
+              • Whisper-line (≤4 words, strong emotion):
+                "पर वो जानता था।" (but he knew)
+              • Under-reaction (context demands explosion, delivery
+                contained):
+                "कर्ण ने कुछ नहीं कहा।" (after a humiliation moment)
+              • Over-reaction (context expects composure, delivery
+                breaks):
+                "भीष्म ने पहली बार चिल्लाया।" (Bhishma cried out
+                for the first time)
+              • Sudden pause (narration explicitly marks internal
+                silence):
+                "... एक पल। दो पल। तीन।" (... one moment. two. three.)
+            Why: flat AI TTS lacks rhythm variation at the AUDIO
+            layer. Until Phase 10 (voice work) unlocks, the SCRIPT
+            must inject rhythm cues that the TTS will at least
+            pause on. This is the prompt-level bridge to the real
+            voice fix.
+    - SCENE 4 "WAIT WHAT?" SHARPENING (iter-4 2026-05-30 / Tightening 18
+      — sharpens iter-3 single-sentence bomb). The scene 4 bomb (from
+      Phase 26(e) reversal) must produce a "wait WHAT?" reaction — a
+      fact/claim that abruptly inverts the viewer's mental model of
+      the hero or story. Not just "scene 3 contradicts scene 2";
+      this is harder. Patterns:
+        ✓ "भीष्म जानते थे दुर्योधन अधर्मी है — फिर भी उन्होंने उसी
+          के लिए युद्ध लड़ा।" (the moral hero knowingly fought for evil)
+        ✓ "कुंती ने कर्ण को इसलिए नहीं छोड़ा कि उपाय नहीं था —
+          उसके पास साहस नहीं था।" (the abandoned mother wasn't
+          desperate — she was a coward)
+        ✓ "अर्जुन ने कर्ण को इसलिए नहीं मारा कि वो जीतना चाहता
+          था — उसे डर था कि वो जीत न पाए।" (Arjuna killed Karna
+          out of fear, not victory)
+      The line must CONTRADICT an assumed narrative.
+      ANTI-DRIFT GUARD 3 (2026-05-30 — over-contrarianism guard):
+      across every 4-video block, AT MOST 2 use the "hero bad
+      actually" inversion. The other ≥2 preserve the hero's
+      nobility / tragedy at face value. Contradiction works
+      ONLY when contrast exists. If EVERY video is "hero bad
+      actually," viewer trusts nothing and emotional weight
+      collapses. (This guard is curation-side: applied when
+      selecting next topic, not enforceable at script time.)
     - ANTI-ELEGANCE FORBIDDEN LIST (iter-2 2026-05-24, Phase 26 companion).
       The LLM's safe-mode default is "elegant grief" — beautiful, dignified,
       noble suffering. That's exactly the failure mode of the channel right
@@ -3631,7 +3772,7 @@ def generate_script(
     - Tags MUST include topic-specific long-tail keywords (named characters
       in this topic + specific incident name + viewer-search queries) on
       top of the generic Mahabharata fallbacks.
-    - Narration per scene: 18-22 words, varied rhythm (mix short punch + long cinematic), end with "..." for TTS pause, ~6-7 seconds spoken. EXCEPTION: scene 5 (valley) is 14-18 words. (Phase 2/3 stabilization 2026-05-19 — tighter to protect aftermath + outro residue at the END.)
+    - Narration per scene: 22-28 words, varied rhythm (mix short punch + long cinematic), end with "..." for TTS pause, ~7-9 seconds spoken. EXCEPTION: scene 5 (valley) is 16-20 words. iter-4 2026-05-30: word target restored to support the full 52-58s emotional architecture; the Day-1 18-22 tightening was reverted because it cut the collapse phase + aftershock line.
     - Narration MUST NOT contain URLs, hashtags (#), @mentions, English in Hindi videos, or any social-media text
     - Generate EXACTLY 6 scenes — never fewer, never more (7-scene scripts overshoot the 60s Shorts cap on Hindi TTS pace)
     - Scene 1 = HOOK, scene 2-3 = setup + RISING TENSION, scene 3 OR 4 = REHOOK (contrast marker), scene 5 = EMOTIONAL VALLEY (intimate quiet), scene 6 = AFTERMATH (emotion AFTER destruction, not spectacle)
@@ -3641,6 +3782,11 @@ def generate_script(
     - Scene 6 (AFTERMATH) image_prompt MUST include an aftermath cue (empty battlefield / abandoned weapon / lonely throne / trembling hand releasing / single figure staring / discarded crown / wind through empty cloth / footprints in ash / hand near but not touching / broken thread). MUST NOT include the old spectacle keywords (lightning / fire / storm / cosmic / destruction / inferno / tempest / burning sky).
     - Scene 6 mood MUST be one of: haunting-quiet, hollow, weary, irreversible, severed, witnessed, abandoned, unresolved. NOT inspiring / triumphant / dignified / peaceful.
     - Scene 6 narration MUST NOT contain closure tropes ("rises triumphant", "dawn of a new era", "glory", "victorious", "hope rekindled", "battle won", "peace restored", "blessing of the gods", "उगता है", "विजय", "महिमा") — these kill emotional residue.
+    - Scene 6 FINAL SENTENCE = AFTERSHOCK LINE (iter-4 2026-05-30 / Tightening 12). The last narration line of the entire script must be a single sentence delivering PHILOSOPHICAL RESIDUE — an uncomfortable truth that haunts the viewer after the video ends. NOT a moral lesson; NOT an explanation; NOT a summary. The line should feel like a struck bell that keeps ringing. Patterns:
+        ✓ "और कर्ण ने सीखा — सम्मान की भूख भी एक श्राप है।" (Karna learned — even the hunger for respect is a curse)
+        ✓ "भीष्म ने धर्म बचाया। पर अपना धर्म खो दिया।" (Bhishma saved dharma — but lost his own)
+        ✓ "जो रिश्ता बचाने के लिए सब छोड़ा — वही सबसे गहरा घाव बना।" (the relationship saved at all cost became the deepest wound)
+      Forbidden in the aftershock line: 'इसलिए', 'और इस तरह', 'यही था', any phrase that RESOLVES the discomfort. The discomfort must STAY with the viewer — that's what produces replay and returning-viewer behavior in this niche.
     - ALL 5 non-outro scenes' image_prompts MUST include a HUMAN PAIN cue
       OR an ANTICIPATION cue (iter-2 2026-05-24 — was "at least 2"; tightened
       because the LLM was concentrating pain in scenes 5–6 and leaving
@@ -3789,13 +3935,13 @@ def generate_script(
                 chosen = (
                     f"Your previous response failed the LENGTH validator "
                     f"(n_scenes={n_scenes}, avg_words={avg_words:.1f}). The target "
-                    f"is EXACTLY 6 scenes AND 18-22 words per scene (avg in the "
-                    f"18-22 range). Total: ~120 spoken words for a 50s Short. "
-                    f"Hindi Charon narrates ~3 words/sec — going over 22 words/scene "
-                    f"pushes audio past the 58.5s cap and the AFTERMATH SCENE + "
+                    f"is EXACTLY 6 scenes AND 22-28 words per scene (avg in the "
+                    f"22-28 range). Total: ~145-165 spoken words for a 52-58s Short. "
+                    f"Hindi Charon narrates ~3 words/sec — going over 28 words/scene "
+                    f"pushes audio past the 58s cap and the AFTERMATH SCENE + "
                     f"OUTRO RESIDUE get chopped. The aftermath is the emotional "
-                    f"payload of the entire video — protect it by staying under 22. "
-                    f"EXCEPTION: scene 5 (the emotional valley) may be 14-18 words. "
+                    f"payload of the entire video — protect it by staying under 28. "
+                    f"EXCEPTION: scene 5 (the emotional valley) is 16-20 words. "
                     f"Do NOT add a 7th scene to satisfy any other rule; tighten "
                     f"existing scenes instead. This is TOP PRIORITY — fix scene "
                     f"count and word count BEFORE any other gate."
@@ -3883,15 +4029,13 @@ def generate_script(
         avg_words = sum(word_counts) / max(len(word_counts), 1)
         n_scenes = len(scenes)
 
-        # Length validator (Phase 2/3 Part F.1, 2026-05-19): tightened from
-        # 22-28 to 18-22 words/scene to PROTECT the aftermath + outro
-        # residue at the END of the video. Smoke #1 verified the previous
-        # 22-28 range pushed audio past the 58.5s cap on dense-narration
-        # days, chopping the emotional landing. New target produces
-        # ~38-42s narrative + ~5s outro = ~45s total → leaves ~13s buffer
-        # for TTS drift, ellipsis pauses, and the protected final-scene
-        # silence required by Part F.2.
-        last_short = (n_scenes != 6 or avg_words < 18 or avg_words > 22)
+        # Length validator (iter-4 2026-05-30 — RESTORED from 18-22 back to
+        # 22-28 words/scene to land the 52-58s emotional architecture).
+        # The Day-1 18-22 tightening was cutting the COLLAPSE phase +
+        # AFTERSHOCK LINE; iter-4 reverts that mistake. New target produces
+        # ~50s narration + ~5s outro = ~55s total, fitting under the 58s
+        # MAX_DURATION_S cap. Scene 5 (valley) may be lower at 16-20 words.
+        last_short = (n_scenes != 6 or avg_words < 22 or avg_words > 28)
         # Threshold 4: a character at the centre of the story (Bhishma in a
         # Bhishma video) can appear ~4 times naturally. 5+ times signals that
         # supporting characters and details are being skipped in favour of

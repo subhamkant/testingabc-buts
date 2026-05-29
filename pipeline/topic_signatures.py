@@ -73,11 +73,23 @@ INCIDENT_KEYWORDS = {
     "bed_arrows":  ["bed of arrows", "arrow bed", "shaiya", "बाणशय्या", "अंतिम शिक्षा", "final teaching"],
     "gita":        ["gita", "bhagavad", "गीता", "भगवद"],
     "silence":     ["silence", "silent", "मौन", "चुप"],
-    "secret":      ["secret", "hidden", "untold", "real", "truth", "रहस्य", "सच", "अनकहा", "असली"],
+    # `secret` category REMOVED 2026-05-30 (iter-4 bug fix). The keywords
+    # "secret/hidden/untold/real/truth/रहस्य/सच/अनकहा/असली" are Phase 1-Plus
+    # title BRAND vocabulary, not story-incident signals. Every video uses
+    # one. Treating them as incident-overlap markers blocked the entire
+    # Karna + Bhishma arcs by false-positive (every Karna topic with "secret"
+    # in its description was flagged as duplicate of "Karna's Untold Truth").
+    # The category is gone; story-specific incidents below remain.
     "thumb":       ["thumb", "gurudakshina", "अंगूठा", "गुरुदक्षिणा"],
     "wound":       ["wound", "scar", "injured", "घाव", "जख्म"],
     "betrayal":    ["betrayal", "betrayed", "धोखा", "विश्वासघात"],
-    "father":      ["father", "kunti", "पिता", "माँ", "mother"],
+    "parent_loss": ["father", "पिता", "abandoned", "abandonment", "त्यागा", "अनाथ"],
+    # `parent_loss` (2026-05-30 iter-4 bug fix — was `father` with overlap
+    # into character names). "kunti", "माँ", "mother" REMOVED because Kunti
+    # is already in CHARACTER_VARIANTS; mixing parent-NAME with parent-ROLE
+    # caused every Kunti-related topic to false-positive overlap on
+    # `father` incident. The category now strictly tracks parent-child
+    # SEPARATION events (abandonment, orphan-status), not the parent's name.
     "lie":         ["lie", "lied", "deception", "झूठ"],
     "kavach":      ["kavach", "kundal", "armor", "armour", "कवच", "कुंडल"],
     "massacre":    ["massacre", "slaughter", "नरसंहार", "हत्या"],

@@ -1260,20 +1260,23 @@ _SAFE_EARLY_ATEMPO_CEIL      = 1.07
 
 def _enforce_max_duration(output_path: str, durations: list | None = None) -> None:
     """
-    Hard-cap the final mp4 at MAX_DURATION_S seconds (default 48). If
+    Hard-cap the final mp4 at MAX_DURATION_S seconds (default 58). If
     the file is already under the cap, no-op.
 
-    Phase 1 Stabilization 2026-05-29 (user RULE 5): tightened cap from 58.5
-    to 48s. Day-27 analytics showed renders landing 50-65s; user-stated
-    target is 35-48s for retention-density. Hindi TTS at the existing
-    ~120-word script target produces ~42-46s narration + ~5s outro =
-    ~47-51s natural — cap at 48 trims the long tail without forcing a
-    word-count change at the script layer.
+    Phase 1 iter-4 2026-05-30 — DURATION REVERT (user correction): cap
+    raised from 48 back to 58. Reason: the 48s cap (Day-1 RULE 5) was
+    OVER-tightened — it was cutting the COLLAPSE phase (40-55s timeline)
+    and AFTERSHOCK LINE (55-60s) which are the EMOTIONAL PAYOFF for this
+    channel's "slow emotional suffocation" niche. The user's storytelling
+    needs 52-58s minimum to land hook → escalation → destruction →
+    collapse → aftershock. The fix was NOT "shorter" — it's "compress
+    dead space while preserving payoff." Cap restored to 58 with 1.5s
+    safety margin under YouTube's 60s Shorts Content-ID threshold.
 
     Historical rationale (still relevant): YouTube applies tighter Content
     ID restrictions on Shorts >60s — the 2026-05-17 #4 Bhishma Kurukshetra
     video (70.4s) was blocked partly because its duration triggered the
-    over-60s restriction tier. Cap at 48 also keeps every upload safely in
+    over-60s restriction tier. Cap at 58 keeps every upload safely in
     the <60s bucket.
 
     Phase 2/3 Part F.3 (2026-05-19): when `durations` (the per-scene visual
@@ -1293,13 +1296,14 @@ def _enforce_max_duration(output_path: str, durations: list | None = None) -> No
                               come down)
 
     WhatIf longform pipeline can opt out by setting MAX_DURATION_S=999 in
-    its workflow env. Default 48 applies to Mahabharata + Krishna + WhatIf
-    Shorts (tightened from 58.5 on 2026-05-29 per Phase 1 Stabilization).
+    its workflow env. Default 58 applies to Mahabharata + Krishna + WhatIf
+    Shorts (Day-1 tightened 58.5→48 on 2026-05-29 — REVERTED to 58 on
+    2026-05-30 per iter-4 Correction 1).
     """
     try:
-        max_s = float(os.environ.get("MAX_DURATION_S", "48"))
+        max_s = float(os.environ.get("MAX_DURATION_S", "58"))
     except ValueError:
-        max_s = 48.0
+        max_s = 58.0
     if max_s >= 999:
         return  # opt-out for longform
     if not os.path.exists(output_path):

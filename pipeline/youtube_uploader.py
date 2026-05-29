@@ -106,7 +106,10 @@ _STORY_THREADS_PATH = os.path.join("assets", "story_threads.json")
 # lens). Per-series so Krishna / WhatIf / Explainer can have their own
 # eventually; for now only mahabharata has a thesis defined.
 _PINNED_CHANNEL_THESIS = {
-    "mahabharata": "— Every hero in Mahabharata destroyed someone.",
+    # iter-4 2026-05-30: extended from "Every hero destroyed someone" to
+    # add the inward-destruction layer matching the channel positioning
+    # shift to "exposing emotional truths through Mahabharata."
+    "mahabharata": "— Every hero destroyed someone. The real destruction was inside.",
 }
 
 
