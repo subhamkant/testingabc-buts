@@ -2429,6 +2429,22 @@ def generate_script(
             content_type = random.choice(["story", "motivational"])
             topic = random.choice(STORY_TOPICS if content_type == "story" else MOTIVATIONAL_THEMES)
 
+    # Phase 1 Addition B (2026-05-29) — Character Emotional Fingerprint lookup.
+    # Resolves the picked arc's emotional_fingerprint (e.g. "rejection + loyalty"
+    # for Karna, "guilt + silence" for Bhishma) so the system prompt can anchor
+    # the script's emotional center on the character's distinct DNA. Variance
+    # comes from fingerprints DIFFERING across arcs, NOT from intensity-
+    # shuffling within an arc. Forced/fallback topics get empty fingerprint
+    # and the block is omitted from the prompt.
+    emotional_fingerprint = ""
+    if arc_name:
+        for _arc in _load_arcs():
+            if _arc.get("name") == arc_name:
+                emotional_fingerprint = _arc.get("emotional_fingerprint", "")
+                break
+        if emotional_fingerprint:
+            print(f"    [fingerprint] {arc_name}: {emotional_fingerprint}")
+
     # Episode number string for the title prefix. Arc-driven runs pass a number;
     # forced-topic / random-fallback runs get the next sequential count after
     # whatever's in recent_topics.json so titles stay numbered consistently.
@@ -2571,6 +2587,31 @@ def generate_script(
     else:
         print(f"    [cliffhanger] none — last arc episode or non-arc topic")
 
+    # ── Character Emotional Fingerprint block (Phase 1 Addition B, 2026-05-29)
+    # Anchors the script's emotional center on the character's distinct DNA.
+    # Karna → rejection + loyalty. Bhishma → guilt + silence. Krishna →
+    # manipulation + foresight. Etc. Empty for forced/fallback topics.
+    fingerprint_block = ""
+    if emotional_fingerprint and arc_name:
+        fingerprint_block = (
+            "═══════════════════════════════════════════════════════════════\n"
+            "    CHARACTER EMOTIONAL FINGERPRINT — the script's emotional DNA\n"
+            "═══════════════════════════════════════════════════════════════\n"
+            f"This video belongs to the {arc_name} arc.\n"
+            f"Character emotional fingerprint: {emotional_fingerprint}.\n\n"
+            "The script's emotional center MUST land on this fingerprint, NOT\n"
+            "on a generic dramatic register. The character is recognizable by\n"
+            "this specific emotional DNA across every video in their arc.\n"
+            "Karna's scripts cluster around rejection + loyalty (the wound he\n"
+            "carries + the cause he serves). Bhishma's around guilt + silence\n"
+            "(the burden he won't speak + the moments he watches in stillness).\n"
+            "Krishna's around manipulation + foresight. Draupadi's around\n"
+            "humiliation + rage. The dramatic intensity may vary (sometimes\n"
+            "EXPLOSIVE, sometimes RESTRAINED, sometimes SILENT — natural\n"
+            "variance per topic), but the fingerprint stays constant.\n"
+        )
+        print(f"    [fingerprint-block] injected for {arc_name}")
+
     prompt = f"""
     You are a master storyteller specialising in the Mahabharata epic, writing scripts for vertical YouTube videos that retain viewer attention from the first second to the last.
 
@@ -2583,9 +2624,11 @@ def generate_script(
     honor. NO video presents a hero as purely admirable. The cost is the
     point — that is this channel's identity.
 
+    {fingerprint_block}
+
     You must strictly follow all rules and NEVER generate invalid or noisy text.
 
-    TASK: Create a 50-58 second vertical (9:16) video script with EXACTLY 6 scenes about a well-known incident from the Mahabharata.
+    TASK: Create a 35-48 second vertical (9:16) video script with EXACTLY 6 scenes about a well-known incident from the Mahabharata.
 
     TOPIC: "{topic}"
     LANGUAGE: {lang_label}
@@ -3437,10 +3480,12 @@ def generate_script(
       गहराई' / 'बहुत कुछ बाकी है' — vague continuation phrases. REQUIRED:
       one named noun + one named consequence. Phase 17-Lite (2026-05-21) —
       becomes the pinned-comment subscribe-CTA tease ('🔔 कल — {{seed}}').
-    - EMOTIONAL VIOLENCE LAYER (Phase 26, 2026-05-23 + iter-2 2026-05-24 —
-      soft prompt guidance, not a validator). Across the 6 scenes the script
-      SHOULD include ALL SIX of these. They overlay the existing rubric;
-      if a script can't fit all six, prioritise (a)→(b)→(c)→(d)→(e)→(f):
+    - EMOTIONAL VIOLENCE LAYER (Phase 26, 2026-05-23 + iter-2 2026-05-24
+      + Phase 1 Stabilization 2026-05-29 — soft prompt guidance, not a
+      validator EXCEPT for (g) which is a HARD RULE). Across the 6 scenes
+      the script SHOULD include ALL SEVEN of these. They overlay the
+      existing rubric; if a script can't fit all seven, prioritise
+      (a)→(b)→(c)→(d)→(e)→(f)→(g) but (g) is non-negotiable:
         (a) ONE emotionally painful line — a NAMED character feeling a
             SPECIFIC named pain (not abstract sorrow). E.g., 'कर्ण को
             हर बार जन्म पर ताना दिया गया।'
@@ -3476,6 +3521,33 @@ def generate_script(
               • 'X चीख उठे' (cried out)
             NOT abstract "grief filled the hall" — a physical break
             tied to a named subject.
+        (g) ONE in-video COMMENT TRIGGER LINE (Phase 1 Stabilization
+            2026-05-29, RULE 7 — promotes Doctrine 3 from documented
+            doctrine to enforced HARD RULE). MUST land in scene 4 OR 5
+            climax. A moral question pointed AT the viewer — NOT
+            narration ABOUT the story. Patterns:
+              ✓ 'गलती कर्ण की थी… या समाज की?'
+              ✓ 'अगर तुम कर्ण की जगह होते क्या करते?'
+              ✓ 'क्या भीष्म का धर्म सही था?'
+              ✓ 'कौन ज्यादा दोषी था — द्रौपदी या पाँडव?'
+            DISTINCT from Phase 27 viewer self-insertion (universalising
+            'हर इंसान के अंदर…' is reflective; comment trigger is
+            interrogative AT the viewer) and from quotable_line (claim
+            ABOUT the story, for reposting). The trigger lands WITHIN
+            the diegetic frame — as if the character or situation itself
+            is asking the viewer to take a stance.
+            FORBIDDEN PATTERNS (Risk 3 guard 2026-05-29 — engineered-
+            feeling comment bait kills audience trust):
+              ✗ 'TEAM X vs TEAM Y' framing (mythology is moral, not
+                partisan sports)
+              ✗ Emoji-laden bait ('🔥 comment 🔥 fast', 'comment 💯')
+              ✗ Direct command-form ('comment your favorite character',
+                'tell me in comments')
+              ✗ Any phrasing that breaks the diegetic frame — the
+                narrator IS the storyteller; an out-of-frame 'drop a
+                comment' is wrong. The question lands as PART of the
+                story's moral fabric, not as an addressed-to-audience
+                aside.
     - ANTI-ELEGANCE FORBIDDEN LIST (iter-2 2026-05-24, Phase 26 companion).
       The LLM's safe-mode default is "elegant grief" — beautiful, dignified,
       noble suffering. That's exactly the failure mode of the channel right

@@ -2,40 +2,44 @@
   "_note": "Mahabharata character arcs — 7 episodes per character, played sequentially. The script generator walks arcs in order: arc 1 episode 1, 2, ... 7, then arc 2 episode 1, ... etc. State tracking via recent_topics.json (already excludes used topics). Once an arc is fully exhausted (all 7 episodes used in recent_topics), the next arc starts. Designed to train YouTube's Suggested algorithm to pair sequential episodes — channel's RELATED_VIDEO traffic was 0.1% before this system.",
   "_added": "2026-05-15 — channel-focus refactor after 13-day analytics showed topic-salad (random Mahabharata stories per upload) wasn't building Suggested traffic. Sequential character arcs in playlist + episode-numbered titles fix that.",
   "_tier2_2026-05-16": "Tier 2 plan review: (a) reordered Bhishma/Karna/Draupadi arcs so each leads with its most emotionally devastating episode (first-impression effect drives playlist sub-conversion). Episode strings unchanged — already-used topics in recent_topics.json still match by topic-string. (b) Added Eklavya (devotion + caste injustice) and Ashwatthama (cursed immortal) — user-identified as naturally viral emotional archetypes. Total arcs: 5 → 7. Total topics: 35 → 49.",
+  "_phase1_2026-05-29": "Phase 1 Stabilization (RULE 4 + Addition B): Reordered arcs so Karna is FIRST (Week 1 ships next 7 days), Bhishma SECOND (Week 2). Replaced Karna topics with user's emotional-reframing list. Replaced Bhishma topics with user's silence/guilt-themed list. Added `emotional_fingerprint` to each arc — character's distinct emotional DNA. The fingerprint feeds into the script_generator system prompt so every Karna script lands on rejection+loyalty, every Bhishma script lands on guilt+silence. Variance comes from fingerprints DIFFERING across arcs (Karna's loud rejection vs Bhishma's silent guilt), NOT from artificial intensity-shuffling within an arc.",
 
   "arcs": [
-    {
-      "name": "Bhishma — The Vow That Doomed a Dynasty",
-      "character": "भीष्म",
-      "playlist_seed": "Mahabharata: The Bhishma Arc",
-      "topics": [
-        "Bhishma's vow of celibacy — the day prince Devavrata chose his father's love over the throne, taking the terrible oath that earned him the name 'Bhishma'",
-        "Bhishma raising the Pandavas and Kauravas together — the grandfather torn between two warring factions of his own bloodline",
-        "Bhishma's silence during Draupadi's vastraharan — why the greatest warrior of his age could not lift his sword to stop the queen's humiliation",
-        "Bhishma in the Kurukshetra war — fighting for the side he knew was wrong, killing soldiers from the family he raised",
-        "Shikhandi and Bhishma — the secret promise that revealed the invincible warrior's only weakness",
-        "Bhishma's final teachings to Yudhishthira — the Shanti Parva wisdom delivered from a dying bed of arrows",
-        "Bhishma on the bed of arrows — 58 days of waiting for death, choosing the moment of his own departure"
-      ]
-    },
     {
       "name": "Karna — The Forgotten Son",
       "character": "कर्ण",
       "playlist_seed": "Mahabharata: The Karna Arc",
+      "emotional_fingerprint": "rejection + loyalty",
       "topics": [
-        "Karna's rejection at Draupadi's swayamvara — the wound that defined his life when she called him sutaputra",
-        "Karna's birth and abandonment — Kunti's secret child, the son of Surya placed in a basket on the Ganges",
-        "Karna's friendship with Duryodhana — the loyalty that bound him to the wrong side of dharma forever",
-        "Karna and Parashurama — the curse from a guru who learned his student's true caste at the wrong moment",
-        "Karna's gift of kavach and kundal to Indra — the sacrifice of his own protective armor he was born with",
-        "Karna's meeting with Kunti before the war — the mother revealing she abandoned him, asking him to spare her sons",
-        "Karna's death by Arjuna's arrow — the moment his chariot wheel sank into the earth and the curse came true"
+        "Karna's greatest mistake — the day he chose loyalty to Duryodhana over Krishna's offer of the empire and brotherhood with the Pandavas, knowing dharma was on the other side",
+        "Krishna's final offer to Karna — the secret pre-war visit where Krishna revealed Kunti's truth and offered him the throne if he switched sides, and Karna refused",
+        "Karna's hidden jealousy of Arjuna — the lifelong resentment that drove every choice he made, the wound his loyalty never quite covered",
+        "The curse that destroyed Karna — Parashurama discovering his student's true caste while sleeping on his lap, the doom that surfaced on Karna's last battlefield",
+        "Why Karna could never defeat Arjuna — the cumulative weight of three curses, lost armor, sunken chariot wheel, and the gods themselves siding against him in his final hour",
+        "Karna's final lie — the truth about his identity he chose to bury even as he died, the secret he kept from everyone including himself, even from Duryodhana",
+        "Karna's last regret on the battlefield — the dying thoughts of a man who realized too late that loyalty to the wrong friend had cost him everything"
+      ]
+    },
+    {
+      "name": "Bhishma — The Vow That Doomed a Dynasty",
+      "character": "भीष्म",
+      "playlist_seed": "Mahabharata: The Bhishma Arc",
+      "emotional_fingerprint": "guilt + silence",
+      "topics": [
+        "Bhishma's fatal vow — the day prince Devavrata renounced the throne and married life for his father Shantanu's love, taking the oath that would doom Hastinapur",
+        "Why Bhishma protected the wrong side — the elder who knew Duryodhana's cause was unjust yet chose his oath to the throne over dharma, watching the war from inside his own guilt",
+        "Bhishma's hidden guilt during Draupadi's humiliation — the moments inside his silence as the dharma he upheld broke in the Kuru sabha, his sword resting because his vow forbade it",
+        "The choice that destroyed Hastinapur — Bhishma crowning blind Dhritarashtra over his brother Pandu's lineage, the succession decision that planted the war's first seed",
+        "Bhishma's silent suffering through the Kurukshetra war — fighting the children he raised, killing the warriors he taught, carrying every dead soldier's weight in unspoken grief",
+        "Bhishma's regret on the bed of arrows — 58 days of waiting for death, replaying every choice that had brought him to the battlefield, choosing the moment of his own departure",
+        "Bhishma's final words to Yudhishthira — the dying teachings from the bed of arrows, wisdom delivered too late to undo what had been done to his bloodline"
       ]
     },
     {
       "name": "Arjuna — The Reluctant Warrior",
       "character": "अर्जुन",
       "playlist_seed": "Mahabharata: The Arjuna Arc",
+      "emotional_fingerprint": "doubt + glory",
       "topics": [
         "Arjuna and Drona's bird-eye test — the moment Drona knew this student would become the greatest archer",
         "Arjuna's exile in disguise as Brihannala — the warrior who became a dance teacher to fulfill a vow",
@@ -50,6 +54,7 @@
       "name": "Draupadi — The Queen Who Lit the War",
       "character": "द्रौपदी",
       "playlist_seed": "Mahabharata: The Draupadi Arc",
+      "emotional_fingerprint": "humiliation + rage",
       "topics": [
         "Draupadi's vastraharan in the Kuru sabha — the queen pulled by her hair, the elders silent",
         "Draupadi born from the sacrificial fire — the daughter Drupada asked for to destroy Drona",
@@ -64,6 +69,7 @@
       "name": "Yudhishthira — The Cost of Truth",
       "character": "युधिष्ठिर",
       "playlist_seed": "Mahabharata: The Yudhishthira Arc",
+      "emotional_fingerprint": "truth + indecision",
       "topics": [
         "Yudhishthira and the Yaksha at the lake — the questions that defined dharma in the forest",
         "Yudhishthira's gambling addiction — how the truthful king lost everything including his wife",
@@ -78,6 +84,7 @@
       "name": "Eklavya — The Devotion That Cost a Thumb",
       "character": "एकलव्य",
       "playlist_seed": "Mahabharata: The Eklavya Arc",
+      "emotional_fingerprint": "devotion + injustice",
       "topics": [
         "Eklavya's gurudakshina — the thumb he cut off without hesitation when his guru asked for it, the price of a teacher who had never once taught him",
         "Eklavya practicing before a statue of Drona — the forest student who became a greater archer than Arjuna by training with mud-clay alone",
@@ -92,6 +99,7 @@
       "name": "Ashwatthama — The Cursed One",
       "character": "अश्वत्थामा",
       "playlist_seed": "Mahabharata: The Ashwatthama Arc",
+      "emotional_fingerprint": "madness + revenge",
       "topics": [
         "Ashwatthama and the lie 'Ashwatthama is dead' — the moment Yudhishthira's only lie killed his father Drona from grief, not blade",
         "Ashwatthama's massacre of the sleeping Pandava sons — the night a son of a Brahmin became a butcher in the Pandava camp",

@@ -1260,13 +1260,21 @@ _SAFE_EARLY_ATEMPO_CEIL      = 1.07
 
 def _enforce_max_duration(output_path: str, durations: list | None = None) -> None:
     """
-    Hard-cap the final mp4 at MAX_DURATION_S seconds (default 58.5). If
+    Hard-cap the final mp4 at MAX_DURATION_S seconds (default 48). If
     the file is already under the cap, no-op.
 
-    YouTube applies tighter Content ID restrictions on Shorts >60s — the
-    2026-05-17 #4 Bhishma Kurukshetra video (70.4s) was blocked partly
-    because its duration triggered the over-60s restriction tier. Capping
-    at 58.5s keeps every upload in the safer <60s bucket.
+    Phase 1 Stabilization 2026-05-29 (user RULE 5): tightened cap from 58.5
+    to 48s. Day-27 analytics showed renders landing 50-65s; user-stated
+    target is 35-48s for retention-density. Hindi TTS at the existing
+    ~120-word script target produces ~42-46s narration + ~5s outro =
+    ~47-51s natural — cap at 48 trims the long tail without forcing a
+    word-count change at the script layer.
+
+    Historical rationale (still relevant): YouTube applies tighter Content
+    ID restrictions on Shorts >60s — the 2026-05-17 #4 Bhishma Kurukshetra
+    video (70.4s) was blocked partly because its duration triggered the
+    over-60s restriction tier. Cap at 48 also keeps every upload safely in
+    the <60s bucket.
 
     Phase 2/3 Part F.3 (2026-05-19): when `durations` (the per-scene visual
     clip durations from `_per_scene_durations()`) is provided, this function
@@ -1285,13 +1293,13 @@ def _enforce_max_duration(output_path: str, durations: list | None = None) -> No
                               come down)
 
     WhatIf longform pipeline can opt out by setting MAX_DURATION_S=999 in
-    its workflow env. Default 58.5 applies to Mahabharata + Krishna + WhatIf
-    Shorts.
+    its workflow env. Default 48 applies to Mahabharata + Krishna + WhatIf
+    Shorts (tightened from 58.5 on 2026-05-29 per Phase 1 Stabilization).
     """
     try:
-        max_s = float(os.environ.get("MAX_DURATION_S", "58.5"))
+        max_s = float(os.environ.get("MAX_DURATION_S", "48"))
     except ValueError:
-        max_s = 58.5
+        max_s = 48.0
     if max_s >= 999:
         return  # opt-out for longform
     if not os.path.exists(output_path):
