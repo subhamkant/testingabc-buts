@@ -2,31 +2,21 @@ name: Mahabharata YouTube Bot
 
 on:
   schedule:
-    # Posting-hour cron, calibrated for 18:00 IST (6 PM IST) publish target.
-    #
-    # User directive 2026-05-30: target 6 PM IST landing every day.
-    # 18:00 IST = 12:30 UTC publish target.
-    # GHA queue delay measured ~150 min over the last 4 cron runs.
-    # So cron fires 150 min before 12:30 UTC = 10:00 UTC.
-    #
-    # 10:00 UTC + ~150 min queue = 12:30 UTC = 18:00 IST landing.
-    # Fast-queue days (~60 min): lands 11:00 UTC = 16:30 IST (early but
-    # still primetime). Slow-queue days (~180 min): lands 13:00 UTC =
-    # 18:30 IST (within window).
+    # User directive 2026-05-30: cron fires at 5:30 PM IST so the video
+    # uploads BY 6 PM IST.
+    # 5:30 PM IST = 17:30 IST = 12:00 UTC.
+    # With short queue delay (~30 min), publish lands ~12:30 UTC = 18:00 IST.
+    # If GHA queue is longer on a given day, publish lands later in evening
+    # primetime (still within Indian audience window).
     #
     # History:
     #   2026-05-21: 13:30 UTC
-    #   2026-05-24: 16:00 UTC (after queue delay measured ~50-80 min)
-    #   2026-05-29: 14:30 UTC (Phase 1 Stabilization, queue delay ~150 min,
-    #              targeting 17:00 UTC = 22:30 IST landing)
-    #   2026-05-30: 10:00 UTC (user shift to 6 PM IST target — earlier
-    #              audience slot vs the prior 22:30 IST late-night slot)
+    #   2026-05-24: 16:00 UTC
+    #   2026-05-29: 14:30 UTC (targeting 22:30 IST late-night landing)
+    #   2026-05-30: 12:00 UTC (user shift to 5:30 PM IST cron / 6 PM IST publish target)
     #
-    # Cron 2 (15:30 UTC) remains DISABLED. Re-enable only after the
-    # Stabilization Gate fires per plan file (hook consistency ≥3-of-7 AND
-    # first-10% retention ≥1.3 on 5-of-7 AND sub conversion ≥0.8/day for
-    # trailing 7 days).
-    - cron: "0 10 * * *"
+    # Cron 2 (15:30 UTC) remains DISABLED.
+    - cron: "0 12 * * *"
   workflow_dispatch:
     inputs:
       target:
