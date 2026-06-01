@@ -1,22 +1,12 @@
 name: Mahabharata YouTube Bot
 
 on:
-  schedule:
-    # User directive 2026-05-30: cron fires at 5:30 PM IST so the video
-    # uploads BY 6 PM IST.
-    # 5:30 PM IST = 17:30 IST = 12:00 UTC.
-    # With short queue delay (~30 min), publish lands ~12:30 UTC = 18:00 IST.
-    # If GHA queue is longer on a given day, publish lands later in evening
-    # primetime (still within Indian audience window).
-    #
-    # History:
-    #   2026-05-21: 13:30 UTC
-    #   2026-05-24: 16:00 UTC
-    #   2026-05-29: 14:30 UTC (targeting 22:30 IST late-night landing)
-    #   2026-05-30: 12:00 UTC (user shift to 5:30 PM IST cron / 6 PM IST publish target)
-    #
-    # Cron 2 (15:30 UTC) remains DISABLED.
-    - cron: "0 12 * * *"
+  # SCHEDULE TEMPORARILY REMOVED 2026-06-01 for manual trigger run.
+  # Prevents any potentially-queued GHA cron from firing alongside the
+  # manual workflow_dispatch (dual-fire risk avoidance).
+  # Re-add when ready:
+  #   schedule:
+  #     - cron: "0 12 * * *"   # 5:30 PM IST nominal, ~6 PM IST publish target
   workflow_dispatch:
     inputs:
       target:
