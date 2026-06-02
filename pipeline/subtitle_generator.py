@@ -60,6 +60,70 @@ FADE_OUT_S     = 0.08
 HOLD_AFTER_S   = 0.06                     # extra hang time after word's end
 
 
+# ── Title card style (Phase 11 retention refactor, 2026-06-02) ───────────────
+# Hardcoded title-card text rendered for the first 2.5s. Larger font than
+# word-cards (visible in the 0.5s swipe-decision window), positioned in the
+# center-upper third (y=600 from top of 1920) so it doesn't overlap the
+# word-subtitle band at MARGIN_V=520 from bottom (≈y=1400 of 1920).
+TITLE_CARD_FONT_SIZE     = 96
+TITLE_CARD_OUTLINE_PX    = 8       # heavier outline than word cards (6)
+TITLE_CARD_FILL_RGBA     = (255, 230, 80, 255)  # warm-amber yellow, matches LUT
+TITLE_CARD_OUTLINE_RGBA  = (0, 0, 0, 255)
+TITLE_CARD_SHADOW_RGBA   = (0, 0, 0, 200)
+TITLE_CARD_SHADOW_OFFSET = (4, 4)
+TITLE_CARD_Y_FROM_TOP    = 600   # center-upper third of 1920
+TITLE_CARD_START_S       = 0.0
+TITLE_CARD_END_S         = 2.5
+# Hard cut at t=2.5s is INTENTIONAL — soft fades lull attention. Per
+# user direction 2026-06-02: title card vanishing abruptly acts as a
+# secondary attention reset just as the first-impression decision
+# finishes processing.
+TITLE_CARD_FADE_IN_S     = 0.0
+TITLE_CARD_FADE_OUT_S    = 0.0
+
+
+def _render_title_card_png(hook_title: str, out_path: str) -> dict | None:
+    """Phase 11 retention refactor 2026-06-02. Render the hook_title as a
+    standalone large-font yellow-with-black-stroke PNG for the t=0 overlay.
+    Reuses the existing text_renderer pipeline (NotoSansDevanagari-Bold)
+    so Hindi + English both render cleanly. Returns a card dict with
+    {path, start, end, w, h, y_expr} or None on failure / empty title."""
+    if not hook_title or not hook_title.strip():
+        return None
+    if not os.path.exists(FONT_PATH):
+        print(f"    [title-card] font missing at {FONT_PATH} — skipping title card")
+        return None
+    try:
+        from pipeline.text_renderer import render_text_card
+        img = render_text_card(
+            hook_title.strip(),
+            font_path=FONT_PATH,
+            font_size=TITLE_CARD_FONT_SIZE,
+            fill=TITLE_CARD_FILL_RGBA,
+            outline=TITLE_CARD_OUTLINE_RGBA,
+            outline_px=TITLE_CARD_OUTLINE_PX,
+            shadow=TITLE_CARD_SHADOW_RGBA,
+            shadow_offset=TITLE_CARD_SHADOW_OFFSET,
+        )
+    except Exception as e:
+        print(f"    [title-card] render failed: {e}")
+        return None
+    os.makedirs(os.path.dirname(out_path) or ".", exist_ok=True)
+    img.save(out_path, "PNG")
+    w, h = img.size
+    return {
+        "path":   out_path,
+        "start":  TITLE_CARD_START_S,
+        "end":    TITLE_CARD_END_S,
+        "w":      w,
+        "h":      h,
+        # Override default lower-third positioning: anchor at fixed Y from top.
+        "y_expr": f"{TITLE_CARD_Y_FROM_TOP}",
+        # No fade — hard cut. Marker key checked in _build_overlay_filter.
+        "_no_fade": True,
+    }
+
+
 # ── Groq Whisper ──────────────────────────────────────────────────────────────
 
 def _groq_transcribe_words(audio_path: str, language: str) -> list:
@@ -362,25 +426,38 @@ _OVERLAY_CHUNK = 80
 def _build_overlay_filter(cards: list, target_h: int) -> str:
     """
     Build an FFmpeg filter_complex that overlays each PNG card on the video,
-    centered horizontally, at a fixed vertical position MARGIN_V from the
-    bottom. Each overlay is gated to its [start, end] window with fade in/out.
+    centered horizontally. Default vertical position is MARGIN_V from the
+    bottom (word-subtitle lower-third). Each overlay is gated to its
+    [start, end] window with fade in/out.
+
+    Per-card overrides (Phase 11 retention refactor 2026-06-02):
+      - card["y_expr"] (str): override the default y position. The title
+        card uses a fixed Y from top instead of from bottom.
+      - card["_no_fade"] (bool): skip the fade-in/out filter — hard cut
+        at start/end. Used by the title card for the deliberate t=2.5s
+        attention-reset cut.
     """
     parts = ["[0:v]format=yuva420p[v0]"]
     prev = "[v0]"
 
     for idx, c in enumerate(cards, start=1):
-        dur = max(c["end"] - c["start"], 0.05)
-        fade_out_st = max(dur - FADE_OUT_S, 0.0)
-        # Per-card alpha animation: fade in, hold, fade out
-        parts.append(
-            f"[{idx}:v]format=rgba,"
-            f"fade=t=in:st=0:d={FADE_IN_S:.3f}:alpha=1,"
-            f"fade=t=out:st={fade_out_st:.3f}:d={FADE_OUT_S:.3f}:alpha=1"
-            f"[c{idx}]"
-        )
+        no_fade = bool(c.get("_no_fade"))
+        if no_fade:
+            # Title card: no alpha animation, just format conversion
+            parts.append(f"[{idx}:v]format=rgba[c{idx}]")
+        else:
+            dur = max(c["end"] - c["start"], 0.05)
+            fade_out_st = max(dur - FADE_OUT_S, 0.0)
+            # Per-card alpha animation: fade in, hold, fade out
+            parts.append(
+                f"[{idx}:v]format=rgba,"
+                f"fade=t=in:st=0:d={FADE_IN_S:.3f}:alpha=1,"
+                f"fade=t=out:st={fade_out_st:.3f}:d={FADE_OUT_S:.3f}:alpha=1"
+                f"[c{idx}]"
+            )
         out_label = f"[v{idx}]" if idx < len(cards) else "[vout]"
-        # Vertical position: MARGIN_V from the bottom, top edge of card
-        y_expr = f"H-{MARGIN_V}-h"
+        # Vertical position: per-card override OR default to MARGIN_V from bottom.
+        y_expr = c.get("y_expr") or f"H-{MARGIN_V}-h"
         parts.append(
             f"{prev}[c{idx}]overlay="
             f"x=(W-w)/2:y={y_expr}"
@@ -392,22 +469,71 @@ def _build_overlay_filter(cards: list, target_h: int) -> str:
     return ";".join(parts)
 
 
-def _burn_chunk(video_path: str, cards: list, output_path: str) -> bool:
-    """Run a single FFmpeg pass overlaying up to _OVERLAY_CHUNK cards."""
+def _burn_chunk(video_path: str, cards: list, output_path: str,
+                hook_anchor_path: str | None = None) -> bool:
+    """Run a single FFmpeg pass overlaying up to _OVERLAY_CHUNK cards.
+
+    Phase 11 retention refactor 2026-06-02: when `hook_anchor_path` is
+    provided AND the file exists, layer the SFX into the audio via `amix`
+    at t=0. The SFX input is appended AFTER all card inputs so it doesn't
+    shift any card filter-graph indices. SFX index is computed
+    dynamically — `len(inputs) // 2` after appending — so the filter
+    graph never references a hardcoded stream index that could shift
+    when the title card is absent (this would have crashed the pipeline
+    if `hook_anchor_path` was hardcoded to `[2:a]` per the original plan
+    draft).
+    """
+    # Track ffmpeg input INDEX (number of `-i` flags seen so far) — NOT the
+    # length of the inputs list, because card inputs use 6 list elements each
+    # (`-loop 1 -t X -i path`) while bare `-i path` uses 2. The earlier
+    # `len(inputs)//2 - 1` computation crashed when cards >> 1 because it
+    # confused the two element counts.
     inputs = ["-i", video_path]
+    next_input_idx = 1   # video is input 0, next is index 1
     for c in cards:
         inputs += ["-loop", "1", "-t", f"{(c['end'] - c['start']) + 0.1:.3f}", "-i", c["path"]]
+        next_input_idx += 1
+
+    # Dynamic SFX index — exact ffmpeg input position after all card inputs.
+    # The os.path.exists() gate ensures a missing SFX file degrades gracefully
+    # (render proceeds without the t=0 audio anchor) instead of crashing the
+    # cron job.
+    sfx_idx = None
+    if hook_anchor_path and os.path.exists(hook_anchor_path):
+        inputs += ["-i", hook_anchor_path]
+        sfx_idx = next_input_idx
+        next_input_idx += 1
 
     filter_complex = _build_overlay_filter(cards, target_h=1920)
+
+    # Audio path: bare-copy unless SFX present, then amix at t=0.
+    audio_args = []
+    if sfx_idx is not None:
+        # Append amix branch to existing filter_complex.
+        # weights wrapped in single quotes so the internal space doesn't
+        # break the ffmpeg filter parser.
+        filter_complex += (
+            f";[0:a][{sfx_idx}:a]"
+            f"amix=inputs=2:duration=longest:weights='1.0 0.7'"
+            f"[a_mixed]"
+        )
+        audio_args = [
+            "-map", "[a_mixed]",
+            "-c:a", "aac", "-b:a", "192k",
+        ]
+    else:
+        audio_args = [
+            "-map", "0:a?",
+            "-c:a", "copy",
+        ]
 
     cmd = [
         "ffmpeg", "-y",
         *inputs,
         "-filter_complex", filter_complex,
         "-map", "[vout]",
-        "-map", "0:a?",
+        *audio_args,
         "-c:v", "libx264", "-preset", "fast", "-crf", "20",
-        "-c:a", "copy",
         "-pix_fmt", "yuv420p",
         "-movflags", "+faststart",
         output_path,
@@ -422,10 +548,16 @@ def _burn_chunk(video_path: str, cards: list, output_path: str) -> bool:
     return True
 
 
-def _burn_subtitles_overlay(video_path: str, cards: list) -> bool:
+def _burn_subtitles_overlay(video_path: str, cards: list,
+                             hook_anchor_path: str | None = None) -> bool:
     """
     Overlay every card PNG onto the video. Big card lists are processed in
     chunks of _OVERLAY_CHUNK so each FFmpeg filter graph stays manageable.
+
+    Phase 11 retention refactor 2026-06-02: when `hook_anchor_path` is
+    provided, it is applied ONLY to the FIRST chunk's audio (amix at t=0).
+    Subsequent chunks copy the already-mixed audio forward. The title
+    card (if present) is always card index 0 inside the first chunk.
     """
     if not cards:
         return False
@@ -436,7 +568,10 @@ def _burn_subtitles_overlay(video_path: str, cards: list) -> bool:
     chunks = [cards[i:i + _OVERLAY_CHUNK] for i in range(0, len(cards), _OVERLAY_CHUNK)]
     for ci, chunk in enumerate(chunks):
         out_path = video_path.replace(".mp4", f"_subs_pass{ci}.mp4")
-        ok = _burn_chunk(work_path, chunk, out_path)
+        # Only the FIRST chunk gets the SFX amix — subsequent chunks copy
+        # whatever audio (already-mixed) is in the input from the prior pass.
+        chunk_sfx = hook_anchor_path if ci == 0 else None
+        ok = _burn_chunk(work_path, chunk, out_path, hook_anchor_path=chunk_sfx)
         if not ok:
             for p in tmp_paths:
                 if os.path.exists(p):
@@ -458,12 +593,33 @@ def _burn_subtitles_overlay(video_path: str, cards: list) -> bool:
 
 # ── Public API ────────────────────────────────────────────────────────────────
 
-def apply_subtitles(video_path: str, audio_path: str, language: str = "hi") -> bool:
-    """
-    End-to-end: transcribe audio → group into cards → write ASS → burn into video.
+# Default hook-anchor SFX path. Phase 11 retention refactor 2026-06-02.
+# Reuses the existing heartbeat_climax.wav as the t=0 audio jolt (sharp
+# attack, < 1s decay). Override via HOOK_ANCHOR_SFX env var to a custom
+# wav. The os.path.exists() check inside _burn_chunk ensures pipeline
+# degrades gracefully (no SFX) if the file is missing — never crashes.
+_DEFAULT_HOOK_ANCHOR_SFX = os.path.join(
+    os.path.dirname(__file__), "..", "assets", "heartbeat_climax.wav"
+)
 
-    Returns True if subtitles were applied, False otherwise. The original video
-    file is preserved unchanged on any failure.
+
+def apply_subtitles(video_path: str, audio_path: str, language: str = "hi",
+                    hook_title: str = "") -> bool:
+    """
+    End-to-end: transcribe audio → group into cards → render PNGs →
+    overlay onto video. Returns True if subtitles were applied.
+
+    Phase 11 retention refactor 2026-06-02:
+      - `hook_title` (optional): when non-empty, render the title-card
+        PNG and PREPEND it as the first overlay (card index 0). Visible
+        from t=0.0 to t=2.5 with a deliberate HARD cut (no fade). Sits
+        at y=600 from top, above the word-subtitle band.
+      - Hook-anchor SFX (`HOOK_ANCHOR_SFX` env var or default
+        `assets/heartbeat_climax.wav`): when the file exists, layered
+        into the audio via amix at t=0. The SFX adds a sharp auditory
+        jolt paired with the title card for dual-modal attention.
+
+    The original video file is preserved unchanged on any failure.
     """
     if os.environ.get("BURN_SUBTITLES", "1").strip() not in ("1", "true", "yes"):
         print("    [subs] BURN_SUBTITLES disabled — skipping")
@@ -499,8 +655,32 @@ def apply_subtitles(video_path: str, audio_path: str, language: str = "hi") -> b
         return False
     print(f"    Rendered {len(rendered)} card PNGs")
 
+    # Phase 11 retention refactor: prepend title card if provided.
+    if hook_title:
+        title_card_path = os.path.join(cards_dir, "title_card.png")
+        title_card = _render_title_card_png(hook_title, title_card_path)
+        if title_card is not None:
+            print(f"    [title-card] '{hook_title}' rendered "
+                  f"({title_card['w']}×{title_card['h']}) — overlaid at "
+                  f"y={TITLE_CARD_Y_FROM_TOP}, t=0 to {TITLE_CARD_END_S}s")
+            rendered = [title_card] + rendered
+        else:
+            print(f"    [title-card] could not render '{hook_title[:40]}' — proceeding without")
+
+    # Hook-anchor SFX (env-tunable, gracefully degrades if missing).
+    hook_anchor_path = os.environ.get(
+        "HOOK_ANCHOR_SFX", _DEFAULT_HOOK_ANCHOR_SFX,
+    )
+    if hook_anchor_path and os.path.exists(hook_anchor_path):
+        print(f"    [hook-anchor] SFX layered at t=0 from {os.path.basename(hook_anchor_path)}")
+    else:
+        # Silent degradation — log once, don't fail.
+        print(f"    [hook-anchor] SFX file not found ({hook_anchor_path}) — proceeding without")
+        hook_anchor_path = None
+
     print("    Overlaying subtitles onto video...")
-    if not _burn_subtitles_overlay(video_path, rendered):
+    if not _burn_subtitles_overlay(video_path, rendered,
+                                    hook_anchor_path=hook_anchor_path):
         return False
 
     print("    [OK] Subtitles burned into video")

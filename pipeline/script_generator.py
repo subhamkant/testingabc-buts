@@ -586,14 +586,30 @@ _CHARACTER_NAMES_LIST = (
 )
 
 
+# Pattern D (Phase 11 retention refactor 2026-06-02) — paradox-fact hook.
+# First sentence MUST contain BOTH a named character AND a contradiction /
+# paradox marker within the first 10 words. Example: "भीष्म कभी हारे नहीं —
+# पर एक स्त्री ने उन्हें गिरा दिया।" combines "भीष्म" (named character) +
+# "नहीं" (contradiction) + "पर" (paradox pivot) → strongest in-media-res
+# opener. Pattern A/B/C remain — D widens the acceptance surface.
+_HOOK_PARADOX_FIRST_HALF = _re.compile(
+    r"\b(लेकिन|पर|फिर\s+भी|कभी\s+नहीं|पहली\s+बार|आखिरी|एकमात्र|"
+    r"but|yet|still|never|only|until)\b",
+    _re.IGNORECASE
+)
+
+
 def _check_hook_pattern(scene1_narration: str) -> tuple[bool, str]:
     """
     Hook validator (HARD gate). Returns (ok, reason).
 
     Rejects setup-line openers ("यह कहानी है...", "Long ago...") and requires
-    scene 1's first sentence to match Pattern A (shocking fact with digit +
-    named character), Pattern B (question opener), or Pattern C (cliffhanger
-    trailing with लेकिन/but/...).
+    scene 1's first sentence to match one of four patterns:
+      A — shocking fact: digit + named character
+      B — question opener (क्या आप / Did you / etc.)
+      C — cliffhanger trail (...लेकिन / ...but / ...)
+      D — paradox-fact: BOTH a named character AND a paradox/contradiction
+          marker within the first 10 words (Phase 11 retention refactor)
     """
     if not scene1_narration:
         return False, "scene 1 narration empty"
@@ -609,10 +625,90 @@ def _check_hook_pattern(scene1_narration: str) -> tuple[bool, str]:
     pattern_a = has_digit and has_character
     pattern_b = bool(_HOOK_QUESTION_OPENER.match(first_sentence))
     pattern_c = bool(_HOOK_CLIFFHANGER_END.search(first_sentence))
-    if pattern_a or pattern_b or pattern_c:
-        which = "A" if pattern_a else ("B" if pattern_b else "C")
+    # Pattern D — Phase 11 retention refactor: paradox-fact opener within
+    # first 10 words. REQUIRES BOTH named character AND paradox marker.
+    first_10_words = " ".join(first_sentence.split()[:10])
+    has_paradox = bool(_HOOK_PARADOX_FIRST_HALF.search(first_10_words))
+    pattern_d = has_character and has_paradox
+    if pattern_a or pattern_b or pattern_c or pattern_d:
+        which = (
+            "A" if pattern_a
+            else "B" if pattern_b
+            else "C" if pattern_c
+            else "D"
+        )
         return True, f"pattern {which}"
-    return False, "no shock-fact / question / cliffhanger pattern detected"
+    return False, "no shock-fact / question / cliffhanger / paradox pattern detected"
+
+
+# ─── hook_title validator (Phase 11 retention refactor, 2026-06-02) ───────
+# Validates the new `hook_title` JSON field used by the t=0 title-card
+# overlay in subtitle_generator. SCOPE IS STRICTLY LIMITED to the
+# hook_title string — does NOT read narration / image_prompt / any other
+# field. Narration ellipses (Gemini TTS pause timing) are unaffected.
+_HOOK_TITLE_CONTRADICTION = _re.compile(
+    r"\b(but|yet|still|never|cost|broke|last|only|until|hidden|untold|real)\b|"
+    r"लेकिन|पर|फिर\s+भी|कभी\s+नहीं|आखिरी|पहली|एकमात्र|जो",
+    _re.IGNORECASE
+)
+_HOOK_TITLE_NAMED_CHAR = _re.compile(
+    r"\b(Bhishma|Arjuna|Karna|Krishna|Draupadi|Yudhishthira|Bhima|Nakula|"
+    r"Sahadeva|Drona|Ashwatthama|Eklavya|Ekalavya|Duryodhana|Dushasana|"
+    r"Shikhandi|Kunti|Gandhari|Dhritarashtra|Vidura|Shakuni|Abhimanyu|"
+    r"Jayadratha|Devavrata|Parashurama|Satyavati|Balarama|Vyasa)\b|"
+    r"भीष्म|अर्जुन|कर्ण|कृष्ण|द्रौपदी|युधिष्ठिर|भीम|द्रोण|अश्वत्थामा|"
+    r"एकलव्य|दुर्योधन|दुश्शासन|शिखंडी|कुंती|गांधारी|धृतराष्ट्र|विदुर|"
+    r"शकुनि|अभिमन्यु|जयद्रथ|देवव्रत|परशुराम|सत्यवती|बलराम|व्यास",
+    _re.IGNORECASE
+)
+_HOOK_TITLE_BANNED = _re.compile(
+    r"[?!…]|\.\.\.|"
+    r"^\s*(this\s+is|the\s+story|long\s+ago|once\s+upon|let\s+me|"
+    r"यह\b|ये\b|एक\s+कहानी|बहुत\s+समय|कहते\s+हैं)",
+    _re.IGNORECASE
+)
+
+
+_HOOK_TITLE_LATIN_ALPHA = _re.compile(r"[A-Za-z]")
+
+
+def _check_hook_title(hook_title: str, language: str = "hi") -> tuple[bool, str]:
+    """Phase 11 retention refactor 2026-06-02. Validates the hook_title
+    field used by the t=0 title-card overlay. Reject reasons surface to
+    the priority cascade for re-prompt.
+
+    IMPORTANT SCOPE: this validator ONLY reads its `hook_title` argument
+    (NEVER touches data["scenes"][...]["narration"] or any other field).
+    The ellipsis-ban in _HOOK_TITLE_BANNED applies SOLELY to hook_title.
+    Narration ellipses (which Gemini TTS uses for 300-400ms dramatic
+    pauses per Phase 2/3 rhythm rules) are completely unaffected.
+
+    Tofu fix 2026-06-03: when language == "hi", any Latin alphabet
+    character is REJECTED. The bundled title-card font is
+    NotoSansDevanagari-Bold.ttf which has no Latin glyph coverage —
+    English chars render as yellow `.notdef` boxes (tofu) which is a
+    swipe-instant retention killer.
+    """
+    if not hook_title or not hook_title.strip():
+        return False, "hook_title missing or empty"
+    title = hook_title.strip()
+    if language == "hi" and _HOOK_TITLE_LATIN_ALPHA.search(title):
+        m = _HOOK_TITLE_LATIN_ALPHA.search(title)
+        return False, (
+            f"hook_title contains Latin char '{m.group(0)}' but Hindi pipeline font "
+            f"is Devanagari-only — would render as tofu: {title[:40]}"
+        )
+    if _HOOK_TITLE_BANNED.search(title):
+        m = _HOOK_TITLE_BANNED.search(title)
+        return False, f"hook_title contains banned punctuation/opener '{m.group(0)}': {title[:40]}"
+    n_words = len(title.split())
+    if n_words < 1 or n_words > 5:
+        return False, f"hook_title must be 1-5 words, got {n_words}: {title[:40]}"
+    has_char = bool(_HOOK_TITLE_NAMED_CHAR.search(title))
+    has_contradiction = bool(_HOOK_TITLE_CONTRADICTION.search(title))
+    if not has_char and not has_contradiction:
+        return False, f"hook_title needs ≥1 named character OR paradox marker: {title[:40]}"
+    return True, f"{n_words} words"
 
 
 # Rehook contrast markers — must appear somewhere in the middle-window scenes
@@ -3438,6 +3534,7 @@ def generate_script(
     ═══════════════════════════════════════════════════════════════
     {{
       "title": "Bilingual Short title UNDER 60 CHARACTERS TOTAL, format: '[Hindi half] | [English half]'. Hindi half MUST come FIRST — Indian audience reads Hindi first; English half is a secondary discovery tag. Each half MUST be 24–28 characters MAX so neither gets truncated by YouTube's 60-char display cap. COUNT CAREFULLY before emitting. GOLD STANDARD — the title MUST do ONE of these: (a) CHALLENGE a known assumption ('कर्ण की मौत का असली कारण अर्जुन नहीं था'), (b) POINT AT A HIDDEN CAUSE ('भीष्म की प्रतिज्ञा का असली सच'), (c) POSE A PAINFUL QUESTION ('मरने से पहले कर्ण ने ये क्यों कहा?'), or (d) INVERT A HERO'S MORAL ('भीष्म ने हस्तिनापुर बचाया नहीं… खत्म किया'). FORBIDDEN PATTERNS — pure incident-naming ('कर्ण की अंतिम प्रतिज्ञा' / 'देवव्रत का महा-त्याग' / 'X की कहानी' / 'X की प्रतिज्ञा'), admiring tones, documentary-summary framings. ABSOLUTELY NO episode/part/sequence numbering: no 'Mahabharata #N:', no 'महाभारत #N:', no 'Episode N', no 'Part N', no 'Ep N', no 'X of Y'. NO 'Story of X' / 'Tale of X' / 'The Saga of X' framings. The Hindi half (primary) MUST use high-search keywords ('प्रतिज्ञा', 'मृत्यु', 'सच', 'पाप', 'गलती', 'धोखा', 'अनकहा', 'रहस्य', 'वो', 'क्यों', 'असली', 'अंतिम', 'अपमान', 'खत्म'). The English half mirrors CONCISELY with a named character + power word (Why / Untold / Real / Hidden / Broke / Never / Last / Refused / Killed / Stopped / Betrayed / Destroyed). NO hashtags in title. GOOD examples (challenge / hidden cause / painful question / inversion): 'कर्ण की मौत का असली कारण | Karna's Real Killer' / 'भीष्म की प्रतिज्ञा का असली सच | What Bhishma Hid' / 'मरने से पहले कर्ण ने क्या कहा | Karna's Last Words' / 'भीष्म ने हस्तिनापुर खत्म किया | Bhishma Destroyed Hastinapur'. BAD examples (pure naming — DO NOT emit): 'कर्ण की अंतिम प्रतिज्ञा' / 'देवव्रत का महा-त्याग' / 'महाभारत #4: ...' / 'The Story of Bhishma'.",
+      "hook_title": "Phase 11 (2026-06-02) retention fix — 1-5 word HIGH-IMPACT title-card text rendered as big yellow-with-black-stroke text overlaid on the first 2.5 seconds of the video. Acts as the visual promise the moment the viewer's thumb hovers over the swipe. CRITICAL FONT CONSTRAINT (tofu fix 2026-06-03): this language is {lang_label}. The bundled title-card font supports Devanagari only — Latin letters render as yellow tofu boxes. So hook_title MUST be 100% Devanagari script for Hindi pipeline (NO English words, NO Latin letters, NO mixed Hinglish). Use compact Hindi noun-phrases ('कर्ण का अंतिम पाप', 'भीष्म की एक गलती', 'द्रौपदी का अपमान', 'अर्जुन का असली डर', 'कृष्ण की चुप्पी'). HARD CONSTRAINTS: 1-5 words total. MUST contain at least one named character in Devanagari (भीष्म / अर्जुन / कर्ण / कृष्ण / द्रौपदी / युधिष्ठिर / भीम / द्रोण / अश्वत्थामा / एकलव्य / दुर्योधन / शिखंडी / कुंती / गांधारी) OR at least one Devanagari paradox marker (लेकिन / पर / फिर भी / कभी नहीं / आखिरी / पहली / एकमात्र / जो). MUST NOT contain '?', '!', '...', emoji, or setup openers ('यह', 'ये', 'एक कहानी', 'बहुत समय', 'कहते हैं'). Reads like a movie poster title card. The narration field MAY and SHOULD still use ellipses for TTS pause timing — that's a separate field. Examples that PASS: 'भीष्म की एक गलती' / 'कर्ण का अंतिम पाप' / 'द्रौपदी का अंतिम सच' / 'कृष्ण की चुप्पी' / 'अर्जुन कभी नहीं हारा'. Examples that FAIL: 'The Curse That Broke Karna' (Latin chars = tofu) / 'Karna का Sach' (Hinglish, partial Latin = partial tofu) / 'यह कहानी है' (setup opener) / 'Karna died young?' (question mark + Latin).",
       "description": "Hook sentence under 90 chars that expands the title's promise with concrete detail.\\n\\n#Shorts #Mahabharata #महाभारत #Krishna #HinduMythology\\n\\n100-150 words about the story, weaving in named characters and the specific incident. Build curiosity. Don't spoil the ending in the description.\\n\\n#Shorts #Mahabharata #महाभारत #Hindu #HinduStory #BhagavadGita #भगवद_गीता #Krishna #कृष्ण #Arjuna #अर्जुन #Karna #कर्ण #Bhishma #भीष्म #Draupadi #द्रौपदी #Kurukshetra #कुरुक्षेत्र #AncientIndia #IndianMythology #Dharma #EpicStory #MythologyShorts #VedicWisdom #HinduDharma #IndianHistory #SpiritualShorts #PauranikKathayein #भारतीयइतिहास #SanatanDharma #सनातनधर्म #HindiShorts #trending",
       "tags": ["topic-specific long-tail tag 1","topic-specific long-tail tag 2","named character 1 (English)","named character 1 (Hindi/Devanagari)","named character 2","specific incident name","viewer-search query like 'why X happened'","Mahabharata","महाभारत","Shorts","Hindu mythology","Krishna","कृष्ण"],
       "scenes": [
@@ -3457,6 +3554,20 @@ def generate_script(
     HARD RULES — violation makes the script unusable:
     - All narration MUST be in {lang_label}
     - All image_prompt, video_prompt, thumbnail_prompt MUST be in English
+    - hook_title MUST be present (separate field, not part of title).
+      hook_title MUST be 1-5 words total. hook_title MUST be 100%
+      Devanagari script — NO Latin letters whatsoever, NO English
+      words, NO Hinglish — because the bundled title-card font has
+      zero Latin glyph coverage and Latin chars render as tofu boxes
+      (yellow squares = swipe-instant kill). hook_title MUST contain
+      at least one named character in Devanagari (भीष्म / कर्ण /
+      अर्जुन / कृष्ण / द्रौपदी / युधिष्ठिर / भीम / द्रोण /
+      अश्वत्थामा / एकलव्य / दुर्योधन / शिखंडी / कुंती / गांधारी)
+      OR at least one Devanagari paradox marker (लेकिन / पर / फिर भी /
+      कभी नहीं / आखिरी / पहली / एकमात्र / जो). hook_title MUST NOT
+      contain '?', '!', '...', or any emoji. It MUST NOT start with
+      setup-mode openers ('यह', 'ये', 'एक कहानी', 'बहुत समय',
+      'कहते हैं').
     - Title: UNDER 60 chars TOTAL, MUST follow `[Hindi half] | [English half]`
       format (Hindi FIRST — primary audience). Each half MUST be 24–28 chars
       MAX so neither gets truncated at YouTube's 60-char display cap. COUNT
@@ -3874,14 +3985,43 @@ def generate_script(
                 chosen = (
                     "Your previous response failed the SCENE 1 HOOK validator: "
                     f"{last_hook_reason}. Scene 1's FIRST sentence MUST follow ONE "
-                    "of the three hook patterns: (A) shocking specific fact with a "
+                    "of FOUR hook patterns: (A) shocking specific fact with a "
                     "digit AND a named character; (B) question opener starting with "
                     "क्या आप / जब / कैसे / क्यों / Did you / What if; (C) cliffhanger "
-                    "ending with लेकिन / but / triple ellipsis. NEVER open with "
+                    "ending with लेकिन / but / triple ellipsis; (D NEW) paradox-fact "
+                    "— BOTH a named character (Bhishma/Karna/etc.) AND a paradox "
+                    "marker (लेकिन / पर / फिर भी / कभी नहीं / but / yet / still / "
+                    "never / only) within the first 10 words. NEVER open with "
                     "documentary-mode openers (\"यह कहानी है...\", \"Long ago...\", "
                     "\"In ancient times...\") — viewers swipe in 1.5s. This is the "
                     "TOP PRIORITY — rewrite scene 1's first sentence before fixing "
                     "any other gate."
+                )
+            elif not last_hook_title_ok:
+                chosen = (
+                    "Your previous response failed the HOOK_TITLE validator: "
+                    f"{last_hook_title_reason}\n\n"
+                    "REWRITE ONLY the `hook_title` field (do NOT touch any other "
+                    "field — leave narration, image_prompt, video_prompt, mood, "
+                    "tags, scenes untouched). CRITICAL FONT RULE (tofu fix "
+                    "2026-06-03): hook_title MUST be 100% Devanagari script. NO "
+                    "Latin letters of any kind — not even one English word. The "
+                    "title-card font has zero Latin coverage and Latin chars will "
+                    "render as yellow tofu boxes that destroy retention. "
+                    "Constraints: 1-5 words total, contain at least one named "
+                    "character in Devanagari (भीष्म/कर्ण/अर्जुन/कृष्ण/द्रौपदी/"
+                    "युधिष्ठिर/भीम/द्रोण/अश्वत्थामा/एकलव्य/दुर्योधन/शिखंडी/"
+                    "कुंती/गांधारी) OR at least one Devanagari paradox marker "
+                    "(लेकिन/पर/फिर भी/कभी नहीं/आखिरी/पहली/एकमात्र/जो). MUST NOT "
+                    "contain '?', '!', '...', emoji, or setup-mode openers "
+                    "('यह', 'ये', 'एक कहानी', 'बहुत समय', 'कहते हैं'). "
+                    "Examples that PASS: 'भीष्म की एक गलती' / 'कर्ण का अंतिम पाप' / "
+                    "'द्रौपदी का अंतिम सच' / 'कृष्ण की चुप्पी' / "
+                    "'अर्जुन कभी नहीं हारा'. Examples that FAIL: 'The Curse That "
+                    "Broke Karna' (Latin = tofu) / 'Karna का Sach' (Hinglish = "
+                    "partial tofu). The narration field MAY and SHOULD still use "
+                    "ellipses ('...') for TTS pause timing — that is an ENTIRELY "
+                    "SEPARATE validator. Touch ONLY hook_title."
                 )
             elif not last_rehook_ok:
                 chosen = (
@@ -4011,14 +4151,35 @@ def generate_script(
         # characteristic of Flash; Pro handles this register better.
         raw = _call_llm(full_prompt, quality="best")
 
-        # Extract the JSON object — handles thinking text, code fences, and preamble
-        start = raw.find("{")
-        end = raw.rfind("}")
-        if start == -1 or end == -1:
-            raise ValueError(f"No JSON object found in LLM response:\n{raw[:300]}")
-        raw = raw[start:end + 1]
-
-        data = _parse_llm_json(raw)
+        # Extract the JSON object — handles thinking text, code fences, and preamble.
+        # Phase 11 retention refactor 2026-06-02: graceful parse-failure handling.
+        # When Gemini Flash truncates a long response (no closing `}`), the old
+        # code raised ValueError out of the entire retry loop — skipping every
+        # validator AND the best-of-N rescue. Now we catch the parse failure,
+        # mark the attempt failed, and continue to the next iteration so any
+        # prior successful attempt can still be shipped via rescue.
+        try:
+            start = raw.find("{")
+            end = raw.rfind("}")
+            if start == -1 or end == -1:
+                raise ValueError(f"No JSON object found in LLM response:\n{raw[:300]}")
+            raw = raw[start:end + 1]
+            data = _parse_llm_json(raw)
+        except (ValueError, json.JSONDecodeError) as parse_err:
+            print(f"    [parse-fail attempt {attempt + 1}/{MAX_ATTEMPTS}] "
+                  f"LLM returned unparseable JSON ({type(parse_err).__name__}: "
+                  f"{str(parse_err)[:100]}); continuing to next attempt.")
+            # Skip ALL validator + scoring logic for this attempt; the prior
+            # best_data remains in place for rescue if this was the last
+            # attempt. Restore an empty `data` so the loop control variables
+            # are sane before `continue`.
+            if attempt < MAX_ATTEMPTS - 1:
+                continue
+            # Last attempt parse-failed — break to let best-of-N rescue ship
+            # whatever earlier attempt scored highest. If no earlier attempt
+            # succeeded either, the rescue's `best_data is None` check raises
+            # downstream with a clear message.
+            break
 
         # Hard-enforce upper bound — LLMs sometimes ignore word limits
         for scene in data.get("scenes", []):
@@ -4089,6 +4250,10 @@ def generate_script(
         # the LLM into prompt-fighting mode and the prose loses soul.
         scene1_text = (scenes[0].get("narration") if scenes else "") or ""
         last_hook_ok, last_hook_reason = _check_hook_pattern(scene1_text)
+        # Phase 11 retention refactor 2026-06-02: hook_title HARD gate.
+        last_hook_title_ok, last_hook_title_reason = _check_hook_title(
+            data.get("hook_title", ""), language=language
+        )
         last_rehook_ok, rehook_idx = _check_rehook_present(scenes)
         rhythm_ok, rhythm_reason = _check_sentence_rhythm(scenes)
         visual_ok, visual_missing = _check_visual_escalation(scenes)
@@ -4107,6 +4272,10 @@ def generate_script(
             print(f"    [hook] OK — {last_hook_reason}")
         else:
             print(f"    [hook] REJECT — {last_hook_reason}")
+        if last_hook_title_ok:
+            print(f"    [hook-title] OK — {last_hook_title_reason}")
+        else:
+            print(f"    [hook-title] REJECT — {last_hook_title_reason}")
         if last_rehook_ok:
             print(f"    [rehook] OK — twist marker in narrative scene {rehook_idx + 1}")
         else:
@@ -4160,6 +4329,7 @@ def generate_script(
         score = (
             (0 if last_short else 1)
             + (1 if last_hook_ok else 0)
+            + (1 if last_hook_title_ok else 0)  # Phase 11
             + (1 if last_rehook_ok else 0)
             + (1 if rep_ok else 0)
             + (1 if tha_ok else 0)
@@ -4176,7 +4346,8 @@ def generate_script(
 
         # Acceptable if every HARD gate passes. (Rhythm + visual + curation
         # are soft, don't gate acceptance.)
-        if (not last_short and last_hook_ok and last_rehook_ok
+        if (not last_short and last_hook_ok and last_hook_title_ok
+                and last_rehook_ok
                 and rep_ok and tha_ok and names_ok
                 and bookend_ok and eng_ok and mono_ok
                 and last_aftermath_ok and last_danger_ok):
@@ -4186,6 +4357,8 @@ def generate_script(
             why = []
             if not last_hook_ok:
                 why.append(f"hook REJECT ({last_hook_reason})")
+            if not last_hook_title_ok:
+                why.append(f"hook_title REJECT ({last_hook_title_reason[:60]})")
             if not last_rehook_ok:
                 why.append("rehook missing")
             if not last_aftermath_ok:

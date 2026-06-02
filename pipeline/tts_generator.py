@@ -42,7 +42,7 @@ _TEMP_ROOT = os.environ.get("PIPELINE_TEMP_ROOT", "temp")
 
 # ── Voice config ──────────────────────────────────────────────────────────────
 
-# Edge TTS fallback voices
+# Edge TTS fallback voices (default)
 _EDGE_VOICES = {
     "en": "en-US-ChristopherNeural",
     "hi": "hi-IN-MadhurNeural",
@@ -51,6 +51,36 @@ _EDGE_FALLBACK = {
     "en": "en-US-GuyNeural",
     "hi": "hi-IN-NeerjaNeural",
 }
+
+# v4.1 (2026-06-01): Per-series Edge voice overrides. The curiosity series
+# (Five Second World EN + Kant Decodes HI) ships content about Indian economy
+# / culture and a US/UK voice destroys credibility. Lock both languages to
+# Indian Edge voices: en-IN-PrabhatNeural (deep authoritative Indian English
+# male) and hi-IN-MadhurNeural (proven native Hindi voice, same one Mahabharata
+# uses). For curiosity, Edge becomes the PRIMARY engine (not just fallback) —
+# see cascade reorder in generate_full_narration().
+_EDGE_VOICES_BY_SERIES = {
+    "curiosity": {
+        "en": "en-IN-PrabhatNeural",
+        "hi": "hi-IN-MadhurNeural",
+    },
+}
+_EDGE_FALLBACK_BY_SERIES = {
+    "curiosity": {
+        "en": "en-IN-NeerjaNeural",   # Indian English female fallback
+        "hi": "hi-IN-NeerjaNeural",
+    },
+}
+
+
+def _edge_voice_for(series: str, language: str, fallback: bool = False) -> str:
+    """Resolve the Edge voice for the given series + language. Falls back to
+    the global _EDGE_VOICES / _EDGE_FALLBACK if the series isn't registered."""
+    series_map = (_EDGE_FALLBACK_BY_SERIES if fallback else _EDGE_VOICES_BY_SERIES).get(series)
+    if series_map and language in series_map:
+        return series_map[language]
+    default_map = _EDGE_FALLBACK if fallback else _EDGE_VOICES
+    return default_map.get(language, default_map["en"])
 
 # Gemini voice — read from .env so it can be changed without code edits
 # Options: Charon (deep/cinematic), Fenrir (strong), Orus (warm), Puck (energetic)
@@ -99,15 +129,40 @@ def _pcm_to_wav(pcm_bytes: bytes, sample_rate: int = 24000) -> bytes:
     return buf.getvalue()
 
 
+def _gemini_tts_keys() -> list[tuple[str, str]]:
+    """Collect all configured Gemini API keys in the order to try them.
+    Returns [(label, key), ...]. The TTS quota is per-key per-day (10 req/day
+    on the free tier), so rotating through every configured key gives us
+    N × 10 daily capacity — critical for bilingual long-form which burns
+    2-12 TTS calls per render.
+    """
+    candidates = [
+        ("primary",     "GEMINI_API_KEY"),
+        ("fallback",    "GEMINI_API_KEY_FALLBACK"),
+    ]
+    for n in range(2, 6):
+        candidates.append((f"fallback-{n}", f"GEMINI_API_KEY_FALLBACK_{n}"))
+
+    keys: list[tuple[str, str]] = []
+    for label, var in candidates:
+        v = os.environ.get(var, "").strip()
+        if v:
+            keys.append((label, v))
+    return keys
+
+
 def _gemini_tts(text: str, output_mp3: str, voice: str = None) -> bool:
     """
     Generates audio via Gemini TTS. Defaults to the global _GEMINI_VOICE
     (Charon) but the caller can pass `voice` to override per series — e.g.
     WhatIf passes "Puck" for an energetic, younger register.
-    Returns True on success.
+
+    Rotates through every configured Gemini API key on 429 RESOURCE_EXHAUSTED
+    so the per-key daily TTS quota doesn't kill a bilingual long-form render.
+    Returns True on first success.
     """
-    api_key = os.environ.get("GEMINI_API_KEY", "").strip()
-    if not api_key:
+    keys = _gemini_tts_keys()
+    if not keys:
         return False
 
     voice_name = voice or _GEMINI_VOICE
@@ -115,69 +170,103 @@ def _gemini_tts(text: str, output_mp3: str, voice: str = None) -> bool:
     try:
         from google import genai
         from google.genai import types
-
-        client = genai.Client(api_key=api_key)
-        response = client.models.generate_content(
-            model=_GEMINI_MODEL,
-            contents=text,
-            config=types.GenerateContentConfig(
-                response_modalities=["AUDIO"],
-                speech_config=types.SpeechConfig(
-                    voice_config=types.VoiceConfig(
-                        prebuilt_voice_config=types.PrebuiltVoiceConfig(
-                            voice_name=voice_name
-                        )
-                    )
-                ),
-            ),
-        )
-
-        part = response.candidates[0].content.parts[0]
-        audio_data = part.inline_data.data  # raw bytes (PCM or WAV)
-        mime_type  = part.inline_data.mime_type or ""
-
-        # Save to a temp WAV, then FFmpeg converts to normalized MP3
-        tmp_wav = output_mp3 + ".tmp.wav"
-
-        if "wav" in mime_type:
-            with open(tmp_wav, "wb") as f:
-                f.write(audio_data)
-        else:
-            # Assume PCM int16 LE at 24kHz mono
-            wav_bytes = _pcm_to_wav(audio_data, sample_rate=24000)
-            with open(tmp_wav, "wb") as f:
-                f.write(wav_bytes)
-
-        # Convert WAV → normalized MP3
-        result = subprocess.run(
-            [
-                "ffmpeg", "-y", "-i", tmp_wav,
-                "-af", "loudnorm=I=-16:TP=-1.5:LRA=11",
-                "-ar", "48000", "-ab", "128k",
-                output_mp3,
-            ],
-            capture_output=True,
-        )
-
-        if os.path.exists(tmp_wav):
-            os.remove(tmp_wav)
-
-        return result.returncode == 0 and os.path.exists(output_mp3)
-
-    except Exception as e:
-        print(f"    [Gemini TTS] {e}")
+    except ImportError as e:
+        print(f"    [Gemini TTS] missing google.genai: {e}")
         return False
+
+    for label, api_key in keys:
+        try:
+            client = genai.Client(api_key=api_key)
+            response = client.models.generate_content(
+                model=_GEMINI_MODEL,
+                contents=text,
+                config=types.GenerateContentConfig(
+                    response_modalities=["AUDIO"],
+                    speech_config=types.SpeechConfig(
+                        voice_config=types.VoiceConfig(
+                            prebuilt_voice_config=types.PrebuiltVoiceConfig(
+                                voice_name=voice_name
+                            )
+                        )
+                    ),
+                ),
+            )
+
+            part = response.candidates[0].content.parts[0]
+            audio_data = part.inline_data.data  # raw bytes (PCM or WAV)
+            mime_type  = part.inline_data.mime_type or ""
+
+            # Save to a temp WAV, then FFmpeg converts to normalized MP3
+            tmp_wav = output_mp3 + ".tmp.wav"
+
+            if "wav" in mime_type:
+                with open(tmp_wav, "wb") as f:
+                    f.write(audio_data)
+            else:
+                # Assume PCM int16 LE at 24kHz mono
+                wav_bytes = _pcm_to_wav(audio_data, sample_rate=24000)
+                with open(tmp_wav, "wb") as f:
+                    f.write(wav_bytes)
+
+            # Convert WAV → normalized MP3
+            result = subprocess.run(
+                [
+                    "ffmpeg", "-y", "-i", tmp_wav,
+                    "-af", "loudnorm=I=-16:TP=-1.5:LRA=11",
+                    "-ar", "48000", "-ab", "128k",
+                    output_mp3,
+                ],
+                capture_output=True,
+            )
+
+            if os.path.exists(tmp_wav):
+                os.remove(tmp_wav)
+
+            if result.returncode == 0 and os.path.exists(output_mp3):
+                print(f"    [Gemini TTS/{label}] OK (voice={voice_name})")
+                return True
+
+        except Exception as e:
+            msg = str(e)
+            # On 429 RESOURCE_EXHAUSTED, rotate to the next key
+            if "429" in msg or "RESOURCE_EXHAUSTED" in msg or "quota" in msg.lower():
+                print(f"    [Gemini TTS/{label}] quota exhausted — trying next key")
+                continue
+            # On any other error (network, malformed input, etc.), still try
+            # the next key — some errors are transient per-region/per-key
+            print(f"    [Gemini TTS/{label}] {msg[:200]}")
+            continue
+
+    print(f"    [Gemini TTS] all {len(keys)} key(s) exhausted")
+    return False
 
 
 # ── Edge TTS with SSML ────────────────────────────────────────────────────────
 
-def _build_ssml(text: str, voice: str, language: str) -> str:
+# v4.1: SSML break-duration profiles. The legacy Mahabharata/Krishna pipeline
+# wants long dramatic pauses (500/400/600ms). The curiosity pipeline uses
+# v4.1 emotional-cue narrations where Pro emits MANY ellipses + (pause) markers
+# (the bracket-stripper converts those to "..."); long break times bloat a
+# 55s Short to 90s+. Halve the break times for curiosity so the pauses
+# REGISTER without inflating the timeline.
+_SSML_BREAK_PROFILES = {
+    "default":   {"sentence": 500, "period": 400, "ellipsis": 600},
+    "curiosity": {"sentence": 250, "period": 200, "ellipsis": 300},
+}
+
+
+def _build_ssml(text: str, voice: str, language: str, series: str = "mahabharata") -> str:
     """
     Wraps narration text in SSML with narration-relaxed style + prosody.
     Adds natural pauses after sentence endings for dramatic effect.
+
+    Break-duration profile is series-aware (v4.1): curiosity uses shorter
+    pauses to prevent ellipsis-heavy v4.1 narrations from bloating duration
+    via Edge SSML's break engine.
     """
     import re
     xml_lang = "hi-IN" if language == "hi" else "en-US"
+    breaks = _SSML_BREAK_PROFILES.get(series, _SSML_BREAK_PROFILES["default"])
 
     # Escape XML special characters
     text_esc = (text
@@ -185,10 +274,13 @@ def _build_ssml(text: str, voice: str, language: str) -> str:
                 .replace("<", "&lt;")
                 .replace(">", "&gt;"))
 
-    # Add dramatic pause after sentence endings
-    text_esc = re.sub(r'([।!?])\s*', r'\1<break time="500ms"/>', text_esc)
-    text_esc = re.sub(r'\.\s+', r'.<break time="400ms"/>', text_esc)
-    text_esc = re.sub(r'\.\.\.',  r'...<break time="600ms"/>', text_esc)
+    # Add dramatic pause after sentence endings (series-aware durations)
+    text_esc = re.sub(r'([।!?])\s*',
+                      rf'\1<break time="{breaks["sentence"]}ms"/>', text_esc)
+    text_esc = re.sub(r'\.\s+',
+                      rf'.<break time="{breaks["period"]}ms"/>', text_esc)
+    text_esc = re.sub(r'\.\.\.',
+                      rf'...<break time="{breaks["ellipsis"]}ms"/>', text_esc)
 
     return (
         f'<speak xmlns="http://www.w3.org/2001/10/synthesis"'
@@ -202,13 +294,14 @@ def _build_ssml(text: str, voice: str, language: str) -> str:
     )
 
 
-async def _edge_tts(text: str, voice: str, output_path: str, use_ssml: bool = True) -> bool:
+async def _edge_tts(text: str, voice: str, output_path: str, use_ssml: bool = True,
+                    series: str = "mahabharata") -> bool:
     """Generate audio via Edge TTS. Returns True on success."""
     try:
         if use_ssml:
             # Detect language from voice name
             lang = "hi" if "hi-IN" in voice else "en"
-            ssml_text = _build_ssml(text, voice, lang)
+            ssml_text = _build_ssml(text, voice, lang, series=series)
             communicate = edge_tts.Communicate(ssml_text, voice)
         else:
             communicate = edge_tts.Communicate(text, voice, rate=_RATE, pitch=_PITCH)
@@ -237,9 +330,47 @@ def _normalize_audio(path: str) -> None:
 
 # ── Text sanitizer ────────────────────────────────────────────────────────────
 
+def _strip_emotional_cues(text: str) -> str:
+    """v4.1 (2026-06-01): convert Pro's bracketed emotional pause cues to
+    TTS-compatible punctuation BEFORE the text hits Gemini Charon (which
+    would otherwise read '(pause)' literally as the word 'pause').
+
+    The Pro paste prompt at `pro_prompts/spacex_type2.md` instructs the LLM
+    to embed these markers inside narration_en / narration_hi strings as
+    delivery cues. This function maps them to ellipses / em-dashes / periods
+    that Charon naturally pauses on. Idempotent.
+
+    Mapping:
+      (pause)      → ' ... '
+      (long pause) → ' ... ... '
+      (breath)     → ' ... '
+      (beat)       → ' — '
+      (stop)       → '. '
+      (whisper)    → ''         (vocal cue only; visual reminder for Pro)
+
+    Case-insensitive; allows optional internal whitespace.
+    """
+    import re
+    cue_map = (
+        (r'\(\s*long\s*pause\s*\)', ' ... ... '),
+        (r'\(\s*pause\s*\)',        ' ... '),
+        (r'\(\s*breath\s*\)',       ' ... '),
+        (r'\(\s*beat\s*\)',         ' — '),
+        (r'\(\s*stop\s*\)',         '. '),
+        (r'\(\s*whisper\s*\)',      ''),
+    )
+    for pattern, replacement in cue_map:
+        text = re.sub(pattern, replacement, text, flags=re.IGNORECASE)
+    return text
+
+
 def _clean_narration(text: str) -> str:
     """Clean narration text before sending to TTS."""
     import re
+
+    # v4.1: strip bracketed emotional cues FIRST so the converted punctuation
+    # survives downstream normalization (ellipses + em-dashes stay intact).
+    text = _strip_emotional_cues(text)
 
     # Remove URLs
     text = re.sub(r'https?://\S+', '', text)
@@ -249,10 +380,11 @@ def _clean_narration(text: str) -> str:
     text = re.sub(r'#\w+', '', text)
     text = re.sub(r'@\w+', '', text)
 
-    # ❗ NEW: remove English abbreviations (MS, ML, etc.)
-    text = re.sub(r'\b[A-Z]{2,}\b', '', text)
-
-    # ❗ NEW: remove repeated weird tokens (common Gemini bug)
+    # Strip repeated MS/ML token chains (Gemini TTS bug — bot reads "em-ess
+    # em-ess em-ess..." when this artifact appears). Targeted to specific
+    # known-bad tokens; v4.1 removed the broader `\b[A-Z]{2,}\b` strip
+    # because it was killing intentional ALLCAPS emphasis (RBI, UPI, SIX,
+    # ROT, BURN, etc.) that Pro now uses for v3 emotional delivery.
     text = re.sub(r'(एमएस|एमएल|MS|ML)+', '', text)
 
     # Normalize spaces
@@ -481,13 +613,23 @@ def _elevenlabs_tts(
 def _elevenlabs_keys() -> list:
     """
     Returns the ordered list of ElevenLabs keys to try, with a label per key.
-    Order: primary, then fallback. Empty entries are filtered out so callers
-    don't need to handle them.
+    Order: primary → fallback → fallback_2 → fallback_3 → fallback_4 → fallback_5.
+    Empty entries are filtered out so callers don't need to handle them.
+
+    Multi-key rotation mirrors the Gemini cascade — when one ElevenLabs free-tier
+    account gets flagged for "unusual activity" (a real risk that hit us on
+    2026-05-31), additional accounts on different emails extend the budget.
+    Each ElevenLabs free account has 10k chars/month (~5-6 bilingual Shorts).
     """
     candidates = [
-        ("ElevenLabs (primary)",  os.environ.get("ELEVENLABS_API_KEY", "").strip()),
-        ("ElevenLabs (fallback)", os.environ.get("ELEVENLABS_API_KEY_FALLBACK", "").strip()),
+        ("ElevenLabs (primary)",    os.environ.get("ELEVENLABS_API_KEY", "").strip()),
+        ("ElevenLabs (fallback)",   os.environ.get("ELEVENLABS_API_KEY_FALLBACK", "").strip()),
     ]
+    for n in range(2, 6):
+        candidates.append(
+            (f"ElevenLabs (fallback-{n})",
+             os.environ.get(f"ELEVENLABS_API_KEY_FALLBACK_{n}", "").strip())
+        )
     return [(label, key) for label, key in candidates if key]
 
 
@@ -704,7 +846,22 @@ async def generate_full_narration(
     use a distinct divine voice while the standard Mahabharata flow keeps
     the default narrator.
 
-    Provider cascade: ElevenLabs → Gemini Charon → Edge SSML → Edge plain.
+    Provider cascade order is controlled by the PRIMARY_TTS env var:
+
+      PRIMARY_TTS=gemini  (default, Phase 11 retention refactor 2026-06-02):
+        Gemini Charon → ElevenLabs → Edge SSML → Edge plain. Saves ~30s
+        per render that was previously wasted on failed ElevenLabs
+        attempts (free-tier blocked on this device). Charon is the
+        Mahabharata default voice — more dramatic-narrator timbre than
+        ElevenLabs Adam for the t=0 attention grab.
+
+      PRIMARY_TTS=elevenlabs  (legacy / rollback):
+        ElevenLabs → Gemini → Edge. The original cascade order.
+
+    Krishna per-scene ElevenLabs runs FIRST regardless of PRIMARY_TTS
+    when ElevenLabs keys are configured — Krishna's per-scene
+    voice_settings tuning is series-specific and shouldn't be swapped.
+
     Once a provider succeeds, the entire video is consistent voice (no
     half-Gemini / half-Edge seams).
     """
@@ -727,11 +884,9 @@ async def generate_full_narration(
     output_path = f"{_TEMP_ROOT}/audio/narration_full.mp3"
 
     # ── 0. Krishna per-scene TTS (only when an ElevenLabs key is set) ──
-    # Each scene gets its own ElevenLabs request with per-scene voice_settings
-    # — contemplative for Scenes 1/2/4, dramatic peak for Scene 3, warm
-    # blessing for Scene 5. This is what produces real LRA in the output.
-    # If the per-scene path fails for any reason we fall through to the
-    # standard single-call path below.
+    # Krishna's per-scene voice_settings tuning is series-specific.
+    # Runs FIRST regardless of PRIMARY_TTS so the divine-monologue
+    # delivery is preserved.
     if series == "krishna" and _elevenlabs_keys():
         print(f"    Krishna mode — per-scene TTS with per-scene voice settings...")
         ok = await _generate_per_scene_krishna_tts(scenes, output_path, language)
@@ -740,24 +895,48 @@ async def generate_full_narration(
             return output_path, char_weights
         print("    [!] Per-scene Krishna TTS failed — falling back to single-call mode")
 
-    # 1. ElevenLabs (best, requires ELEVENLABS_API_KEY[_FALLBACK])
-    # Walk both keys in order — falls through on quota errors / 401 / network
-    # failures, so a single dead key doesn't bump us all the way down to Edge.
-    for key_label, key in _elevenlabs_keys():
-        print(f"    Trying {key_label} (most realistic)...")
-        ok = await asyncio.to_thread(
-            _elevenlabs_tts, full_text, output_path, language, key, key_label, series
-        )
-        if ok:
-            print(f"    [OK] Full narration via {key_label} ({series})")
-            return output_path, char_weights
+    # Phase 11 retention refactor 2026-06-02: PRIMARY_TTS env-gated
+    # cascade ordering. Default "gemini" — Gemini Charon first because
+    # ElevenLabs has been blocked on this device (free-tier abuse flag)
+    # and the failed-attempt cascade was eating ~30s per render. Charon
+    # is the explicit Mahabharata narrator now.
+    primary_tts = os.environ.get("PRIMARY_TTS", "gemini").strip().lower()
 
-    # 2. Gemini TTS — series-aware voice (Charon for myth, Puck for WhatIf)
-    if os.environ.get("GEMINI_API_KEY", "").strip():
+    async def _try_elevenlabs() -> bool:
+        """Try ElevenLabs single-call across all configured keys."""
+        for key_label, key in _elevenlabs_keys():
+            print(f"    Trying {key_label} (most realistic)...")
+            ok = await asyncio.to_thread(
+                _elevenlabs_tts, full_text, output_path, language, key, key_label, series
+            )
+            if ok:
+                print(f"    [OK] Full narration via {key_label} ({series})")
+                return True
+        return False
+
+    async def _try_gemini() -> bool:
+        """Try Gemini TTS with the series-appropriate voice."""
+        if not os.environ.get("GEMINI_API_KEY", "").strip():
+            return False
         gemini_voice = _gemini_voice_for(series)
         print(f"    Trying Gemini TTS ({gemini_voice} voice for {series})...")
         if await asyncio.to_thread(_gemini_tts, full_text, output_path, gemini_voice):
             print(f"    [OK] Full narration via Gemini {gemini_voice}")
+            return True
+        return False
+
+    if primary_tts == "gemini":
+        # 1. Gemini first (default — Phase 11 retention refactor)
+        if await _try_gemini():
+            return output_path, char_weights
+        # 2. ElevenLabs fallback (if Gemini 5xx / quota)
+        if await _try_elevenlabs():
+            return output_path, char_weights
+    else:
+        # Legacy: ElevenLabs first → Gemini fallback
+        if await _try_elevenlabs():
+            return output_path, char_weights
+        if await _try_gemini():
             return output_path, char_weights
 
     # 3. Edge TTS SSML
@@ -765,21 +944,21 @@ async def generate_full_narration(
     voice_alt = _EDGE_FALLBACK.get(language, _EDGE_FALLBACK["en"])
 
     print("    Trying Edge TTS (SSML, primary voice)...")
-    if await _edge_tts(full_text, voice_pri, output_path, use_ssml=True):
+    if await _edge_tts(full_text, voice_pri, output_path, use_ssml=True, series=series):
         _normalize_audio(output_path)
         print("    [OK] Full narration via Edge SSML")
         return output_path, char_weights
 
     # 4. Edge TTS fallback voice
     print("    Trying Edge TTS (SSML, fallback voice)...")
-    if await _edge_tts(full_text, voice_alt, output_path, use_ssml=True):
+    if await _edge_tts(full_text, voice_alt, output_path, use_ssml=True, series=series):
         _normalize_audio(output_path)
         print("    [OK] Full narration via Edge SSML fallback")
         return output_path, char_weights
 
     # 5. Plain Edge TTS — last resort
     print("    Trying Edge TTS (plain)...")
-    if await _edge_tts(full_text, voice_pri, output_path, use_ssml=False):
+    if await _edge_tts(full_text, voice_pri, output_path, use_ssml=False, series=series):
         _normalize_audio(output_path)
         print("    [OK] Full narration via Edge plain")
         return output_path, char_weights

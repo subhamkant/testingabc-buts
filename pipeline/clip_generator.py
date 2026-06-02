@@ -390,11 +390,15 @@ async def _generate_one_scene(
 
 # ── Public API ────────────────────────────────────────────────────────────────
 
-async def generate_video_clips(scenes: list) -> tuple[list, list]:
+async def generate_video_clips(
+    scenes: list,
+    scene_indices: list[int] | None = None,
+) -> tuple[list, list]:
     """
     Returns (clip_paths, image_files):
       clip_paths   list[str | None]  one per scene; None where every provider
-                                     failed for that scene
+                                     failed for that scene OR where the scene
+                                     was excluded by `scene_indices`
       image_files  list[str]         the I2V reference image per scene, also
                                      usable as Ken Burns fallback by the
                                      assembler when clip_paths[i] is None
@@ -402,10 +406,17 @@ async def generate_video_clips(scenes: list) -> tuple[list, list]:
     Per-scene fallback is the caller's job: a None in clip_paths signals
     "render this scene from image_files[i] via Ken Burns". This function
     NEVER raises on partial failure — the orchestrator decides whether the
-    failure rate warrants a full static-image pipeline (e.g. when zero clips
-    succeeded). The earlier all-or-nothing behaviour threw away every
-    successful clip the moment one scene failed; per-scene fallback keeps
-    the cinematic look on the scenes that did succeed.
+    failure rate warrants a full static-image pipeline.
+
+    Phase 11 retention refactor 2026-06-02: when `scene_indices` is
+    provided, ONLY attempt Wan-2.1-I2V generation for those scene
+    positions. All other scenes return None in clip_paths (the assembler
+    falls back to Ken Burns for those). Saves provider quota and keeps
+    Wan focused on the t=0 hook window where motion-pursuit attention
+    matters most.
+
+    Default `scene_indices=None` preserves legacy behavior (try every scene).
+    Recommended for retention: `scene_indices=[0]` — Wan for hook only.
     """
     print(f"    Providers configured: "
           f"fal={'yes' if FAL_KEY else 'no'}  "
@@ -414,6 +425,8 @@ async def generate_video_clips(scenes: list) -> tuple[list, list]:
     print(f"    Concurrency limit: {MAX_CONCURRENT}")
 
     # Step 3a — single wide-shot reference image per scene (no medium/closeup)
+    # ALWAYS render images for ALL scenes — the non-target scenes use these
+    # images for Ken Burns fallback. Only the AI-clip generation is gated.
     print("\n    Step 3a — Generating reference images (1 wide shot per scene)...")
     image_groups = generate_images(scenes, single_shot=True)
     image_files = [
@@ -423,26 +436,51 @@ async def generate_video_clips(scenes: list) -> tuple[list, list]:
 
     os.makedirs("temp/clips", exist_ok=True)
 
-    # Step 3b — parallel cascade
+    # Resolve target indices for AI-clip generation.
+    if scene_indices is None:
+        target_set = set(range(len(scenes)))
+        skip_count = 0
+    else:
+        target_set = set(scene_indices)
+        skip_count = len(scenes) - len(target_set)
+        print(f"    [WAN_HOOK_ONLY] AI-clip generation restricted to scene "
+              f"indices {sorted(target_set)}; {skip_count} scene(s) will use "
+              f"Ken Burns fallback (saves provider quota).")
+
+    # Step 3b — parallel cascade, but ONLY for target indices
     sem     = asyncio.Semaphore(MAX_CONCURRENT)
     motions = random.sample(_CAMERA_MOTIONS, min(len(scenes), len(_CAMERA_MOTIONS)))
     while len(motions) < len(scenes):
         motions.append(random.choice(_CAMERA_MOTIONS))
 
-    print(f"\n    Step 3b — Generating {len(scenes)} clips in parallel...")
+    n_targets = len(target_set)
+    print(f"\n    Step 3b — Generating {n_targets} clip(s) in parallel "
+          f"(of {len(scenes)} total scenes)...")
+
+    # Build an ORDERED list of None-or-coroutine matching scene order, so
+    # the returned results align positionally with `scenes`. Non-target
+    # scenes resolve to None immediately without awaiting an HTTP cascade.
+    async def _noop() -> None:
+        return None
+
     tasks = [
         _generate_one_scene(scene, img_path, i + 1, motions[i], sem)
+        if i in target_set
+        else _noop()
         for i, (scene, img_path) in enumerate(zip(scenes, image_files))
     ]
     results = await asyncio.gather(*tasks)
 
     n_ok     = sum(1 for r in results if r)
-    failed   = [i + 1 for i, r in enumerate(results) if not r]
+    failed   = [i + 1 for i, r in enumerate(results)
+                if not r and i in target_set]
     if failed:
-        print(f"\n    {n_ok}/{len(scenes)} clips succeeded; "
-              f"scenes {failed} will render from static images")
+        print(f"\n    {n_ok}/{n_targets} target clips succeeded; "
+              f"scenes {failed} fell back to Ken Burns")
+    elif n_targets > 0:
+        print(f"\n    All {n_targets} target clips generated successfully")
     else:
-        print(f"\n    All {len(scenes)} clips generated successfully")
+        print(f"\n    No target scenes — all {len(scenes)} use Ken Burns")
     return list(results), image_files
 
 

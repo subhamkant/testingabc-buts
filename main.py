@@ -75,8 +75,12 @@ def _setup_logging(language: str, test_mode: bool) -> object:
 # ── Temp cleanup ──────────────────────────────────────────────────────────────
 
 def cleanup_temp():
+    # 2026-06-02: tolerate Windows file-locks from lingering ffmpeg
+    # subprocesses (e.g., a prior smoke that crashed mid-subtitle-pass
+    # left handles open on temp/clips/*.mp4). Best-effort deletion;
+    # locked files are kept and overwritten on the next pass.
     if os.path.exists("temp"):
-        shutil.rmtree("temp")
+        shutil.rmtree("temp", ignore_errors=True)
     for d in ["temp/audio", "temp/images", "temp/clips"]:
         os.makedirs(d, exist_ok=True)
     os.makedirs("output", exist_ok=True)
@@ -415,8 +419,24 @@ async def run_pipeline(language: str = "en", test_mode: bool = False, test_uploa
 
             if _ai_clips_available:
                 try:
+                    # Phase 11 retention refactor 2026-06-02: WAN_HOOK_ONLY=true
+                    # restricts Wan-2.1-I2V to scene 0 only (the t=0 hook
+                    # window). Scenes 1+ use Ken Burns, saving provider quota
+                    # and keeping Wan focused where motion-pursuit attention
+                    # matters. Set WAN_HOOK_ONLY=false to restore legacy
+                    # (try every scene).
+                    wan_hook_only = os.environ.get(
+                        "WAN_HOOK_ONLY", "true"
+                    ).strip().lower() != "false"
                     print("\nStep 3 — Generating AI video clips...")
-                    clip_files, ref_images = await generate_video_clips(script["scenes"])
+                    if wan_hook_only:
+                        clip_files, ref_images = await generate_video_clips(
+                            script["scenes"], scene_indices=[0],
+                        )
+                    else:
+                        clip_files, ref_images = await generate_video_clips(
+                            script["scenes"],
+                        )
                     n_ai = sum(1 for c in clip_files if c)
                     if n_ai == 0:
                         print("    All AI clip providers failed — using full static-image pipeline")
@@ -489,7 +509,13 @@ async def run_pipeline(language: str = "en", test_mode: bool = False, test_uploa
         elif _burn_subs and video_path and os.path.exists(video_path):
             print("\nStep 4b — Burning word-level subtitles via Groq Whisper...")
             try:
-                apply_subtitles(video_path, audio_path, language)
+                # Phase 11 retention refactor 2026-06-02: pass hook_title so
+                # the subtitle pass also overlays the t=0 title card + the
+                # hook-anchor SFX (both gated internally).
+                apply_subtitles(
+                    video_path, audio_path, language,
+                    hook_title=script.get("hook_title", ""),
+                )
             except Exception as sub_err:
                 print(f"    Subtitles failed (non-fatal): {sub_err}")
             # Cache the final video regardless of subtitle success/failure
@@ -684,8 +710,24 @@ async def run_krishna_speech(test_mode: bool = False, test_upload: bool = False)
 
             if _ai_clips_available:
                 try:
+                    # Phase 11 retention refactor 2026-06-02: WAN_HOOK_ONLY=true
+                    # restricts Wan-2.1-I2V to scene 0 only (the t=0 hook
+                    # window). Scenes 1+ use Ken Burns, saving provider quota
+                    # and keeping Wan focused where motion-pursuit attention
+                    # matters. Set WAN_HOOK_ONLY=false to restore legacy
+                    # (try every scene).
+                    wan_hook_only = os.environ.get(
+                        "WAN_HOOK_ONLY", "true"
+                    ).strip().lower() != "false"
                     print("\nStep 3 — Generating AI video clips...")
-                    clip_files, ref_images = await generate_video_clips(script["scenes"])
+                    if wan_hook_only:
+                        clip_files, ref_images = await generate_video_clips(
+                            script["scenes"], scene_indices=[0],
+                        )
+                    else:
+                        clip_files, ref_images = await generate_video_clips(
+                            script["scenes"],
+                        )
                     n_ai = sum(1 for c in clip_files if c)
                     if n_ai == 0:
                         print("    All AI clip providers failed — using full static-image pipeline")
@@ -737,7 +779,12 @@ async def run_krishna_speech(test_mode: bool = False, test_upload: bool = False)
         elif _burn_subs and video_path and os.path.exists(video_path):
             print("\nStep 4b — Burning word-level subtitles via Groq Whisper...")
             try:
-                apply_subtitles(video_path, audio_path, "hi")
+                # Krishna series — hook_title not generated by Krishna LLM
+                # path yet; pass empty so title card is skipped gracefully.
+                apply_subtitles(
+                    video_path, audio_path, "hi",
+                    hook_title=script.get("hook_title", ""),
+                )
             except Exception as sub_err:
                 print(f"    Subtitles failed (non-fatal): {sub_err}")
             if os.path.exists(video_path):
@@ -1101,7 +1148,12 @@ async def run_whatif_phase(language: str, test_mode: bool = False, test_upload: 
         elif _burn_subs and video_path and os.path.exists(video_path):
             print(f"\nStep 3c [{language}] — Subtitles...")
             try:
-                apply_subtitles(video_path, audio_path, language)
+                # WhatIf series — hook_title not generated by WhatIf LLM
+                # path yet; pass empty so title card is skipped gracefully.
+                apply_subtitles(
+                    video_path, audio_path, language,
+                    hook_title=script.get("hook_title", ""),
+                )
             except Exception as sub_err:
                 print(f"    Subtitles failed (non-fatal): {sub_err}")
             if os.path.exists(video_path):
