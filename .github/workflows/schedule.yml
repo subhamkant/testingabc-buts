@@ -1,12 +1,11 @@
 name: Mahabharata YouTube Bot
 
 on:
-  # SCHEDULE TEMPORARILY REMOVED 2026-06-01 for manual trigger run.
-  # Prevents any potentially-queued GHA cron from firing alongside the
-  # manual workflow_dispatch (dual-fire risk avoidance).
-  # Re-add when ready:
-  #   schedule:
-  #     - cron: "0 12 * * *"   # 5:30 PM IST nominal, ~6 PM IST publish target
+  # Re-enabled 2026-06-03 after the Phase 11 retention refactor commit
+  # (5109a06) landed. Cron disable was temporary for the 2026-06-01
+  # manual trigger; missed renders on 6-02 and 6-03 cron windows.
+  schedule:
+    - cron: "0 12 * * *"   # 5:30 PM IST nominal, ~6 PM IST publish target
   workflow_dispatch:
     inputs:
       target:
