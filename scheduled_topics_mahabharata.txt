@@ -1,9 +1,16 @@
 # Manual topic queue.
-# Cross-arc validation render #2 (Phase 4 unlock gate):
-# Karna arc position #1 — Draupadi's swayamvara rejection.
-# Tests identity-wound register (public humiliation, social
-# caste rupture). Different emotional axis from Karna #6 Kunti
-# meeting (mother-abandonment) — verifies Phase 2/3 holds across
-# distinct Karna-arc emotional moments.
-# Forced-topic path produces episode_n = len(used)+1, expected
-# ~#18 (clean continuation from yesterday's #17).
+# Phase 12 (2026-06-03) pivot render: break the 5-consecutive-Karna streak
+# that crashed views from ~600 to 63. Skip ahead to Draupadi Arc #4, episode
+# 1 (vastraharan) — most explosive psychological pivot away from Karna's
+# rejection theme + biggest visual pivot away from amber-bronze warrior
+# close-ups (Draupadi palette = firelit crimson + saffron court grandeur).
+# After this consumes the line, the new round-robin in _pick_next_arc_topic
+# takes over → next cron picks Yudhishthira (Arc #5), then Eklavya, etc.
+# Forced-topic path now produces stable per-arc episode_n via
+# _stable_episode_n(arc_idx=3, topic_idx=0) = 41 → "Mahabharata #41: ..."
+#
+# 2026-06-03 (post-smoke): Draupadi pivot already published (smoke + manual
+# cron run 26841248041). DO NOT re-render Draupadi tomorrow — per user
+# directive let the new round-robin in _pick_next_arc_topic() pass the torch
+# to the next character (Yudhishthira / Eklavya / Ashwatthama / etc.). The
+# queue is intentionally empty so the cron falls through to round-robin.

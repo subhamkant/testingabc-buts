@@ -2,6 +2,7 @@ import subprocess
 import json
 import os
 import random
+import hashlib
 
 
 # ── Constants ─────────────────────────────────────────────────────────────────
@@ -79,6 +80,153 @@ _TEMP_ROOT = os.environ.get("PIPELINE_TEMP_ROOT", "temp")
 # of bed audio before narration starts. If these drift, audio + video desync
 # at the climax. Keep them numerically identical.
 COLD_OPEN_DURATION_S = 0.8
+
+
+def extract_thumbnail_from_video(video_path: str, timestamp_s: float,
+                                  output_path: str) -> str:
+    """
+    v2 Shorts (7f): extract a single frame from `video_path` at `timestamp_s`
+    seconds and save as JPEG to `output_path`. Replaces the separate FLUX
+    thumbnail generation for Shorts — the thumbnail is literally a frame
+    from the video, so it never misleads viewers and never feels fake.
+
+    FFmpeg seek strategy: place `-ss` BEFORE `-i` for fast (keyframe-aligned)
+    seek; combined with `-frames:v 1 -q:v 2` (high quality JPEG, scale 1-31,
+    lower = better) and `-an` (drop audio). Falls back to slow-seek (-ss
+    after -i) if fast-seek lands on a black/transition frame.
+
+    Returns the output_path on success. Raises FileNotFoundError if the
+    source video doesn't exist; raises RuntimeError on FFmpeg failure.
+    """
+    if not os.path.exists(video_path):
+        raise FileNotFoundError(f"video not found: {video_path}")
+    os.makedirs(os.path.dirname(output_path) or ".", exist_ok=True)
+
+    # Fast-seek attempt (most efficient — seeks to nearest keyframe before timestamp)
+    cmd = [
+        "ffmpeg", "-y",
+        "-ss", f"{timestamp_s:.3f}",
+        "-i", video_path,
+        "-frames:v", "1",
+        "-q:v", "2",
+        "-an",
+        output_path,
+    ]
+    result = subprocess.run(cmd, capture_output=True)
+    if result.returncode == 0 and os.path.exists(output_path) and os.path.getsize(output_path) > 4096:
+        return output_path
+
+    # Fallback: slow seek (frame-accurate) — -ss after -i. Slower but exact.
+    cmd_slow = [
+        "ffmpeg", "-y",
+        "-i", video_path,
+        "-ss", f"{timestamp_s:.3f}",
+        "-frames:v", "1",
+        "-q:v", "2",
+        "-an",
+        output_path,
+    ]
+    result = subprocess.run(cmd_slow, capture_output=True)
+    if result.returncode != 0:
+        tail = (result.stderr.decode("utf-8", errors="replace") or "")[-400:]
+        raise RuntimeError(f"thumbnail extraction failed at {timestamp_s:.2f}s:\n{tail}")
+    return output_path
+
+
+def apply_thumbnail_text_overlay(
+    image_path: str,
+    text: str,
+    *,
+    color: str = "#FFD60A",  # warning yellow (Apple "yellow" system color)
+    stroke_color: str = "#000000",
+    stroke_width_pct: float = 0.012,  # stroke as % of font size
+    font_path: str | None = None,
+    angle_deg: float = -4.0,
+    bottom_margin_pct: float = 0.18,  # text sits ~18% up from bottom (above YT UI overlay)
+    max_width_pct: float = 0.90,
+    output_path: str | None = None,
+) -> str:
+    """Overlay bold scroll-stopping text on a Shorts thumbnail. The font is
+    auto-sized to fill `max_width_pct` of the image width. Text is angled
+    slightly (algorithmic visual interrupt) and outlined with a heavy black
+    stroke so it stays legible on any background.
+
+    Designed for the v3 thumbnail pack — pulls a 2-4 word punchy phrase from
+    metadata.json (e.g. "EARTH IS FUEL", "TUMHARI AUKAAT NAHI") and burns
+    it onto the FFmpeg-extracted frame so the thumbnail looks like a real
+    designer made it, not an AI auto-extraction.
+
+    Falls back to Arial Bold if Impact isn't available. Writes to
+    `output_path` (default: overwrite `image_path`).
+    """
+    try:
+        from PIL import Image, ImageDraw, ImageFont
+    except ImportError as e:
+        raise RuntimeError(f"Pillow required for thumbnail overlay: {e}")
+
+    if output_path is None:
+        output_path = image_path
+
+    # Font cascade — first available wins
+    font_candidates = (
+        [font_path] if font_path else [
+            "C:/Windows/Fonts/impact.ttf",       # Impact — first choice (per v3 spec)
+            "C:/Windows/Fonts/arialbd.ttf",      # Arial Bold — fallback
+            "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",  # Linux fallback
+        ]
+    )
+    font_file = next((f for f in font_candidates if f and os.path.exists(f)), None)
+    if not font_file:
+        raise RuntimeError(f"No font found. Tried: {font_candidates}")
+
+    img = Image.open(image_path).convert("RGBA")
+    W, H = img.size
+
+    # Auto-size font so text fills max_width_pct of image width
+    target_w = int(W * max_width_pct)
+    # Binary search for font size — start at 10% of image height
+    lo, hi = 16, int(H * 0.22)
+    best_size = lo
+    txt_upper = text.upper()  # all-caps thumbnail style
+    while lo <= hi:
+        mid = (lo + hi) // 2
+        font = ImageFont.truetype(font_file, mid)
+        # Pillow ≥10: getbbox returns (l, t, r, b); width = r - l
+        bbox = font.getbbox(txt_upper)
+        w = bbox[2] - bbox[0]
+        if w <= target_w:
+            best_size = mid
+            lo = mid + 1
+        else:
+            hi = mid - 1
+    font = ImageFont.truetype(font_file, best_size)
+    stroke_width = max(2, int(best_size * stroke_width_pct))
+
+    # Render text on a transparent overlay layer, THEN rotate, THEN paste
+    bbox = font.getbbox(txt_upper)
+    text_w = bbox[2] - bbox[0]
+    text_h = bbox[3] - bbox[1]
+    pad = stroke_width * 3
+    overlay = Image.new("RGBA", (text_w + pad * 2, text_h + pad * 2), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(overlay)
+    draw.text(
+        (pad - bbox[0], pad - bbox[1]),
+        txt_upper,
+        font=font,
+        fill=color,
+        stroke_width=stroke_width,
+        stroke_fill=stroke_color,
+    )
+    overlay = overlay.rotate(angle_deg, resample=Image.BICUBIC, expand=True)
+    OW, OH = overlay.size
+
+    # Position: horizontally centered, vertically bottom_margin_pct from bottom
+    x = (W - OW) // 2
+    y = H - int(H * bottom_margin_pct) - OH // 2
+
+    img.paste(overlay, (x, y), overlay)
+    img.convert("RGB").save(output_path, "JPEG", quality=92)
+    return output_path
 
 
 # ── Audio helpers ─────────────────────────────────────────────────────────────
@@ -438,17 +586,32 @@ def _write_final_video(clip_paths: list, clip_durations: list, output_path: str)
 
 # ── Cinematic polish layer (LUT + light-leak overlay + camera shake) ─────────
 
-def _pick_lut() -> str:
-    """Pick a random .cube LUT from assets/luts/. Returns path or empty string."""
+def _pick_lut(character_key: str = "") -> str:
+    """Pick a .cube LUT from assets/luts/. Phase 12 (2026-06-03): when
+    `character_key` is provided (e.g. "द्रौपदी"), the pick is deterministic
+    per character AND stable across processes — uses hashlib.md5 because
+    Python's built-in hash() is randomized per-interpreter (PYTHONHASHSEED),
+    which would break daily-cron consistency since each GHA container starts
+    a fresh Python process. Same character → same LUT every render → visible
+    color consistency within an arc + visible color diversity across arcs.
+
+    Falls back to random.choice when character_key is empty (legacy callers,
+    non-arc topics)."""
     lut_dir = "assets/luts"
     if not os.path.isdir(lut_dir):
         return ""
-    cubes = [
+    cubes = sorted(
         os.path.join(lut_dir, f)
         for f in os.listdir(lut_dir)
         if f.lower().endswith(".cube")
-    ]
-    return random.choice(cubes) if cubes else ""
+    )
+    if not cubes:
+        return ""
+    if character_key:
+        digest = hashlib.md5(character_key.encode("utf-8")).hexdigest()
+        stable_idx = int(digest, 16) % len(cubes)
+        return cubes[stable_idx]
+    return random.choice(cubes)
 
 
 def _pick_overlay(kind: str = "lightleaks") -> str:
@@ -478,7 +641,7 @@ def _shake_active_expr(boundaries: list, window: float = 0.30) -> str:
     return "(" + "+".join(parts) + ")"
 
 
-def _apply_cinematic_polish(video_path: str, clip_durations: list, series: str = "mahabharata") -> None:
+def _apply_cinematic_polish(video_path: str, clip_durations: list, series: str = "mahabharata", character_key: str = "") -> None:
     """
     Final polish pass: camera shake at scene boundaries → 3D LUT grade →
     light-leak overlay (screen blend) → optional FPS bump. In-place modify.
@@ -500,7 +663,7 @@ def _apply_cinematic_polish(video_path: str, clip_durations: list, series: str =
     overlapping). Set CINEMATIC_LIGHT_LEAK=true to re-enable if you decide
     the polish-layer look is worth the ghost risk.
     """
-    lut        = "" if series == "explainer" else _pick_lut()
+    lut        = "" if series == "explainer" else _pick_lut(character_key=character_key)
     # Light-leak overlay: gated by env var, default OFF to suppress the
     # ghost/double-exposure at scene boundaries.
     leak_enabled = os.environ.get("CINEMATIC_LIGHT_LEAK", "false").lower() in ("1", "true", "yes")
@@ -1470,8 +1633,8 @@ def _apply_background_music(output_path: str, series: str = "mahabharata"):
         # Seed chunking off the output_path basename — deterministic per-video,
         # but different across re-renders / different scenes.
         seed_int = abs(hash(os.path.basename(output_path))) % (2**31)
-        candidate = "temp/_chunked_music.mp3"
-        os.makedirs("temp", exist_ok=True)
+        candidate = f"{_TEMP_ROOT}/_chunked_music.mp3"
+        os.makedirs(_TEMP_ROOT, exist_ok=True)
         chunk_schedule = _build_chunked_music_track(music_path, candidate, video_duration, seed_int)
         if chunk_schedule:
             chunked_music_path = candidate
@@ -1490,17 +1653,19 @@ def _apply_background_music(output_path: str, series: str = "mahabharata"):
     # reduction of ~10% so narration carries the emotion and music sits
     # under it. Music's job is atmosphere; narration is the protagonist.
     #
-    #   Window                  Tier1   T1.5    T1.5.b  T1.5.c (now, 2026-05-23)
-    #   0-3s (mystery)          0.060   0.055   0.050   0.042
-    #   3-8s (tension)          0.080   0.075   0.067   0.057
-    #   8 → valley_start (emot) 0.100   0.095   0.085   0.072
-    #   VALLEY window           —       0.040   0.048   0.041
-    #   post-valley (climax)    0.130   0.110   0.098   0.083
+    #   Window                  Tier1   T1.5    T1.5.b  T1.5.c  T1.5.d (now, 2026-06-03)
+    #   0-3s (mystery)          0.060   0.055   0.050   0.042   0.043
+    #   3-8s (tension)          0.080   0.075   0.067   0.057   0.059
+    #   8 → valley_start (emot) 0.100   0.095   0.085   0.072   0.074
+    #   VALLEY window           —       0.040   0.048   0.041   0.042
+    #   post-valley (climax)    0.130   0.110   0.098   0.083   0.086
     #
-    # Tier 1.5.c (2026-05-23): another -15% across the board per user
-    # feedback that music still felt prominent against narration. The
-    # curve shape (mystery → tension → emotion → valley dip → climax)
-    # is preserved; only the overall ceiling shifts down.
+    # Tier 1.5.d (2026-06-03): +~3% across the board per Phase 12 review.
+    # User watched the first Draupadi render and confirmed cinematic
+    # strings sat slightly under Charon's voice — bumping the floor so
+    # the orchestral track drives more background energy without
+    # overpowering narration. Still well under the Tier 1.5.b/Tier 1.0
+    # baselines that the user previously found too loud.
     #
     # Sidechain still tightened: attack 80ms, release 450ms, ratio 7.
     valley_end_t   = max(8.0, video_duration - 7.0)   # ~7s of climax tail
@@ -1509,11 +1674,11 @@ def _apply_background_music(output_path: str, series: str = "mahabharata"):
     # but loud enough to not read as broken silence on mobile speakers in
     # noisy environments.
     music_volume_expr = (
-        f"if(lt(t,3),0.042,"
-        f"if(lt(t,8),0.057,"
-        f"if(lt(t,{valley_start_t:.2f}),0.072,"
-        f"if(lt(t,{valley_end_t:.2f}),0.041,"
-        f"0.083))))"
+        f"if(lt(t,3),0.043,"
+        f"if(lt(t,8),0.059,"
+        f"if(lt(t,{valley_start_t:.2f}),0.074,"
+        f"if(lt(t,{valley_end_t:.2f}),0.042,"
+        f"0.086))))"
     )
     # Build the filter graph + ffmpeg input list. If chunking is active AND
     # the ambient bed exists, layer the bed as a 3rd input ([2:a]) at flat
@@ -1566,7 +1731,7 @@ def _apply_background_music(output_path: str, series: str = "mahabharata"):
     if result.returncode == 0:
         os.replace(music_output, output_path)
         print(f"    [OK] Music mixed (5-section curve w/ valley dip: "
-              f"0.050→0.067→0.085→[VALLEY {valley_start_t:.1f}-{valley_end_t:.1f}s @ 0.048]→0.098, "
+              f"0.043→0.059→0.074→[VALLEY {valley_start_t:.1f}-{valley_end_t:.1f}s @ 0.042]→0.086, "
               f"sidechain a80/r450/ratio7) + audio normalized ({audio_chain})")
         # In continuous mode the ambient bed isn't mixed in, so report it as
         # not active rather than showing a misleading file path.
@@ -2164,7 +2329,7 @@ def assemble_video_continuous_audio(
     `series` controls per-series audio finalization (krishna gets LRA=14
     to preserve emotional dynamic range; others use LRA=7)."""
     os.makedirs("output", exist_ok=True)
-    os.makedirs("temp/clips", exist_ok=True)
+    os.makedirs(f"{_TEMP_ROOT}/clips", exist_ok=True)
 
     n = len(image_files)
     audio_duration = get_audio_duration(audio_path)
@@ -2215,7 +2380,7 @@ def assemble_video_continuous_audio(
     for i, (imgs, dur) in enumerate(zip(image_files, durations)):
         if isinstance(imgs, str):
             imgs = [imgs]
-        silent_path = f"temp/clips/silent_{i:02d}.mp4"
+        silent_path = f"{_TEMP_ROOT}/clips/silent_{i:02d}.mp4"
         intensity = _scene_intensity(i)
         tag = ""
         if n >= 4 and i == n - 3:
@@ -2240,7 +2405,7 @@ def assemble_video_continuous_audio(
         climax_idx, _src = _pick_cold_open_scene_idx(cold_open_moods, n)
         climax_imgs = image_files[climax_idx]
         climax_first = climax_imgs[0] if isinstance(climax_imgs, list) else climax_imgs
-        cold_open_path = "temp/clips/silent_cold_open.mp4"
+        cold_open_path = f"{_TEMP_ROOT}/clips/silent_cold_open.mp4"
         if _make_freeze_clip(climax_first, COLD_OPEN_S, cold_open_path):
             silent_paths = [cold_open_path] + silent_paths
             durations    = [COLD_OPEN_S] + list(durations)
@@ -2252,7 +2417,7 @@ def assemble_video_continuous_audio(
             durations[0] += SCENE_0_TRIM
             print(f"    [Phase 24] Cold-open prepend FAILED; falling back to original scene-1 cold open")
 
-    silent_full = "temp/clips/silent_full.mp4"
+    silent_full = f"{_TEMP_ROOT}/clips/silent_full.mp4"
     if not _build_silent_video_with_xfades(silent_paths, durations, silent_full):
         return output_path
     if not _mux_continuous_audio(silent_full, audio_path, output_path):
@@ -2271,7 +2436,10 @@ def assemble_video_continuous_audio(
     if len(scene_moods) == n:
         _inject_scene_boundary_sfx(output_path, original_durations, scene_moods)
 
-    _apply_cinematic_polish(output_path, original_durations)
+    _apply_cinematic_polish(
+        output_path, original_durations,
+        character_key=script_data.get("arc_character_devanagari", ""),
+    )
     _apply_background_music(output_path, series=series)
     _apply_phase3_overlays(output_path)
     _enforce_max_duration(output_path, original_durations)
@@ -2297,7 +2465,7 @@ def assemble_from_video_clips_continuous_audio(
     reference-image list returned by `generate_video_clips` as
     `fallback_images` to enable this."""
     os.makedirs("output", exist_ok=True)
-    os.makedirs("temp/clips", exist_ok=True)
+    os.makedirs(f"{_TEMP_ROOT}/clips", exist_ok=True)
 
     n = len(clip_files)
     audio_duration = get_audio_duration(audio_path)
@@ -2330,7 +2498,7 @@ def assemble_from_video_clips_continuous_audio(
 
     silent_paths = []
     for i, (clip, dur) in enumerate(zip(clip_files, durations)):
-        silent_path = f"temp/clips/silent_clip_{i:02d}.mp4"
+        silent_path = f"{_TEMP_ROOT}/clips/silent_clip_{i:02d}.mp4"
         if clip:
             print(f"    AI clip {i+1}/{n} silent ({dur:.2f}s)...")
             _make_silent_video_scene_clip(clip, silent_path, dur)
@@ -2348,7 +2516,7 @@ def assemble_from_video_clips_continuous_audio(
             raise RuntimeError(f"Silent scene {i+1} missing — FFmpeg produced no output")
         silent_paths.append(silent_path)
 
-    silent_full = "temp/clips/silent_full.mp4"
+    silent_full = f"{_TEMP_ROOT}/clips/silent_full.mp4"
     if not _build_silent_video_with_xfades(silent_paths, durations, silent_full):
         return output_path
     if not _mux_continuous_audio(silent_full, audio_path, output_path):
@@ -2364,7 +2532,10 @@ def assemble_from_video_clips_continuous_audio(
     if len(scene_moods) == n:
         _inject_scene_boundary_sfx(output_path, durations, scene_moods)
 
-    _apply_cinematic_polish(output_path, durations)
+    _apply_cinematic_polish(
+        output_path, durations,
+        character_key=script_data.get("arc_character_devanagari", ""),
+    )
     _apply_background_music(output_path, series=series)
     _apply_phase3_overlays(output_path)
     _enforce_max_duration(output_path, durations)
@@ -2388,7 +2559,7 @@ def assemble_video(
     Audio streams are concatenated sequentially (no overlap).
     """
     os.makedirs("output", exist_ok=True)
-    os.makedirs("temp/clips", exist_ok=True)
+    os.makedirs(f"{_TEMP_ROOT}/clips", exist_ok=True)
 
     clip_paths     = []
     clip_durations = []
@@ -2398,7 +2569,7 @@ def assemble_video(
         if isinstance(imgs, str):
             imgs = [imgs]
         duration  = get_audio_duration(audio)
-        clip_path = f"temp/clips/clip_{i:02d}.mp4"
+        clip_path = f"{_TEMP_ROOT}/clips/clip_{i:02d}.mp4"
         print(f"    Scene {i+1}/{len(pairs)} ({duration:.1f}s, {len(imgs)} shots)...")
         _make_scene_clip(imgs, audio, clip_path, duration)
         clip_paths.append(clip_path)
@@ -2412,7 +2583,10 @@ def assemble_video(
     size_mb = os.path.getsize(output_path) / (1024 * 1024)
     print(f"    [OK] Video assembled -> {output_path}  ({size_mb:.1f} MB)")
 
-    _apply_cinematic_polish(output_path, clip_durations)
+    _apply_cinematic_polish(
+        output_path, clip_durations,
+        character_key=script_data.get("arc_character_devanagari", ""),
+    )
     _apply_background_music(output_path)
     _apply_phase3_overlays(output_path)
     _enforce_max_duration(output_path, clip_durations)
@@ -2430,7 +2604,7 @@ def assemble_from_video_clips(
     Assembles portrait MP4 from AI video clips (Kling / Hailuo) + TTS audio.
     """
     os.makedirs("output", exist_ok=True)
-    os.makedirs("temp/clips", exist_ok=True)
+    os.makedirs(f"{_TEMP_ROOT}/clips", exist_ok=True)
 
     processed_paths     = []
     processed_durations = []
@@ -2438,7 +2612,7 @@ def assemble_from_video_clips(
 
     for i, (clip, audio) in enumerate(pairs):
         duration       = get_audio_duration(audio)
-        processed_path = f"temp/clips/processed_{i:02d}.mp4"
+        processed_path = f"{_TEMP_ROOT}/clips/processed_{i:02d}.mp4"
         print(f"    Processing clip {i+1}/{len(pairs)} ({duration:.1f}s)...")
         _make_video_scene_clip(clip, audio, processed_path, duration)
         if not os.path.exists(processed_path):
@@ -2454,7 +2628,10 @@ def assemble_from_video_clips(
     size_mb = os.path.getsize(output_path) / (1024 * 1024)
     print(f"    [OK] Video assembled -> {output_path}  ({size_mb:.1f} MB)")
 
-    _apply_cinematic_polish(output_path, processed_durations)
+    _apply_cinematic_polish(
+        output_path, processed_durations,
+        character_key=script_data.get("arc_character_devanagari", ""),
+    )
     _apply_background_music(output_path)
     _apply_phase3_overlays(output_path)
     _enforce_max_duration(output_path, processed_durations)

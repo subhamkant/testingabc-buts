@@ -257,6 +257,44 @@ def _load_used_topics() -> set[str]:
         return set()
 
 
+def _last_used_arc_index() -> int | None:
+    """Phase 12 (2026-06-03). Return the arc index whose topic appears LAST
+    in recent_topics.json. Returns None if recent_topics.json is empty / the
+    most-recent topic matches no arc. Caller uses this to start the round-
+    robin walk one arc AFTER the most-recent character — guarantees no two
+    consecutive renders share a character."""
+    try:
+        with open(_RECENT_TOPICS_FILE, encoding="utf-8") as f:
+            entries = json.load(f).get("mahabharata", [])
+    except Exception:
+        return None
+    if not entries:
+        return None
+    last_topic = entries[-1].get("topic", "")
+    if not last_topic:
+        return None
+    for arc_idx, arc in enumerate(_load_arcs()):
+        if last_topic in arc.get("topics", []):
+            return arc_idx
+    return None
+
+
+def _stable_episode_n(arc_idx: int, topic_idx: int) -> int:
+    """Phase 12 (2026-06-03). Stable per-arc episode number — survives the
+    round-robin rotation so the same (character, episode) always emits the
+    same #N regardless of when it's rendered.
+
+      arc 0 (Karna)    -> 11..17
+      arc 1 (Bhishma)  -> 21..27
+      arc 2 (Arjuna)   -> 31..37
+      arc 3 (Draupadi) -> 41..47
+      arc 4 (Yudhi)    -> 51..57
+      arc 5 (Eklavya)  -> 61..67
+      arc 6 (Ashwa)    -> 71..77
+    """
+    return (arc_idx + 1) * 10 + (topic_idx + 1)
+
+
 def _pick_next_arc_topic() -> tuple[str, int, str, str | None] | None:
     """
     Walk character arcs sequentially, picking the first topic NOT in
@@ -299,12 +337,22 @@ def _pick_next_arc_topic() -> tuple[str, int, str, str | None] | None:
     # Stage 2 dedup data — fetched once per process. Returns [] on any error.
     published_sigs = fetch_recent_title_signatures()
 
-    global_n = 0
+    # Phase 12 round-robin (2026-06-03): rotate the arc walk start position
+    # so consecutive renders never share a character. Falls back to index-0
+    # start when recent_topics.json is empty (first-ever render).
+    last_arc = _last_used_arc_index()
+    start = ((last_arc + 1) % len(arcs)) if last_arc is not None else 0
+    arc_order_with_idx = [
+        ((start + i) % len(arcs), arcs[(start + i) % len(arcs)])
+        for i in range(len(arcs))
+    ]
+    print(f"    [rotation] last arc={last_arc}, starting walk at arc index {start} "
+          f"({arc_order_with_idx[0][1].get('name', '?')})")
+
     runtime_skipped = []
-    for arc in arcs:
+    for arc_idx, arc in arc_order_with_idx:
         arc_topics = arc.get("topics", [])
         for idx, topic in enumerate(arc_topics):
-            global_n += 1
             if topic in used:
                 continue
             if published_sigs and topic_overlaps_published(topic, published_sigs):
@@ -323,7 +371,7 @@ def _pick_next_arc_topic() -> tuple[str, int, str, str | None] | None:
             if runtime_skipped:
                 print(f"    [runtime-dedup] skipped {len(runtime_skipped)} arc "
                       f"topic(s) due to title overlap with published videos")
-            return topic, global_n, arc.get("name", ""), next_topic
+            return topic, _stable_episode_n(arc_idx, idx), arc.get("name", ""), next_topic
     return None
 
 
@@ -2495,18 +2543,22 @@ def generate_script(
         # workflow_dispatch overrides) benefit from the binge mechanic.
         arcs = _load_arcs()
         used = _load_used_topics()
-        for arc in arcs:
+        for arc_idx, arc in enumerate(arcs):
             topics_list = arc.get("topics", [])
             if forced_topic in topics_list:
                 arc_name = arc.get("name", "")
                 idx = topics_list.index(forced_topic)
+                # Phase 12 (2026-06-03) — give forced-topic renders the same
+                # stable per-arc episode_n as round-robin picks. Otherwise the
+                # fallback `len(used)+1` would emit a confusing global counter
+                # that contradicts the per-arc numbering on every other render.
+                episode_n = _stable_episode_n(arc_idx, idx)
                 # Look ahead for the next unused topic in this arc
                 for ahead in topics_list[idx + 1:]:
                     if ahead not in used:
                         next_episode_teaser = ahead
                         break
-                # episode_n stays None → falls back to len(used)+1 below
-                print(f"    [arc-forced] matched {arc_name} — cliffhanger eligible")
+                print(f"    [arc-forced] matched {arc_name} — episode {episode_n}, cliffhanger eligible")
                 if next_episode_teaser:
                     print(f"    [cliffhanger] next_episode_teaser: {next_episode_teaser[:80]}")
                 break
@@ -2533,13 +2585,25 @@ def generate_script(
     # shuffling within an arc. Forced/fallback topics get empty fingerprint
     # and the block is omitted from the prompt.
     emotional_fingerprint = ""
+    arc_character_devanagari = ""  # Phase 12 (2026-06-03): drives _CHARACTER_PALETTE
     if arc_name:
         for _arc in _load_arcs():
             if _arc.get("name") == arc_name:
                 emotional_fingerprint = _arc.get("emotional_fingerprint", "")
+                arc_character_devanagari = _arc.get("character", "")
                 break
         if emotional_fingerprint:
             print(f"    [fingerprint] {arc_name}: {emotional_fingerprint}")
+
+    # Phase 12 (2026-06-03) — per-character palette + lighting directive.
+    # Substituted into the LLM image_prompt template so every per-scene FLUX
+    # prompt inherits the arc's visual signature (Karna=amber, Bhishma=cold
+    # silver, Draupadi=firelit crimson, etc.). Falls back to neutral cinematic
+    # for non-arc topics or unknown characters.
+    from pipeline.image_generator import _character_palette_directive
+    palette_directive = _character_palette_directive(arc_character_devanagari)
+    if arc_character_devanagari:
+        print(f"    [palette] {arc_character_devanagari} -> {palette_directive[:70]}...")
 
     # Episode number string for the title prefix. Arc-driven runs pass a number;
     # forced-topic / random-fallback runs get the next sequential count after
@@ -2733,7 +2797,7 @@ def generate_script(
 
     You must strictly follow all rules and NEVER generate invalid or noisy text.
 
-    TASK: Create a 52-58 second vertical (9:16) video script with EXACTLY 6 scenes about a well-known incident from the Mahabharata. The 52-58s range is REQUIRED — this channel's emotional architecture needs the full hook → escalation → destruction → collapse → aftershock arc. Going shorter cuts the emotional payoff (the collapse phase + aftershock line live in the final 15 seconds — they're the reason viewers come back).
+    TASK: Create a 45-50 second vertical (9:16) video script with EXACTLY 6 scenes about a well-known incident from the Mahabharata. Phase 12 (2026-06-03 v2): the target is 45-50s, with 58s as a HARD ceiling. Per-scene narration is 14-18 words (valley scene 5 is 11-14), totaling 85-110 spoken words. Hindi Charon TTS narrates at ~2.2 words/sec (measured) — going over 18 words/scene pushes audio past 58s and auto-cap chops the aftermath, killing the emotional payload. Generate WITHIN the target so the aftermath survives. Keep the full emotional architecture (hook → escalation → destruction → collapse → aftershock) but make each scene PUNCHIER — fewer words, harder beats. Shorts reward compression.
 
     TOPIC: "{topic}"
     LANGUAGE: {lang_label}
@@ -3539,8 +3603,8 @@ def generate_script(
       "tags": ["topic-specific long-tail tag 1","topic-specific long-tail tag 2","named character 1 (English)","named character 1 (Hindi/Devanagari)","named character 2","specific incident name","viewer-search query like 'why X happened'","Mahabharata","महाभारत","Shorts","Hindu mythology","Krishna","कृष्ण"],
       "scenes": [
         {{
-          "narration": "22-28 words in the specified LANGUAGE — vivid, present-tense, dramatic. MIX of short punch lines and longer cinematic lines (varied rhythm). End each scene with '...' (triple ellipsis) for natural TTS pause. ~7-9 seconds spoken. EXCEPTION: the valley scene (scene 5) is 16-20 words and quiet. iter-4 2026-05-30: word target restored from Day-1's tighter 18-22 to support the full 52-58s emotional architecture (hook → escalation → destruction → collapse → aftershock). Going shorter cuts the emotional payoff.",
-          "image_prompt": "Detailed English prompt, EMOTION-FIRST structure: [Named character's specific facial state — eyes / mouth / posture carrying the scene's emotional truth, e.g. 'Bhishma's eyes shut tight against a tear running down his cheek, jaw clenched white'], [shot type — favor extreme close-up, asymmetric framing, or uncomfortable proximity], in [environment with ≥3 specific architectural/environmental elements: carved pillars, oil lamps, lotus reliefs, etc], [lighting — favor harsh edge lighting / single dramatic source / dim shadow-heavy], [mood], jewel-toned palette. FACE DOMINANCE FLOOR (Phase 1 iter-3 2026-05-29 / Issue #1) — for scenes 1-5 the human face MUST occupy ≥50% of the frame area. Sky / landscape / atmospheric backdrops may not exceed 25% of frame in scenes 1-5. Scene 6 (aftermath) is the ONLY exception — it may use wide landscape composition for emotional emptiness. The face is the scene; the environment is secondary. TEXTURE + IMPERFECTION MANDATES (Phase 1 iter-3 2026-05-29 / Issue #4) — visible film grain on the image (not the smooth FLUX default), imperfect focus (one element may be slightly soft), motion blur on emotional moments (running tears smear, hair displaced mid-turn, hand caught mid-reach), hair caught mid-motion or fabric mid-flow (never frozen-portrait stillness), dust / ash / particles in the light when mood permits. FORBID balanced or centered compositions when the scene's mood is anguish / rage / shock / guilt / grief. FORBID 'magazine quality', 'studio-lit', 'polished AI render', 'wraparound bokeh', 'stock photo elegance', 'commercial photography', 'editorial portrait'. MUST end with: 'clean cinematic frame with no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text.'",
+          "narration": "14-18 words in the specified LANGUAGE — vivid, present-tense, dramatic. MIX of short punch lines and longer cinematic lines (varied rhythm). End each scene with '...' (triple ellipsis) for natural TTS pause. ~5-7 seconds spoken. EXCEPTION: the valley scene (scene 5) is 11-14 words and quiet. Phase 12 2026-06-03 v2: 14-18 words/scene (not 18-22) because Gemini Charon narrates at ~2.2 wps (slower than older 3 wps spec) and the smoke at 18-22 overshot to 66s. Target total ~85-110 spoken words → ~44-50s + ~3.5s outro = 47-53s, NEVER hitting auto-cap. The aftermath survives intact. Pack each beat HARDER, not longer.",
+          "image_prompt": "Detailed English prompt, EMOTION-FIRST structure: [Named character's specific facial state — eyes / mouth / posture carrying the scene's emotional truth, e.g. 'Bhishma's eyes shut tight against a tear running down his cheek, jaw clenched white'], [shot type — favor extreme close-up, asymmetric framing, or uncomfortable proximity], in [environment with ≥3 specific architectural/environmental elements: carved pillars, oil lamps, lotus reliefs, etc], [lighting — favor harsh edge lighting / single dramatic source / dim shadow-heavy], [mood], {palette_directive} (Phase 12 per-character palette — use this color/light signature throughout the scene; do NOT default to warm amber unless the directive explicitly says amber). FACE DOMINANCE FLOOR (Phase 1 iter-3 2026-05-29 / Issue #1) — for scenes 1-5 the human face MUST occupy ≥50% of the frame area. Sky / landscape / atmospheric backdrops may not exceed 25% of frame in scenes 1-5. Scene 6 (aftermath) is the ONLY exception — it may use wide landscape composition for emotional emptiness. The face is the scene; the environment is secondary. TEXTURE + IMPERFECTION MANDATES (Phase 1 iter-3 2026-05-29 / Issue #4) — visible film grain on the image (not the smooth FLUX default), imperfect focus (one element may be slightly soft), motion blur on emotional moments (running tears smear, hair displaced mid-turn, hand caught mid-reach), hair caught mid-motion or fabric mid-flow (never frozen-portrait stillness), dust / ash / particles in the light when mood permits. FORBID balanced or centered compositions when the scene's mood is anguish / rage / shock / guilt / grief. FORBID 'magazine quality', 'studio-lit', 'polished AI render', 'wraparound bokeh', 'stock photo elegance', 'commercial photography', 'editorial portrait'. MUST end with: 'clean cinematic frame with no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text.'",
           "video_prompt": "Cinematic 5-second shot in English — characters in subtle motion, camera movement, lighting. Vertical 9:16.",
           "mood": "3-6 word English emotional tone phrase"
         }}
@@ -3883,7 +3947,7 @@ def generate_script(
     - Tags MUST include topic-specific long-tail keywords (named characters
       in this topic + specific incident name + viewer-search queries) on
       top of the generic Mahabharata fallbacks.
-    - Narration per scene: 22-28 words, varied rhythm (mix short punch + long cinematic), end with "..." for TTS pause, ~7-9 seconds spoken. EXCEPTION: scene 5 (valley) is 16-20 words. iter-4 2026-05-30: word target restored to support the full 52-58s emotional architecture; the Day-1 18-22 tightening was reverted because it cut the collapse phase + aftershock line.
+    - Narration per scene: 14-18 words, varied rhythm (mix short punch + long cinematic), end with "..." for TTS pause, ~6-7 seconds spoken. EXCEPTION: scene 5 (valley) is 11-14 words. Phase 12 2026-06-03 (revised v2): word target tightened to 14-18 because the smoke at 18-22 still overshot — Gemini Charon narrates ~2.2 words/sec (NOT 3 wps as the older spec assumed), with ellipsis pauses adding 0.3-0.4s each. 14-18 words/scene avg × 6 scenes = 96 words × 2.2 wps = ~44s narration + ~3.5s outro = ~47s total, comfortably inside the 50s soft target and the 58s HARD ceiling. NO end-chopping = aftermath survives intact.
     - Narration MUST NOT contain URLs, hashtags (#), @mentions, English in Hindi videos, or any social-media text
     - Generate EXACTLY 6 scenes — never fewer, never more (7-scene scripts overshoot the 60s Shorts cap on Hindi TTS pace)
     - Scene 1 = HOOK, scene 2-3 = setup + RISING TENSION, scene 3 OR 4 = REHOOK (contrast marker), scene 5 = EMOTIONAL VALLEY (intimate quiet), scene 6 = AFTERMATH (emotion AFTER destruction, not spectacle)
@@ -4074,17 +4138,24 @@ def generate_script(
             elif last_short:
                 chosen = (
                     f"Your previous response failed the LENGTH validator "
-                    f"(n_scenes={n_scenes}, avg_words={avg_words:.1f}). The target "
-                    f"is EXACTLY 6 scenes AND 22-28 words per scene (avg in the "
-                    f"22-28 range). Total: ~145-165 spoken words for a 52-58s Short. "
-                    f"Hindi Charon narrates ~3 words/sec — going over 28 words/scene "
-                    f"pushes audio past the 58s cap and the AFTERMATH SCENE + "
-                    f"OUTRO RESIDUE get chopped. The aftermath is the emotional "
-                    f"payload of the entire video — protect it by staying under 28. "
-                    f"EXCEPTION: scene 5 (the emotional valley) is 16-20 words. "
-                    f"Do NOT add a 7th scene to satisfy any other rule; tighten "
-                    f"existing scenes instead. This is TOP PRIORITY — fix scene "
-                    f"count and word count BEFORE any other gate."
+                    f"(n_scenes={n_scenes}, avg_words={avg_words:.1f}). Phase 12 "
+                    f"(2026-06-03 v2) target: EXACTLY 6 scenes AND 14-18 words "
+                    f"per scene (avg in the 14-18 range). Total: ~85-110 spoken "
+                    f"words for a 40-50s Short. Hindi Charon narrates ~2.2 "
+                    f"words/sec (measured empirically — slower than older specs "
+                    f"claimed because every ellipsis adds 0.3-0.4s of pause). "
+                    f"Going over 18 words/scene pushes audio past the 58s HARD "
+                    f"ceiling and the AFTERMATH SCENE + OUTRO RESIDUE get "
+                    f"chopped by auto-cap. The aftermath is the emotional "
+                    f"payload of the entire video — protect it by staying "
+                    f"UNDER 18 avg. EXCEPTION: scene 5 (the emotional valley) "
+                    f"is 11-14 words. Going BELOW 14 average is also a fail — "
+                    f"the collapse phase + aftershock line need at least 85 "
+                    f"words total to land. Do NOT add a 7th scene to satisfy "
+                    f"any other rule; tighten existing scenes instead. This is "
+                    f"TOP PRIORITY — fix scene count and word count BEFORE "
+                    f"any other gate. Each scene must be 14-18 words; pack the "
+                    f"beat HARDER, not longer."
                 )
             elif last_missing_names:
                 scene_list = ", ".join(f"scene {n}" for n in last_missing_names)
@@ -4190,13 +4261,18 @@ def generate_script(
         avg_words = sum(word_counts) / max(len(word_counts), 1)
         n_scenes = len(scenes)
 
-        # Length validator (iter-4 2026-05-30 — RESTORED from 18-22 back to
-        # 22-28 words/scene to land the 52-58s emotional architecture).
-        # The Day-1 18-22 tightening was cutting the COLLAPSE phase +
-        # AFTERSHOCK LINE; iter-4 reverts that mistake. New target produces
-        # ~50s narration + ~5s outro = ~55s total, fitting under the 58s
-        # MAX_DURATION_S cap. Scene 5 (valley) may be lower at 16-20 words.
-        last_short = (n_scenes != 6 or avg_words < 22 or avg_words > 28)
+        # Length validator (Phase 12 2026-06-03 v2 — TIGHTENED FURTHER from
+        # the initial 18-22 to 14-18 words/scene because the smoke at 18-22
+        # still overshot to 66s (auto-cap chopped to 58s, killing aftermath).
+        # Root cause: Gemini Charon narrates ~2.2 wps (NOT 3 wps as older
+        # specs claimed) — every ellipsis adds 0.3-0.4s pause and the LLM
+        # uses them heavily for drama. Updated math: 14-18 avg × 6 scenes
+        # = ~96 words × 2.2 wps = ~44s narration + ~3.5s outro = ~47s
+        # total, comfortably under the 58s MAX_DURATION_S cap with drift
+        # margin. Scene 5 (valley) may be lower at 11-14 words. Going
+        # BELOW 14 average fails — the collapse phase + aftershock need
+        # at least 85 words across all 6 scenes to land emotionally.
+        last_short = (n_scenes != 6 or avg_words < 14 or avg_words > 18)
         # Threshold 4: a character at the centre of the story (Bhishma in a
         # Bhishma video) can appear ~4 times naturally. 5+ times signals that
         # supporting characters and details are being skipped in favour of
@@ -4415,5 +4491,14 @@ def generate_script(
         # Only prepend if not already present (idempotent for retries)
         if not existing_desc.startswith("▶️ अगला भाग:"):
             data["description"] = prefix + existing_desc
+
+    # Phase 12 (2026-06-03) — bake canonical character keys into the script
+    # JSON so downstream consumers (video_assembler's _pick_lut, subtitle
+    # generator, etc.) read from one well-named top-level location instead
+    # of re-deriving from arc_name -> arc.get("character") on every step.
+    # Empty strings for non-arc topics; consumers should treat empty as
+    # "use legacy/random behavior".
+    data["arc_character_devanagari"] = arc_character_devanagari
+    data["arc_character_english"]    = arc_name or ""
 
     return data

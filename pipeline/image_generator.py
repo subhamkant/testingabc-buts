@@ -105,6 +105,59 @@ STYLE_SUFFIX_DIVINE = (
 # prompt (see generate_image_bytes).
 STYLE_SUFFIX = STYLE_SUFFIX_MORTAL
 
+
+# ── Phase 12 per-character palette + lighting (2026-06-03) ──────────────────
+# Replaces the hardcoded warm-amber default in script_generator's image_prompt
+# template. Each arc gets a distinct visual signature so consecutive uploads
+# pass the thumbnail-scroll diversity test — Karna's amber-bronze shadow look
+# stops bleeding into Bhishma's cold restraint, Draupadi's firelit fury, etc.
+#
+# Triggered by: script_generator builds the image_prompt f-string with
+# _character_palette_directive(arc_character_devanagari) substituted in.
+# Result: every per-scene FLUX prompt carries the character's palette inline.
+_CHARACTER_PALETTE = {
+    "कर्ण": {
+        "palette":  "warm amber + bronze, deep shadow, sunset on armor",
+        "lighting": "harsh edge-light from a single sunset source, embers in the foreground",
+    },
+    "भीष्म": {
+        "palette":  "cool silver-blue, restrained, age-weathered",
+        "lighting": "cold moonlight or pre-dawn grey, minimal shadow, no warmth",
+    },
+    "अर्जुन": {
+        "palette":  "heroic gold + cobalt, high saturation, vital",
+        "lighting": "strong key-light, golden-hour, hero composition",
+    },
+    "द्रौपदी": {
+        "palette":  "firelit crimson + saffron, regal red sari, court grandeur",
+        "lighting": "warm torchlight + harsh court interior, contrasted, intense",
+    },
+    "युधिष्ठिर": {
+        "palette":  "solemn candlelit ochre + parchment, contemplative",
+        "lighting": "single oil-lamp source, low-key, moral weight",
+    },
+    "एकलव्य": {
+        "palette":  "forest greens + earth-browns, dappled, untouched by court colors",
+        "lighting": "dappled sunlight through canopy, natural, raw",
+    },
+    "अश्वत्थामा": {
+        "palette":  "blood-red + smoke-grey, fevered, cursed, unstable",
+        "lighting": "flickering firelight, hard shadows, hellish edge",
+    },
+}
+
+
+def _character_palette_directive(character_devanagari: str) -> str:
+    """Phase 12 (2026-06-03). Return a 2-line image-prompt addendum for the
+    given character. Used by script_generator's image_prompt template to
+    override the hardcoded warm-amber default. Falls back to a neutral
+    cinematic line when the character isn't in the lookup (e.g. forced
+    topics outside the 7 main arcs, or krishna direct-address renders)."""
+    entry = _CHARACTER_PALETTE.get((character_devanagari or "").strip())
+    if not entry:
+        return "jewel-toned palette, soft cinematic lighting"
+    return f"{entry['palette']}, {entry['lighting']}"
+
 # WhatIf series style suffixes — picked by `script["visual_style"]`. Mahabharata
 # style does NOT apply to WhatIf scripts; the LLM picks the most suitable style
 # per topic (e.g. dinosaurs -> nature-doc, black hole -> sci-fi-cinematic).
@@ -392,18 +445,61 @@ _SHOT_COMPOSITIONS = [
 # supplies one prompt per shot with a category tag. Each category prepends
 # its own composition directive so FLUX gets a consistent framing per type.
 #
-# v2 used "cinematic / dramatic" framings — every shot looked beautifully
-# composed and FLUX-rendered, brain pattern-matched as AI imagery after a
-# few shots. v4 shifts toward DOCUMENTARY REALISM — security-camera angles,
-# fluorescent / sodium-vapor lighting, slight grain, handheld imperfect
-# framing. The intent: shots read as "leaked / discovered / observed"
-# instead of "beautifully rendered." Brain stops pattern-matching to AI.
-_CATEGORY_PREFIX = {
-    "human":    "candid documentary photograph, ordinary person, fluorescent or natural light, slightly grainy, handheld feel, imperfect framing, no dramatic lighting, ",
-    "system":   "documentary photograph of industrial infrastructure, security camera angle OR handheld investigative shot, fluorescent or sodium-vapor lighting, slightly grainy, no people, no text, no logos, NO cinematic dramatic lighting — feels captured not staged, ",
-    "symbolic": "documentary still-life photograph, observed object in a real setting, natural or fluorescent light, slightly imperfect framing, no dramatic isolation lighting, no people, no text, ",
-    "ui":       "low-fi screen capture from an investigative documentary OR a photographed-off-monitor shot of a news terminal, slight moire or screen glare, looks filmed off a real screen, no logos, no readable proper-noun text, ",
+# Visual-category prefixes — keyed by series, then category. Each series
+# has its own visual brand:
+#   "explainer"  — documentary realism (v4): grainy, fluorescent-lit, handheld,
+#                  "leaked/observed" feel. Anti-cinematic on purpose.
+#   "curiosity"  — premium cinematic (Cleo Abram / Lemmino / Kurzgesagt):
+#                  volumetric lighting, color grading, motion blur, 35mm film.
+#                  OPPOSITE of explainer — beauty-first, awe-evoking.
+_CATEGORY_PREFIX_BY_SERIES = {
+    "explainer": {
+        "human":    "candid documentary photograph, ordinary person, fluorescent or natural light, slightly grainy, handheld feel, imperfect framing, no dramatic lighting, ",
+        "system":   "documentary photograph of industrial infrastructure, security camera angle OR handheld investigative shot, fluorescent or sodium-vapor lighting, slightly grainy, no people, no text, no logos, NO cinematic dramatic lighting — feels captured not staged, ",
+        "symbolic": "documentary still-life photograph, observed object in a real setting, natural or fluorescent light, slightly imperfect framing, no dramatic isolation lighting, no people, no text, ",
+        "ui":       "low-fi screen capture from an investigative documentary OR a photographed-off-monitor shot of a news terminal, slight moire or screen glare, looks filmed off a real screen, no logos, no readable proper-noun text, ",
+    },
+    "curiosity": {
+        # Anti-text guard appears EARLY (front-loaded — FLUX down-weights late tokens)
+        # AND at the end. Specifically lists "no fictional brand names" because
+        # FLUX-schnell hallucinated a fictional "VIPER" logo on spacecraft in the
+        # v2 Short 1 render — generic "no text, no logos" wasn't strong enough.
+        "hero":              "premium cinematic photograph (absolutely no readable text, no fictional brand names, no painted logos, no numbers visible), single dramatic subject, volumetric lighting, atmospheric depth, motion blur on action elements, color graded teal-and-orange or cool moonlight, 35mm film aesthetic, no text, no logos, no signs, ",
+        "environment":       "vast cinematic landscape (absolutely no readable text, no fictional brand names, no painted logos, no signs visible), scale-emphasizing wide angle, dramatic sky or cosmic backdrop, dust or particles in air, golden-hour or moonlight, NASA / National Geographic photography style, no humans, no text, no logos, ",
+        "motion":            "cinematic photograph of motion mid-action (absolutely no readable text, no fictional brand names, no painted logos on any machinery or vehicles) — collapsing or flowing or expanding or disintegrating — slight motion blur, dramatic lighting, dynamic composition, no text, no logos, no signs, ",
+        "tension":           "tight cinematic close-up of an object (absolutely no readable text, no fictional brand names, no painted logos, no readable numbers) implying threat or change, shallow depth of field, harsh side-lighting, single light source, intentionally ominous framing, no people, no text, no logos, ",
+        "aftermath":         "calm cinematic still (absolutely no readable text, no fictional brand names, no painted logos visible) — after-the-event quietness, soft natural light, single subject in a vast empty space, contemplative composition, no people, no text, no logos, ",
+        "human_consequence": "cinematic close-up of a single human in an emotional moment — eyes widening in slow-dawning realization, dilating pupils, a single tear tracing a cheek, parted lips mid-gasp, frozen face mid-thought, an open mouth in silent scream, lashes wet, jaw clenched in dread, brow furrowed in shock — face occupies the frame, shallow depth of field, intense single-source lighting, photoreal skin texture, dramatic emotional weight, NO hands or fingers visible in frame, no text, no logos, no readable numbers, ",
+    },
 }
+
+# Backwards-compat alias for any callers still expecting flat _CATEGORY_PREFIX
+# (the explainer's pre-multi-series shape). New code should use
+# _CATEGORY_PREFIX_BY_SERIES[series][category].
+_CATEGORY_PREFIX = _CATEGORY_PREFIX_BY_SERIES["explainer"]
+
+# Per-series output resolution. Explainer is portrait (Shorts), curiosity is
+# landscape long-form. v2: curiosity also has a Shorts mode (portrait), picked
+# via `mode="shorts"` parameter on generate_images.
+_RESOLUTION_BY_SERIES = {
+    "explainer": (768, 1344),    # portrait 9:16
+    "curiosity": (1920, 1080),   # landscape 16:9 long-form (default for curiosity)
+}
+# v2: per (series, mode) override. mode="shorts" forces portrait Shorts dims.
+_RESOLUTION_BY_SERIES_MODE = {
+    ("curiosity", "shorts"): (1080, 1920),   # portrait 9:16 Shorts (true Shorts dims)
+    ("curiosity", "longform"): (1920, 1080), # landscape 16:9 long-form
+}
+_DEFAULT_RESOLUTION = (768, 1344)  # backwards-compat default (portrait)
+
+
+def _resolution_for(series: str, mode: str = "longform") -> tuple[int, int]:
+    """Pick (width, height) based on series + mode. mode kw added in v2 for
+    Shorts vs long-form on the same series."""
+    key = (series, mode)
+    if key in _RESOLUTION_BY_SERIES_MODE:
+        return _RESOLUTION_BY_SERIES_MODE[key]
+    return _RESOLUTION_BY_SERIES.get(series, _DEFAULT_RESOLUTION)
 
 
 # ─── Hook visual override (Phase 2, 2026-05-17) ──────────────────────────
@@ -1146,7 +1242,7 @@ def generate_image_bytes(prompt: str, seed: int, width: int, height: int,
     raise RuntimeError(f"all image providers failed; last={last_err}")
 
 
-def generate_images(scenes: list, single_shot: bool = False, series: str = "mahabharata", visual_style: str = "", ck=None) -> list:
+def generate_images(scenes: list, single_shot: bool = False, series: str = "mahabharata", visual_style: str = "", ck=None, mode: str = "longform") -> list:
     """
     Generates portrait (768x1344) images per scene.
 
@@ -1247,23 +1343,31 @@ def generate_images(scenes: list, single_shot: bool = False, series: str = "maha
         shot_paths = []
         mood = scene.get("mood", "")
 
-        # ── v2 EXPLAINER FAST PATH ───────────────────────────────────────
-        # When the script supplies a `visual_track` (explainer series), the LLM
-        # has already authored 3 distinct prompts with category tags. Use those
-        # directly with category-specific framing instead of the generic
-        # _SHOT_COMPOSITIONS triplet. This delivers the visual diversity that
-        # the wide/dynamic/closeup pattern can't (every shot was a riff on the
-        # same human-centric image_prompt).
-        if series == "explainer" and isinstance(scene.get("visual_track"), list) and scene["visual_track"]:
+        # ── VISUAL_TRACK FAST PATH (v2 explainer, v5 curiosity) ──────────
+        # When the script supplies a `visual_track` (explainer + curiosity series),
+        # the LLM has already authored per-shot prompts with category tags. Use
+        # those directly with category-specific framing instead of the generic
+        # _SHOT_COMPOSITIONS triplet. The framing prefix is picked from the
+        # series-specific dict so explainer gets documentary-realism cues and
+        # curiosity gets premium-cinematic cues.
+        if (series in ("explainer", "curiosity")
+                and isinstance(scene.get("visual_track"), list)
+                and scene["visual_track"]):
             track = scene["visual_track"]
+            # Per-series category dict + resolution (v2: mode-aware for shorts vs longform)
+            series_categories = _CATEGORY_PREFIX_BY_SERIES.get(
+                series, _CATEGORY_PREFIX_BY_SERIES["explainer"]
+            )
+            default_cat_for_series = next(iter(series_categories))  # first key as fallback
+            img_w, img_h = _resolution_for(series, mode)
             for shot_idx, shot in enumerate(track):
                 if not isinstance(shot, dict):
                     continue
-                cat = shot.get("category", "system")
+                cat = shot.get("category", default_cat_for_series)
                 subject = (shot.get("prompt") or "").strip()
                 if not subject:
                     continue
-                framing = _CATEGORY_PREFIX.get(cat, _CATEGORY_PREFIX["system"])
+                framing = series_categories.get(cat) or series_categories[default_cat_for_series]
                 full_prompt = framing + subject
                 # Seed: stable per (scene, shot, category) so re-runs reproduce
                 seed = i * 211 + shot_idx * 37 + (hash(cat) & 0xFFF)
@@ -1272,20 +1376,21 @@ def generate_images(scenes: list, single_shot: bool = False, series: str = "maha
                 for attempt in range(3):
                     try:
                         img_bytes, provider = generate_image_bytes(
-                            full_prompt, seed=seed, width=768, height=1344,
-                            mood="", style_suffix="",  # explainer has its own LUT downstream
+                            full_prompt, seed=seed, width=img_w, height=img_h,
+                            mood="", style_suffix="",  # series LUT applied downstream
                         )
                         with open(output_path, "wb") as f:
                             f.write(img_bytes)
                         shot_paths.append(output_path)
-                        print(f"    [OK] Scene {i+1} shot {shot_idx+1}/3 ({cat}) via {provider}")
+                        print(f"    [OK] Scene {i+1} shot {shot_idx+1}/{len(track)} "
+                              f"({cat} {img_w}x{img_h}) via {provider}")
                         success = True
                         break
                     except Exception as e:
                         print(f"    [!] Scene {i+1} shot {shot_idx+1} ({cat}) attempt {attempt+1}: {e}")
                     time.sleep((attempt + 1) * 3)
                 if not success:
-                    _create_placeholder(output_path, i * 3 + shot_idx, series=series)
+                    _create_placeholder(output_path, i * len(track) + shot_idx, series=series)
                     shot_paths.append(output_path)
                     print(f"    [~] Placeholder for scene {i+1} shot {shot_idx+1} ({cat})")
                 try:
