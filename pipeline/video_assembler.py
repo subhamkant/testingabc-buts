@@ -1966,7 +1966,13 @@ def _make_boomerang_source(raw_clip_path: str, output_path: str) -> bool:
     return result.returncode == 0 and os.path.exists(output_path)
 
 
-def _make_silent_video_scene_clip(raw_clip_path: str, output_path: str, duration: float):
+def _make_silent_video_scene_clip(
+    raw_clip_path: str,
+    output_path: str,
+    duration: float,
+    scene_index: int = -1,
+    is_ai_clip: bool = False,
+):
     """Process AI clip into a silent 1080x1920 scaled cinematic clip of the
     given duration.
 
@@ -1974,22 +1980,45 @@ def _make_silent_video_scene_clip(raw_clip_path: str, output_path: str, duration
     with visible jump-cuts, we first build a boomerang (forward+reverse)
     source so each loop transition is frame-matched and seamless. For short
     scenes that fit within one playback of the source, we skip the boomerang
-    step to save FFmpeg time."""
+    step to save FFmpeg time.
+
+    Phase 13 (2026-06-04) — Scene-0 hook gets a slow-motion stretch when an
+    AI clip is present (`scene_index == 0 and is_ai_clip`). `setpts=2.0*PTS`
+    + `fps=30` doubles the visual duration of the 5s Wan source into a 10s
+    cinematic slow-mo opening, locking the viewer's eye through the entire
+    swipe-decision window. Zero new API calls — purely local ffmpeg.
+    `scene_index=-1`/`is_ai_clip=False` defaults preserve legacy behavior
+    for any caller that doesn't pass the new args."""
 
     # Probe the source clip duration
     src_dur = get_audio_duration(raw_clip_path) or 3.4
 
-    # Boomerang only when we actually need to loop. If duration <= src_dur,
-    # one straight playback covers the scene.
+    # Phase 13: scene-0 AI clips get 2x slow-mo, so effective source length
+    # is doubled. Boomerang is almost never needed in that branch.
+    is_scene0_ai = (scene_index == 0 and is_ai_clip)
+    effective_src_dur = src_dur * 2.0 if is_scene0_ai else src_dur
+
+    # Boomerang only when we actually need to loop. If duration <= src_dur
+    # (or doubled effective in the slow-mo case), one straight playback covers
+    # the scene.
     src_for_loop = raw_clip_path
     boomerang_path = output_path.replace(".mp4", "_boom.mp4")
     used_boomerang = False
-    if duration > src_dur * 1.05:
+    if duration > effective_src_dur * 1.05:
         if _make_boomerang_source(raw_clip_path, boomerang_path):
             src_for_loop = boomerang_path
             used_boomerang = True
 
-    vf_parts = [
+    vf_parts = []
+    if is_scene0_ai:
+        # Slow-motion stretch — comma-joined into the same filter chain so
+        # ffmpeg evaluates these sequentially with the downstream scale/crop
+        # filters. setpts MUST come BEFORE scale (operates on input PTS),
+        # fps interpolates to keep playback smooth post-slowdown.
+        vf_parts.append("setpts=2.0*PTS")
+        vf_parts.append("fps=30")
+        print(f"    [phase13-slowmo] scene 0 AI clip stretched 2x via setpts (src={src_dur:.2f}s -> effective={effective_src_dur:.2f}s)")
+    vf_parts.extend([
         "scale=1080:1920:force_original_aspect_ratio=increase:flags=lanczos",
         "crop=1080:1920",
         COLOR_GRADE,
@@ -1997,7 +2026,7 @@ def _make_silent_video_scene_clip(raw_clip_path: str, output_path: str, duration
         "fade=t=in:st=0:d=0.4",
         f"fade=t=out:st={max(duration - 0.4, 0):.2f}:d=0.4",
         "setsar=1",
-    ]
+    ])
     cmd = [
         "ffmpeg", "-y",
         "-stream_loop", "-1", "-i", src_for_loop,
@@ -2508,7 +2537,10 @@ def assemble_from_video_clips_continuous_audio(
         silent_path = f"{_TEMP_ROOT}/clips/silent_clip_{i:02d}.mp4"
         if clip:
             print(f"    AI clip {i+1}/{n} silent ({dur:.2f}s)...")
-            _make_silent_video_scene_clip(clip, silent_path, dur)
+            _make_silent_video_scene_clip(
+                clip, silent_path, dur,
+                scene_index=i, is_ai_clip=True,
+            )
         else:
             img = fallback_images[i] if fallback_images and i < len(fallback_images) else None
             if not img or not os.path.exists(img):

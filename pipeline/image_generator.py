@@ -33,39 +33,51 @@ _TEMP_ROOT = os.environ.get("PIPELINE_TEMP_ROOT", "temp")
 # was added 2026-05-14 evening to push back against FLUX silhouette-dark
 # tendencies under "oil-lamp lighting" cues.
 STYLE_SUFFIX_MORTAL = (
+    # Phase 13 Royal Glow (2026-06-04) — Mahabharata characters are god-kings
+    # and noble dynasties; they should LOOK like the epic they're from. This
+    # suffix evolves the prior documentary-realism cues into "god-king majesty"
+    # while keeping every carefully-tuned anchor that prevented splotchy skin,
+    # dead-doll eyes, and silhouette-dark Karna in earlier iterations.
+    # The injured/exile caveat is baked in as a conditional clause so FLUX
+    # naturally suppresses the halo when the per-scene image_prompt carries
+    # wound/blood/aftermath keywords.
+    #
     # Photoreal anchor — kept short for distilled FLUX variants (Pollinations,
     # Cloudflare) which honor long prompts less reliably than HF FLUX-schnell.
-    # WALKED BACK from earlier version: "physically-based skin with visible
-    # pores and fine facial hair" + "ultra-sharp 8K detail throughout" were
-    # producing splotchy/scarred face artifacts and broken eye anatomy on
-    # women's close-ups in the 2026-05-13 local test (Draupadi face had
-    # mottled "wet/grimy" texture, eyelid anatomy was broken in another shot).
-    # Distilled FLUX-schnell over-interprets "visible pores" as "lots of
-    # skin texture" and produces splotches. Softer anchors below.
-    "photorealistic cinematic film still shot on Arri Alexa LF, "
-    "Kodak Vision3 5219 film stock, "
+    # WALKED BACK from a 2026-05-13 attempt at "physically-based skin with
+    # visible pores and fine facial hair" + "ultra-sharp 8K detail throughout"
+    # which produced splotchy/scarred face artifacts. The Phase 13 "pristine
+    # skin with subtle glow" wording instead leans on lighting cues, not
+    # texture, to drive majesty.
+    "photoreal cinematic period-film aesthetic, "
+    "Mahabharata god-king majesty, "
+    "flawless pristine skin with a subtle divine glow "
+    "(unless the scene depicts injury, blood, exile, or aftermath — "
+    "then maintain gritty/wounded realism over the glow), "
     "natural skin texture, realistic facial features, "
     # Eye-specific anchor — added 2026-05-14 after the Karna-arc local test
     # shipped 7/10 frames with dead-eye / black-void pupils. Distilled FLUX
-    # at 4 steps loses eye micro-detail without an explicit eye cue. This
-    # is eye-only — does not re-introduce "pores"/"8K" that caused splotchy
-    # skin on the prior iteration.
-    "detailed expressive eyes with clearly defined iris and pupils, "
+    # at 4 steps loses eye micro-detail without an explicit eye cue.
+    "intense piercing eyes carrying the character's active emotion, "
+    "clearly defined iris and pupils, "
     "natural catch-light reflections in the eyes, "
-    # Face-exposure anchor — added 2026-05-14 after the v3_images smoke test
-    # shipped Karna with near-black skin from FLUX over-interpreting "oil-lamp"
-    # / "subtle glow" lighting cues. Canonical Karna is golden-bronze (Surya's
-    # son), not silhouette-dark. This anchor pushes back without overruling
-    # mood / shadow direction from the scene prompt.
+    # Posture + lighting — the literal halo effect.
+    "regal posture, high-end epic fantasy film styling, "
+    "golden hour rim lighting creating an ethereal halo on hair and shoulders, "
+    "85mm portrait, crisp detail on jewelry and fabric, "
+    # Face-exposure anchor — added 2026-05-14 after FLUX over-interpreted
+    # "oil-lamp" cues and rendered Karna near-black. Canonical Karna is
+    # golden-bronze (Surya's son), not silhouette-dark.
     "warm golden-bronze skin tone for Indian characters, "
     "luminous golden glowing complexion, "
     "well-lit faces with key-light on the face, even facial exposure, "
     "ancient India Mahabharat live-action / Baahubali period-film aesthetic, "
-    "carved sandstone temple architecture in sharp focus, oil-lamp lighting, "
+    "carved sandstone temple architecture in sharp focus, "
     "balanced natural color grading, neutral whites, true skin tones, "
     "sharp focus on subject, clear facial features, "
     "no global color wash, no orange filter, no magenta or pink cast, "
-    "no CGI plastic look, no airbrushed skin"
+    "no CGI plastic look, no airbrushed skin, "
+    "NO cartoon, NO anime, NO illustration, NO dead doll eyes"
 )
 
 # DIVINE variant — same as MORTAL minus the golden-bronze skin anchor that
@@ -254,7 +266,17 @@ _NEGATIVE_DEFAULT = (
     "extra fingers,six fingers,seven fingers,too many fingers,"
     "mutated hands,malformed hands,fused fingers,missing fingers,"
     "extra limbs,extra arms,malformed limbs,disfigured,"
-    "cross-eyed,bad proportions"
+    "cross-eyed,bad proportions,"
+    # ── Phase 13 Royal Glow companion negatives (2026-06-04) ─────────────
+    # The new positive suffix invites "divine glow" failure modes (over-
+    # airbrushed, painting-like, doll-faced). These negatives hard-block
+    # them without weakening the genuine god-king majesty the positive
+    # suffix is asking for. NOT applied to _NEGATIVE_RESTRAINT below
+    # because aftermath/grief scenes legitimately benefit from "dull"
+    # and "lifeless" textures.
+    "painting,oil painting,watercolor,2d illustration,storybook art,"
+    "dead doll eyes,dull lifeless skin,sickly skin,jaundiced complexion,"
+    "magazine retouching,over-airbrushed,flat lighting,dim flat ambient light"
 )
 
 # Restraint-mode negative — used when an imperfection cue is active for the
