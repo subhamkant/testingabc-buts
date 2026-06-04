@@ -1653,19 +1653,26 @@ def _apply_background_music(output_path: str, series: str = "mahabharata"):
     # reduction of ~10% so narration carries the emotion and music sits
     # under it. Music's job is atmosphere; narration is the protagonist.
     #
-    #   Window                  Tier1   T1.5    T1.5.b  T1.5.c  T1.5.d (now, 2026-06-03)
-    #   0-3s (mystery)          0.060   0.055   0.050   0.042   0.043
-    #   3-8s (tension)          0.080   0.075   0.067   0.057   0.059
-    #   8 → valley_start (emot) 0.100   0.095   0.085   0.072   0.074
-    #   VALLEY window           —       0.040   0.048   0.041   0.042
-    #   post-valley (climax)    0.130   0.110   0.098   0.083   0.086
+    #   Window                  Tier1   T1.5    T1.5.b  T1.5.c  T1.5.d  T1.5.e (now, 2026-06-04)
+    #   0-3s (mystery)          0.060   0.055   0.050   0.042   0.043   0.035
+    #   3-8s (tension)          0.080   0.075   0.067   0.057   0.059   0.048
+    #   8 → valley_start (emot) 0.100   0.095   0.085   0.072   0.074   0.060
+    #   VALLEY window           —       0.040   0.048   0.041   0.042   0.034
+    #   post-valley (climax)    0.130   0.110   0.098   0.083   0.086   0.070
     #
-    # Tier 1.5.d (2026-06-03): +~3% across the board per Phase 12 review.
-    # User watched the first Draupadi render and confirmed cinematic
-    # strings sat slightly under Charon's voice — bumping the floor so
-    # the orchestral track drives more background energy without
-    # overpowering narration. Still well under the Tier 1.5.b/Tier 1.0
-    # baselines that the user previously found too loud.
+    # Tier 1.5.e (2026-06-04): -18% across the board — REVERSING 1.5.d's
+    # ill-judged +3% boost AND dropping further below 1.5.c. User watched
+    # yesterday's Draupadi render (videoplayback.mp4, mono, 39.89s) and
+    # confirmed narration is NOT audible against the music. ffmpeg audio
+    # analysis backs this: that file's LRA = 1.1 LU (extremely crushed
+    # dynamics) — music + voice sitting at the same effective level the
+    # whole time. Today's Yudhishthira render measured LRA = 3.1 LU
+    # (closer to narrative norm), so the issue may already partly be
+    # self-correcting via different mix paths, but lowering the base
+    # curve here is the cleanest single knob. Follow-up tuning that's
+    # deferred unless this doesn't fully fix it: drop sidechain ratio
+    # from 7→4 (less aggressive ducking-then-rebound, better dynamics)
+    # and raise loudnorm LRA target from 7→11 (preserve more range).
     #
     # Sidechain still tightened: attack 80ms, release 450ms, ratio 7.
     valley_end_t   = max(8.0, video_duration - 7.0)   # ~7s of climax tail
@@ -1674,11 +1681,11 @@ def _apply_background_music(output_path: str, series: str = "mahabharata"):
     # but loud enough to not read as broken silence on mobile speakers in
     # noisy environments.
     music_volume_expr = (
-        f"if(lt(t,3),0.043,"
-        f"if(lt(t,8),0.059,"
-        f"if(lt(t,{valley_start_t:.2f}),0.074,"
-        f"if(lt(t,{valley_end_t:.2f}),0.042,"
-        f"0.086))))"
+        f"if(lt(t,3),0.035,"
+        f"if(lt(t,8),0.048,"
+        f"if(lt(t,{valley_start_t:.2f}),0.060,"
+        f"if(lt(t,{valley_end_t:.2f}),0.034,"
+        f"0.070))))"
     )
     # Build the filter graph + ffmpeg input list. If chunking is active AND
     # the ambient bed exists, layer the bed as a 3rd input ([2:a]) at flat
@@ -1731,7 +1738,7 @@ def _apply_background_music(output_path: str, series: str = "mahabharata"):
     if result.returncode == 0:
         os.replace(music_output, output_path)
         print(f"    [OK] Music mixed (5-section curve w/ valley dip: "
-              f"0.043→0.059→0.074→[VALLEY {valley_start_t:.1f}-{valley_end_t:.1f}s @ 0.042]→0.086, "
+              f"0.035→0.048→0.060→[VALLEY {valley_start_t:.1f}-{valley_end_t:.1f}s @ 0.034]→0.070, "
               f"sidechain a80/r450/ratio7) + audio normalized ({audio_chain})")
         # In continuous mode the ambient bed isn't mixed in, so report it as
         # not active rather than showing a misleading file path.
