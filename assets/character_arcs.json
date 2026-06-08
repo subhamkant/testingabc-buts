@@ -3,6 +3,7 @@
   "_added": "2026-05-15 — channel-focus refactor after 13-day analytics showed topic-salad (random Mahabharata stories per upload) wasn't building Suggested traffic. Sequential character arcs in playlist + episode-numbered titles fix that.",
   "_tier2_2026-05-16": "Tier 2 plan review: (a) reordered Bhishma/Karna/Draupadi arcs so each leads with its most emotionally devastating episode (first-impression effect drives playlist sub-conversion). Episode strings unchanged — already-used topics in recent_topics.json still match by topic-string. (b) Added Eklavya (devotion + caste injustice) and Ashwatthama (cursed immortal) — user-identified as naturally viral emotional archetypes. Total arcs: 5 → 7. Total topics: 35 → 49.",
   "_phase1_2026-05-29": "Phase 1 Stabilization (RULE 4 + Addition B): Reordered arcs so Karna is FIRST (Week 1 ships next 7 days), Bhishma SECOND (Week 2). Replaced Karna topics with user's emotional-reframing list. Replaced Bhishma topics with user's silence/guilt-themed list. Added `emotional_fingerprint` to each arc — character's distinct emotional DNA. The fingerprint feeds into the script_generator system prompt so every Karna script lands on rejection+loyalty, every Bhishma script lands on guilt+silence. Variance comes from fingerprints DIFFERING across arcs (Karna's loud rejection vs Bhishma's silent guilt), NOT from artificial intensity-shuffling within an arc.",
+  "_phase15_2026-06-08": "Phase 15 DNA rewrite — channel analytics 2026-06-08 showed -68.8% view decline over 7 uploads driven by topic-fandom mismatch (Yudhishthira/Eklavya philosophical topics pulled 11-15 views vs Karna's 600+ floor). Deep-dive on the 158% AVP 5-24 Karna friendship video isolated a 4-part DNA: name-first hook + subversion adjective + charged moral noun + trait inversion. ALL non-Karna topics were rewritten to embed this DNA so the Phase 15 semantic gate in script_generator.py admits them as anchor-tier candidates. Guardrails: (1) NARRATIVE ALIGNMENT — the underlying event/incident is preserved; only the moral framing is subverted (e.g., Yudhishthira's truth becomes 'hidden cowardice exposed by Yaksha', not a fabricated event). (2) ENGLISH-CLICKABLE — every topic carries highly clickable English nouns (sin, mistake, lie, betrayal) alongside Hindi flavor. (3) REGEX EXACTNESS — singular noun forms only to match Phase 15's word-boundary regex. Karna arc preserved as-is — it was already 6/7 DNA-compliant and is the validated 158% AVP archetype.",
 
   "arcs": [
     {
@@ -14,10 +15,10 @@
         "Karna's greatest mistake — the day he chose loyalty to Duryodhana over Krishna's offer of the empire and brotherhood with the Pandavas, knowing dharma was on the other side",
         "Krishna's final offer to Karna — the secret pre-war visit where Krishna revealed Kunti's truth and offered him the throne if he switched sides, and Karna refused",
         "Karna's hidden jealousy of Arjuna — the lifelong resentment that drove every choice he made, the wound his loyalty never quite covered",
-        "The curse that destroyed Karna — Parashurama discovering his student's true caste while sleeping on his lap, the doom that surfaced on Karna's last battlefield",
-        "Why Karna could never defeat Arjuna — the cumulative weight of three curses, lost armor, sunken chariot wheel, and the gods themselves siding against him in his final hour",
-        "Karna's final lie — the truth about his identity he chose to bury even as he died, the secret he kept from everyone including himself, even from Duryodhana",
-        "Karna's last regret on the battlefield — the dying thoughts of a man who realized too late that loyalty to the wrong friend had cost him everything"
+        "The greatest curse that destroyed Karna — Parashurama discovering his student's hidden caste while sleeping on his lap, the doom that surfaced on Karna's last battlefield",
+        "Why Karna could never defeat Arjuna — the hidden weight of his greatest curse, lost armor, sunken chariot wheel, and the gods themselves siding against him in his final hour",
+        "Karna's final lie — the hidden truth about his identity he chose to bury even as he died, the secret he kept from everyone including himself, even from Duryodhana",
+        "Karna's last regret on the battlefield — the dying thoughts of a man who realized too late that his loyalty to the wrong friend had cost him everything"
       ]
     },
     {
@@ -26,13 +27,13 @@
       "playlist_seed": "Mahabharata: The Bhishma Arc",
       "emotional_fingerprint": "guilt + silence",
       "topics": [
-        "Bhishma's fatal vow — the day prince Devavrata renounced the throne and married life for his father Shantanu's love, taking the oath that would doom Hastinapur",
-        "Why Bhishma protected the wrong side — the elder who knew Duryodhana's cause was unjust yet chose his oath to the throne over dharma, watching the war from inside his own guilt",
+        "Bhishma's greatest fatal vow — the day prince Devavrata renounced the throne and married life for his father Shantanu's love, the secret oath that doomed Hastinapur",
+        "Bhishma's biggest betrayal — the elder who knew Duryodhana's cause was unjust yet hid behind his vow to the throne over dharma, watching the war from inside his own hidden guilt",
         "Bhishma's hidden guilt during Draupadi's humiliation — the moments inside his silence as the dharma he upheld broke in the Kuru sabha, his sword resting because his vow forbade it",
-        "The choice that destroyed Hastinapur — Bhishma crowning blind Dhritarashtra over his brother Pandu's lineage, the succession decision that planted the war's first seed",
-        "Bhishma's silent suffering through the Kurukshetra war — fighting the children he raised, killing the warriors he taught, carrying every dead soldier's weight in unspoken grief",
-        "Bhishma's regret on the bed of arrows — 58 days of waiting for death, replaying every choice that had brought him to the battlefield, choosing the moment of his own departure",
-        "Bhishma's final words to Yudhishthira — the dying teachings from the bed of arrows, wisdom delivered too late to undo what had been done to his bloodline"
+        "Bhishma's hidden sin against Hastinapur — crowning blind Dhritarashtra over his brother Pandu's lineage, the secret succession mistake that planted the war's first seed",
+        "Bhishma's untold guilt through Kurukshetra — fighting the children he raised, killing the warriors he taught, the hidden regret of every dead soldier he carried in silence",
+        "Bhishma's greatest regret on the bed of arrows — 58 days replaying the choices that doomed him, the hidden truth he never told, choosing the moment of his own departure",
+        "Bhishma's final regret to Yudhishthira — the dying truth from the bed of arrows, the bitter wisdom delivered too late to undo what had been done to his bloodline"
       ]
     },
     {
@@ -41,13 +42,13 @@
       "playlist_seed": "Mahabharata: The Arjuna Arc",
       "emotional_fingerprint": "doubt + glory",
       "topics": [
-        "Arjuna and Drona's bird-eye test — the moment Drona knew this student would become the greatest archer",
-        "Arjuna's exile in disguise as Brihannala — the warrior who became a dance teacher to fulfill a vow",
-        "Arjuna and Krishna in the Gita — the chariot stops, the cousin becomes the philosopher",
-        "Arjuna's vow to kill Jayadratha before sundown — the impossible promise that nearly broke him",
-        "Arjuna fighting his own grandfather Bhishma — using Shikhandi as a shield to do what he could never do otherwise",
-        "Arjuna fighting his guru Drona — and the lie 'Ashwatthama is dead' that broke the master's spirit",
-        "Arjuna's grief after Abhimanyu's death — the father's vow that turned the war on day fourteen"
+        "Arjuna's hidden truth at Drona's bird-eye test — the secret ruthlessness Drona spotted in his student, the greatest archer made by a cold heart not a kind one",
+        "Arjuna's hidden vow as Brihannala — the warrior's secret year-long humiliation disguised as a dance teacher, the greatest mistake of his exile in Virata's court",
+        "Arjuna's greatest fear in the Gita — the hidden truth Krishna had to reveal because the warrior nearly broke before the war, the secret regret Krishna exposed on the chariot",
+        "Arjuna's greatest vow to kill Jayadratha — the impossible promise born from his hidden grief over Abhimanyu, the secret revenge that nearly destroyed him before sundown",
+        "Arjuna's hidden lie against Bhishma — using Shikhandi as a shield, the secret betrayal of the warrior code, the greatest sin of a grandson against his grandfather",
+        "Arjuna's secret lie about Ashwatthama — the untold betrayal that broke his guru Drona's spirit, the day a son's name became his hidden sin",
+        "Arjuna's hidden vow after Abhimanyu — the father's secret loyalty promise born from grief, the greatest mistake that turned Kurukshetra on day fourteen"
       ]
     },
     {
@@ -56,13 +57,13 @@
       "playlist_seed": "Mahabharata: The Draupadi Arc",
       "emotional_fingerprint": "humiliation + rage",
       "topics": [
-        "Draupadi's vastraharan in the Kuru sabha — the queen pulled by her hair, the elders silent",
-        "Draupadi born from the sacrificial fire — the daughter Drupada asked for to destroy Drona",
-        "Draupadi's swayamvara — the moment she chose Arjuna (in disguise) and rejected Karna",
-        "Draupadi as wife to five Pandavas — the unusual marriage that bound the brothers forever",
-        "Draupadi's vow about her hair — never tying it back until washed in Dushasana's blood",
-        "Draupadi in the forest exile — twelve years of waiting, refusing to forget the humiliation",
-        "Draupadi's grief after the war — winning a kingdom of corpses, losing all five sons in one night"
+        "Draupadi's greatest humiliation in the Kuru sabha — the queen pulled by her hair, the secret sin every elder watched in silence, the untold betrayal that lit the war",
+        "Draupadi's hidden birth from sacrificial fire — Drupada's secret sin, the daughter he weaponized to destroy Drona, the greatest curse of the Panchala line",
+        "Draupadi's swayamvara — the queen's greatest mistake when she rejected Karna for a disguised Arjuna, the secret pride that doomed an empire",
+        "Draupadi's untold marriage to five Pandavas — the hidden vow that bound the brothers forever, the queen's greatest sacrifice nobody ever named",
+        "Draupadi's secret vow about her hair — the queen's untold revenge, never tied until washed in Dushasana's blood, the greatest curse she carried in silence",
+        "Draupadi's hidden rage in forest exile — twelve years of secret humiliation she refused to forget, the queen's coldest vow waiting for the day of revenge",
+        "Draupadi's untold grief after the war — the queen's greatest betrayal by victory, winning a kingdom of corpses, losing all five sons in one secret night"
       ]
     },
     {
@@ -71,13 +72,13 @@
       "playlist_seed": "Mahabharata: The Yudhishthira Arc",
       "emotional_fingerprint": "truth + indecision",
       "topics": [
-        "Yudhishthira and the Yaksha at the lake — the questions that defined dharma in the forest",
-        "Yudhishthira's gambling addiction — how the truthful king lost everything including his wife",
-        "Yudhishthira's lie 'Ashwatthama is dead' — the only lie of his life, and what it cost him",
-        "Yudhishthira's refusal to abandon a dog at heaven's gate — the final test of dharma",
-        "Yudhishthira's vision of his brothers in hell — the moment heaven tested his attachment",
-        "Yudhishthira's rule as king — the prosperous kingdom built on guilt over his cousins' deaths",
-        "Yudhishthira's final journey to the Himalayas — walking with his brothers and Draupadi toward death"
+        "Yudhishthira's hidden cowardice at the Yaksha lake — the secret questions that exposed his greatest lie about dharma, the truth no king wanted answered",
+        "Yudhishthira's hidden sin in the dice game — the truthful king's greatest betrayal, gambling away his wife and his brothers as the secret cost of his pride",
+        "Yudhishthira's greatest lie — the only deception of his life, and the secret cost no one knew, the day Ashwatthama's name became his hidden sin",
+        "Yudhishthira's last test at heaven's gate — the secret truth about the dog that exposed the king's hidden loyalty, the final cost of dharma he almost paid",
+        "Yudhishthira's greatest fear in hell — the secret betrayal heaven showed him of his own brothers, the king's hidden guilt no kingdom could undo",
+        "Yudhishthira's hidden guilt as king — the prosperous kingdom built on the secret regret of every cousin he killed, the throne's greatest fatal cost",
+        "Yudhishthira's final regret in the Himalayas — the king's last hidden betrayal, watching every brother and Draupadi fall on the secret death-walk to heaven"
       ]
     },
     {
@@ -86,13 +87,13 @@
       "playlist_seed": "Mahabharata: The Eklavya Arc",
       "emotional_fingerprint": "devotion + injustice",
       "topics": [
-        "Eklavya's gurudakshina — the thumb he cut off without hesitation when his guru asked for it, the price of a teacher who had never once taught him",
-        "Eklavya practicing before a statue of Drona — the forest student who became a greater archer than Arjuna by training with mud-clay alone",
-        "Drona's first refusal — turning away the tribal prince at the gates because his caste did not match the royal academy",
-        "The day Arjuna saw a dog with seven arrows in its mouth — the arrows that did not let the dog bark, fired by an archer Arjuna had never met",
-        "Eklavya as the king of the Nishadhas — the warrior whose people still remembered his devotion long after the kshatriyas forgot his name",
-        "Eklavya's death by Krishna's hand — the dharma-defender Krishna had to kill so Arjuna could remain the greatest archer at Kurukshetra",
-        "Eklavya's place in the Bhagavad Gita's silence — the warrior the Gita never named, whose absence haunts every chapter on devotion"
+        "Eklavya's greatest sacrifice — the hidden thumb he cut off for a guru who never taught him, the untold sin of caste that took an archer's hand",
+        "Eklavya's hidden truth before Drona's statue — the forest student's greatest betrayal by caste, the secret skill that surpassed Arjuna without a teacher",
+        "Drona's greatest sin against Eklavya — the hidden caste betrayal at the academy gates that doomed a tribal prince before he could lift a bow",
+        "Arjuna's greatest fear about Eklavya — the hidden seven-arrow truth in the dog's mouth, the secret archer who exposed Drona's biggest lie",
+        "Eklavya's untold legacy as Nishadha king — the hidden loyalty his people kept alive, the secret history the kshatriyas erased from every record",
+        "Krishna's hidden sin against Eklavya — the greatest secret murder that secured Arjuna's title, the dharma-defender's untold betrayal of a true devotee",
+        "Eklavya's untold absence in the Gita — Krishna's greatest silence, the secret name the scripture refused to honor, the hidden sin of devotion forgotten"
       ]
     },
     {
@@ -101,13 +102,13 @@
       "playlist_seed": "Mahabharata: The Ashwatthama Arc",
       "emotional_fingerprint": "madness + revenge",
       "topics": [
-        "Ashwatthama and the lie 'Ashwatthama is dead' — the moment Yudhishthira's only lie killed his father Drona from grief, not blade",
-        "Ashwatthama's massacre of the sleeping Pandava sons — the night a son of a Brahmin became a butcher in the Pandava camp",
-        "Ashwatthama's Brahmastra against Uttara's womb — the unborn Parikshit attacked by a weapon that should never have been turned on a child",
-        "Krishna's curse on Ashwatthama — three thousand years of wandering with a wound on his forehead that would never close",
-        "Ashwatthama's gem and the wound — the jewel torn from his forehead that left an exposed scar for the rest of eternity",
-        "Ashwatthama still walking the earth — the immortal warrior some say is still seen near Indian forests asking for oil for his wound",
-        "Ashwatthama's tragedy as a parable — the man who paid the highest price of the Mahabharata war, beyond death itself"
+        "Ashwatthama's hidden truth in Yudhishthira's lie — the secret name that killed his father Drona from grief not blade, the greatest sin of war",
+        "Ashwatthama's greatest sin — the hidden midnight massacre of the sleeping Pandava sons, the secret revenge that broke a Brahmin into a butcher",
+        "Ashwatthama's greatest curse — the hidden Brahmastra against Uttara's womb, the secret revenge that doomed an unborn Parikshit before he could be named",
+        "Krishna's greatest curse on Ashwatthama — the hidden three-thousand-year sentence, the secret wound that would never close, the untold cost of revenge",
+        "Ashwatthama's hidden wound — Krishna's greatest punishment, the secret gem torn from his forehead, the untold betrayal it sealed for eternity",
+        "Ashwatthama's untold immortality — the hidden curse that still walks the earth, the secret warrior some say begs for oil in Indian forests at night",
+        "Ashwatthama's greatest tragedy — the hidden truth of Mahabharata's secret cost, the man punished beyond death itself, the untold sin no era can erase"
       ]
     }
   ]
