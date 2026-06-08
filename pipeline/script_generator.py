@@ -2,6 +2,9 @@ from google import genai
 import json
 import random
 import os
+import re as _re   # Phase 15 (2026-06-08) — module-level _re needed by the
+                   # tier-rotation regex constants; previously only imported
+                   # mid-file (~line 695) which made early references fail.
 import time
 
 
@@ -295,6 +298,78 @@ def _stable_episode_n(arc_idx: int, topic_idx: int) -> int:
     return (arc_idx + 1) * 10 + (topic_idx + 1)
 
 
+# ─── Phase 15 (2026-06-08) — Tier-weighted character rotation ────────────────
+# Replaces Phase 12's pure round-robin. Channel analytics 2026-06-08 showed
+# -68.8% view decline over 7 uploads despite Phase 11-13 shipping cleanly.
+# Root cause: uniform rotation forces low-fandom characters (Yudhishthira /
+# Eklavya) into the Shorts algorithmic feed, where they pull 11-15 views vs
+# 600+ for iconic characters (Karna / Draupadi / Bhishma). Tiered weighting
+# preserves variety while keeping the Shorts feed algorithmically warm.
+#
+# Weights derived from observed view performance, normalized to sum=100.
+_TIER_WEIGHTS = {
+    # Tier 1 — Anchors (60% combined). Iconic, viral, audience has priors.
+    "कर्ण":      ("T1", 25),    # Karna   — proven 600+ floor
+    "द्रौपदी":   ("T1", 20),    # Draupadi — 594v on 2026-06-07 publish
+    "भीष्म":     ("T1", 15),    # Bhishma  — 861v top performer (Untold Sacrifice)
+    # Tier 2 — Wildcards (30% combined). Land IF given the 4-part DNA framing.
+    "अर्जुन":    ("T2", 15),    # Arjuna
+    "अश्वत्थामा": ("T2", 15),    # Ashwatthama
+    # Tier 3 — Philosophers (10% combined). Used sparingly.
+    "युधिष्ठिर": ("T3",  5),    # Yudhishthira — 15v floor; tighten gate
+    "एकलव्य":   ("T3",  5),    # Eklavya
+}
+
+
+# Phase 15 semantic topic gate — the "4-part DNA" filter. A topic must
+# contain BOTH a charged moral noun AND a subversion adjective to clear
+# the gate. Bilingual: arc topics live in English (character_arcs.json)
+# but the LLM emits Hindi narration, so we accept either script. The
+# double-match (noun AND adjective) protects against single-keyword
+# false positives where setup phrases coincidentally contain a charged
+# word without the framing punch.
+_CHARGED_NOUNS = _re.compile(
+    # Hindi (Devanagari) — these are the charged NOUN forms
+    r"पाप|गलती|घमंड|सच|धोखा|बलिदान|श्राप|प्रतिशोध|"
+    r"अपमान|विश्वासघात|झूठ|ज़िद|मजबूरी|डर|"
+    # English nouns (matches arc topics in character_arcs.json)
+    r"\bsin\b|\bmistake\b|\bpride\b|\btruth\b|\bbetrayal\b|\bsacrifice\b|"
+    r"\bcurse\b|\brevenge\b|\bhumiliation\b|\blie\b|"
+    r"\bfear\b|\bjealousy\b|\bregret\b|\bloyalty\b|\bvow\b|\bguilt\b|"
+    r"\bcost\b|\bfatal\b",
+    _re.IGNORECASE,
+)
+_SUBVERSION_ADJECTIVES = _re.compile(
+    # Hindi adjectives — "last/final" → "अंतिम" goes here, not in nouns
+    r"असली|बड़ी|बड़ा|छिपा|छिपी|अनकहा|अनकही|गुप्त|कड़वा|भयानक|अंतिम|"
+    # English subversion adjectives. "last" / "final" are modifiers
+    # ("Karna's LAST regret" — last modifies regret) — they belong here.
+    r"\breal\b|\bbig\b|\bbiggest\b|\bhidden\b|\buntold\b|\bsecret\b|"
+    r"\bbitter\b|\bterrifying\b|\bgreatest\b|\bdeepest\b|\blast\b|\bfinal\b|"
+    r"\bthat\s+one\b|\bthe\s+one\b",
+    _re.IGNORECASE,
+)
+
+
+def _topic_passes_semantic_gate(topic: str) -> tuple[bool, str]:
+    """Phase 15 (2026-06-08). Return (ok, reason). A topic must contain
+    BOTH at least one charged moral noun (sin/mistake/pride/etc.) AND
+    at least one subversion adjective (real/hidden/untold/etc.). Either
+    Hindi or English matches count. Topics that fail are passed over by
+    the weighted rotation in favor of the next eligible candidate in
+    the drawn tier; the rotation downgrades to a lower tier if no topic
+    in the drawn tier passes."""
+    has_noun = bool(_CHARGED_NOUNS.search(topic))
+    has_adj  = bool(_SUBVERSION_ADJECTIVES.search(topic))
+    if not has_noun and not has_adj:
+        return False, "missing both charged-moral-noun AND subversion-adjective"
+    if not has_noun:
+        return False, "missing charged-moral-noun (sin/mistake/pride/etc.)"
+    if not has_adj:
+        return False, "missing subversion-adjective (real/hidden/untold/etc.)"
+    return True, "passes DNA gate"
+
+
 def _pick_next_arc_topic() -> tuple[str, int, str, str | None] | None:
     """
     Walk character arcs sequentially, picking the first topic NOT in
@@ -337,29 +412,45 @@ def _pick_next_arc_topic() -> tuple[str, int, str, str | None] | None:
     # Stage 2 dedup data — fetched once per process. Returns [] on any error.
     published_sigs = fetch_recent_title_signatures()
 
-    # Phase 12 round-robin (2026-06-03): rotate the arc walk start position
-    # so consecutive renders never share a character. Falls back to index-0
-    # start when recent_topics.json is empty (first-ever render).
-    last_arc = _last_used_arc_index()
-    start = ((last_arc + 1) % len(arcs)) if last_arc is not None else 0
-    arc_order_with_idx = [
-        ((start + i) % len(arcs), arcs[(start + i) % len(arcs)])
-        for i in range(len(arcs))
-    ]
-    print(f"    [rotation] last arc={last_arc}, starting walk at arc index {start} "
-          f"({arc_order_with_idx[0][1].get('name', '?')})")
+    # Phase 15 (2026-06-08): TIERED WEIGHTED ROTATION replaces Phase 12
+    # round-robin. Random draw across all characters with tier-based weights
+    # (T1 anchors 60% / T2 wildcards 30% / T3 philosophers 10%). The last-
+    # drawn character is MASKED from the next draw so we never repeat
+    # consecutively. Within the drawn character's arc, the semantic gate
+    # (Phase 15 charged-noun + subversion-adjective regex) filters for
+    # topics matching the 4-part DNA isolated from the channel's 158% AVP
+    # winners. If the drawn character has no gate-passing unused topic,
+    # fall through tier by tier until SOMETHING ships (cron must never
+    # publish nothing).
 
-    runtime_skipped = []
-    for arc_idx, arc in arc_order_with_idx:
+    last_arc = _last_used_arc_index()
+    last_character = arcs[last_arc].get("character", "") if last_arc is not None else ""
+
+    # Build per-character arc-index map so we can resolve a drawn character
+    # back to its arc + topics + stable episode_n.
+    char_to_arc_idx = {arc.get("character", ""): i for i, arc in enumerate(arcs)}
+
+    def _try_pick_from_character(character: str, enforce_gate: bool):
+        """Return (topic, episode_n, arc_name, next_topic_in_arc) for the first
+        unused + non-overlapping topic in `character`'s arc, optionally
+        enforcing the semantic gate. None if no eligible topic."""
+        arc_idx = char_to_arc_idx.get(character)
+        if arc_idx is None:
+            return None
+        arc = arcs[arc_idx]
         arc_topics = arc.get("topics", [])
         for idx, topic in enumerate(arc_topics):
             if topic in used:
                 continue
             if published_sigs and topic_overlaps_published(topic, published_sigs):
-                runtime_skipped.append(topic)
                 continue
-            # Look ahead within THIS arc for the next unused & non-overlapping
-            # topic (skipping any already-used or runtime-rejected ones).
+            if enforce_gate:
+                ok, why = _topic_passes_semantic_gate(topic)
+                if not ok:
+                    print(f"    [phase15-gate] skipping {character} topic "
+                          f"'{topic[:60]}...' — {why}")
+                    continue
+            # Found a usable topic. Compute the cliffhanger teaser too.
             next_topic = None
             for ahead in arc_topics[idx + 1:]:
                 if ahead in used:
@@ -368,10 +459,50 @@ def _pick_next_arc_topic() -> tuple[str, int, str, str | None] | None:
                     continue
                 next_topic = ahead
                 break
-            if runtime_skipped:
-                print(f"    [runtime-dedup] skipped {len(runtime_skipped)} arc "
-                      f"topic(s) due to title overlap with published videos")
             return topic, _stable_episode_n(arc_idx, idx), arc.get("name", ""), next_topic
+        return None
+
+    # Build the eligible pool (mask last-drawn character).
+    eligible = [
+        (char, info) for char, info in _TIER_WEIGHTS.items()
+        if char != last_character and char in char_to_arc_idx
+    ]
+    if not eligible:
+        # All characters masked / none in arcs JSON — relax the mask.
+        eligible = [
+            (char, info) for char, info in _TIER_WEIGHTS.items()
+            if char in char_to_arc_idx
+        ]
+    chars   = [c for c, _ in eligible]
+    weights = [w for _, (_, w) in eligible]
+
+    # Try up to 12 weighted draws WITH the semantic gate enforced. Each
+    # draw is independent — if a drawn character has no gate-passing
+    # topic, we draw again. This naturally biases toward characters whose
+    # arcs HAVE gate-passing topics (T1 anchors expected to dominate).
+    import random as _random_local  # local alias to avoid top-level import collision
+    tried_chars = set()
+    for attempt in range(12):
+        drawn = _random_local.choices(chars, weights=weights, k=1)[0]
+        if drawn in tried_chars:
+            continue
+        tried_chars.add(drawn)
+        tier = _TIER_WEIGHTS[drawn][0]
+        print(f"    [phase15-tier] attempt {attempt+1}: drew {tier} {drawn} "
+              f"(masked previous: {last_character or 'none'})")
+        result = _try_pick_from_character(drawn, enforce_gate=True)
+        if result:
+            return result
+
+    # Gate-enforced draws exhausted. Fall through: try every character WITHOUT
+    # the gate. Better to publish a topic that doesn't perfectly fit the DNA
+    # than to ship nothing.
+    print(f"    [phase15-fallback] gate-enforced draws exhausted "
+          f"({len(tried_chars)} characters tried); relaxing gate")
+    for char, _ in eligible:
+        result = _try_pick_from_character(char, enforce_gate=False)
+        if result:
+            return result
     return None
 
 
@@ -2375,9 +2506,12 @@ HARD RULES — violation makes the script unusable:
             raise ValueError(f"No JSON object found in Krishna LLM response:\n{raw[:300]}")
         data = _parse_llm_json(raw[start:end + 1])
 
-        # Hard-trim narrations
+        # Hard-trim narrations (Phase 15 defensive: malformed LLM scenes
+        # missing the `narration` key crashed the 2026-06-04 cron primary
+        # with KeyError. Use .get() so a partial scene is skipped instead
+        # of bringing down the whole job.)
         for scene in data.get("scenes", []):
-            scene["narration"] = _trim_narration(scene["narration"])
+            scene["narration"] = _trim_narration(scene.get("narration", ""))
 
         scenes      = data.get("scenes", [])
         word_counts = [len(s["narration"].split()) for s in scenes]
@@ -3949,8 +4083,8 @@ def generate_script(
       top of the generic Mahabharata fallbacks.
     - Narration per scene: 14-18 words, varied rhythm (mix short punch + long cinematic), end with "..." for TTS pause, ~6-7 seconds spoken. EXCEPTION: scene 5 (valley) is 11-14 words. Phase 12 2026-06-03 (revised v2): word target tightened to 14-18 because the smoke at 18-22 still overshot — Gemini Charon narrates ~2.2 words/sec (NOT 3 wps as the older spec assumed), with ellipsis pauses adding 0.3-0.4s each. 14-18 words/scene avg × 6 scenes = 96 words × 2.2 wps = ~44s narration + ~3.5s outro = ~47s total, comfortably inside the 50s soft target and the 58s HARD ceiling. NO end-chopping = aftermath survives intact.
     - Narration MUST NOT contain URLs, hashtags (#), @mentions, English in Hindi videos, or any social-media text
-    - Generate EXACTLY 6 scenes — never fewer, never more (7-scene scripts overshoot the 60s Shorts cap on Hindi TTS pace)
-    - Scene 1 = HOOK, scene 2-3 = setup + RISING TENSION, scene 3 OR 4 = REHOOK (contrast marker), scene 5 = EMOTIONAL VALLEY (intimate quiet), scene 6 = AFTERMATH (emotion AFTER destruction, not spectacle)
+    - Generate EXACTLY 7 scenes (Phase 15 2026-06-08: 6 narrative scenes + 1 short loop-closure question scene). Scene 7 is much SHORTER than the others (8-12 words, ~3-4s spoken) so total audio still lands inside 40-50s.
+    - Scene 1 = HOOK IN MEDIA RES (begin INSIDE an emotional moment already in progress — eyes trembling, hand reaching, voice breaking, breath catching — NOT documentary narrator setup), scene 2-3 = setup + RISING TENSION, scene 3 OR 4 = REHOOK (contrast marker), scene 5 = EMOTIONAL VALLEY (intimate quiet), scene 6 = AFTERMATH + aftershock line (emotion AFTER destruction, not spectacle), scene 7 = LOOP CLOSURE QUESTION (Phase 15: 8-12 words, MUST end with a question mark, MUST be an ethically charged question that puts the viewer INSIDE the moral dilemma)
     - ONE scene around the 50% mark MUST begin or contain a rehook contrast marker
       ("लेकिन..."/"परंतु..."/"जो किसी ने नहीं सोचा था..."/"और तभी..."/"But..."/"Suddenly")
     - Scene 5 (VALLEY) MUST be intimate close-up — candlelight / dim warm tones / single subject — NOT lightning/fire/spectacle
@@ -3962,6 +4096,14 @@ def generate_script(
         ✓ "भीष्म ने धर्म बचाया। पर अपना धर्म खो दिया।" (Bhishma saved dharma — but lost his own)
         ✓ "जो रिश्ता बचाने के लिए सब छोड़ा — वही सबसे गहरा घाव बना।" (the relationship saved at all cost became the deepest wound)
       Forbidden in the aftershock line: 'इसलिए', 'और इस तरह', 'यही था', any phrase that RESOLVES the discomfort. The discomfort must STAY with the viewer — that's what produces replay and returning-viewer behavior in this niche.
+    - SCENE 7 = LOOP CLOSURE QUESTION (Phase 15 2026-06-08, retention amplifier). The 7th scene is one short line, 8-12 words, that MUST end with a question mark and MUST force the viewer to put themselves INSIDE the moral dilemma the video just laid out. The question creates an "emotional callback": when YouTube autoplays scene 7 → scene 1, the viewer is still mentally answering the question as the new emotional reaction hits — producing the >100% AVP rewatch effect (proven on कर्ण की दोस्ती का असली पाप, 158% AVP, 662 views). Approved patterns:
+        ✓ "अगर आप उस क्षण में होते... तो क्या करते?" (if you were in that moment... what would you do?)
+        ✓ "क्या वो सही थे... या आप होते तो रोक देते?" (were they right... or would you have stopped them?)
+        ✓ "किसने ज़्यादा खोया — कर्ण ने या कुंती ने?" (who lost more — Karna or Kunti?)
+        ✓ "क्या आप उन्हें माफ़ कर पाते?" (would you have forgiven them?)
+        ✓ "अगर ये धर्म था... तो अधर्म क्या होगा?" (if this was dharma... what is adharma?)
+      BANNED Scene 7 forms: declarative summary ("यह थी कर्ण की कहानी"), philosophical conclusion ("धर्म ही जीतता है"), call-to-action ("subscribe करो", "comment करो"), closing wish ("शुभकामनाएँ"), or any statement that ENDS with a period. Scene 7 closes with "?" — the open question is the rewatch trigger.
+      Pair with: Scene 1 MUST begin in media res (no documentary setup, no "बहुत समय पहले") so the loop from Scene 7 back to Scene 1 hits the viewer with an emotional reaction WHILE they're still mentally answering the question. The in-media-res rule already exists as a hook validator; Phase 15 just reinforces that the loop's quality depends on BOTH endpoints.
     - ALL 5 non-outro scenes' image_prompts MUST include a HUMAN PAIN cue
       OR an ANTICIPATION cue (iter-2 2026-05-24 — was "at least 2"; tightened
       because the LLM was concentrating pain in scenes 5–6 and leaving
@@ -4138,24 +4280,22 @@ def generate_script(
             elif last_short:
                 chosen = (
                     f"Your previous response failed the LENGTH validator "
-                    f"(n_scenes={n_scenes}, avg_words={avg_words:.1f}). Phase 12 "
-                    f"(2026-06-03 v2) target: EXACTLY 6 scenes AND 14-18 words "
-                    f"per scene (avg in the 14-18 range). Total: ~85-110 spoken "
-                    f"words for a 40-50s Short. Hindi Charon narrates ~2.2 "
-                    f"words/sec (measured empirically — slower than older specs "
-                    f"claimed because every ellipsis adds 0.3-0.4s of pause). "
-                    f"Going over 18 words/scene pushes audio past the 58s HARD "
-                    f"ceiling and the AFTERMATH SCENE + OUTRO RESIDUE get "
-                    f"chopped by auto-cap. The aftermath is the emotional "
-                    f"payload of the entire video — protect it by staying "
-                    f"UNDER 18 avg. EXCEPTION: scene 5 (the emotional valley) "
-                    f"is 11-14 words. Going BELOW 14 average is also a fail — "
-                    f"the collapse phase + aftershock line need at least 85 "
-                    f"words total to land. Do NOT add a 7th scene to satisfy "
-                    f"any other rule; tighten existing scenes instead. This is "
-                    f"TOP PRIORITY — fix scene count and word count BEFORE "
-                    f"any other gate. Each scene must be 14-18 words; pack the "
-                    f"beat HARDER, not longer."
+                    f"(n_scenes={n_scenes}, avg_words={avg_words:.1f}). Phase 15 "
+                    f"(2026-06-08) target: EXACTLY 7 scenes. Scenes 1-6 are "
+                    f"narrative (14-18 words each); scene 7 is the LOOP CLOSURE "
+                    f"QUESTION (8-12 words, MUST end with '?'). Combined avg "
+                    f"naturally lands at 14-17 words across all 7 scenes. "
+                    f"Total: ~105-120 spoken words for a 50-55s Short. "
+                    f"Hindi Charon narrates ~2.2 words/sec — going over 18 "
+                    f"avg pushes audio past the 58s HARD ceiling and the "
+                    f"AFTERMATH + LOOP-CLOSURE QUESTION get chopped, killing "
+                    f"the rewatch trigger. Going BELOW 13 avg means scene 7 "
+                    f"is the only short one (good) but scenes 1-6 are too "
+                    f"thin to land the emotional architecture. Do NOT add an "
+                    f"8th scene to satisfy any other rule; tighten existing "
+                    f"scenes instead. This is TOP PRIORITY — fix scene count "
+                    f"and word count BEFORE any other gate. Scene 7 MUST end "
+                    f"with '?' — that's the loop trigger, not optional."
                 )
             elif last_missing_names:
                 scene_list = ", ".join(f"scene {n}" for n in last_missing_names)
@@ -4253,26 +4393,26 @@ def generate_script(
             break
 
         # Hard-enforce upper bound — LLMs sometimes ignore word limits
+        # (Phase 15 defensive .get() — see 2026-06-04 KeyError post-mortem)
         for scene in data.get("scenes", []):
-            scene["narration"] = _trim_narration(scene["narration"])
+            scene["narration"] = _trim_narration(scene.get("narration", ""))
 
         scenes = data.get("scenes", [])
         word_counts = [len(s["narration"].split()) for s in scenes]
         avg_words = sum(word_counts) / max(len(word_counts), 1)
         n_scenes = len(scenes)
 
-        # Length validator (Phase 12 2026-06-03 v2 — TIGHTENED FURTHER from
-        # the initial 18-22 to 14-18 words/scene because the smoke at 18-22
-        # still overshot to 66s (auto-cap chopped to 58s, killing aftermath).
-        # Root cause: Gemini Charon narrates ~2.2 wps (NOT 3 wps as older
-        # specs claimed) — every ellipsis adds 0.3-0.4s pause and the LLM
-        # uses them heavily for drama. Updated math: 14-18 avg × 6 scenes
-        # = ~96 words × 2.2 wps = ~44s narration + ~3.5s outro = ~47s
-        # total, comfortably under the 58s MAX_DURATION_S cap with drift
-        # margin. Scene 5 (valley) may be lower at 11-14 words. Going
-        # BELOW 14 average fails — the collapse phase + aftershock need
-        # at least 85 words across all 6 scenes to land emotionally.
-        last_short = (n_scenes != 6 or avg_words < 14 or avg_words > 18)
+        # Length validator (Phase 15 2026-06-08 — extended to 7 scenes for
+        # the Loop Closure question scene). Architecture: scenes 1-6 are
+        # narrative (14-18 words each, ~95-110 total); scene 7 is the
+        # loop-closure question (8-12 words, ~10 words avg). Combined
+        # ≈ 105-120 words / 2.2 wps Charon = ~48-55s + ~3.5s outro asset
+        # = ~52-58s total — landing right at the 58s ceiling. Average
+        # check across all 7 scenes naturally pulls toward ~14-17 due
+        # to the short scene 7. We allow avg as low as 13 to absorb that
+        # without false-rejecting otherwise-valid scripts.
+        # Previous Phase 13 v2 was: n_scenes != 6, avg 14-18.
+        last_short = (n_scenes != 7 or avg_words < 13 or avg_words > 18)
         # Threshold 4: a character at the centre of the story (Bhishma in a
         # Bhishma video) can appear ~4 times naturally. 5+ times signals that
         # supporting characters and details are being skipped in favour of
