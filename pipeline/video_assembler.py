@@ -1886,13 +1886,18 @@ def _make_freeze_clip(image_path: str, duration: float, output_path: str) -> boo
     return result.returncode == 0
 
 
-def _make_silent_image_scene_clip(image_paths, output_path: str, duration: float, intensity: float = 1.0):
+def _make_silent_image_scene_clip(image_paths, output_path: str, duration: float, intensity: float = 1.0, scene_index: int = -1):
     """Ken Burns over one or more images, silent video output. Mirrors
     _make_scene_clip but skips the audio muxing step.
 
     `intensity` (added 2026-05-16) scales the per-scene Ken Burns zoom delta.
     Caller passes 0.8 for opening scenes, ramping to ~1.4 for the climax so
     the visual motion rises with the music's 4-section emotional curve.
+
+    Phase 16 D1 (2026-06-09) — `scene_index=0` SUPPRESSES the fade-in on
+    the first sub-clip. Without this, scene 0's first sub starts at 0%
+    opacity (pure black) which kills the swipe-decision window. Default
+    `-1` preserves legacy behavior for all non-scene-0 callers.
     """
     import shutil as _sh
 
@@ -1921,7 +1926,9 @@ def _make_silent_image_scene_clip(image_paths, output_path: str, duration: float
 
         ok = _render_image_clip(
             img, sub_path, actual_dur, motion,
-            fade_in=(j == 0),
+            # Phase 16 D1: gate fade-in on scene 0 — never fade the very
+            # first frame of the video from pure black (swipe-instant kill).
+            fade_in=(j == 0 and scene_index != 0),
             fade_out=(j == n_subs - 1),
             intensity=intensity,
         )
@@ -2018,15 +2025,24 @@ def _make_silent_video_scene_clip(
         vf_parts.append("setpts=2.0*PTS")
         vf_parts.append("fps=30")
         print(f"    [phase13-slowmo] scene 0 AI clip stretched 2x via setpts (src={src_dur:.2f}s -> effective={effective_src_dur:.2f}s)")
-    vf_parts.extend([
+    # Phase 16 D1 (2026-06-09) — Scene 0 NEVER fades from black. The fade-
+    # from-black at t=0 was producing a pure-black opening frame for
+    # ~0.4s which is a swipe-instant kill in the Shorts feed (verified
+    # in forensic analysis of 8v Arjuna + 15v Yudhishthira renders that
+    # both opened on pure black pixels). Scenes 1+ keep the fade-in
+    # because the cross-scene xfade gives them a smooth handoff; only
+    # the hook scene must hit at 100% opacity on frame 1.
+    base_filters = [
         "scale=1080:1920:force_original_aspect_ratio=increase:flags=lanczos",
         "crop=1080:1920",
         COLOR_GRADE,
         FILM_GRAIN,
-        "fade=t=in:st=0:d=0.4",
-        f"fade=t=out:st={max(duration - 0.4, 0):.2f}:d=0.4",
-        "setsar=1",
-    ])
+    ]
+    if scene_index != 0:
+        base_filters.append("fade=t=in:st=0:d=0.4")
+    base_filters.append(f"fade=t=out:st={max(duration - 0.4, 0):.2f}:d=0.4")
+    base_filters.append("setsar=1")
+    vf_parts.extend(base_filters)
     cmd = [
         "ffmpeg", "-y",
         "-stream_loop", "-1", "-i", src_for_loop,
@@ -2320,7 +2336,7 @@ def assemble_explainer_video(
             imgs = [imgs]
         silent_path = f"{_TEMP_ROOT}/clips/explainer_silent_{i:02d}.mp4"
         print(f"    [explainer] scene {i+1}/{n} silent ({dur:.2f}s, {len(imgs)} shot(s))...")
-        _make_silent_image_scene_clip(imgs, silent_path, dur, intensity=zoom_intensity)
+        _make_silent_image_scene_clip(imgs, silent_path, dur, intensity=zoom_intensity, scene_index=i)
         silent_paths.append(silent_path)
 
     silent_full = f"{_TEMP_ROOT}/clips/explainer_silent_full.mp4"
@@ -2424,7 +2440,7 @@ def assemble_video_continuous_audio(
         elif n >= 3 and i == n - 2:
             tag = " [CLIMAX]"
         print(f"    Scene {i+1}/{n} silent ({dur:.2f}s, {len(imgs)} shot(s), KB intensity={intensity:.2f}){tag}...")
-        _make_silent_image_scene_clip(imgs, silent_path, dur, intensity=intensity)
+        _make_silent_image_scene_clip(imgs, silent_path, dur, intensity=intensity, scene_index=i)
         silent_paths.append(silent_path)
 
     if n >= 4:
@@ -2550,7 +2566,9 @@ def assemble_from_video_clips_continuous_audio(
                 )
             intensity = _scene_intensity(i)
             print(f"    Ken Burns {i+1}/{n} silent ({dur:.2f}s, intensity={intensity:.2f}) — AI clip missing for this scene")
-            _make_silent_image_scene_clip(img, silent_path, dur, intensity=intensity)
+            # Phase 16 D1: explicit scene_index threading for Ken Burns fallback so
+            # scene 0 doesn't fade from black even when Wan fails.
+            _make_silent_image_scene_clip(img, silent_path, dur, intensity=intensity, scene_index=i)
         if not os.path.exists(silent_path):
             raise RuntimeError(f"Silent scene {i+1} missing — FFmpeg produced no output")
         silent_paths.append(silent_path)

@@ -670,18 +670,30 @@ def _concat_audio_files(
         "-i", "anullsrc=channel_layout=stereo:sample_rate=44100",
     ]
 
-    # Build the filter graph: optionally apply per-scene volume,
-    # then concat with silence-glue between scenes.
+    # Build the filter graph: trim leading TTS silence per scene,
+    # optionally apply per-scene volume, then concat with silence-glue
+    # between scenes.
+    #
+    # Phase 16 D1 (2026-06-09) — Gemini Charon TTS generates audio with
+    # 100-400ms of leading silence/breath padding per call. When per-scene
+    # MP3s get concatenated, scene 0's leading silence becomes the
+    # video's opening dead air. Forensic analysis of the 2026-06-08
+    # failing renders showed 5-7s of essentially silent audio at video
+    # start (RMS -67 to -139 dB) — the dead air comes from this leading
+    # silence accumulated across scenes plus the cold-open prepend.
+    # silenceremove with start_threshold=-50dB chops audio below that
+    # floor; start_silence=0.05 keeps a 50ms breath buffer so we don't
+    # cut the first phoneme.
     pre_parts = []
     concat_inputs = []
     for i in range(n):
+        chain = ["silenceremove=start_periods=1:start_threshold=-50dB:start_silence=0.05"]
         if db_offsets and i < len(db_offsets) and db_offsets[i] != 0.0:
             db = db_offsets[i]
             sign = "" if db >= 0 else "-"
-            pre_parts.append(f"[{i}:a]volume={sign}{abs(db):.2f}dB[v{i}]")
-            concat_inputs.append(f"[v{i}]")
-        else:
-            concat_inputs.append(f"[{i}:a]")
+            chain.append(f"volume={sign}{abs(db):.2f}dB")
+        pre_parts.append(f"[{i}:a]" + ",".join(chain) + f"[v{i}]")
+        concat_inputs.append(f"[v{i}]")
 
     parts = []
     for i in range(n):

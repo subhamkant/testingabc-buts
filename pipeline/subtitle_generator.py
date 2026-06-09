@@ -509,12 +509,22 @@ def _burn_chunk(video_path: str, cards: list, output_path: str,
     # Audio path: bare-copy unless SFX present, then amix at t=0.
     audio_args = []
     if sfx_idx is not None:
-        # Append amix branch to existing filter_complex.
-        # weights wrapped in single quotes so the internal space doesn't
-        # break the ffmpeg filter parser.
+        # Phase 16 D1 (2026-06-09) — TWO changes to make the hook-anchor
+        # SFX actually audible at t=0:
+        # (1) Pre-boost the SFX +6dB via `volume=2.0` before the mix.
+        #     Linear 2.0 = +6dB. Without this, the SFX sits below the
+        #     Tier 1.5.e music floor (~0.035 = -29dB) and is inaudible.
+        # (2) Add `normalize=0` to amix so it does NOT divide each input
+        #     by sum-of-weights. amix's default normalize=1 with weights
+        #     '1.0 0.7' divides narration by 1.7 → effective 0.59x =
+        #     -4.6dB drop on narration. This silently quietens the
+        #     entire video whenever the SFX is present. Disabling
+        #     normalize preserves narration at full level AND lets the
+        #     boosted SFX punch through.
         filter_complex += (
-            f";[0:a][{sfx_idx}:a]"
-            f"amix=inputs=2:duration=longest:weights='1.0 0.7'"
+            f";[{sfx_idx}:a]volume=2.0[sfx_boosted];"
+            f"[0:a][sfx_boosted]"
+            f"amix=inputs=2:duration=longest:weights='1.0 0.7':normalize=0"
             f"[a_mixed]"
         )
         audio_args = [
