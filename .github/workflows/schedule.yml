@@ -57,6 +57,16 @@ on:
         options:
           - "true"
           - "false"
+      revival_topic:
+        description: "Phase 16 D6 revival render — force a specific Mahabharata topic (leave BLANK for legacy weighted-rotation behavior). Example: 'Karna-Kunti meeting — the moment Kunti reveals she is his mother, secret loyalty and the hidden sin of motherhood'"
+        required: false
+        default: ""
+        type: string
+      bake_thumbnail_path:
+        description: "Phase 16 D6 forced-frame thumbnail — repo-relative path to a 1080x1920 PNG to prepend as first ~0.8s of the MP4 (becomes the YouTube auto-thumbnail). Leave BLANK to skip."
+        required: false
+        default: ""
+        type: string
 
 # ════════════════════════════════════════════════════════════════════════════
 # WORKFLOW STRUCTURE
@@ -117,6 +127,35 @@ jobs:
           SERIES="$T"
           [ "$T" = "hi" ] || [ "$T" = "en" ] && SERIES="mahabharata"
           echo "PIPELINE_RUN_ID=${SERIES}_${{ github.run_id }}" >> $GITHUB_ENV
+      # Phase 16 D2 (2026-06-09) — workflow_dispatch revival input handler.
+      # When `revival_topic` is provided (the D6 cloud-trigger path), we
+      # prepend it to scheduled_topics_mahabharata.txt so the existing
+      # forced-topic path picks it up at script-gen time without code
+      # changes. When `bake_thumbnail_path` is also set, we export it as
+      # BAKE_THUMBNAIL_PATH so main.py's pre-upload bake-in step fires.
+      - name: Phase 16 revival overrides (revival_topic + bake_thumbnail_path)
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          REVIVAL_TOPIC="${{ inputs.revival_topic }}"
+          BAKE_PATH="${{ inputs.bake_thumbnail_path }}"
+          if [ -n "$REVIVAL_TOPIC" ]; then
+            echo "[revival] forcing topic: $REVIVAL_TOPIC"
+            # Prepend (not append) so this beats any pre-existing queue entry.
+            QUEUE="scheduled_topics_mahabharata.txt"
+            TMP_QUEUE="$(mktemp)"
+            printf '# Phase 16 D6 revival override (workflow_dispatch %s)\n%s\n' \
+              "${{ github.run_id }}" "$REVIVAL_TOPIC" > "$TMP_QUEUE"
+            [ -f "$QUEUE" ] && cat "$QUEUE" >> "$TMP_QUEUE"
+            mv "$TMP_QUEUE" "$QUEUE"
+          fi
+          if [ -n "$BAKE_PATH" ]; then
+            if [ -f "$BAKE_PATH" ]; then
+              echo "[revival] bake-thumbnail enabled: $BAKE_PATH"
+              echo "BAKE_THUMBNAIL_PATH=$BAKE_PATH" >> $GITHUB_ENV
+            else
+              echo "[revival] WARNING: bake_thumbnail_path '$BAKE_PATH' does not exist — skipping bake-in"
+            fi
+          fi
       - uses: ./.github/actions/run-pipeline-with-checkpoint
         with:
           pipeline-run-id: ${{ env.PIPELINE_RUN_ID }}

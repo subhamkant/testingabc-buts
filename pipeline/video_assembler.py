@@ -133,6 +133,135 @@ def extract_thumbnail_from_video(video_path: str, timestamp_s: float,
     return output_path
 
 
+def prepend_thumbnail_frame(
+    mp4_path: str,
+    thumbnail_png: str,
+    freeze_duration: float = 0.8,
+) -> bool:
+    """Phase 16 D2 (2026-06-09) — Prepend a static PNG as the first
+    `freeze_duration` seconds of the MP4. The first frame YouTube ingests
+    becomes the auto-selected Shorts thumbnail (since Shorts don't allow
+    API-uploaded custom thumbnails). The static graphic also plays as a
+    fast title-card before the Scene 0 motion begins.
+
+    The MP4 is replaced in place on success.
+
+    AUDIO-SYNC TRAP (the reason this helper exists instead of a 5-line
+    ffmpeg one-liner): a static PNG has no audio track. Naive concat of
+    a video-only thumbnail clip with a video+audio main clip causes ffmpeg
+    to either fail or permanently desync the audio (the audio stream
+    starts at t=0 but the video stream starts at t=`freeze_duration`).
+
+    Fix: probe the source MP4's audio params (sample_rate, channel layout),
+    synthesize a silent `anullsrc` track at MATCHING specs, mux it into
+    the thumbnail clip via -shortest, then concat two fully-formed A/V
+    streams. The concat demuxer needs identical A/V codec params on
+    both inputs, which is why we re-encode both into yuv420p libx264
+    + 44.1k aac with identical bitrates.
+
+    Returns True on success, False on any failure (caller must handle).
+    Never raises — a failed thumbnail prepend should not break the
+    upload pipeline; the original MP4 is left untouched on failure."""
+    if not os.path.exists(mp4_path):
+        print(f"    [thumb-prepend] source MP4 missing: {mp4_path}")
+        return False
+    if not os.path.exists(thumbnail_png):
+        print(f"    [thumb-prepend] thumbnail PNG missing: {thumbnail_png}")
+        return False
+
+    # Probe the source MP4 — we need to match audio specs exactly for concat
+    probe = subprocess.run([
+        "ffprobe", "-v", "error", "-print_format", "json",
+        "-show_streams", mp4_path,
+    ], capture_output=True, text=True)
+    if probe.returncode != 0:
+        print(f"    [thumb-prepend] ffprobe failed: {probe.stderr[:200]}")
+        return False
+    try:
+        info = json.loads(probe.stdout)
+        audio = next((s for s in info["streams"] if s["codec_type"] == "audio"), None)
+        video = next((s for s in info["streams"] if s["codec_type"] == "video"), None)
+    except Exception as e:
+        print(f"    [thumb-prepend] probe parse failed: {e}")
+        return False
+    if not video:
+        print(f"    [thumb-prepend] no video stream in source — skipping")
+        return False
+
+    width = int(video.get("width", 1080))
+    height = int(video.get("height", 1920))
+    sample_rate = int((audio or {}).get("sample_rate", "44100"))
+    channels = int((audio or {}).get("channels", 2))
+    ch_layout = "stereo" if channels >= 2 else "mono"
+
+    # Step 1 — build the thumbnail clip with synthesized silent audio.
+    # -loop 1 + -framerate 30 holds the still image at 30fps.
+    # -t bounds both video and audio inputs to the freeze duration.
+    # -shortest belt-and-braces ensures matched lengths.
+    thumb_clip = mp4_path.replace(".mp4", "_thumb_clip.mp4")
+    cmd1 = [
+        "ffmpeg", "-y",
+        "-loop", "1", "-framerate", "30",
+        "-t", f"{freeze_duration:.2f}",
+        "-i", thumbnail_png,
+        "-f", "lavfi",
+        "-t", f"{freeze_duration:.2f}",
+        "-i", f"anullsrc=channel_layout={ch_layout}:sample_rate={sample_rate}",
+        "-vf", (
+            f"scale={width}:{height}:force_original_aspect_ratio=increase,"
+            f"crop={width}:{height},setsar=1,format=yuv420p"
+        ),
+        "-c:v", "libx264", "-preset", "fast", "-crf", "20",
+        "-c:a", "aac", "-b:a", "192k", "-ar", str(sample_rate),
+        "-shortest",
+        thumb_clip,
+    ]
+    r1 = subprocess.run(cmd1, capture_output=True)
+    if r1.returncode != 0 or not os.path.exists(thumb_clip):
+        tail = (r1.stderr.decode("utf-8", errors="replace") or "")[-300:]
+        print(f"    [thumb-prepend] thumb clip render failed: {tail}")
+        return False
+
+    # Step 2 — concat-demuxer over two A/V-matched inputs.
+    # The concat demuxer requires identical codec params on both files,
+    # which we guarantee by re-encoding both legs to libx264+aac+yuv420p.
+    concat_list = mp4_path.replace(".mp4", "_concat_list.txt")
+    output = mp4_path.replace(".mp4", "_with_thumb.mp4")
+    try:
+        with open(concat_list, "w", encoding="utf-8") as f:
+            f.write(f"file '{os.path.abspath(thumb_clip)}'\n")
+            f.write(f"file '{os.path.abspath(mp4_path)}'\n")
+        cmd2 = [
+            "ffmpeg", "-y",
+            "-f", "concat", "-safe", "0",
+            "-i", concat_list,
+            "-c:v", "libx264", "-preset", "fast", "-crf", "20",
+            "-c:a", "aac", "-b:a", "192k", "-ar", str(sample_rate),
+            "-pix_fmt", "yuv420p",
+            "-movflags", "+faststart",
+            output,
+        ]
+        r2 = subprocess.run(cmd2, capture_output=True)
+        if r2.returncode != 0 or not os.path.exists(output):
+            tail = (r2.stderr.decode("utf-8", errors="replace") or "")[-300:]
+            print(f"    [thumb-prepend] concat failed: {tail}")
+            return False
+        # Atomic-ish in-place replace
+        os.replace(output, mp4_path)
+        print(
+            f"    [thumb-prepend] OK — prepended {freeze_duration:.1f}s "
+            f"thumbnail ({width}x{height}) to {os.path.basename(mp4_path)}"
+        )
+        return True
+    finally:
+        # Cleanup intermediates regardless of outcome
+        for f in (thumb_clip, concat_list):
+            try:
+                os.remove(f)
+            except OSError:
+                pass
+
+
 def apply_thumbnail_text_overlay(
     image_path: str,
     text: str,

@@ -540,6 +540,24 @@ async def run_pipeline(language: str = "en", test_mode: bool = False, test_uploa
         elif local_only:
             print("\nStep 5 — SKIPPED via LOCAL_ONLY=true (mp4 saved locally only)")
         elif (not test_mode or test_upload) and os.path.exists("client_secrets.json"):
+            # Phase 16 D2 (2026-06-09) — env-gated FORCED-FRAME thumbnail
+            # bake-in. When BAKE_THUMBNAIL_PATH points to an existing PNG
+            # (1080x1920), prepend it as the first ~0.8s of the MP4 BEFORE
+            # uploading. YouTube Shorts don't accept API-uploaded custom
+            # thumbnails, so the only way to control the auto-selected
+            # thumbnail is to make our chosen graphic the literal first
+            # frame YouTube ingests. Used for the Phase 16 D6 revival
+            # render; daily cron leaves this unset for legacy behavior.
+            _thumb_bake_path = os.environ.get("BAKE_THUMBNAIL_PATH", "").strip()
+            if _thumb_bake_path and os.path.exists(_thumb_bake_path):
+                _freeze_s = float(os.environ.get("BAKE_THUMBNAIL_SECONDS", "0.8"))
+                try:
+                    from pipeline.video_assembler import prepend_thumbnail_frame
+                    print(f"\nStep 4c — Baking forced-frame thumbnail ({_thumb_bake_path}, {_freeze_s}s)...")
+                    prepend_thumbnail_frame(video_path, _thumb_bake_path, freeze_duration=_freeze_s)
+                except Exception as bake_err:
+                    # NEVER fail upload because of a thumbnail prepend issue
+                    print(f"    [thumb-prepend] non-fatal failure, continuing without bake-in: {bake_err}")
             try:
                 print("\nStep 5 — Uploading to YouTube...")
                 # Checkpoint immediately when YouTube returns a video_id —

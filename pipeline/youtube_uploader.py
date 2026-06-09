@@ -30,12 +30,17 @@ _PLAYLIST_TITLES = {
     "krishna":     "Krishna Speaks — First-Person Wisdom",
     "whatif":      "What If — Vyasa AI",
     "explainer":   "Kant Decodes — Hindi Explainers",
+    # Curiosity series — same series key for both channels; YouTube creates the
+    # playlist on whichever channel the token authorizes (EN → Five Second World
+    # via token_curiosity.pickle; HI → Kant Decodes via token_explainer.pickle).
+    "curiosity":   "Cinematic Curiosity — Wounds, Not Poems",
 }
 _PLAYLIST_DESCRIPTIONS = {
     "mahabharata": "Cinematic short stories from the Mahabharata epic — Krishna, Arjuna, Karna, Draupadi, and the eternal lessons of dharma.",
     "krishna":     "Lord Krishna speaks directly to Arjuna, Uddhava, Karna, Bhishma — first-person wisdom from the Mahabharata. हिंदी में।",
     "whatif":      "What if reality bent for a moment? Curiosity-driven thought experiments about Earth, science, nature, and the cosmos.",
     "explainer":   "Hindi explainers separating facts from internet hype. AI, scams, productivity myths, work culture, psychology — what's actually going on behind the noise.",
+    "curiosity":   "Emotionally unsafe explorations of science, technology, and existential futures. Every video is a wound, not a poem.",
 }
 
 # Pinned-comment template per series. After upload, the bot auto-replies its
@@ -71,6 +76,16 @@ _PINNED_COMMENT_TEMPLATES = {
         "🔔 Subscribe — Kant Decodes har hype sabse pehle.\n"
         "#KantDecodes #Hindi #Explainer"
     ),
+    # Curiosity series — same channel-neutral template; per-video pinned_comment
+    # from metadata.json takes priority when present (see upload routing logic).
+    # This fallback uses the v3 "wound, not a poem" register.
+    "curiosity": (
+        "We are sitting in the dirt clapping for the billionaires who are "
+        "mathematically calculating how much of our oxygen they need to burn "
+        "to escape us.\n\n"
+        "🔔 Subscribe — Every video is a wound, not a poem.\n"
+        "#CinematicCuriosity #Shorts"
+    ),
 }
 _PLAYLIST_CACHE_PATH = os.path.join("assets", "playlist_ids.json")
 
@@ -84,12 +99,14 @@ _PINNED_HASHTAGS_BY_SERIES = {
     "krishna":     "#Krishna #कृष्ण #BhagavadGita #Shorts",
     "whatif":      "#WhatIf #Science #Shorts",
     "explainer":   "#KantDecodes #Hindi #Explainer",
+    "curiosity":   "#CinematicCuriosity #SpaceX #TypeIICivilization #Shorts",
 }
 _PINNED_SUBSCRIBE_FALLBACK = {
     "mahabharata": "🔔 Daily Mahabharata Shorts in हिंदी",
     "krishna":     "🔔 Daily Krishna wisdom — हिंदी में।",
     "whatif":      "🔔 Daily science what-ifs.",
     "explainer":   "🔔 Subscribe — Kant Decodes har hype sabse pehle.",
+    "curiosity":   "🔔 Every video is a wound, not a poem.",
 }
 # Only the Hindi-targeted series get the next_seed subscribe-tease format.
 # WhatIf + Explainer use a different language register where a Hindi seed
@@ -119,11 +136,28 @@ def _compose_pinned_comment(series: str, override: str, next_seed: str) -> str:
     If `next_seed` is provided and the series supports it, the subscribe line
     names tomorrow's hook; otherwise the generic subscribe fallback is used.
     Wave 3 adds the channel-thesis tagline between the subscribe line and
-    the hashtag block when the series has one defined."""
+    the hashtag block when the series has one defined.
+
+    Phase 16 D2 (2026-06-09) — added a HARDCODED last-resort fallback so
+    the auto-comment NEVER returns empty. The earlier chain was:
+      override → series template → "" (silent skip)
+    The new chain is:
+      override → series template → universal tribal-split fallback
+    The auto-comment is the channel's strongest early-engagement signal;
+    silently skipping it on an edge case is unacceptable for the revival
+    render.
+    """
     override = (override or "").strip()
     next_seed = (next_seed or "").strip()
     if not override:
-        return _PINNED_COMMENT_TEMPLATES.get(series, "")
+        template = _PINNED_COMMENT_TEMPLATES.get(series, "")
+        if template:
+            return template
+        # Phase 16 D2 final fallback — never return empty
+        return (
+            "इस बारे में आपकी क्या राय है? "
+            "एक पक्ष चुनें और कमेंट करें।"
+        )
 
     hashtags  = _PINNED_HASHTAGS_BY_SERIES.get(series, "")
     thesis    = _PINNED_CHANNEL_THESIS.get(series, "")
@@ -236,6 +270,15 @@ _TAGS_EXPLAINER = [
     "सोशल मीडिया", "एनालिसिस", "real story", "behind the noise",
     "ai hype", "scams explained",
 ]
+# Curiosity (Five Second World + Kant Decodes pivot) — bilingual cinematic
+# curiosity channels. The base bundle works for both EN and HI; the language
+# branch in _series_tag_pack adds Hinglish / English variants.
+_TAGS_CURIOSITY = [
+    "cinematic curiosity", "existential", "type 2 civilization",
+    "Kardashev scale", "SpaceX", "Elon Musk", "Mars colonization",
+    "Starship", "dystopian future", "future of humanity",
+    "space colonization", "climate dread", "Shorts",
+]
 
 
 def _series_tag_pack(series: str, language: str) -> list:
@@ -250,6 +293,19 @@ def _series_tag_pack(series: str, language: str) -> list:
     if series == "explainer":
         # Hindi-only channel; no English variant.
         return list(_TAGS_EXPLAINER)
+    if series == "curiosity":
+        base = list(_TAGS_CURIOSITY)
+        if language == "hi":
+            base += [
+                "हिंदी शॉर्ट्स", "Five Second World", "Kant Decodes",
+                "cosmic dread Hindi", "tech explained Hindi",
+            ]
+        else:
+            base += [
+                "Five Second World", "global English Shorts",
+                "tech philosophy", "cosmic horror",
+            ]
+        return base
     # Default: Mahabharata
     base = list(_TAGS_MAHABHARATA)
     if language == "hi":
@@ -409,9 +465,23 @@ def upload_to_youtube(
     if series is None:
         series = script_data.get("series", "mahabharata")
 
-    # Build tag list — series-specific bundle + script-supplied tags, deduped, capped at 30
+    # Build tag list — series-specific bundle + script-supplied tags, deduped.
+    # YouTube hard-rejects ANY tag string over 500 chars total (counting
+    # surrounding quotes on multi-word tags + comma separators). The legacy
+    # `[:30]` cap is character-blind so the curiosity series (which has long
+    # metadata-driven tags + a 13-item base bundle) was overflowing 500.
+    # Re-cap by char budget to guarantee under 500. Order = script tags first
+    # (highest editorial intent), then series bundle (SEO booster).
     base_tags = _series_tag_pack(series, language)
-    all_tags  = list(dict.fromkeys(script_data.get("tags", []) + base_tags))[:30]
+    merged = list(dict.fromkeys(list(script_data.get("tags", [])) + base_tags))
+    all_tags: list[str] = []
+    char_budget = 480  # 500 minus 20-char safety margin
+    for tag in merged[:30]:
+        cost = len(tag) + (2 if " " in tag else 0) + 1  # +quotes (if spaces) +comma
+        if char_budget - cost < 0:
+            break
+        all_tags.append(tag)
+        char_budget -= cost
 
     # Description: cap trailing hashtag block at top 3 (was 31 → suppression risk),
     # then ensure #Shorts for Shorts algorithm classification.
