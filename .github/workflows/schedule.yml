@@ -1,37 +1,19 @@
 name: Mahabharata YouTube Bot
 
 on:
-  # ═══════════════════════════════════════════════════════════════════════
-  # 🚨 CRON INTENTIONALLY DISABLED 2026-06-09 — Phase 16 ALGORITHMIC COOLDOWN
-  # ═══════════════════════════════════════════════════════════════════════
-  # The Mahabharata channel entered algorithmic suppression after a string of
-  # low-retention renders trained YouTube's discovery system to throttle our
-  # uploads. As of 2026-06-09, fresh renders are getting <50 impressions in
-  # the first 24h (last 28d shows -42% subscriber growth despite +121% views).
-  # No amount of pipeline polish (Phases 11-15) can fix this because the
-  # algorithm has stopped serving the channel.
+  # Re-enabled 2026-06-14 — Phase 16 cooldown over, Phase 17 hyper-cut +
+  # Tier 1.5.g music + recent_topics.json migration all shipped. Daily
+  # publishing resumed at 5:40 PM IST (12:10 UTC) per channel owner.
   #
-  # PHASE 16 STRATEGIC PAUSE: NO auto-uploads for 5 days minimum (until
-  # 2026-06-14). Then a SINGLE hand-crafted revival render (Karna-Kunti
-  # meeting) uploaded MANUALLY via YouTube mobile app on 2026-06-15 at
-  # 6:30 PM IST sharp, with a baked-in custom thumbnail as first 0.5s of
-  # the MP4 + pre-written tribal-split pinned comment posted within 60s.
-  #
-  # DO NOT RE-ENABLE THE SCHEDULE without explicit go-ahead from the
-  # channel owner. workflow_dispatch is kept available ONLY for the
-  # manual revival render generation, not for daily publishing.
-  #
-  # Re-enable criteria (post-revival): >300 views in 48h on revival → ramp
-  # to 1 render every 3 days (NOT daily). 100-300 views → another pause +
-  # second revival. <100 views → consider new channel.
-  #
-  # Earlier disable history:
+  # History:
   #   2026-06-01: temporary disable for one-off manual trigger
   #   2026-06-03: re-enabled after Phase 11 (commit 5109a06)
-  #   2026-06-09: THIS disable — strategic cooldown, NOT temporary
-  # ═══════════════════════════════════════════════════════════════════════
-  # schedule:
-  #   - cron: "0 12 * * *"   # DISABLED — see block comment above
+  #   2026-06-09: disabled — Phase 16 algorithmic cooldown (5-day pause)
+  #   2026-06-13: D6 revival published (8Z1QBrqHNb0, later unlisted)
+  #               + Tier 1.5.g music drop + Phase 17 hyper-cut shipped
+  #   2026-06-14: re-enabled at NEW slot 12:10 UTC (was 12:00 UTC)
+  schedule:
+    - cron: "10 12 * * *"   # 5:40 PM IST nominal publish target
   workflow_dispatch:
     inputs:
       target:
