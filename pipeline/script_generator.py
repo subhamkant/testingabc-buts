@@ -2931,7 +2931,7 @@ def generate_script(
 
     You must strictly follow all rules and NEVER generate invalid or noisy text.
 
-    TASK: Create a 45-50 second vertical (9:16) video script with EXACTLY 6 scenes about a well-known incident from the Mahabharata. Phase 12 (2026-06-03 v2): the target is 45-50s, with 58s as a HARD ceiling. Per-scene narration is 14-18 words (valley scene 5 is 11-14), totaling 85-110 spoken words. Hindi Charon TTS narrates at ~2.2 words/sec (measured) — going over 18 words/scene pushes audio past 58s and auto-cap chops the aftermath, killing the emotional payload. Generate WITHIN the target so the aftermath survives. Keep the full emotional architecture (hook → escalation → destruction → collapse → aftershock) but make each scene PUNCHIER — fewer words, harder beats. Shorts reward compression.
+    TASK: Create a 45-50 second vertical (9:16) video script with EXACTLY 13 scenes about a well-known incident from the Mahabharata. Phase 17 (2026-06-13) hyper-cut: doubled the scene count from 7 to 13 so video_assembler.py cuts to a new image every ~3.5-4s — manufacturing kinetic energy from static FLUX images via rapid editing alone (no paid I2V API). Per-scene narration is 6-9 words; scene 13 (loop closure question) is 5-8 words. Total ~100-110 spoken words for a 46-50s Short. Hindi Charon TTS narrates at ~2.2 words/sec (measured). Each scene is ONE punchy sentence — not a paragraph. The full emotional architecture (hook → setup → rehook → destruction → valley → aftermath → loop question) is preserved across 13 cuts: 1-2 hook, 3-5 setup, 6-7 rehook, 8-10 destruction, 11 valley, 12 aftermath, 13 loop. Shorts reward compression + visual density.
 
     TOPIC: "{topic}"
     LANGUAGE: {lang_label}
@@ -3737,7 +3737,7 @@ def generate_script(
       "tags": ["topic-specific long-tail tag 1","topic-specific long-tail tag 2","named character 1 (English)","named character 1 (Hindi/Devanagari)","named character 2","specific incident name","viewer-search query like 'why X happened'","Mahabharata","महाभारत","Shorts","Hindu mythology","Krishna","कृष्ण"],
       "scenes": [
         {{
-          "narration": "14-18 words in the specified LANGUAGE — vivid, present-tense, dramatic. MIX of short punch lines and longer cinematic lines (varied rhythm). End each scene with '...' (triple ellipsis) for natural TTS pause. ~5-7 seconds spoken. EXCEPTION: the valley scene (scene 5) is 11-14 words and quiet. Phase 12 2026-06-03 v2: 14-18 words/scene (not 18-22) because Gemini Charon narrates at ~2.2 wps (slower than older 3 wps spec) and the smoke at 18-22 overshot to 66s. Target total ~85-110 spoken words → ~44-50s + ~3.5s outro = 47-53s, NEVER hitting auto-cap. The aftermath survives intact. Pack each beat HARDER, not longer.",
+          "narration": "6-9 words in the specified LANGUAGE — ONE punchy sentence per scene. Vivid, present-tense, single visual beat (NOT a paragraph). End each scene with '...' (triple ellipsis) for natural TTS pause. ~2.5-4 seconds spoken. EXCEPTION: scene 11 (valley) is 5-7 words and intimate, scene 13 (loop closure question) is 5-8 words and MUST end with '?'. Phase 17 2026-06-13 hyper-cut: 13 scenes × 8 words avg = ~100 words × 2.2 wps Charon = ~46s narration + ~3s outro = ~49-50s, NEVER hitting auto-cap. Each scene is ONE beat in a 13-cut rapid-fire sequence. Pack each beat HARD — visual + emotional density per scene matters more than length.",
           "image_prompt": "Detailed English prompt, EMOTION-FIRST structure: [Named character's specific facial state — eyes / mouth / posture carrying the scene's emotional truth, e.g. 'Bhishma's eyes shut tight against a tear running down his cheek, jaw clenched white'], [shot type — favor extreme close-up, asymmetric framing, or uncomfortable proximity], in [environment with ≥3 specific architectural/environmental elements: carved pillars, oil lamps, lotus reliefs, etc], [lighting — favor harsh edge lighting / single dramatic source / dim shadow-heavy], [mood], {palette_directive} (Phase 12 per-character palette — use this color/light signature throughout the scene; do NOT default to warm amber unless the directive explicitly says amber). FACE DOMINANCE FLOOR (Phase 1 iter-3 2026-05-29 / Issue #1) — for scenes 1-5 the human face MUST occupy ≥50% of the frame area. Sky / landscape / atmospheric backdrops may not exceed 25% of frame in scenes 1-5. Scene 6 (aftermath) is the ONLY exception — it may use wide landscape composition for emotional emptiness. The face is the scene; the environment is secondary. TEXTURE + IMPERFECTION MANDATES (Phase 1 iter-3 2026-05-29 / Issue #4) — visible film grain on the image (not the smooth FLUX default), imperfect focus (one element may be slightly soft), motion blur on emotional moments (running tears smear, hair displaced mid-turn, hand caught mid-reach), hair caught mid-motion or fabric mid-flow (never frozen-portrait stillness), dust / ash / particles in the light when mood permits. FORBID balanced or centered compositions when the scene's mood is anguish / rage / shock / guilt / grief. FORBID 'magazine quality', 'studio-lit', 'polished AI render', 'wraparound bokeh', 'stock photo elegance', 'commercial photography', 'editorial portrait'. MUST end with: 'clean cinematic frame with no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text.'",
           "video_prompt": "Cinematic 5-second shot in English — characters in subtle motion, camera movement, lighting. Vertical 9:16.",
           "mood": "3-6 word English emotional tone phrase"
@@ -4081,17 +4081,36 @@ def generate_script(
     - Tags MUST include topic-specific long-tail keywords (named characters
       in this topic + specific incident name + viewer-search queries) on
       top of the generic Mahabharata fallbacks.
-    - Narration per scene: 14-18 words, varied rhythm (mix short punch + long cinematic), end with "..." for TTS pause, ~6-7 seconds spoken. EXCEPTION: scene 5 (valley) is 11-14 words. Phase 12 2026-06-03 (revised v2): word target tightened to 14-18 because the smoke at 18-22 still overshot — Gemini Charon narrates ~2.2 words/sec (NOT 3 wps as the older spec assumed), with ellipsis pauses adding 0.3-0.4s each. 14-18 words/scene avg × 6 scenes = 96 words × 2.2 wps = ~44s narration + ~3.5s outro = ~47s total, comfortably inside the 50s soft target and the 58s HARD ceiling. NO end-chopping = aftermath survives intact.
+    - Narration per scene: 6-9 words, punchy single-beat lines (Phase 17 2026-06-13 hyper-cut: 13 scenes × ~3.85s each instead of 7 scenes × ~7s each — to manufacture kinetic energy from static FLUX images via rapid editing alone, no paid I2V). Each scene is now ONE punchy sentence, not a paragraph. End with "..." (triple ellipsis) for TTS pause. ~2.5-4s spoken per scene at Gemini Charon's measured 2.2 wps. Math: 12 narrative scenes × 8 words avg + Scene 13 question (5-8 words) ≈ 100-110 spoken words = ~46s narration + ~3s outro = ~49-50s total. NO end-chop.
     - Narration MUST NOT contain URLs, hashtags (#), @mentions, English in Hindi videos, or any social-media text
-    - Generate EXACTLY 7 scenes (Phase 15 2026-06-08: 6 narrative scenes + 1 short loop-closure question scene). Scene 7 is much SHORTER than the others (8-12 words, ~3-4s spoken) so total audio still lands inside 40-50s.
-    - Scene 1 = HOOK IN MEDIA RES (begin INSIDE an emotional moment already in progress — eyes trembling, hand reaching, voice breaking, breath catching — NOT documentary narrator setup), scene 2-3 = setup + RISING TENSION, scene 3 OR 4 = REHOOK (contrast marker), scene 5 = EMOTIONAL VALLEY (intimate quiet), scene 6 = AFTERMATH + aftershock line (emotion AFTER destruction, not spectacle), scene 7 = LOOP CLOSURE QUESTION (Phase 15: 8-12 words, MUST end with a question mark, MUST be an ethically charged question that puts the viewer INSIDE the moral dilemma)
-    - ONE scene around the 50% mark MUST begin or contain a rehook contrast marker
-      ("लेकिन..."/"परंतु..."/"जो किसी ने नहीं सोचा था..."/"और तभी..."/"But..."/"Suddenly")
-    - Scene 5 (VALLEY) MUST be intimate close-up — candlelight / dim warm tones / single subject — NOT lightning/fire/spectacle
-    - Scene 6 (AFTERMATH) image_prompt MUST include an aftermath cue (empty battlefield / abandoned weapon / lonely throne / trembling hand releasing / single figure staring / discarded crown / wind through empty cloth / footprints in ash / hand near but not touching / broken thread). MUST NOT include the old spectacle keywords (lightning / fire / storm / cosmic / destruction / inferno / tempest / burning sky).
-    - Scene 6 mood MUST be one of: haunting-quiet, hollow, weary, irreversible, severed, witnessed, abandoned, unresolved. NOT inspiring / triumphant / dignified / peaceful.
-    - Scene 6 narration MUST NOT contain closure tropes ("rises triumphant", "dawn of a new era", "glory", "victorious", "hope rekindled", "battle won", "peace restored", "blessing of the gods", "उगता है", "विजय", "महिमा") — these kill emotional residue.
-    - Scene 6 FINAL SENTENCE = AFTERSHOCK LINE (iter-4 2026-05-30 / Tightening 12). The last narration line of the entire script must be a single sentence delivering PHILOSOPHICAL RESIDUE — an uncomfortable truth that haunts the viewer after the video ends. NOT a moral lesson; NOT an explanation; NOT a summary. The line should feel like a struck bell that keeps ringing. Patterns:
+    - Generate EXACTLY 13 scenes (Phase 17 2026-06-13: 12 narrative + 1 loop-closure question). Each scene is a single visual beat. Scene 13 is the LOOP CLOSURE question.
+    - 13-scene STRUCTURE (1-indexed):
+        • Scenes 1-2 = HOOK IN MEDIA RES (begin INSIDE an emotional moment already in progress — eyes trembling, hand reaching, voice breaking, breath catching — NOT documentary narrator setup; scene 2 lands the revelation that pulls the viewer in)
+        • Scenes 3-5 = SETUP + RISING TENSION (3 cuts ramping the stakes — character motivation, social weight, the trap closing)
+        • Scenes 6-7 = REHOOK / CONTRAST (the "but wait" twist that resets curiosity — at least ONE of scenes 6-7 MUST contain a contrast marker: "लेकिन..."/"परंतु..."/"जो किसी ने नहीं सोचा था..."/"और तभी..."/"But..."/"Suddenly")
+        • Scenes 8-10 = DESTRUCTION (3 cuts of the destructive event itself — not metaphor, real consequence)
+        • Scene 11 = EMOTIONAL VALLEY (intimate close-up — candlelight / dim warm tones / single subject — NOT lightning/fire/spectacle. The quietest beat.)
+        • Scene 12 = AFTERMATH + aftershock line (emotion AFTER destruction, not spectacle)
+        • Scene 13 = LOOP CLOSURE QUESTION (5-8 words, MUST end with a question mark, MUST be an ethically charged question that puts the viewer INSIDE the moral dilemma)
+    - CAMERA ANGLE CYCLING (Phase 17 — manufacture kinetic energy from static FLUX images). The image_prompt of each scene MUST begin with the cycled angle directive below, then the visual content. Cycling is DETERMINISTIC — scene 1 uses angle 1, scene 2 uses angle 2, etc. Do NOT shuffle. This prevents the "static fatigue" of 4 portrait close-ups in a row:
+        1. "Extreme macro close-up on character's eyes — single tear / pupils dilated / lashes wet"
+        2. "Wide establishing shot — vast battlefield / palace / sky / river, character a small commanding figure"
+        3. "Low angle silhouette — character backlit, looking down at viewer, threatening or majestic"
+        4. "Over-the-shoulder POV — viewer sees what character sees, the world from inside their head"
+        5. "Detail / object close-up — weapon hilt / jewelry / hand gripping / single object that carries meaning"
+        6. "Top-down god's-eye view — character small in vast composition, fate looking down"
+        7. "Profile silhouette against firelight / sunset / lightning — single backlight carving the face"
+        8. "Reaction shot — face only, eyes wide, mouth tight, breath caught mid-gesture"
+        9. "Action moment frozen mid-gesture — sword raising, hand reaching, foot stepping forward"
+        10. "Inner sanctum extreme close-up — single feature (lips, eyebrow, scar, jewelry) filling 80% of frame"
+        11. "Symbolic object focus — pulled focus on the meaningful object (crown, weapon, ash, broken thread), character blurred behind"
+        12. "Backlit emotional close-up — single light source carving the face, half in shadow, eyes catching the light"
+        13. "Reverence wide low-angle — character looking up to sky / gods / fate, vast space above their head"
+    - Scene 11 (VALLEY) MUST be intimate close-up using angle 11 — candlelight / dim warm tones / single subject — NOT lightning/fire/spectacle
+    - Scene 12 (AFTERMATH) image_prompt MUST include an aftermath cue (empty battlefield / abandoned weapon / lonely throne / trembling hand releasing / single figure staring / discarded crown / wind through empty cloth / footprints in ash / hand near but not touching / broken thread). MUST NOT include the old spectacle keywords (lightning / fire / storm / cosmic / destruction / inferno / tempest / burning sky).
+    - Scene 12 mood MUST be one of: haunting-quiet, hollow, weary, irreversible, severed, witnessed, abandoned, unresolved. NOT inspiring / triumphant / dignified / peaceful.
+    - Scene 12 narration MUST NOT contain closure tropes ("rises triumphant", "dawn of a new era", "glory", "victorious", "hope rekindled", "battle won", "peace restored", "blessing of the gods", "उगता है", "विजय", "महिमा") — these kill emotional residue.
+    - Scene 12 = AFTERSHOCK LINE (iter-4 2026-05-30 / Tightening 12, now relocated from scene 6 to scene 12 by Phase 17). This scene's narration must be a single sentence delivering PHILOSOPHICAL RESIDUE — an uncomfortable truth that haunts the viewer after the video ends. NOT a moral lesson; NOT an explanation; NOT a summary. The line should feel like a struck bell that keeps ringing. Patterns:
         ✓ "और कर्ण ने सीखा — सम्मान की भूख भी एक श्राप है।" (Karna learned — even the hunger for respect is a curse)
         ✓ "भीष्म ने धर्म बचाया। पर अपना धर्म खो दिया।" (Bhishma saved dharma — but lost his own)
         ✓ "जो रिश्ता बचाने के लिए सब छोड़ा — वही सबसे गहरा घाव बना।" (the relationship saved at all cost became the deepest wound)
@@ -4280,22 +4299,26 @@ def generate_script(
             elif last_short:
                 chosen = (
                     f"Your previous response failed the LENGTH validator "
-                    f"(n_scenes={n_scenes}, avg_words={avg_words:.1f}). Phase 15 "
-                    f"(2026-06-08) target: EXACTLY 7 scenes. Scenes 1-6 are "
-                    f"narrative (14-18 words each); scene 7 is the LOOP CLOSURE "
-                    f"QUESTION (8-12 words, MUST end with '?'). Combined avg "
-                    f"naturally lands at 14-17 words across all 7 scenes. "
-                    f"Total: ~105-120 spoken words for a 50-55s Short. "
-                    f"Hindi Charon narrates ~2.2 words/sec — going over 18 "
-                    f"avg pushes audio past the 58s HARD ceiling and the "
-                    f"AFTERMATH + LOOP-CLOSURE QUESTION get chopped, killing "
-                    f"the rewatch trigger. Going BELOW 13 avg means scene 7 "
-                    f"is the only short one (good) but scenes 1-6 are too "
-                    f"thin to land the emotional architecture. Do NOT add an "
-                    f"8th scene to satisfy any other rule; tighten existing "
-                    f"scenes instead. This is TOP PRIORITY — fix scene count "
-                    f"and word count BEFORE any other gate. Scene 7 MUST end "
-                    f"with '?' — that's the loop trigger, not optional."
+                    f"(n_scenes={n_scenes}, avg_words={avg_words:.1f}). Phase 17 "
+                    f"(2026-06-13) target: EXACTLY 13 scenes (hyper-cut). "
+                    f"Scenes 1-12 are narrative beats (6-9 words EACH — ONE "
+                    f"punchy sentence per scene, NOT a paragraph); scene 13 "
+                    f"is the LOOP CLOSURE QUESTION (5-8 words, MUST end with "
+                    f"'?'). Combined avg lands at ~7-9 across all 13 scenes. "
+                    f"Total: ~100-110 spoken words for a 49-50s Short. "
+                    f"Hindi Charon narrates ~2.2 words/sec. Each scene is "
+                    f"ONE BEAT in a 13-cut rapid-fire sequence — visual "
+                    f"density manufactures kinetic energy from static FLUX "
+                    f"images. Going OVER 10 avg means scenes are too long "
+                    f"(paragraph not beat); going BELOW 5 means scenes are "
+                    f"too thin to land. Do NOT collapse to fewer scenes; "
+                    f"deliver EXACTLY 13. This is TOP PRIORITY — fix scene "
+                    f"count and word count BEFORE any other gate. Scene 13 "
+                    f"MUST end with '?' — that's the loop trigger, not "
+                    f"optional. Each image_prompt MUST begin with its "
+                    f"cycled camera-angle directive (scene 1 = macro eyes, "
+                    f"scene 2 = wide establishing, ... scene 13 = reverence "
+                    f"wide low-angle) per the HARD RULES above."
                 )
             elif last_missing_names:
                 scene_list = ", ".join(f"scene {n}" for n in last_missing_names)
@@ -4402,17 +4425,19 @@ def generate_script(
         avg_words = sum(word_counts) / max(len(word_counts), 1)
         n_scenes = len(scenes)
 
-        # Length validator (Phase 15 2026-06-08 — extended to 7 scenes for
-        # the Loop Closure question scene). Architecture: scenes 1-6 are
-        # narrative (14-18 words each, ~95-110 total); scene 7 is the
-        # loop-closure question (8-12 words, ~10 words avg). Combined
-        # ≈ 105-120 words / 2.2 wps Charon = ~48-55s + ~3.5s outro asset
-        # = ~52-58s total — landing right at the 58s ceiling. Average
-        # check across all 7 scenes naturally pulls toward ~14-17 due
-        # to the short scene 7. We allow avg as low as 13 to absorb that
-        # without false-rejecting otherwise-valid scripts.
-        # Previous Phase 13 v2 was: n_scenes != 6, avg 14-18.
-        last_short = (n_scenes != 7 or avg_words < 13 or avg_words > 18)
+        # Length validator (Phase 17 2026-06-13 — hyper-cut to 13 scenes,
+        # 6-9 words/scene, to manufacture kinetic visual energy from
+        # static FLUX images via rapid editing alone). Architecture:
+        # scenes 1-12 are narrative beats (6-9 words each, ~90-100
+        # total); scene 13 is the loop-closure question (5-8 words).
+        # Combined avg lands at ~7-9 across all 13 scenes. At Charon's
+        # 2.2 wps that's ~46s narration + ~3s outro = ~49-50s — well
+        # inside the 58s ceiling. Floor at 5 to absorb the short
+        # questions/valleys without false-rejection; ceiling at 10
+        # rejects LLM drift back toward the old paragraph-length
+        # scenes that defeat the hyper-cut visual density.
+        # Previous Phase 15: n_scenes != 7, avg 13-18.
+        last_short = (n_scenes != 13 or avg_words < 5 or avg_words > 10)
         # Threshold 4: a character at the centre of the story (Bhishma in a
         # Bhishma video) can appear ~4 times naturally. 5+ times signals that
         # supporting characters and details are being skipped in favour of

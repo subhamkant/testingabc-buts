@@ -34,9 +34,25 @@ COLOR_GRADE = (
 FILM_GRAIN = "noise=alls=14:allf=t+u"
 
 FPS                = 30
-XFADE_DURATION     = 0.5
+XFADE_DURATION     = 0.5         # default for 6-7 scene renders (~7s/scene)
+XFADE_DURATION_HYPERCUT = 0.3    # Phase 17 (2026-06-13): tighter xfade when
+                                 # n_scenes >= 12. At ~3.85s per scene a 0.5s
+                                 # transition burns 13% of the cut — feels
+                                 # sluggish. 0.3s = 8% of cut, snappier.
 SUB_XFADE_DURATION = 0.25
 _MIN_SUB_DURATION  = 2.0   # minimum seconds per sub-clip
+
+
+def _resolve_xfade_duration(n_scenes: int) -> float:
+    """Phase 17 (2026-06-13). Pick the xfade transition duration based on
+    scene density. Hyper-cut renders (n >= 12 scenes for ~50s = ~3.85s per
+    scene) get a tighter 0.3s xfade so transitions don't dominate the cut;
+    standard renders (7-scene Phase 15 architecture) keep the 0.5s xfade
+    that's been tuned over the last 30 days.
+
+    Pure function — same input always returns same output. No env var
+    override; the scene count IS the signal."""
+    return XFADE_DURATION_HYPERCUT if n_scenes >= 12 else XFADE_DURATION
 
 
 # ── Explainer channel — locked visual identity ───────────────────────────────
@@ -680,14 +696,18 @@ def _write_final_video(clip_paths: list, clip_durations: list, output_path: str)
     accumulated  = 0.0
     prev_label   = "[0:v]"
 
+    # Phase 17 (2026-06-13): pick xfade based on scene density.
+    # Hyper-cut (n>=12) uses 0.3s; standard 6-7 scene renders keep 0.5s.
+    xfade_dur = _resolve_xfade_duration(len(clip_paths))
+
     for idx in range(1, len(clip_paths)):
-        accumulated += clip_durations[idx - 1] - XFADE_DURATION
+        accumulated += clip_durations[idx - 1] - xfade_dur
         is_last      = (idx == len(clip_paths) - 1)
         out_label    = "[vout]" if is_last else f"[xf{idx}]"
         transition   = _XFADE_TRANSITIONS[idx % len(_XFADE_TRANSITIONS)]
         filter_parts.append(
             f"{prev_label}[{idx}:v]xfade=transition={transition}"
-            f":duration={XFADE_DURATION}:offset={accumulated:.3f}{out_label}"
+            f":duration={xfade_dur}:offset={accumulated:.3f}{out_label}"
         )
         prev_label = out_label
 
@@ -2034,6 +2054,28 @@ def _make_silent_image_scene_clip(image_paths, output_path: str, duration: float
     if isinstance(image_paths, str):
         image_paths = [image_paths]
 
+    # === v2.1 motion-clip dispatcher (added 2026-06-13) ===
+    # If any input path ends in .mp4, the upstream image_generator (curiosity
+    # series only) produced a pre-rendered LTX-Video clip for this scene.
+    # Route the whole scene to the existing _make_silent_video_scene_clip
+    # handler (loop/boomerang + portrait crop + LUT grade + grain) and return.
+    #
+    # Mahabharata isolation: Mahabharata's image_generator never produces .mp4
+    # paths — its visual_track outputs are exclusively .jpg/.png stills. So for
+    # Mahabharata, mp4_paths is always empty and execution falls through to the
+    # existing Ken Burns logic unchanged. Verified safe.
+    mp4_paths = [p for p in image_paths if isinstance(p, str) and p.lower().endswith(".mp4")]
+    if mp4_paths:
+        _make_silent_video_scene_clip(
+            mp4_paths[0],
+            output_path,
+            duration,
+            scene_index=scene_index,
+            is_ai_clip=True,
+        )
+        return
+    # === end dispatcher ===
+
     n_subs  = len(image_paths)
     sub_dur = duration / n_subs
 
@@ -2202,7 +2244,12 @@ def _make_silent_video_scene_clip(
 
 def _build_silent_video_with_xfades(clip_paths: list, durations: list, output_path: str) -> bool:
     """Concatenate silent video clips with rotating xfade transitions. Final
-    timeline length = sum(durations) - (n-1)*XFADE_DURATION."""
+    timeline length = sum(durations) - (n-1)*xfade_dur.
+
+    Phase 17 (2026-06-13): xfade duration auto-scales based on scene density
+    via _resolve_xfade_duration() — hyper-cut renders (n>=12) get 0.3s
+    transitions so the cuts feel snappy; standard 7-scene renders keep 0.5s.
+    """
     if len(clip_paths) == 1:
         import shutil as _sh
         _sh.copy2(clip_paths[0], output_path)
@@ -2216,14 +2263,16 @@ def _build_silent_video_with_xfades(clip_paths: list, durations: list, output_pa
     accumulated  = 0.0
     prev_label   = "[0:v]"
 
+    xfade_dur = _resolve_xfade_duration(len(clip_paths))
+
     for idx in range(1, len(clip_paths)):
-        accumulated += durations[idx - 1] - XFADE_DURATION
+        accumulated += durations[idx - 1] - xfade_dur
         is_last      = (idx == len(clip_paths) - 1)
         out_label    = "[vout]" if is_last else f"[xf{idx}]"
         transition   = _XFADE_TRANSITIONS[idx % len(_XFADE_TRANSITIONS)]
         filter_parts.append(
             f"{prev_label}[{idx}:v]xfade=transition={transition}"
-            f":duration={XFADE_DURATION}:offset={accumulated:.3f}{out_label}"
+            f":duration={xfade_dur}:offset={accumulated:.3f}{out_label}"
         )
         prev_label = out_label
 
