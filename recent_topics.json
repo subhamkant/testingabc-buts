@@ -9,40 +9,49 @@
       "ts": "2026-06-01 17:23:14"
     },
     {
-      "topic": "Karna's last regret on the battlefield — the dying thoughts of a man who realized too late that loyalty to the wrong friend had cost him everything",
-      "ts": "2026-06-02 19:17:43"
+      "topic": "Karna's last regret on the battlefield — the dying thoughts of a man who realized too late that his loyalty to the wrong friend had cost him everything",
+      "ts": "2026-06-02 19:17:43",
+      "_migrated_from_phase15_rewrite": "Karna's last regret on the battlefield — the dying thoughts ..."
     },
     {
-      "topic": "Arjuna and Drona's bird-eye test — the moment Drona knew this student would become the greatest archer",
-      "ts": "2026-06-03 16:49:07"
+      "topic": "Arjuna's hidden truth at Drona's bird-eye test — the secret ruthlessness Drona spotted in his student, the greatest archer made by a cold heart not a kind one",
+      "ts": "2026-06-03 16:49:07",
+      "_migrated_from_phase15_rewrite": "Arjuna and Drona's bird-eye test — the moment Drona knew thi..."
     },
     {
-      "topic": "Draupadi born from the sacrificial fire — the daughter Drupada asked for to destroy Drona",
-      "ts": "2026-06-03 18:34:43"
+      "topic": "Draupadi's hidden birth from sacrificial fire — Drupada's secret sin, the daughter he weaponized to destroy Drona, the greatest curse of the Panchala line",
+      "ts": "2026-06-03 18:34:43",
+      "_migrated_from_phase15_rewrite": "Draupadi born from the sacrificial fire — the daughter Drupa..."
     },
     {
-      "topic": "Yudhishthira and the Yaksha at the lake — the questions that defined dharma in the forest",
-      "ts": "2026-06-04 15:06:18"
+      "topic": "Yudhishthira's hidden cowardice at the Yaksha lake — the secret questions that exposed his greatest lie about dharma, the truth no king wanted answered",
+      "ts": "2026-06-04 15:06:18",
+      "_migrated_from_phase15_rewrite": "Yudhishthira and the Yaksha at the lake — the questions that..."
     },
     {
-      "topic": "Eklavya's gurudakshina — the thumb he cut off without hesitation when his guru asked for it, the price of a teacher who had never once taught him",
-      "ts": "2026-06-04 18:48:47"
+      "topic": "Eklavya's greatest sacrifice — the hidden thumb he cut off for a guru who never taught him, the untold sin of caste that took an archer's hand",
+      "ts": "2026-06-04 18:48:47",
+      "_migrated_from_phase15_rewrite": "Eklavya's gurudakshina — the thumb he cut off without hesita..."
     },
     {
-      "topic": "Ashwatthama and the lie 'Ashwatthama is dead' — the moment Yudhishthira's only lie killed his father Drona from grief, not blade",
-      "ts": "2026-06-05 14:53:27"
+      "topic": "Ashwatthama's hidden truth in Yudhishthira's lie — the secret name that killed his father Drona from grief not blade, the greatest sin of war",
+      "ts": "2026-06-05 14:53:27",
+      "_migrated_from_phase15_rewrite": "Ashwatthama and the lie 'Ashwatthama is dead' — the moment Y..."
     },
     {
-      "topic": "Arjuna fighting his own grandfather Bhishma — using Shikhandi as a shield to do what he could never do otherwise",
-      "ts": "2026-06-06 13:34:04"
+      "topic": "Arjuna's hidden lie against Bhishma — using Shikhandi as a shield, the secret betrayal of the warrior code, the greatest sin of a grandson against his grandfather",
+      "ts": "2026-06-06 13:34:04",
+      "_migrated_from_phase15_rewrite": "Arjuna fighting his own grandfather Bhishma — using Shikhand..."
     },
     {
-      "topic": "Draupadi as wife to five Pandavas — the unusual marriage that bound the brothers forever",
-      "ts": "2026-06-07 13:52:39"
+      "topic": "Draupadi's untold marriage to five Pandavas — the hidden vow that bound the brothers forever, the queen's greatest sacrifice nobody ever named",
+      "ts": "2026-06-07 13:52:39",
+      "_migrated_from_phase15_rewrite": "Draupadi as wife to five Pandavas — the unusual marriage tha..."
     },
     {
-      "topic": "Yudhishthira's gambling addiction — how the truthful king lost everything including his wife",
-      "ts": "2026-06-08 15:55:50"
+      "topic": "Yudhishthira's hidden sin in the dice game — the truthful king's greatest betrayal, gambling away his wife and his brothers as the secret cost of his pride",
+      "ts": "2026-06-08 15:55:50",
+      "_migrated_from_phase15_rewrite": "Yudhishthira's gambling addiction — how the truthful king lo..."
     },
     {
       "topic": "Arjuna's hidden truth at Drona's bird-eye test — the secret ruthlessness Drona spotted in his student, the greatest archer made by a cold heart not a kind one",
@@ -56,5 +65,6 @@
       "topic": "Karna-Kunti meeting — the secret moment Kunti revealed she was his mother, the queen's hidden sin and the warrior's greatest betrayal by his own blood",
       "ts": "2026-06-13 14:56:00"
     }
-  ]
+  ],
+  "_note": "Phase 15 rewrite (commit 320e49f on 2026-06-08) changed arc topic strings. Pre-2026-06-08 entries whose strings became orphaned vs current arcs.json were migrated to their post-Phase-15 equivalents on 2026-06-13 to restore exact-string dedup. The `_migrated_from_phase15_rewrite` field on each migrated entry records the original published string for traceability."
 }
