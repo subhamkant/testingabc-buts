@@ -1802,14 +1802,27 @@ def _apply_background_music(output_path: str, series: str = "mahabharata"):
     # reduction of ~10% so narration carries the emotion and music sits
     # under it. Music's job is atmosphere; narration is the protagonist.
     #
-    #   Window                  Tier1   T1.5    T1.5.b  T1.5.c  T1.5.d  T1.5.e  T1.5.f (now, 2026-06-13)
-    #   0-3s (mystery)          0.060   0.055   0.050   0.042   0.043   0.035   0.024
-    #   3-8s (tension)          0.080   0.075   0.067   0.057   0.059   0.048   0.034
-    #   8 → valley_start (emot) 0.100   0.095   0.085   0.072   0.074   0.060   0.042
-    #   VALLEY window           —       0.040   0.048   0.041   0.042   0.034   0.024
-    #   post-valley (climax)    0.130   0.110   0.098   0.083   0.086   0.070   0.050
+    #   Window                  Tier1   T1.5    T1.5.b  T1.5.c  T1.5.d  T1.5.e  T1.5.f  T1.5.g (now, 2026-06-13 PM)
+    #   0-3s (mystery)          0.060   0.055   0.050   0.042   0.043   0.035   0.024   0.012
+    #   3-8s (tension)          0.080   0.075   0.067   0.057   0.059   0.048   0.034   0.017
+    #   8 → valley_start (emot) 0.100   0.095   0.085   0.072   0.074   0.060   0.042   0.021
+    #   VALLEY window           —       0.040   0.048   0.041   0.042   0.034   0.024   0.012
+    #   post-valley (climax)    0.130   0.110   0.098   0.083   0.086   0.070   0.050   0.025
     #
-    # Tier 1.5.f (2026-06-13): another -30% across the board after the
+    # Tier 1.5.g (2026-06-13 PM): another -50% from 1.5.f after the
+    # Phase 17 hyper-cut smoke render (Yudhishthira #52, 57.89s output)
+    # came back with the SAME user feedback for the 5th time in 10 days:
+    # "BG music is still high". Each prior linear-gain drop didn't move
+    # the user's perception enough. 1.5.g pushes music to -32 to -38 dB
+    # — at the threshold of audibility on phone speakers in noisy
+    # environments. Music is now atmospheric whisper; narration is
+    # unambiguously the protagonist. THIS IS THE FLOOR. If 1.5.g still
+    # reads as "too loud", the issue is no longer the linear curve —
+    # it's loudnorm pulling everything up during the I=-14 LUFS pass.
+    # Next fix (if needed) would be loudnorm I target -14→-16 or LRA
+    # widening 7→14, NOT another curve drop.
+    #
+    # Tier 1.5.f (2026-06-13): -30% across the board after the
     # Phase 16 D6 revival render shipped (8Z1QBrqHNb0). User feedback
     # post-publish: "BG music is still high" despite the 1.5.e drop +
     # the amix normalize=0 fix from Phase 16 D1. Per-window mean volume
@@ -1831,11 +1844,11 @@ def _apply_background_music(output_path: str, series: str = "mahabharata"):
     # but loud enough to not read as broken silence on mobile speakers in
     # noisy environments.
     music_volume_expr = (
-        f"if(lt(t,3),0.024,"
-        f"if(lt(t,8),0.034,"
-        f"if(lt(t,{valley_start_t:.2f}),0.042,"
-        f"if(lt(t,{valley_end_t:.2f}),0.024,"
-        f"0.050))))"
+        f"if(lt(t,3),0.012,"
+        f"if(lt(t,8),0.017,"
+        f"if(lt(t,{valley_start_t:.2f}),0.021,"
+        f"if(lt(t,{valley_end_t:.2f}),0.012,"
+        f"0.025))))"
     )
     # Build the filter graph + ffmpeg input list. If chunking is active AND
     # the ambient bed exists, layer the bed as a 3rd input ([2:a]) at flat
@@ -1888,7 +1901,7 @@ def _apply_background_music(output_path: str, series: str = "mahabharata"):
     if result.returncode == 0:
         os.replace(music_output, output_path)
         print(f"    [OK] Music mixed (5-section curve w/ valley dip: "
-              f"0.024→0.034→0.042→[VALLEY {valley_start_t:.1f}-{valley_end_t:.1f}s @ 0.024]→0.050, "
+              f"0.012→0.017→0.021→[VALLEY {valley_start_t:.1f}-{valley_end_t:.1f}s @ 0.012]→0.025, "
               f"sidechain a80/r450/ratio7) + audio normalized ({audio_chain})")
         # In continuous mode the ambient bed isn't mixed in, so report it as
         # not active rather than showing a misleading file path.
