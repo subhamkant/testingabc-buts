@@ -64,6 +64,10 @@
     {
       "topic": "Karna-Kunti meeting — the secret moment Kunti revealed she was his mother, the queen's hidden sin and the warrior's greatest betrayal by his own blood",
       "ts": "2026-06-13 14:56:00"
+    },
+    {
+      "topic": "Arjuna's secret lie about Ashwatthama — the untold betrayal that broke his guru Drona's spirit, the day a son's name became his hidden sin",
+      "ts": "2026-06-13 18:55:19"
     }
   ],
   "_note": "Phase 15 rewrite (commit 320e49f on 2026-06-08) changed arc topic strings. Pre-2026-06-08 entries whose strings became orphaned vs current arcs.json were migrated to their post-Phase-15 equivalents on 2026-06-13 to restore exact-string dedup. The `_migrated_from_phase15_rewrite` field on each migrated entry records the original published string for traceability."
