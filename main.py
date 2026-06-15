@@ -392,7 +392,12 @@ async def run_pipeline(language: str = "en", test_mode: bool = False, test_uploa
             char_weights = ck.load_json("char_weights.json")
         else:
             print("\nStep 2 — Generating continuous voiceover (single-pass TTS)...")
-            audio_path_temp, char_weights = await generate_full_narration(script["scenes"], language)
+            # Phase 18 (2026-06-16): pass the full script dict when the new
+            # decoupled `voiceover` key is present, so generate_full_narration
+            # can skip the per-scene `। ` join. Falls back to the legacy
+            # `scenes` list otherwise — preserves Phase 17.b behavior bit-for-bit.
+            _tts_input = script if "voiceover" in script else script["scenes"]
+            audio_path_temp, char_weights = await generate_full_narration(_tts_input, language)
 
             if not audio_path_temp or not os.path.exists(audio_path_temp):
                 print("No audio generated. Aborting.")
@@ -429,13 +434,29 @@ async def run_pipeline(language: str = "en", test_mode: bool = False, test_uploa
                         "WAN_HOOK_ONLY", "true"
                     ).strip().lower() != "false"
                     print("\nStep 3 — Generating AI video clips...")
+                    # Phase 18 (2026-06-16): shim — generate_video_clips
+                    # expects scene-like dicts (image_prompt + video_prompt +
+                    # mood). When Phase 18 is active there is no `scenes`
+                    # key; map broll entries to that shape, reusing
+                    # image_prompt as the I2V seed.
+                    _clip_input = script.get("broll") or script.get("scenes") or []
+                    if "broll" in script and _clip_input:
+                        _clip_input = [
+                            {
+                                "image_prompt": b.get("image_prompt", ""),
+                                "video_prompt": b.get("image_prompt", ""),
+                                "mood":         b.get("mood", ""),
+                                "narration":    b.get("anchor_phrase", ""),
+                            }
+                            for b in _clip_input
+                        ]
                     if wan_hook_only:
                         clip_files, ref_images = await generate_video_clips(
-                            script["scenes"], scene_indices=[0],
+                            _clip_input, scene_indices=[0],
                         )
                     else:
                         clip_files, ref_images = await generate_video_clips(
-                            script["scenes"],
+                            _clip_input,
                         )
                     n_ai = sum(1 for c in clip_files if c)
                     if n_ai == 0:
@@ -464,7 +485,10 @@ async def run_pipeline(language: str = "en", test_mode: bool = False, test_uploa
                 # Pass ck so generate_images can checkpoint after EACH scene
                 # completes — survives 29-min cap mid-batch and resumes there.
                 reset_provider_tally()
-                image_files = generate_images(script["scenes"], series="mahabharata", ck=ck)
+                # Phase 18 (2026-06-16): pass full script dict so
+                # generate_images can iterate broll entries when present.
+                # Falls back to legacy `scenes` list otherwise.
+                image_files = generate_images(script, series="mahabharata", ck=ck)
                 if script.get("thumbnail_prompt"):
                     # Extract Hindi shock-phrase from title for thumbnail overlay.
                     # Title format from prompt: "<Hindi half> | <English half>"
@@ -738,13 +762,29 @@ async def run_krishna_speech(test_mode: bool = False, test_upload: bool = False)
                         "WAN_HOOK_ONLY", "true"
                     ).strip().lower() != "false"
                     print("\nStep 3 — Generating AI video clips...")
+                    # Phase 18 (2026-06-16): shim — generate_video_clips
+                    # expects scene-like dicts (image_prompt + video_prompt +
+                    # mood). When Phase 18 is active there is no `scenes`
+                    # key; map broll entries to that shape, reusing
+                    # image_prompt as the I2V seed.
+                    _clip_input = script.get("broll") or script.get("scenes") or []
+                    if "broll" in script and _clip_input:
+                        _clip_input = [
+                            {
+                                "image_prompt": b.get("image_prompt", ""),
+                                "video_prompt": b.get("image_prompt", ""),
+                                "mood":         b.get("mood", ""),
+                                "narration":    b.get("anchor_phrase", ""),
+                            }
+                            for b in _clip_input
+                        ]
                     if wan_hook_only:
                         clip_files, ref_images = await generate_video_clips(
-                            script["scenes"], scene_indices=[0],
+                            _clip_input, scene_indices=[0],
                         )
                     else:
                         clip_files, ref_images = await generate_video_clips(
-                            script["scenes"],
+                            _clip_input,
                         )
                     n_ai = sum(1 for c in clip_files if c)
                     if n_ai == 0:

@@ -69,6 +69,10 @@ inputs:
   elevenlabs-api-key-fallback:   { required: true }
   elevenlabs-voice-id:           { required: true }
   elevenlabs-voice-id-krishna:   { required: true }
+  # Phase 18 (2026-06-16) — Decoupled voiceover + anchored B-roll opt-in.
+  # Default "false" so the cron continues to ship Phase 17.b until smoke
+  # confirms. Flip to "true" via workflow_dispatch input to test live.
+  phase18-decoupled:             { required: false, default: "false" }
 
 runs:
   using: composite
@@ -122,6 +126,9 @@ runs:
         # To restore EN uploads: set this to "false" or remove the line.
         WHATIF_SKIP_EN_UPLOAD: "true"
         PIPELINE_RUN_ID: ${{ inputs.pipeline-run-id }}
+        # Phase 18 (2026-06-16) — opt-in decoupled voiceover + broll path.
+        # See pipeline/phase18.py + main.py shim. Default "false".
+        PHASE18_DECOUPLED: ${{ inputs.phase18-decoupled }}
       run: ${{ inputs.pipeline-cmd }} 2>&1 | tee pipeline_output.txt
 
     - name: Persist unsaved assembled video to checkpoint (cancellation race)

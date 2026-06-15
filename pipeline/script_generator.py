@@ -2651,6 +2651,17 @@ def generate_script(
     if series == "krishna":
         return _generate_krishna_script(forced_topic=forced_topic)
 
+    # Phase 18 (2026-06-16) — Decoupled Voiceover + Anchored B-Roll.
+    # Opt-in via PHASE18_DECOUPLED=true. When active, this REPLACES the
+    # 13-scene Phase 17.b path with a single flowing voiceover + 8-10
+    # anchored B-roll images. The legacy path below is preserved verbatim
+    # for instant rollback (flip env flag false → next render uses legacy).
+    from pipeline.phase18 import phase18_enabled
+    if phase18_enabled():
+        from pipeline.phase18 import generate_phase18_script
+        print("    [phase18] PHASE18_DECOUPLED=true — using decoupled voiceover + broll path")
+        return generate_phase18_script(language, forced_topic, series="mahabharata")
+
     _MOTIVATIONAL_KEYWORDS = ("karma", "dharma", "lesson", "wisdom", "why", "power", "teaching")
 
     # ── Topic selection ─────────────────────────────────────────────────

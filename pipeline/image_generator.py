@@ -1,11 +1,14 @@
+import asyncio
 import requests
 import os
 import re
 import time
 import json
 import base64
+import hashlib
 import io
 import subprocess
+from pathlib import Path
 from urllib.parse import quote
 
 
@@ -513,6 +516,21 @@ _RESOLUTION_BY_SERIES_MODE = {
     ("curiosity", "longform"): (1920, 1080), # landscape 16:9 long-form
 }
 _DEFAULT_RESOLUTION = (768, 1344)  # backwards-compat default (portrait)
+
+
+# ── Style anchor (v2.1 — 2026-06-13) ──────────────────────────────────────────
+# Per-topic cinematography reference concatenated into every visual prompt
+# (curiosity series only). When a topic's strategy.json has a `style_anchor`
+# field, that value wins; otherwise this default applies. The anchor sits
+# between the category framing prefix and the scene-specific subject prompt:
+#     "<category_prefix>, <style_anchor>, <subject>"
+# Mahabharata isolation: anchor is ONLY injected when series == "curiosity"
+# inside the visual_track fast path. Mahabharata's prompts are untouched.
+_DEFAULT_STYLE_ANCHOR = (
+    "shot on Arri Alexa LF, anamorphic lens, Roger Deakins natural lighting, "
+    "deep teal and amber color grade, 35mm film grain, cinematic shadows, "
+    "8k hyper-realistic"
+)
 
 
 def _resolution_for(series: str, mode: str = "longform") -> tuple[int, int]:
@@ -1264,9 +1282,15 @@ def generate_image_bytes(prompt: str, seed: int, width: int, height: int,
     raise RuntimeError(f"all image providers failed; last={last_err}")
 
 
-def generate_images(scenes: list, single_shot: bool = False, series: str = "mahabharata", visual_style: str = "", ck=None, mode: str = "longform") -> list:
+def generate_images(scenes_or_script, single_shot: bool = False, series: str = "mahabharata", visual_style: str = "", ck=None, mode: str = "longform", style_anchor: str | None = None) -> list:
     """
     Generates portrait (768x1344) images per scene.
+
+    Phase 18 (2026-06-16) — when called with a script DICT that has a `broll`
+    key, iterate over the broll entries instead of the legacy `scenes` array.
+    Each broll entry has the same shape as a scene entry for our purposes
+    (`image_prompt`, `mood`, optional anchor used as the narration field for
+    the hook-visual lookup), so we just shim it into the legacy loop.
 
     Default: 3 shots per scene (wide / medium / closeup) for the static-image
     Ken Burns pipeline.
@@ -1294,6 +1318,28 @@ def generate_images(scenes: list, single_shot: bool = False, series: str = "maha
     otherwise they point into temp/images.
     """
     os.makedirs(f"{_TEMP_ROOT}/images", exist_ok=True)
+
+    # Phase 18 (2026-06-16) — accept (a) a dict with a 'broll' key (Phase 18
+    # decoupled path), (b) a dict with a 'scenes' key (full script dict from
+    # the new main.py call site), or (c) a raw list of scene dicts (legacy).
+    if isinstance(scenes_or_script, dict):
+        if "broll" in scenes_or_script:
+            scenes = [
+                {
+                    "image_prompt": entry.get("image_prompt", ""),
+                    "mood":         entry.get("mood", ""),
+                    "narration":    entry.get("anchor_phrase", ""),
+                }
+                for entry in scenes_or_script["broll"]
+            ]
+            print(f"    [phase18-img] iterating {len(scenes)} broll entries (decoupled mode)")
+        elif "scenes" in scenes_or_script:
+            scenes = scenes_or_script["scenes"]
+        else:
+            raise ValueError("generate_images: dict missing both 'broll' and 'scenes' keys")
+    else:
+        scenes = scenes_or_script
+
     scene_groups = []
 
     # _SHOT_COMPOSITIONS replaced the prior _SHOT_ANGLES (2026-05-17 Phase 1).
@@ -1382,6 +1428,16 @@ def generate_images(scenes: list, single_shot: bool = False, series: str = "maha
             )
             default_cat_for_series = next(iter(series_categories))  # first key as fallback
             img_w, img_h = _resolution_for(series, mode)
+            # v2.1 (2026-06-13) — style anchor injection, curiosity-only.
+            # Resolves the per-topic cinematography reference once per scene
+            # and concatenates it into every shot's prompt between the
+            # category framing and the subject. Mahabharata + explainer skip
+            # this entirely (anchor_fragment stays empty string).
+            anchor_fragment = ""
+            if series == "curiosity":
+                _anchor = (style_anchor or _DEFAULT_STYLE_ANCHOR).strip().rstrip(",").strip()
+                if _anchor:
+                    anchor_fragment = _anchor + ", "
             for shot_idx, shot in enumerate(track):
                 if not isinstance(shot, dict):
                     continue
@@ -1390,7 +1446,7 @@ def generate_images(scenes: list, single_shot: bool = False, series: str = "maha
                 if not subject:
                     continue
                 framing = series_categories.get(cat) or series_categories[default_cat_for_series]
-                full_prompt = framing + subject
+                full_prompt = framing + anchor_fragment + subject
                 # Seed: stable per (scene, shot, category) so re-runs reproduce
                 seed = i * 211 + shot_idx * 37 + (hash(cat) & 0xFFF)
                 output_path = f"{_TEMP_ROOT}/images/scene_{i:02d}_shot_{shot_idx:02d}.jpg"
@@ -1796,3 +1852,193 @@ def _create_placeholder(output_path: str, index: int, series: str = "mahabharata
         ],
         capture_output=True,
     )
+
+
+# ── Kaggle primary path (v2.1, 2026-06-13) ───────────────────────────────────
+# Async wrapper that tries the Kaggle FLUX + IP-Adapter Master Anchor + LTX
+# notebook for curiosity Shorts, falls back to the sync Cloudflare cascade on
+# any KaggleClientError.
+#
+# Mahabharata isolation: this function REFUSES to fire for series != "curiosity"
+# and immediately delegates to the existing sync generate_images() path.
+# Mahabharata's main.py does not import or call this function — it only calls
+# sync generate_images() which is unchanged. Verified safe.
+
+# Module-level lock — serializes EN and HI Kaggle calls inside a single
+# process. Without this, the second-language render's `current_run.json`
+# write could clobber the first language's config mid-push, and Kaggle would
+# render the wrong content for one of the two languages. Held across the
+# full lifecycle (write → push → poll → download) so EN's outputs are safely
+# on local disk before HI even attempts to write its config.
+_KAGGLE_LOCK = asyncio.Lock()
+
+
+def _stable_master_seed(run_id: str) -> int:
+    """Derive a deterministic 31-bit seed from run_id via hashlib (not the
+    built-in hash()) so the value is stable across Python processes.
+    Required because the seed is sent to Kaggle and must reproduce when
+    re-running with the same run_id (debugging, retries)."""
+    digest = hashlib.md5(run_id.encode("utf-8")).hexdigest()[:8]
+    return int(digest, 16) % (2**31 - 1)
+
+
+def _reshape_kaggle_outputs_to_scene_groups(downloaded: list, scenes: list) -> list:
+    """Group downloaded Kaggle artifacts by scene/shot index from filename
+    pattern `scene_NN_shot_MM.{jpg,mp4}`. Returns list-of-lists matching
+    generate_images()'s curiosity-Shorts return shape.
+
+    Motion clips (.mp4) take precedence over stills (.jpg) at the same
+    (scene, shot) position — the video assembler's dispatcher routes the
+    .mp4 to _make_silent_video_scene_clip while .jpg goes to Ken Burns.
+    Filenames are 1-indexed (matches run_flux_phase.py's zfill output);
+    we convert to 0-indexed internally to align with scenes[] list."""
+    by_pos: dict = {}
+    pattern = re.compile(r"scene_(\d+)_shot_(\d+)\.(jpg|jpeg|png|mp4)$", re.IGNORECASE)
+    for p in downloaded:
+        m = pattern.search(str(p))
+        if not m:
+            continue
+        scene_idx = int(m.group(1)) - 1
+        shot_idx = int(m.group(2)) - 1
+        ext = m.group(3).lower()
+        key = (scene_idx, shot_idx)
+        # mp4 wins over jpg at the same (scene, shot) position
+        if key not in by_pos or (
+            ext == "mp4" and not str(by_pos[key]).lower().endswith(".mp4")
+        ):
+            by_pos[key] = p
+
+    scene_groups = []
+    for i, scene in enumerate(scenes):
+        shot_paths = []
+        for j in range(len(scene.get("visual_track", []))):
+            path = by_pos.get((i, j))
+            if path:
+                shot_paths.append(str(path))
+        scene_groups.append(shot_paths)
+    return scene_groups
+
+
+async def generate_images_with_kaggle_primary(
+    scenes: list,
+    *,
+    series: str = "curiosity",
+    mode: str = "shorts",
+    style_anchor: str | None = None,
+    run_id: str = "",
+    ck=None,
+    visual_style: str = "",
+    single_shot: bool = False,
+) -> list:
+    """v2.1 Kaggle-primary entry point for curiosity Shorts. Pushes the
+    FLUX+IP-Adapter+LTX kernel folder with a per-render `current_run.json`,
+    polls for completion, downloads outputs into cache/<run_id>/visuals/.
+
+    Returns the same list-of-lists shape as generate_images() — outer list
+    is per-scene, inner list is per-shot paths (.jpg stills and/or .mp4
+    motion clips). The video assembler's dispatcher routes each file type.
+
+    On any KaggleClientError (missing kernel-metadata, push failure, poll
+    timeout, download error), falls back to the existing sync Cloudflare
+    cascade. Network/quota failures degrade gracefully — no IP-Adapter
+    consistency and no motion clips, but the pipeline still produces a
+    working Short.
+
+    Concurrency: holds _KAGGLE_LOCK for the full push → poll → download
+    cycle so EN+HI batches cannot collide on `current_run.json`.
+
+    Mahabharata isolation: if series != "curiosity", returns immediately
+    via the sync fallback path. Mahabharata's main.py doesn't import this
+    function anyway, so this is double-belt-and-suspenders.
+    """
+    # --- Hard gate: curiosity only ---
+    if series != "curiosity":
+        return generate_images(
+            scenes, single_shot=single_shot, series=series,
+            visual_style=visual_style, ck=ck, mode=mode,
+            style_anchor=style_anchor,
+        )
+
+    # --- Soft gates: missing config falls through to Cloudflare ---
+    kernel_ref = os.environ.get("KAGGLE_KERNEL_REF", "").strip()
+    kernel_dir = Path("kaggle_notebooks") / "cinematic-i2v-batch"
+    if not kernel_ref:
+        print("[kaggle] KAGGLE_KERNEL_REF not set — using Cloudflare cascade")
+        return generate_images(
+            scenes, single_shot=single_shot, series=series,
+            visual_style=visual_style, ck=ck, mode=mode,
+            style_anchor=style_anchor,
+        )
+    if not kernel_dir.exists():
+        print(f"[kaggle] kernel folder missing: {kernel_dir} — using Cloudflare cascade")
+        return generate_images(
+            scenes, single_shot=single_shot, series=series,
+            visual_style=visual_style, ck=ck, mode=mode,
+            style_anchor=style_anchor,
+        )
+
+    # Lazy import — avoids loading kaggle subprocess wrapper for Mahabharata
+    from pipeline import kaggle_client
+
+    async with _KAGGLE_LOCK:
+        try:
+            # Build run_config — what run_flux_phase.py + run_ltx_phase.py
+            # read at start of each subprocess
+            requires_motion_list = [
+                [i, j]
+                for i, scene in enumerate(scenes)
+                for j, shot in enumerate(scene.get("visual_track", []) or [])
+                if isinstance(shot, dict) and shot.get("requires_motion")
+            ]
+            master_seed = _stable_master_seed(run_id or "default-run")
+            run_config = {
+                "scenes": scenes,
+                "style_anchor": (style_anchor or _DEFAULT_STYLE_ANCHOR).strip(),
+                "requires_motion": requires_motion_list,
+                "master_seed": master_seed,
+                "run_id": run_id,
+            }
+            print(f"[kaggle] pushing kernel {kernel_ref} for run_id={run_id} "
+                  f"({len(scenes)} scenes, {len(requires_motion_list)} motion shots, "
+                  f"seed={master_seed})")
+            version = await kaggle_client.push_kernel_with_run_config(
+                kernel_dir, run_config,
+            )
+
+            timeout_s = int(os.environ.get("KAGGLE_TIMEOUT_S", "2700"))
+            poll_interval_s = int(os.environ.get("KAGGLE_POLL_INTERVAL_S", "60"))
+            print(f"[kaggle] polling (interval={poll_interval_s}s, timeout={timeout_s}s)")
+            result = await kaggle_client.poll_kernel(
+                kernel_ref,
+                poll_interval_s=poll_interval_s,
+                timeout_s=timeout_s,
+            )
+            if result["status"] != "complete":
+                raise kaggle_client.KaggleClientError(
+                    f"kernel ended with status={result['status']}"
+                )
+
+            target_dir = Path(f"cache/{run_id}/visuals") if run_id else Path("cache/kaggle_latest/visuals")
+            target_dir.mkdir(parents=True, exist_ok=True)
+            print(f"[kaggle] downloading outputs to {target_dir}")
+            downloaded = await kaggle_client.download_output(
+                kernel_ref, target_dir,
+                version=version if version > 0 else None,
+            )
+
+            scene_groups = _reshape_kaggle_outputs_to_scene_groups(downloaded, scenes)
+            n_files = sum(len(g) for g in scene_groups)
+            n_mp4 = sum(1 for g in scene_groups for p in g if p.lower().endswith(".mp4"))
+            print(f"[kaggle] OK — {n_files} files ({n_mp4} motion clips, "
+                  f"{n_files - n_mp4} stills) across {len(scene_groups)} scenes")
+            return scene_groups
+
+        except kaggle_client.KaggleClientError as e:
+            print(f"[kaggle] FAILED — falling back to Cloudflare cascade: {e}")
+            # Sync Cloudflare fallback inside the lock — prevents HI's
+            # Kaggle attempt from racing with EN's fallback writes.
+            return generate_images(
+                scenes, single_shot=single_shot, series=series,
+                visual_style=visual_style, ck=ck, mode=mode,
+                style_anchor=style_anchor,
+            )

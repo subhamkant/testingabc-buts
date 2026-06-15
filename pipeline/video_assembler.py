@@ -51,8 +51,14 @@ def _resolve_xfade_duration(n_scenes: int) -> float:
     that's been tuned over the last 30 days.
 
     Pure function — same input always returns same output. No env var
-    override; the scene count IS the signal."""
-    return XFADE_DURATION_HYPERCUT if n_scenes >= 12 else XFADE_DURATION
+    override; the scene count IS the signal.
+
+    Phase 18 (2026-06-16): threshold dropped from 12 to 8. The decoupled
+    voiceover + broll architecture produces 8-10 cuts per render instead
+    of 13, but still wants the hyper-cut pacing (50s / 8-10 cuts ≈ 5-6s
+    per cut — at 0.5s xfade that's 9-10% of each cut, sluggish; at 0.3s
+    it's 5-6%, snappy)."""
+    return XFADE_DURATION_HYPERCUT if n_scenes >= 8 else XFADE_DURATION
 
 
 # ── Explainer channel — locked visual identity ───────────────────────────────
@@ -2577,11 +2583,72 @@ def assemble_video_continuous_audio(
 
     n = len(image_files)
     audio_duration = get_audio_duration(audio_path)
-    durations = _per_scene_durations(audio_duration, char_weights, n)
 
-    print(f"    Audio duration: {audio_duration:.2f}s  |  scenes: {n}")
-    print(f"    Per-scene clip durations: " +
-          ", ".join(f"{d:.2f}s" for d in durations))
+    # Phase 18 (2026-06-16) — anchor-phrase timestamp placement. When the
+    # script carries `voiceover` + `broll`, derive each image's start_t
+    # from where its anchor_phrase falls in the voiceover string (via
+    # proportional char-position mapping). Each image then holds from its
+    # start_t until the NEXT image's start_t — cuts land on narrative
+    # beats, not on clock ticks. See pipeline/phase18.py for the schema.
+    if isinstance(script_data, dict) and "voiceover" in script_data and "broll" in script_data:
+        voiceover   = script_data["voiceover"]
+        broll       = script_data["broll"]
+        total_chars = max(len(voiceover), 1)
+        MIN_DUR     = 2.5
+
+        timestamps = []
+        for i, entry in enumerate(broll):
+            phrase = entry.get("anchor_phrase", "")
+            idx = voiceover.find(phrase) if phrase else -1
+            # Validator already guarantees idx >= 0 and monotonic for new
+            # renders. Defensive fallback for resume-from-cache paths where
+            # the cached voiceover may have been edited externally:
+            if idx < 0:
+                idx = int(i * total_chars / max(len(broll), 1))
+            raw_t = (idx / total_chars) * audio_duration
+            # Phase 18 Anchor-Drift Failsafe — Hindi char-count is a ±5-10%
+            # approximation of audio-time (silent modifiers, variable-length
+            # vowels). Clamp every timestamp to audio_duration - MIN_DUR so
+            # the final clip always has legal runway. Prevents EOF overrun
+            # in _mux_continuous_audio and negative-duration crash in
+            # _build_silent_video_with_xfades.
+            safe_t = min(raw_t, audio_duration - MIN_DUR)
+            # Re-enforce monotonicity after clamping — adjacent tail anchors
+            # can collide on the same clamped timestamp. Force MIN_DUR gap.
+            if timestamps and safe_t <= timestamps[-1]:
+                safe_t = min(timestamps[-1] + MIN_DUR, audio_duration - MIN_DUR)
+            timestamps.append(safe_t)
+
+        # Per-image durations: each image runs from its start_t until the
+        # next image's start_t. Final image runs to audio_duration.
+        durations = []
+        for i in range(n):
+            next_t = timestamps[i + 1] if i + 1 < n else audio_duration
+            durations.append(max(next_t - timestamps[i], MIN_DUR))
+
+        # Renormalize so sum(durations) matches the xfade-overlap budget.
+        # Shave proportionally from non-final clips; protect the final clip
+        # (preserves _FINAL_SCENE_MIN_S contract from line 2335).
+        xfade_dur  = _resolve_xfade_duration(n)
+        target_sum = audio_duration + (n - 1) * xfade_dur
+        slack = sum(durations) - target_sum
+        if slack > 0:
+            shaveable_sum = sum(durations[:-1])
+            if shaveable_sum > 0:
+                ratio = slack / shaveable_sum
+                durations = [d * (1 - ratio) for d in durations[:-1]] + [durations[-1]]
+
+        print(f"    [phase18-assembler] anchor placement: "
+              f"timestamps={[f'{t:.1f}s' for t in timestamps]}")
+        print(f"    [phase18-assembler] per-image durations: "
+              f"{[f'{d:.1f}s' for d in durations]}  (audio={audio_duration:.2f}s, "
+              f"xfade={xfade_dur:.2f}s, n={n})")
+    else:
+        # Legacy Phase 17.b proportional path — char_weights is a list[int]
+        durations = _per_scene_durations(audio_duration, char_weights, n)
+        print(f"    Audio duration: {audio_duration:.2f}s  |  scenes: {n}")
+        print(f"    Per-scene clip durations: " +
+              ", ".join(f"{d:.2f}s" for d in durations))
 
     # Per-scene Ken Burns intensity (Tier 1.5, Fix 1.10): linear ramp from
     # 0.8x → 1.4x like Tier 1, but with TWO overrides on the narrative
@@ -2645,7 +2712,10 @@ def assemble_video_continuous_audio(
         # Excludes scene 0 (hook — using its frame would duplicate what plays
         # next) and scene n-1 (static outro asset). Falls back to n-2 if no
         # scene scores positive (preserves original Phase 24 behavior).
-        cold_open_moods = [s.get("mood", "") for s in (script_data.get("scenes") or [])]
+        # Phase 18 (2026-06-16): broll entries carry the same `mood` field.
+        _mood_source = (script_data.get("scenes")
+                        or script_data.get("broll") or [])
+        cold_open_moods = [s.get("mood", "") for s in _mood_source]
         climax_idx, _src = _pick_cold_open_scene_idx(cold_open_moods, n)
         climax_imgs = image_files[climax_idx]
         climax_first = climax_imgs[0] if isinstance(climax_imgs, list) else climax_imgs
@@ -2676,7 +2746,12 @@ def assemble_video_continuous_audio(
     # Phase 24 (2026-05-21): uses `original_durations` (pre-cold-open-trim) so
     # SFX/shake/duration-cap all align to narrative scene boundaries, not to
     # the cold-open visual prepend.
-    scene_moods = [s.get("mood", "") for s in (script_data.get("scenes") or [])]
+    # Phase 18 (2026-06-16): broll entries supply mood per visual cut. SFX
+    # then fires on cut boundaries (correct film-editing convention) instead
+    # of narration-scene boundaries.
+    _sfx_mood_source = (script_data.get("scenes")
+                        or script_data.get("broll") or [])
+    scene_moods = [s.get("mood", "") for s in _sfx_mood_source]
     if len(scene_moods) == n:
         _inject_scene_boundary_sfx(output_path, original_durations, scene_moods)
 
@@ -2713,7 +2788,48 @@ def assemble_from_video_clips_continuous_audio(
 
     n = len(clip_files)
     audio_duration = get_audio_duration(audio_path)
-    durations = _per_scene_durations(audio_duration, char_weights, n)
+
+    # Phase 18 (2026-06-16) — same anchor-phrase placement as the image-only
+    # assembler. WAN_HOOK_ONLY=true means most renders flow through this path
+    # with 1 AI clip + 8-9 Ken Burns fallbacks; the timestamp computation
+    # must be identical so cuts land where the narration says they should.
+    if isinstance(script_data, dict) and "voiceover" in script_data and "broll" in script_data:
+        voiceover   = script_data["voiceover"]
+        broll       = script_data["broll"]
+        total_chars = max(len(voiceover), 1)
+        MIN_DUR     = 2.5
+
+        timestamps = []
+        for i, entry in enumerate(broll):
+            phrase = entry.get("anchor_phrase", "")
+            idx = voiceover.find(phrase) if phrase else -1
+            if idx < 0:
+                idx = int(i * total_chars / max(len(broll), 1))
+            raw_t = (idx / total_chars) * audio_duration
+            safe_t = min(raw_t, audio_duration - MIN_DUR)
+            if timestamps and safe_t <= timestamps[-1]:
+                safe_t = min(timestamps[-1] + MIN_DUR, audio_duration - MIN_DUR)
+            timestamps.append(safe_t)
+
+        durations = []
+        for i in range(n):
+            next_t = timestamps[i + 1] if i + 1 < n else audio_duration
+            durations.append(max(next_t - timestamps[i], MIN_DUR))
+
+        xfade_dur  = _resolve_xfade_duration(n)
+        target_sum = audio_duration + (n - 1) * xfade_dur
+        slack = sum(durations) - target_sum
+        if slack > 0:
+            shaveable_sum = sum(durations[:-1])
+            if shaveable_sum > 0:
+                ratio = slack / shaveable_sum
+                durations = [d * (1 - ratio) for d in durations[:-1]] + [durations[-1]]
+        print(f"    [phase18-clip-assembler] anchor placement: "
+              f"timestamps={[f'{t:.1f}s' for t in timestamps]}")
+        print(f"    [phase18-clip-assembler] per-image durations: "
+              f"{[f'{d:.1f}s' for d in durations]}")
+    else:
+        durations = _per_scene_durations(audio_duration, char_weights, n)
 
     n_clips  = sum(1 for c in clip_files if c)
     n_static = n - n_clips
@@ -2777,7 +2893,10 @@ def assemble_from_video_clips_continuous_audio(
     # Scene-boundary SFX (mood-mapped): sword clang on battle, divine bell on
     # Krishna, war drum on Kurukshetra, conch on vows, chime default. Layered
     # into narration audio BEFORE music mix so SFX gets sidechain ducking too.
-    scene_moods = [s.get("mood", "") for s in (script_data.get("scenes") or [])]
+    # Phase 18 (2026-06-16): broll fallback for mood source.
+    _sfx_mood_source = (script_data.get("scenes")
+                        or script_data.get("broll") or [])
+    scene_moods = [s.get("mood", "") for s in _sfx_mood_source]
     if len(scene_moods) == n:
         _inject_scene_boundary_sfx(output_path, durations, scene_moods)
 

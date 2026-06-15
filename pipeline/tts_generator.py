@@ -839,7 +839,7 @@ async def _generate_per_scene_krishna_tts(
 # ── Single-pass full narration ────────────────────────────────────────────────
 
 async def generate_full_narration(
-    scenes: list,
+    scenes_or_script,
     language: str = "en",
     series: str = "mahabharata",
 ) -> tuple:
@@ -879,19 +879,32 @@ async def generate_full_narration(
     """
     os.makedirs(f"{_TEMP_ROOT}/audio", exist_ok=True)
 
-    # Concatenate per-scene narrations with a sentence delimiter so the model
-    # produces a natural breath / pause between scenes.
-    delim = "। " if language == "hi" else ". "
-
-    cleaned_parts = []
-    char_weights  = []
-    for scene in scenes:
-        text = _clean_narration(scene["narration"])
-        cleaned_parts.append(text)
-        char_weights.append(max(len(text), 1))
-
-    full_text = delim.join(cleaned_parts)
-    print(f"    Full narration: {len(full_text)} chars across {len(scenes)} scene(s)")
+    # Phase 18 (2026-06-16) detector — when called with a script dict that
+    # has a 'voiceover' key, send the continuous voiceover string directly
+    # to TTS with NO `। ` delimiter join. The delim was the source of the
+    # robotic telegram cadence in pre-Phase-18 renders even though the TTS
+    # itself runs as one continuous Charon call.
+    if isinstance(scenes_or_script, dict) and "voiceover" in scenes_or_script:
+        vo = _clean_narration(scenes_or_script["voiceover"])
+        full_text = vo
+        # Dict shape signals "Phase 18, no scene granularity" to the
+        # video_assembler. assembler branches on isinstance(., dict).
+        char_weights = {"total": len(vo), "voiceover": vo}
+        scenes = None  # not used in Phase 18 path
+        print(f"    [phase18-tts] continuous voiceover: {len(vo)} chars, "
+              f"{len(vo.split())} words (no delim join)")
+    else:
+        # Legacy Phase 17.b — per-scene char_weights list + delim join
+        scenes = scenes_or_script
+        delim = "। " if language == "hi" else ". "
+        cleaned_parts = []
+        char_weights  = []
+        for scene in scenes:
+            text = _clean_narration(scene["narration"])
+            cleaned_parts.append(text)
+            char_weights.append(max(len(text), 1))
+        full_text = delim.join(cleaned_parts)
+        print(f"    Full narration: {len(full_text)} chars across {len(scenes)} scene(s)")
 
     output_path = f"{_TEMP_ROOT}/audio/narration_full.mp3"
 
