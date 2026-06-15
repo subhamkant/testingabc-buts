@@ -2906,6 +2906,29 @@ def generate_script(
         )
         print(f"    [fingerprint-block] injected for {arc_name}")
 
+    # Phase 17.b (2026-06-14) — Scene 1 opener-archetype rotation. Channel
+    # analytics on 2026-06-14 showed "stayed to watch" rate at 31.9-37%
+    # (algorithmic threshold for virality = 65-80%). One driver: every
+    # recent render opens on the macro-eye close-up (angle 1 of Phase 17),
+    # so the channel grid looks templated and pattern-boredom swipes
+    # accumulate. Rotate Scene 1's opener across 4 archetypes based on
+    # episode_n so consecutive renders never share the same opening style.
+    _OPENER_ARCHETYPES = [
+        ("A", "Extreme macro close-up on character's eyes — single tear / pupils dilated / lashes wet — caught mid-blink"),
+        ("B", "Weapon / artifact detail — sword tip mid-strike / glowing arrow / bloodied hand on hilt / dice mid-roll — the object that carries the violence, blurred motion behind"),
+        ("C", "Action moment frozen mid-gesture — sword raising arc / hand gripping hair / arrow leaving bowstring / body falling — the verb made visible"),
+        ("D", "Wide environmental disaster — burning camp / blood-soaked battlefield / crashing chariot wheel / collapsing palace pillar — chaos that the narration described, no character close-up"),
+    ]
+    _archetype_idx = (int(episode_n) if isinstance(episode_n, int) or (isinstance(episode_n, str) and episode_n.isdigit()) else 0) % len(_OPENER_ARCHETYPES)
+    _archetype_letter, _archetype_text = _OPENER_ARCHETYPES[_archetype_idx]
+    scene1_opener_directive = (
+        f"SCENE 1 ANGLE FOR THIS RENDER = OPENER ARCHETYPE {_archetype_letter}: "
+        f"\"{_archetype_text}\". The image_prompt for Scene 1 MUST begin with "
+        f"this exact directive. Do NOT use any of the other archetypes for Scene 1."
+    )
+    print(f"    [phase17.b-opener] scene 1 archetype {_archetype_letter} "
+          f"selected (episode_n={episode_n} mod 4)")
+
     prompt = f"""
     You are a master storyteller specialising in the Mahabharata epic, writing scripts for vertical YouTube videos that retain viewer attention from the first second to the last.
 
@@ -4085,15 +4108,25 @@ def generate_script(
     - Narration MUST NOT contain URLs, hashtags (#), @mentions, English in Hindi videos, or any social-media text
     - Generate EXACTLY 13 scenes (Phase 17 2026-06-13: 12 narrative + 1 loop-closure question). Each scene is a single visual beat. Scene 13 is the LOOP CLOSURE question.
     - 13-scene STRUCTURE (1-indexed):
-        • Scenes 1-2 = HOOK IN MEDIA RES (begin INSIDE an emotional moment already in progress — eyes trembling, hand reaching, voice breaking, breath catching — NOT documentary narrator setup; scene 2 lands the revelation that pulls the viewer in)
-        • Scenes 3-5 = SETUP + RISING TENSION (3 cuts ramping the stakes — character motivation, social weight, the trap closing)
+        • Scene 1 = SHOCK-ACTION HOOK (Phase 17.b 2026-06-14, post-31.9%-stayed-to-watch fix). MUST start with a visible ACTION VERB in the FIRST 5 WORDS of narration. NOT atmospheric setting ("आधी रात पांडव शिविर में डर पसरता है"), NOT slow emotional reaction ("कुंती की आँखें काँपती हैं"), NOT philosophical ("धर्म का सबसे बड़ा संकट था")  — those are scene 2-3 material. Scene 1 is a violent/shocking action MID-EXECUTION:
+            ✓ "अश्वत्थामा ने सोते हुए बच्चों पर तलवार उठा दी!"  (raised sword on sleeping children)
+            ✓ "दुःशासन ने भरी सभा में द्रौपदी के बाल खींचे!" (Dushasana dragged Draupadi's hair in full assembly)
+            ✓ "कर्ण ने अपना कवच काटकर इंद्र को दे दिया!" (Karna cut his armor off and gave it to Indra)
+            ✓ "अर्जुन ने अपने ही गुरु के सीने में बाण मारा!" (Arjuna shot an arrow into his own guru's chest)
+            ✗ "आधी रात एक भयानक डर पसरा" (atmospheric — kills hook, viewer swipes)
+            ✗ "एक माँ अपने बेटे को देखती है" (passive setup — kills hook)
+            ✗ "हस्तिनापुर में एक रहस्य था" (philosophical setup — kills hook)
+        • Scene 2 = INSTANT REVELATION (immediate consequence of Scene 1's action — who screamed, what shattered, who saw it happen). NOT exposition.
+        • Scenes 3-5 = SETUP + RISING TENSION (NOW you can explain why — character motivation, social weight, the trap closing). Save the "why" for here, never for Scene 1.
         • Scenes 6-7 = REHOOK / CONTRAST (the "but wait" twist that resets curiosity — at least ONE of scenes 6-7 MUST contain a contrast marker: "लेकिन..."/"परंतु..."/"जो किसी ने नहीं सोचा था..."/"और तभी..."/"But..."/"Suddenly")
         • Scenes 8-10 = DESTRUCTION (3 cuts of the destructive event itself — not metaphor, real consequence)
         • Scene 11 = EMOTIONAL VALLEY (intimate close-up — candlelight / dim warm tones / single subject — NOT lightning/fire/spectacle. The quietest beat.)
         • Scene 12 = AFTERMATH + aftershock line (emotion AFTER destruction, not spectacle)
         • Scene 13 = LOOP CLOSURE QUESTION (5-8 words, MUST end with a question mark, MUST be an ethically charged question that puts the viewer INSIDE the moral dilemma)
-    - CAMERA ANGLE CYCLING (Phase 17 — manufacture kinetic energy from static FLUX images). The image_prompt of each scene MUST begin with the cycled angle directive below, then the visual content. Cycling is DETERMINISTIC — scene 1 uses angle 1, scene 2 uses angle 2, etc. Do NOT shuffle. This prevents the "static fatigue" of 4 portrait close-ups in a row:
-        1. "Extreme macro close-up on character's eyes — single tear / pupils dilated / lashes wet"
+    - IMAGE-SUBJECT LOCK (Phase 17.b 2026-06-14 fix for the 31.9%/37% stayed-to-watch rate). image_prompt MUST visually depict the EXACT moment described in narration. If narration says "sword raised on children" → image MUST show visible raised sword + visible sleeping children (bedding / cot / blanket). If narration says "Dushasana dragged Draupadi's hair" → image MUST show a hand actually gripping hair, NOT a stoic court tableau. Do NOT fall back to "warrior looking at camera" / generic portrait — every image must mirror the SPECIFIC verb + objects in that scene's narration. Each image_prompt MUST contain a visible action verb (raising / gripping / shouting / striking / falling / piercing) matching the narration, plus the SPECIFIC props named in narration (sword, dice, hair, crown, bed of arrows, etc.).
+    - CAMERA ANGLE CYCLING (Phase 17 — manufacture kinetic energy from static FLUX images). The image_prompt of each scene MUST begin with the angle directive below, then the visual content. Phase 17.b 2026-06-14 — SCENE 1's angle ROTATES across renders to break the channel-grid "Visual Grid Fatigue" (multiple consecutive uploads using the same macro-eye thumbnail style triggers pattern-boredom swipe-aways).
+        {scene1_opener_directive}
+        FIXED SCENES 2-13 (always these angles, in this order):
         2. "Wide establishing shot — vast battlefield / palace / sky / river, character a small commanding figure"
         3. "Low angle silhouette — character backlit, looking down at viewer, threatening or majestic"
         4. "Over-the-shoulder POV — viewer sees what character sees, the world from inside their head"
