@@ -3,7 +3,17 @@ name: Mahabharata YouTube Bot
 on:
   # Re-enabled 2026-06-14 — Phase 16 cooldown over, Phase 17 hyper-cut +
   # Tier 1.5.g music + recent_topics.json migration all shipped. Daily
-  # publishing resumed at 5:40 PM IST (12:10 UTC) per channel owner.
+  # publishing now targets 6:05-6:10 PM IST publish window — trigger at
+  # 5:50 PM IST = 12:20 UTC, render takes ~15 min, upload completes around
+  # 6:05-6:10 PM IST = peak Indian commute-home Shorts window.
+  #
+  # GHA cron drift caveat: GitHub Actions scheduled workflows can be
+  # delayed +30-60 min during peak load (never early). Setting cron to
+  # 5:50 PM IST means actual fire ranges 5:50-6:50 PM IST → publish lands
+  # 6:05-7:05 PM IST. For sharp time targets, use an external cron-ping
+  # service (e.g. cron-job.org) calling repository_dispatch API. Not
+  # warranted yet — the 6:05-7:05 window still hits the IST evening
+  # Shorts feed.
   #
   # History:
   #   2026-06-01: temporary disable for one-off manual trigger
@@ -11,9 +21,11 @@ on:
   #   2026-06-09: disabled — Phase 16 algorithmic cooldown (5-day pause)
   #   2026-06-13: D6 revival published (8Z1QBrqHNb0, later unlisted)
   #               + Tier 1.5.g music drop + Phase 17 hyper-cut shipped
-  #   2026-06-14: re-enabled at NEW slot 12:10 UTC (was 12:00 UTC)
+  #   2026-06-14: re-enabled at 12:10 UTC (5:40 PM IST nominal)
+  #   2026-06-14: shifted to 12:20 UTC (5:50 PM IST) per owner target
+  #               of 6:05-6:10 PM IST publish landing
   schedule:
-    - cron: "10 12 * * *"   # 5:40 PM IST nominal publish target
+    - cron: "20 12 * * *"   # 5:50 PM IST nominal → 6:05-6:10 PM IST publish
   workflow_dispatch:
     inputs:
       target:
