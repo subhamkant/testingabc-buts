@@ -314,6 +314,84 @@ def _check_character_names_single(image_prompt: str) -> bool:
     return any(name.lower() in text for name in _CHARACTER_NAMES_LIST)
 
 
+# ─── Phase 19 (2026-06-16) wardrobe + story entity ────────────────────────
+
+_VALID_WARDROBE_CONTEXTS = {"WAR", "PALACE", "DIVINE", "FOREST", "JOURNEY"}
+
+# Devanagari noun → list of English equivalents the LLM should use in
+# image_prompts. When a voiceover names a story-critical entity, at least
+# ONE broll image_prompt must contain a matching English form in its
+# foreground. Without this rule, the LLM emits "Yudhishthira walking with
+# his dog" in the voiceover but no broll image_prompt actually contains
+# "dog" — and FLUX renders him alone (verified failure mode on the
+# 2026-06-16 Heaven's Gate render where the Dharma dog vanished entirely).
+_STORY_ENTITY_MAP = {
+    "कुत्ता":      ["dog", "stray dog"],
+    "धनुष":        ["bow", "gandiva"],
+    "गाण्डीव":    ["gandiva", "bow"],
+    "बाण-शय्या":  ["bed of arrows", "arrow bed"],
+    "बाण":         ["arrow", "arrows"],
+    "मोम-महल":    ["wax palace", "lacquered palace", "lakshagriha"],
+    "लाक्षागृह":   ["wax palace", "lacquered palace", "lakshagriha"],
+    "अक्षय-पात्र": ["begging bowl", "akshaya patra"],
+    "सुदर्शन":    ["sudarshana", "discus", "chakra"],
+    "चक्र":        ["chakra", "discus"],
+    "कुंडल":       ["kundal", "earring", "kundala"],
+    "कवच":         ["kavach", "armor", "kavacha"],
+    "गदा":         ["mace", "gada"],
+    "रथ":          ["chariot"],
+    "बच्चे":       ["children", "sleeping children"],
+}
+
+
+def _check_wardrobe_context_set(broll: list) -> tuple[bool, str]:
+    """Phase 19 (2026-06-16). Every broll entry must declare a
+    `wardrobe_context` ∈ {WAR, PALACE, DIVINE, FOREST, JOURNEY} so
+    image_generator.py can inject the right clothing+lighting prefix.
+    Empty / invalid → reject."""
+    for i, entry in enumerate(broll):
+        ctx = (entry.get("wardrobe_context", "") or "").strip().upper()
+        if not ctx:
+            return False, f"broll[{i}] missing wardrobe_context"
+        if ctx not in _VALID_WARDROBE_CONTEXTS:
+            return False, (
+                f"broll[{i}] wardrobe_context='{ctx}' invalid "
+                f"(must be one of {sorted(_VALID_WARDROBE_CONTEXTS)})"
+            )
+    return True, ""
+
+
+def _check_story_entity_present(voiceover: str, broll: list) -> tuple[bool, str]:
+    """Phase 19 (2026-06-16). When the voiceover names a known story-
+    critical entity (कुत्ता / धनुष / सुदर्शन-चक्र / etc.), at least ONE
+    broll image_prompt must contain a matching English form. Loosened
+    from ≥2 to ≥1 per plan Adjustment #2 — one clean establishing shot
+    is enough; demanding 2 occupies 25%+ of an 8-image video and shoehorns
+    the entity into bad framings.
+    Default-pass-closed for topics where no mapped entity appears."""
+    needed = []
+    for hi_noun, en_forms in _STORY_ENTITY_MAP.items():
+        if hi_noun in voiceover:
+            needed.append((hi_noun, en_forms))
+    if not needed:
+        return True, ""  # no mapped entities in voiceover → nothing to check
+
+    combined_prompts = " ".join(
+        b.get("image_prompt", "").lower() for b in broll
+    )
+    missing = []
+    for hi_noun, en_forms in needed:
+        if not any(form in combined_prompts for form in en_forms):
+            missing.append((hi_noun, en_forms))
+    if missing:
+        hi, en = missing[0]
+        return False, (
+            f"voiceover names '{hi}' but no broll image_prompt contains "
+            f"its English equivalent ({'/'.join(en[:2])})"
+        )
+    return True, ""
+
+
 def validate_phase18(data: dict, lang_label: str = "Hindi") -> tuple[bool, str, dict]:
     """Aggregate validator. Returns (passed_all_gates, first_violation_label,
     info_dict). info_dict carries score, word_count, broll_count so the
@@ -379,10 +457,15 @@ def validate_phase18(data: dict, lang_label: str = "Hindi") -> tuple[bool, str, 
 
     bookend_ok = _check_bookend_text(vo)
 
+    # Phase 19 (2026-06-16) — wardrobe context + story entity gates
+    wardrobe_set_ok, _wardrobe_why = _check_wardrobe_context_set(br)
+    story_entity_ok, _story_why    = _check_story_entity_present(vo, br)
+
     flags = [length_ok, broll_ok, hook_ok, hook_title_ok, loop_ok,
              shock_ok, rehook_ok, eng_ok, mono_ok, tha_ok, rep_ok,
              anchors_ok, names_ok, archetype_ok, subject_lock_ok,
-             intensity_ok, bookend_ok]
+             intensity_ok, bookend_ok,
+             wardrobe_set_ok, story_entity_ok]  # Phase 19
     score = sum(1 for f in flags if f)
 
     info = {
@@ -390,26 +473,30 @@ def validate_phase18(data: dict, lang_label: str = "Hindi") -> tuple[bool, str, 
         "word_count":  n_words,
         "broll_count": n_broll,
         "anchor_why":  _anchor_why,
+        "wardrobe_why": _wardrobe_why,
+        "story_why":   _story_why,
     }
 
     # First violation in priority order (single highest-impact gate)
     cascade = [
-        ("length",       length_ok and broll_ok),
-        ("anchors",      anchors_ok),
-        ("hook",         hook_ok),
-        ("shock_action", shock_ok),
-        ("loop_closure", loop_ok),
-        ("hook_title",   hook_title_ok),
-        ("archetype",    archetype_ok),
-        ("subject_lock", subject_lock_ok),
-        ("intensity",    intensity_ok),
-        ("rehook",       rehook_ok),
-        ("char_names",   names_ok),
-        ("bookend",      bookend_ok),
-        ("engagement",   eng_ok),
-        ("monotony",     mono_ok),
-        ("tha_tic",      tha_ok),
-        ("repetition",   rep_ok),
+        ("length",        length_ok and broll_ok),
+        ("anchors",       anchors_ok),
+        ("wardrobe_set",  wardrobe_set_ok),    # Phase 19
+        ("story_entity",  story_entity_ok),    # Phase 19
+        ("hook",          hook_ok),
+        ("shock_action",  shock_ok),
+        ("loop_closure",  loop_ok),
+        ("hook_title",    hook_title_ok),
+        ("archetype",     archetype_ok),
+        ("subject_lock",  subject_lock_ok),
+        ("intensity",     intensity_ok),
+        ("rehook",        rehook_ok),
+        ("char_names",    names_ok),
+        ("bookend",       bookend_ok),
+        ("engagement",    eng_ok),
+        ("monotony",      mono_ok),
+        ("tha_tic",       tha_ok),
+        ("repetition",    rep_ok),
     ]
     for label, ok in cascade:
         if not ok:
@@ -422,6 +509,8 @@ def validate_phase18(data: dict, lang_label: str = "Hindi") -> tuple[bool, str, 
 _VIOLATION_REMINDERS = {
     "length":       "Your voiceover word count was out of range. Voiceover MUST be 75-115 Hindi words (AIM FOR ~95). Match the SHAPE of the concrete 96-word example in the prompt — open with an 8-word action verb, build 3-4 mid-paragraph beats with sensory anchors, embed a dialogue beat in quotes, insert लेकिन/परंतु around the midpoint, close with a question that echoes the opener noun. broll MUST be 8-10 entries.",
     "anchors":      "Your broll anchor_phrase entries failed validation. Each anchor_phrase MUST be 2-4 words appearing VERBATIM in the voiceover, in ASCENDING order by character position. Final anchor MUST land in the LAST 30% of the voiceover.",
+    "wardrobe_set": "Every broll entry MUST declare a wardrobe_context field, one of: WAR / PALACE / DIVINE / FOREST / JOURNEY. Pick the context that matches THAT specific broll moment (not the whole story): a dice-game palace scene is PALACE even in an Arjuna story; Yudhishthira walking to heaven's gate is JOURNEY, not WAR; Krishna in his cosmic form is DIVINE; Eklavya's forest ashram is FOREST.",
+    "story_entity": "Your voiceover names a story-critical entity (e.g. कुत्ता / धनुष / सुदर्शन / कुंडल / बच्चे) but NO broll image_prompt contains its English equivalent. AT LEAST ONE broll image_prompt MUST have the entity as a clearly identifiable foreground subject — e.g. anchor 'कुत्ता का साथ' → image_prompt 'a loyal stray dog walking close beside Yudhishthira, foreground subject'. The audience cannot feel the dog's presence if FLUX never renders one.",
     "hook":         "Your voiceover's first 10 words did not pass the hook validator. Open INSIDE an emotional moment with a named character (अर्जुन/कर्ण/etc.) AND/OR a paradox marker (लेकिन/पर/फिर भी). NO documentary setups (\"यह कहानी है\", \"बहुत समय पहले\").",
     "shock_action": "Your voiceover's first 8 words must contain a present-tense action verb. NO setup. Examples: \"अर्जुन धनुष उठाता है\" (raising), \"द्रौपदी आँसू बहाती है\" (shedding), \"अश्वत्थामा तलवार चलाता है\" (wielding).",
     "loop_closure": "Your voiceover must END with a question mark (?). The final clause must be an ethically-charged question to the viewer: \"क्या यही धर्म था?\" / \"क्या वो सही थे?\" / \"किसने ज्यादा खोया?\".",
@@ -528,10 +617,45 @@ OUTPUT 1 — `voiceover`: ONE flowing Hindi paragraph, 75-115 words (AIM FOR ~95
 
 OUTPUT 2 — `broll`: an array of EXACTLY 8-10 entries, each:
   {{
-    "image_prompt":    "<English. Literal-physical FLUX prompt — see rules below>",
-    "anchor_phrase":   "<2-4 Devanagari words VERBATIM from voiceover>",
-    "mood":            "<3-6 word English emotional tone for SFX selection>"
+    "image_prompt":     "<English. Literal-physical FLUX prompt — see rules below>",
+    "anchor_phrase":    "<2-4 Devanagari words VERBATIM from voiceover>",
+    "mood":             "<3-6 word English emotional tone for SFX selection>",
+    "wardrobe_context": "<one of: WAR | PALACE | DIVINE | FOREST | JOURNEY>"
   }}
+
+WARDROBE_CONTEXT (Phase 19, 2026-06-16) — REQUIRED per entry. Pick the
+context that matches THAT SPECIFIC broll moment, not the whole story.
+A Yudhishthira video can span PALACE (dice game), WAR (Kurukshetra),
+FOREST (vanvas), and JOURNEY (Mahaprasthanika to heaven's gate) in the
+same render.
+
+  WAR     — battlefield / siege / duel / combat scene. Subject in
+            authentic ancient Indian armor (kavach + kundal + gold
+            chest-plate). Use this ONLY for explicit combat moments.
+  PALACE  — royal court / throne room / private chamber / Hastinapur
+            interior. Subject in silk dhoti + mukut crown + jewelry.
+            NO armor. NO weapons unless ceremonial.
+  DIVINE  — Swarga / Mount Meru / encounter with a deity (Krishna's
+            virat rupa, Yaksha at the lake, Indra at heaven's gate).
+            Subject glowing, white-and-gold silks, celestial light.
+  FOREST  — vanvas / ashram / Kamyaka forest / Eklavya's clearing.
+            Subject in valkala bark-cloth, rudraksha mala, barefoot.
+            NO crown. NO jewelry except rudraksha.
+  JOURNEY — pilgrimage / Mahaprasthanika walk / Mount Meru ascent /
+            walking to heaven's gate. Subject in silk dhoti + wooden
+            walking staff. Companions visible alongside.
+
+EXAMPLES of correct wardrobe_context selection:
+  • voiceover beat = "Yudhishthira places his foot on Indra's chariot
+    at Swarga's gate"        → wardrobe_context: "DIVINE"
+  • voiceover beat = "Yudhishthira and his dog walking up the
+    Himalayan path"          → wardrobe_context: "JOURNEY"
+  • voiceover beat = "dice clatter in the Hastinapur court as
+    Draupadi is dragged in"  → wardrobe_context: "PALACE"
+  • voiceover beat = "Karna's chariot wheel sinks into the blood-
+    soaked mud of Kurukshetra" → wardrobe_context: "WAR"
+  • voiceover beat = "Eklavya kneels before his clay Drona at the
+    forest hermitage"        → wardrobe_context: "FOREST"
 
 BROLL RULES (HARD — violation = REJECT):
 
@@ -558,6 +682,26 @@ BROLL RULES (HARD — violation = REJECT):
         anchor "अश्वत्थामा तलवार उठाता" → image MUST contain "ashwatthama" (or warrior) + "sword"
         anchor "बच्चे सो रहे"             → image MUST contain "children" + "sleeping"
       No subject bleed (Arjuna image when narration is about Draupadi).
+
+  (d.2) STORY-CRITICAL ENTITY (Phase 19, 2026-06-16) — when the voiceover
+        names a non-human story element (animal companion / divine entity
+        / named weapon / named object), AT LEAST ONE broll image_prompt
+        MUST contain the English equivalent as a clearly identifiable
+        foreground subject. Prefer placing it on the broll entry whose
+        anchor_phrase names the entity directly.
+          voiceover names "कुत्ता"  → ≥1 image_prompt contains "a loyal
+                                     stray dog ... foreground subject"
+          voiceover names "धनुष"   → ≥1 image_prompt contains "Gandiva
+                                     bow / Arjuna's bow ... foreground"
+          voiceover names "कुंडल"  → ≥1 image_prompt contains "golden
+                                     kundal earrings ... close-up"
+          voiceover names "बच्चे"  → ≥1 image_prompt contains "sleeping
+                                     children ... foreground"
+          voiceover names "सुदर्शन" → ≥1 image_prompt contains "sudarshana
+                                     chakra / discus ... divine glow"
+        The Dharma dog vanishing from the 2026-06-16 Heaven's Gate render
+        — the entire emotional pivot of that story — is exactly the
+        failure mode this rule prevents.
 
   (e) INTENSITY ADJECTIVE (Phase 18, FLUX-quality floor) — EVERY image_prompt
       MUST contain at least ONE aggressive physical adjective from this list:
@@ -606,7 +750,8 @@ OUTPUT — return ONLY valid JSON, no markdown fences, no preamble:
     {{
       "image_prompt": "<literal-physical English prompt with character + intensity + palette + 'no hands in frame, no text...'>",
       "anchor_phrase": "<2-4 Devanagari words verbatim from voiceover>",
-      "mood": "<3-6 word English mood>"
+      "mood": "<3-6 word English mood>",
+      "wardrobe_context": "<WAR | PALACE | DIVINE | FOREST | JOURNEY>"
     }}
   ],
   "title": "<Bilingual <60 chars, format: '[Hindi half] | [English half]'. Hindi FIRST. Each half 24-28 chars max. MUST do ONE of: challenge a known assumption / point at a hidden cause / pose a painful question / invert a hero's moral. FORBIDDEN: pure incident-naming ('कर्ण की प्रतिज्ञा'), Story of X, episode numbering.>",
@@ -765,6 +910,12 @@ def generate_phase18_script(
             elif last_violation == "anchors":
                 why = last_info.get("anchor_why", "")
                 dynamic_prefix = f"Anchor validation failed: {why[:200]}. "
+            elif last_violation == "wardrobe_set":
+                why = last_info.get("wardrobe_why", "")
+                dynamic_prefix = f"Wardrobe-context validation failed: {why[:200]}. "
+            elif last_violation == "story_entity":
+                why = last_info.get("story_why", "")
+                dynamic_prefix = f"Story-entity validation failed: {why[:200]}. "
             full_prompt = base_prompt + (
                 f"\n\n── RETRY REMINDER (attempt {attempt+1}/{MAX_ATTEMPTS}) ──\n"
                 f"{dynamic_prefix}{base_reminder}"
@@ -802,7 +953,7 @@ def generate_phase18_script(
         vo_chars = len(data.get("voiceover", ""))
         vo_words = info.get("word_count", 0)
         br_n = info.get("broll_count", 0)
-        print(f"    [phase18-validate] score={score}/17 ok={ok} "
+        print(f"    [phase18-validate] score={score}/19 ok={ok} "
               f"voiceover={vo_words}w/{vo_chars}c broll={br_n} "
               f"violation={violation or 'none'}")
 

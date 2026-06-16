@@ -35,8 +35,51 @@
   },
 
   "Yudhishthira": {
-    "visual": "Yudhishthira Dharmaraja the just king, noble and serene face with calm deep eyes, medium build with dignified upright posture, wearing royal white and gold dhoti with royal crown, expression of righteousness and inner peace, holding royal scepter, gentle strong hands, aura of moral authority and calm wisdom",
-    "colors": "white-gold royal attire, serene noble face, dignified bearing"
+    "_revised": "Phase 19 (2026-06-16) — Heaven's Gate render shipped him in Sauron-spike helmet + skull-emblem armor + Byzantine crown. Explicit anti-armor + Hindu-iconography anchor.",
+    "visual": "Yudhishthira Dharmaraja the just king, warm golden-bronze Indian skin, salt-pepper beard, calm deep eyes, white-and-gold silk dhoti with red-gold angavastram (NO iron armor unless battlefield, NO European helmet), classical Indian mukut crown with peacock feather, tilak on forehead, gold kundal earrings, yajnopavita thread, gold scepter or walking staff",
+    "colors": "warm golden-bronze Indian skin, white-and-gold silk dhoti, gold mukut crown, ruby-and-gold jewelry"
+  },
+
+  "Dharma dog": {
+    "_added": "Phase 19 (2026-06-16) — Heaven's Gate story pivot; was rendering invisible because no descriptor existed.",
+    "visual": "a lean medium-sized stray Indian street dog with short tan-and-white fur, alert dark loyal eyes, walking close beside Yudhishthira, foreground subject in lower-third of frame, clearly visible and in focus, slightly worn paws from travel",
+    "colors": "tan-and-white short fur, dark loyal eyes"
+  },
+
+  "Garuda": {
+    "_added": "Phase 19 (2026-06-16) — Vishnu's mount, story-critical in several arc topics.",
+    "visual": "Lord Garuda divine eagle-man mount of Vishnu, golden feathered body with massive wings spread, sharp eagle face with hooked beak, human warrior torso, jeweled gold breast medallion, regal divine stance, NOT Western dragon, NOT Greek harpy",
+    "colors": "golden feathers, jewel-toned wings, gold medallion"
+  },
+
+  "Nandi": {
+    "_added": "Phase 19 (2026-06-16) — Shiva's mount, foreground prop in divine scenes.",
+    "visual": "Nandi the divine white bull mount of Shiva, massive seated bull with pristine white hide, gold-leaf horns, garlanded with orange marigold flowers, large soulful eyes, sacred Hindu temple icon",
+    "colors": "pristine white hide, gold horn-leaf, marigold garland"
+  },
+
+  "Sudarshana chakra": {
+    "_added": "Phase 19 (2026-06-16) — Krishna's divine discus, story-critical entity.",
+    "visual": "Krishna's Sudarshana chakra, golden 8-spoked divine discus weapon emitting luminous golden divine light, spinning energy ring, foreground prop in close detail, Hindu iconography",
+    "colors": "luminous gold divine glow, spinning rays"
+  },
+
+  "Gandiva bow": {
+    "_added": "Phase 19 (2026-06-16) — Arjuna's celestial bow.",
+    "visual": "Arjuna's celestial Gandiva bow, polished dark wood with gold-and-pearl inlay along the curve, ornate string, divine glow at the handle, foreground prop or held by Arjuna",
+    "colors": "dark wood + gold-pearl inlay + faint divine glow"
+  },
+
+  "Akshaya patra": {
+    "_added": "Phase 19 (2026-06-16) — Draupadi's inexhaustible bowl, vanvas story.",
+    "visual": "Draupadi's Akshaya Patra, ornate weathered bronze begging bowl with ancient Indian metalwork, faint divine glow at the rim, foreground prop in close detail",
+    "colors": "weathered bronze, faint divine glow"
+  },
+
+  "Indra": {
+    "_added": "Phase 19 (2026-06-16) — King of devas, Heaven's Gate story pivot.",
+    "visual": "Lord Indra king of devas, golden-skinned divine warrior with thousand-eye motif on robe, layered gold-and-pearl crown (mukut) with peacock-feather centerpiece, holding vajra thunderbolt weapon, seated on Airavata white elephant OR standing in golden celestial chariot, divine radiance, NO European helmet",
+    "colors": "golden divine skin, gold-and-pearl mukut, vajra weapon"
   },
 
   "Duryodhana": {

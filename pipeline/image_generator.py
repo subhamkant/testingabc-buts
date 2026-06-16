@@ -131,35 +131,143 @@ STYLE_SUFFIX = STYLE_SUFFIX_MORTAL
 # _character_palette_directive(arc_character_devanagari) substituted in.
 # Result: every per-scene FLUX prompt carries the character's palette inline.
 _CHARACTER_PALETTE = {
+    # Phase 19 (2026-06-16) palette rebalance — Heaven's Gate render
+    # forensic exposed that "low-key, moral weight, deep shadow, smoke-grey"
+    # phrasing pulled FLUX into Eastern Orthodox liturgical / dark-medieval
+    # aesthetic. Every entry now ends with explicit "faces clearly lit" so
+    # the warm-Indian-skin guard survives FLUX's tendency to render
+    # candlelit scenes as silhouettes. Mood preserved (Karna still amber,
+    # Bhishma still moonlit, Ashwatthama still fevered) but the dark-fantasy
+    # vocabulary is gone.
     "कर्ण": {
-        "palette":  "warm amber + bronze, deep shadow, sunset on armor",
-        "lighting": "harsh edge-light from a single sunset source, embers in the foreground",
+        "palette":  "warm sunset amber + bronze, golden divine glow on kavach armor, "
+                    "saffron-and-crimson palette, faces clearly lit",
+        "lighting": "harsh golden-hour edge-light, embers in foreground, "
+                    "faces visible and warm",
     },
     "भीष्म": {
-        "palette":  "cool silver-blue, restrained, age-weathered",
-        "lighting": "cold moonlight or pre-dawn grey, minimal shadow, no warmth",
+        "palette":  "cool moonlit silver-blue, restrained noble tones, "
+                    "white-and-silver silk dhoti, faces clearly lit",
+        "lighting": "cold pre-dawn moonlight or candlelit interior, faces "
+                    "visible and dignified, no deep shadows",
     },
     "अर्जुन": {
-        "palette":  "heroic gold + cobalt, high saturation, vital",
-        "lighting": "strong key-light, golden-hour, hero composition",
+        "palette":  "heroic gold + cobalt, high saturation, golden-bronze skin, "
+                    "vital divine charm",
+        "lighting": "strong key-light, golden-hour, hero composition with rim-light halo",
     },
     "द्रौपदी": {
-        "palette":  "firelit crimson + saffron, regal red sari, court grandeur",
-        "lighting": "warm torchlight + harsh court interior, contrasted, intense",
+        "palette":  "firelit crimson + saffron, regal red-and-gold sari, "
+                    "warm Indian skin tone, court grandeur",
+        "lighting": "warm torchlight and oil-lamp, contrasted, intense BUT "
+                    "faces clearly visible",
     },
     "युधिष्ठिर": {
-        "palette":  "solemn candlelit ochre + parchment, contemplative",
-        "lighting": "single oil-lamp source, low-key, moral weight",
+        # Phase 19 (2026-06-16) — was "solemn candlelit ochre + parchment,
+        # contemplative, single oil-lamp source, low-key, moral weight"
+        # which FLUX read as Eastern Orthodox liturgical scene. Rebalanced
+        # to preserve contemplative tone with explicit Hindu palace anchor.
+        "palette":  "warm oil-lamp glow on white-and-gold silk dhoti, "
+                    "carved sandstone palace interior, contemplative dignified, "
+                    "faces clearly lit with key-light",
+        "lighting": "warm oil-lamp + soft fill from skylight, dignified, "
+                    "faces visible, NO deep shadows, NO dark fantasy",
     },
     "एकलव्य": {
-        "palette":  "forest greens + earth-browns, dappled, untouched by court colors",
-        "lighting": "dappled sunlight through canopy, natural, raw",
+        "palette":  "forest greens + earth-browns, dappled golden sunlight, "
+                    "warm Indian skin tone, untouched by court colors",
+        "lighting": "dappled sunlight through banyan canopy, faces clearly lit",
     },
     "अश्वत्थामा": {
-        "palette":  "blood-red + smoke-grey, fevered, cursed, unstable",
-        "lighting": "flickering firelight, hard shadows, hellish edge",
+        # Phase 19 (2026-06-16) — preserved fever/cursed mood but added
+        # explicit "warm Indian skin" anchor so faces don't render dark.
+        "palette":  "blood-red + smoke-grey accents on warm bronze skin, fevered, "
+                    "cursed but face clearly visible, NOT silhouette",
+        "lighting": "flickering firelight with key-light on face, hard shadows "
+                    "on armor but face exposed, hellish edge",
     },
 }
+
+
+# ─── Phase 19 (2026-06-16) Wardrobe Context + Hindu Iconography ──────────
+# Three layered anchors that combat FLUX's training-data bias toward
+# European medieval / dark fantasy when given "Mahabharata" + "warrior":
+#   1. _WARDROBE_CONTEXT_PREFIX — clothing + lighting + skin per scene type
+#   2. _HINDU_ICONOGRAPHY_ANCHOR — universal Vedic/Pauranic visual lock
+#   3. _NEGATIVE_PHASE19_ANTI_BIAS — explicit kills for skull / spike /
+#      viking / mosque / Sauron / etc. (appended at bottom of this file)
+#
+# Failure mode this fixes: 2026-06-16 Heaven's Gate render shipped
+# Yudhishthira in skull-emblem breastplate, demonic-spike helmet,
+# viking-horn silhouette, Byzantine headband crown, and Christian-Orthodox
+# candle staff. Story-critical dog absent from all 6 sampled frames.
+
+# CLOTHING + LIGHTING + SKIN TONE ONLY. No environment / setting / background
+# descriptors — those belong to the LLM's image_prompt and would clash with
+# the wardrobe prefix in atypical scenes (e.g. river duel = WAR context but
+# NOT a dusty battlefield).
+_WARDROBE_CONTEXT_PREFIX = {
+    "WAR": (
+        "authentic Vedic-era warrior wearing kavach (engraved gold-leaf "
+        "chest-plate with sun or moon motif, NEVER European plate armor, "
+        "NEVER skull emblem, NEVER spiked helmet), Indian classical mukut "
+        "helmet with peacock feather, gold kundal earrings visible, "
+        "warm golden-bronze Indian skin tone, "
+    ),
+    "PALACE": (
+        "royal subject in pristine white-and-gold silk dhoti with red "
+        "angavastram, classical Indian mukut crown (NEVER European helmet), "
+        "tilak on forehead, layered gold necklaces and kundal earrings, "
+        "warm oil-lamp glow on warm golden-bronze Indian skin, NO armor, "
+        "NO weapons unless ceremonial, "
+    ),
+    "DIVINE": (
+        "subject glowing with ethereal halo of divine charm, wearing "
+        "pristine white silk dhoti edged in gold with diaphanous shawl, "
+        "celestial mukut, glowing golden-bronze skin, divine golden "
+        "light on the face, NO armor, NO darkness, NO shadows, "
+    ),
+    "FOREST": (
+        "subject in simple natural-cotton valkala bark-cloth garments, "
+        "hair tied in topknot, rudraksha bead mala around neck, barefoot, "
+        "warm dappled-sunlight key-light on face, warm golden-bronze "
+        "Indian skin tone, NO crown, NO jewelry except rudraksha, "
+    ),
+    "JOURNEY": (
+        "subject in white-and-gold silk dhoti (NOT armor) with simple "
+        "wooden walking staff, companions visible alongside (brothers, "
+        "queen Draupadi, loyal stray dog if story-relevant), warm "
+        "key-light on faces transitioning to celestial golden glow, "
+        "warm golden-bronze Indian skin tone, "
+    ),
+}
+
+
+def _inject_wardrobe_context(wardrobe_context: str) -> str:
+    """Phase 19 (2026-06-16). Return a wardrobe-context-specific positive
+    prefix for the LLM-emitted classification. Falls back to a neutral
+    "ancient Indian classical" anchor when the context is empty (defensive
+    — should never fire if the new validator catches it at script-gen)."""
+    ctx = (wardrobe_context or "").strip().upper()
+    return _WARDROBE_CONTEXT_PREFIX.get(
+        ctx,
+        "ancient Indian Mahabharata era, classical Indian wardrobe, "
+    )
+
+
+# Universal anchor prepended to EVERY FLUX prompt. References Raja Ravi
+# Varma + Amar Chitra Katha + B.R. Chopra 1988 TV Mahabharat — three
+# well-established visual references with strong training-data signal.
+# Compressed comma-list form — every char counts under the 2000-char
+# Cloudflare cap. Architectural exclusions (NO Islamic domes / NO Gothic
+# / NO European castles) live in _NEGATIVE_PHASE19_ANTI_BIAS, not here.
+_HINDU_ICONOGRAPHY_ANCHOR = (
+    "Raja Ravi Varma style, Amar Chitra Katha, B.R. Chopra Mahabharat "
+    "1988 wardrobe, authentic Hindu Vedic iconography, classical Indian "
+    "period film, warm golden-bronze skin, intricate gold kundal earrings "
+    "and mukut crown, tilak, yajnopavita, silk dhoti, carved Hindu temple "
+    "architecture, "
+)
 
 
 def _character_palette_directive(character_devanagari: str) -> str:
@@ -328,6 +436,33 @@ _NEGATIVE_RESTRAINT = (
     "extra limbs,extra arms,malformed limbs,disfigured,"
     "cross-eyed,bad proportions"
 )
+
+# Phase 19 (2026-06-16) — explicit anti-bias kills. FLUX defaults to
+# European medieval / dark fantasy when given generic "warrior" or "epic"
+# descriptors. Verified failure modes on 2026-06-16 Heaven's Gate render:
+# skull emblem on breastplate (t=23s), demonic-spike helmet (t=18s),
+# viking-horn helmet silhouette (t=13s), Byzantine/Mongol headband crowns,
+# Christian-Orthodox candle staff (t=0). Also kills Islamic architecture
+# (mosque/dome/minaret) which appeared as background in t=4/t=8 — wrong
+# civilization for ancient India.
+_NEGATIVE_PHASE19_ANTI_BIAS = (
+    ",european knight,medieval armor,plate armor,chain mail,gothic armor,"
+    "viking horns,viking helmet,crusader,roman armor,greek armor,"
+    "european helmet,european crown,gothic crown,byzantine crown,"
+    "mongol armor,mongol helmet,ottoman armor,"
+    "skull emblem,skull motif,skull on armor,skull iconography,"
+    "demonic spikes,dark fantasy,dark souls aesthetic,game of thrones aesthetic,"
+    "lord of the rings aesthetic,sauron,nazgul,dementor,horned helmet,"
+    "fantasy demon,sinister glow,evil aura,"
+    "mosque,minaret,dome architecture,islamic architecture,"
+    "gothic cathedral,european castle,medieval keep,"
+    "christian crucifix,orthodox priest,liturgical staff,papal staff,"
+    "celtic knot,nordic rune,egyptian ankh,star of david,"
+    "modern clothing,suit and tie,jeans,t-shirt,"
+    "samurai armor,ninja,kimono,chinese armor,japanese armor"
+)
+_NEGATIVE_DEFAULT   = _NEGATIVE_DEFAULT   + _NEGATIVE_PHASE19_ANTI_BIAS
+_NEGATIVE_RESTRAINT = _NEGATIVE_RESTRAINT + _NEGATIVE_PHASE19_ANTI_BIAS
 
 # Backwards-compat alias — _NEGATIVE was the single global pre-2026-05-18.
 _NEGATIVE = _NEGATIVE_DEFAULT
@@ -1326,9 +1461,10 @@ def generate_images(scenes_or_script, single_shot: bool = False, series: str = "
         if "broll" in scenes_or_script:
             scenes = [
                 {
-                    "image_prompt": entry.get("image_prompt", ""),
-                    "mood":         entry.get("mood", ""),
-                    "narration":    entry.get("anchor_phrase", ""),
+                    "image_prompt":     entry.get("image_prompt", ""),
+                    "mood":             entry.get("mood", ""),
+                    "narration":        entry.get("anchor_phrase", ""),
+                    "wardrobe_context": entry.get("wardrobe_context", ""),  # Phase 19
                 }
                 for entry in scenes_or_script["broll"]
             ]
@@ -1565,7 +1701,23 @@ def generate_images(scenes_or_script, single_shot: bool = False, series: str = "
             # part of the scene prompt. Empty cue = no-op.
             if imperfection_cue:
                 base_prompt = f"{base_prompt}. {imperfection_cue}"
-            prompt = f"{angle_label}{composition_directive}{base_prompt}"
+            # Phase 19 (2026-06-16) — wardrobe-context-aware + Hindu-iconography
+            # anchored composition. Order matters: iconography anchor at the
+            # front (FLUX gives more weight to early tokens) → wardrobe context
+            # next → angle/composition → base_prompt last. base_prompt carries
+            # the LLM-emitted character + intensity + palette. Mahabharata-only
+            # (series-gated) so the curiosity / whatif / krishna pipelines stay
+            # on their existing prompt-shape contracts.
+            if series == "mahabharata":
+                wardrobe_ctx    = scene.get("wardrobe_context", "")
+                wardrobe_prefix = _inject_wardrobe_context(wardrobe_ctx)
+                prompt = (
+                    _HINDU_ICONOGRAPHY_ANCHOR
+                    + wardrobe_prefix
+                    + f"{angle_label}{composition_directive}{base_prompt}"
+                )
+            else:
+                prompt = f"{angle_label}{composition_directive}{base_prompt}"
             # Stable per-character seed: same hero across scenes → similar
             # face. Falls back to scene-position seed when no known character
             # is mentioned (WhatIf scenes, environment-only shots).
@@ -1981,64 +2133,103 @@ async def generate_images_with_kaggle_primary(
     from pipeline import kaggle_client
 
     async with _KAGGLE_LOCK:
-        try:
-            # Build run_config — what run_flux_phase.py + run_ltx_phase.py
-            # read at start of each subprocess
-            requires_motion_list = [
-                [i, j]
-                for i, scene in enumerate(scenes)
-                for j, shot in enumerate(scene.get("visual_track", []) or [])
-                if isinstance(shot, dict) and shot.get("requires_motion")
-            ]
-            master_seed = _stable_master_seed(run_id or "default-run")
-            run_config = {
-                "scenes": scenes,
-                "style_anchor": (style_anchor or _DEFAULT_STYLE_ANCHOR).strip(),
-                "requires_motion": requires_motion_list,
-                "master_seed": master_seed,
-                "run_id": run_id,
-            }
-            print(f"[kaggle] pushing kernel {kernel_ref} for run_id={run_id} "
-                  f"({len(scenes)} scenes, {len(requires_motion_list)} motion shots, "
-                  f"seed={master_seed})")
-            version = await kaggle_client.push_kernel_with_run_config(
-                kernel_dir, run_config,
-            )
+        # Build run_config ONCE — the same payload is pushed on each retry
+        # (only the master_seed could vary; we keep it stable so each retry
+        # would reproduce the same output if it landed on T4).
+        requires_motion_list = [
+            [i, j]
+            for i, scene in enumerate(scenes)
+            for j, shot in enumerate(scene.get("visual_track", []) or [])
+            if isinstance(shot, dict) and shot.get("requires_motion")
+        ]
+        master_seed = _stable_master_seed(run_id or "default-run")
+        run_config = {
+            "scenes": scenes,
+            "style_anchor": (style_anchor or _DEFAULT_STYLE_ANCHOR).strip(),
+            "requires_motion": requires_motion_list,
+            "master_seed": master_seed,
+            "run_id": run_id,
+        }
+        timeout_s = int(os.environ.get("KAGGLE_TIMEOUT_S", "2700"))
+        poll_interval_s = int(os.environ.get("KAGGLE_POLL_INTERVAL_S", "60"))
+        max_attempts = int(os.environ.get("KAGGLE_P100_RETRIES", "5"))
 
-            timeout_s = int(os.environ.get("KAGGLE_TIMEOUT_S", "2700"))
-            poll_interval_s = int(os.environ.get("KAGGLE_POLL_INTERVAL_S", "60"))
-            print(f"[kaggle] polling (interval={poll_interval_s}s, timeout={timeout_s}s)")
-            result = await kaggle_client.poll_kernel(
-                kernel_ref,
-                poll_interval_s=poll_interval_s,
-                timeout_s=timeout_s,
-            )
-            if result["status"] != "complete":
-                raise kaggle_client.KaggleClientError(
-                    f"kernel ended with status={result['status']}"
+        # Retry-until-T4 loop. Each P100 fast-fail costs ~60s; a successful
+        # FLUX+LTX run takes ~17 min. So 5 P100 retries cost ~5 min worst-
+        # case — under 1/3 of one real-run quota. Once T4 lands, FLUX+LTX
+        # complete and we return scene_groups directly.
+        last_error: str = "<no Kaggle attempt made>"
+        for attempt in range(1, max_attempts + 1):
+            try:
+                print(f"[kaggle] attempt {attempt}/{max_attempts}: pushing kernel "
+                      f"{kernel_ref} for run_id={run_id} "
+                      f"({len(scenes)} scenes, {len(requires_motion_list)} motion shots, "
+                      f"seed={master_seed})")
+                version = await kaggle_client.push_kernel_with_run_config(
+                    kernel_dir, run_config,
                 )
+                print(f"[kaggle] polling (interval={poll_interval_s}s, timeout={timeout_s}s)")
+                result = await kaggle_client.poll_kernel(
+                    kernel_ref,
+                    poll_interval_s=poll_interval_s,
+                    timeout_s=timeout_s,
+                )
+                if result["status"] == "complete":
+                    target_dir = (
+                        Path(f"cache/{run_id}/visuals")
+                        if run_id
+                        else Path("cache/kaggle_latest/visuals")
+                    )
+                    target_dir.mkdir(parents=True, exist_ok=True)
+                    print(f"[kaggle] downloading outputs to {target_dir}")
+                    downloaded = await kaggle_client.download_output(
+                        kernel_ref, target_dir,
+                        version=version if version > 0 else None,
+                    )
+                    scene_groups = _reshape_kaggle_outputs_to_scene_groups(downloaded, scenes)
+                    n_files = sum(len(g) for g in scene_groups)
+                    n_mp4 = sum(
+                        1 for g in scene_groups for p in g
+                        if p.lower().endswith(".mp4")
+                    )
+                    print(f"[kaggle] OK on attempt {attempt} — {n_files} files "
+                          f"({n_mp4} motion clips, {n_files - n_mp4} stills) "
+                          f"across {len(scene_groups)} scenes")
+                    return scene_groups
 
-            target_dir = Path(f"cache/{run_id}/visuals") if run_id else Path("cache/kaggle_latest/visuals")
-            target_dir.mkdir(parents=True, exist_ok=True)
-            print(f"[kaggle] downloading outputs to {target_dir}")
-            downloaded = await kaggle_client.download_output(
-                kernel_ref, target_dir,
-                version=version if version > 0 else None,
-            )
+                # status != "complete" — was it our P100 fast-fail?
+                was_p100 = await kaggle_client.is_p100_failure(kernel_ref)
+                if was_p100 and attempt < max_attempts:
+                    print(f"[kaggle] attempt {attempt}/{max_attempts}: P100 allocated "
+                          f"(sm_60 incompatible with PyTorch 2.x). Retrying for T4 luck...")
+                    last_error = f"attempt {attempt}: P100 fast-fail"
+                    continue  # next attempt — Kaggle may give T4 next time
+                # Either genuine error (not P100) OR we've exhausted retries
+                last_error = (
+                    f"attempt {attempt}: kernel status={result['status']}"
+                    + (" (P100 fast-fail, retries exhausted)" if was_p100 else " (non-P100 error)")
+                )
+                print(f"[kaggle] {last_error}")
+                break  # don't retry non-P100 failures
 
-            scene_groups = _reshape_kaggle_outputs_to_scene_groups(downloaded, scenes)
-            n_files = sum(len(g) for g in scene_groups)
-            n_mp4 = sum(1 for g in scene_groups for p in g if p.lower().endswith(".mp4"))
-            print(f"[kaggle] OK — {n_files} files ({n_mp4} motion clips, "
-                  f"{n_files - n_mp4} stills) across {len(scene_groups)} scenes")
-            return scene_groups
+            except kaggle_client.KaggleClientError as e:
+                last_error = f"attempt {attempt}: {e}"
+                # Could be network blip / push timeout / poll timeout —
+                # retry once or twice before giving up
+                if attempt < max_attempts:
+                    print(f"[kaggle] attempt {attempt}/{max_attempts} CLI error "
+                          f"({e}) — retrying...")
+                    continue
+                print(f"[kaggle] CLI error on final attempt: {e}")
+                break
 
-        except kaggle_client.KaggleClientError as e:
-            print(f"[kaggle] FAILED — falling back to Cloudflare cascade: {e}")
-            # Sync Cloudflare fallback inside the lock — prevents HI's
-            # Kaggle attempt from racing with EN's fallback writes.
-            return generate_images(
-                scenes, single_shot=single_shot, series=series,
-                visual_style=visual_style, ck=ck, mode=mode,
-                style_anchor=style_anchor,
-            )
+        # All Kaggle attempts failed (or hit genuine error) — fall back to
+        # the sync Cloudflare cascade. Lock stays held so HI's attempt
+        # doesn't race against EN's fallback writes.
+        print(f"[kaggle] FAILED after {attempt} attempt(s) — falling back to "
+              f"Cloudflare cascade. Last: {last_error}")
+        return generate_images(
+            scenes, single_shot=single_shot, series=series,
+            visual_style=visual_style, ck=ck, mode=mode,
+            style_anchor=style_anchor,
+        )
