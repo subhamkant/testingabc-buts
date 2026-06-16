@@ -82,8 +82,13 @@
       "ts": "2026-06-16 15:19:33"
     },
     {
+<<<<<<< Updated upstream
       "topic": "Eklavya's hidden truth before Drona's statue — the forest student's greatest betrayal by caste, the secret skill that surpassed Arjuna without a teacher",
       "ts": "2026-06-16 17:34:42"
+=======
+      "topic": "Ashwatthama's greatest curse — the hidden Brahmastra against Uttara's womb, the secret revenge that doomed an unborn Parikshit before he could be named",
+      "ts": "2026-06-16 17:42:15"
+>>>>>>> Stashed changes
     }
   ],
   "_note": "Phase 15 rewrite (commit 320e49f on 2026-06-08) changed arc topic strings. Pre-2026-06-08 entries whose strings became orphaned vs current arcs.json were migrated to their post-Phase-15 equivalents on 2026-06-13 to restore exact-string dedup. The `_migrated_from_phase15_rewrite` field on each migrated entry records the original published string for traceability."
