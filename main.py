@@ -365,25 +365,36 @@ async def run_pipeline(language: str = "en", test_mode: bool = False, test_uploa
             scheduled_topic = get_next_topic("mahabharata")
             script = generate_script(language, forced_topic=scheduled_topic, series="mahabharata")
 
-            if test_mode or test_upload:
-                script["scenes"] = script["scenes"][:1]
-                print("    [test] Capped to 1 scene")
+            # Phase 18 (2026-06-16): scene-cap and outro-append are scoped
+            # to the legacy `scenes`-based path. Phase 18's voiceover ends
+            # with a loop-closure `?` that IS the close — adding a spoken
+            # subscribe CTA after that would break loop rewatch. So we
+            # skip the outro entirely when the decoupled path is active.
+            if "scenes" in script:
+                if test_mode or test_upload:
+                    script["scenes"] = script["scenes"][:1]
+                    print("    [test] Capped to 1 scene")
 
-            # Append fixed subscribe outro before caching so the resumed run
-            # doesn't re-append (which would produce two outros)
-            # Pass episode_n so the outro rotates the reflective question
-            # deterministically (Part G.2, 2026-05-20). script_generator's
-            # generate_script() populates data["episode_n"] via Part G.3.
-            script["scenes"].append(_subscribe_outro(
-                "mahabharata", language, episode_n=script.get("episode_n"),
-            ))
+                # Append fixed subscribe outro before caching so the resumed run
+                # doesn't re-append (which would produce two outros)
+                # Pass episode_n so the outro rotates the reflective question
+                # deterministically (Part G.2, 2026-05-20). script_generator's
+                # generate_script() populates data["episode_n"] via Part G.3.
+                script["scenes"].append(_subscribe_outro(
+                    "mahabharata", language, episode_n=script.get("episode_n"),
+                ))
             update_characters(script)
             ck.save_json("script.json", script)
 
         print(f"    Topic       : {script.get('topic', 'N/A')}")
         print(f"    Title       : {script.get('title', 'N/A')}")
         print(f"    Content type: {script.get('content_type', 'N/A')}")
-        print(f"    Scenes      : {len(script['scenes'])} (incl. subscribe outro)")
+        if "voiceover" in script:
+            _vo_words = len(script.get("voiceover", "").split())
+            _broll_n  = len(script.get("broll", []))
+            print(f"    [phase18]    voiceover {_vo_words}w, broll {_broll_n} entries")
+        else:
+            print(f"    Scenes      : {len(script['scenes'])} (incl. subscribe outro)")
 
         # ── Step 2: Continuous voiceover (single-pass TTS) ────────
         if ck.has("audio.mp3") and ck.has("char_weights.json"):
