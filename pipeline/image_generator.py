@@ -255,18 +255,27 @@ def _inject_wardrobe_context(wardrobe_context: str) -> str:
     )
 
 
-# Universal anchor prepended to EVERY FLUX prompt. References Raja Ravi
-# Varma + Amar Chitra Katha + B.R. Chopra 1988 TV Mahabharat — three
-# well-established visual references with strong training-data signal.
-# Compressed comma-list form — every char counts under the 2000-char
-# Cloudflare cap. Architectural exclusions (NO Islamic domes / NO Gothic
-# / NO European castles) live in _NEGATIVE_PHASE19_ANTI_BIAS, not here.
+# Universal anchor prepended to EVERY Mahabharata FLUX prompt.
+# Phase 20 (2026-06-17) — photoreal-forward rewrite. Phase 19's
+# "Raja Ravi Varma style" + "Amar Chitra Katha" referenced an oil
+# painter and a comic-book series — FLUX read them as 2D-style anchors
+# and produced cartoonish output. Phase 20 keeps cultural protection via
+# the LIVE-ACTION B.R. Chopra Mahabharat 1988 reference + Baahubali (also
+# live-action film), explicitly negates 2D in the positive (FLUX weights
+# early-token positives heaviest), and front-loads cinematic-camera
+# vocabulary that the model has strong training-data signal for.
+# Architectural exclusions (NO Islamic domes / NO Gothic / NO European
+# castles) live in _NEGATIVE_PHASE19_ANTI_BIAS; 2D-style exclusions live
+# in the new _NEGATIVE_PHASE20_ANTI_CARTOON below.
 _HINDU_ICONOGRAPHY_ANCHOR = (
-    "Raja Ravi Varma style, Amar Chitra Katha, B.R. Chopra Mahabharat "
-    "1988 wardrobe, authentic Hindu Vedic iconography, classical Indian "
-    "period film, warm golden-bronze skin, intricate gold kundal earrings "
-    "and mukut crown, tilak, yajnopavita, silk dhoti, carved Hindu temple "
-    "architecture, "
+    "Hyper-photorealistic live-action epic film still, 8K resolution, "
+    "shot on ARRI Alexa 65, highly detailed skin pores and fabric weave, "
+    "gritty naturalistic cinematic lighting, NOT painting, NOT comic book, "
+    "NOT illustration, NOT 2D art, "
+    "Baahubali / B.R. Chopra Mahabharat 1988 live-action wardrobe reference, "
+    "authentic Hindu Vedic iconography, warm golden-bronze Indian skin, "
+    "intricate gold kundal earrings, classical Indian mukut crown, tilak, "
+    "yajnopavita, silk dhoti, carved Hindu Nagara-style temple architecture, "
 )
 
 
@@ -463,6 +472,30 @@ _NEGATIVE_PHASE19_ANTI_BIAS = (
 )
 _NEGATIVE_DEFAULT   = _NEGATIVE_DEFAULT   + _NEGATIVE_PHASE19_ANTI_BIAS
 _NEGATIVE_RESTRAINT = _NEGATIVE_RESTRAINT + _NEGATIVE_PHASE19_ANTI_BIAS
+
+# Phase 20 (2026-06-17) — explicit anti-cartoon / anti-2D / anti-stylized
+# kills. Phase 19's _HINDU_ICONOGRAPHY_ANCHOR referenced "Raja Ravi Varma
+# style" + "Amar Chitra Katha" (an oil painter + a comic-book series)
+# and FLUX read those as 2D-style anchors → cartoonish output.
+# Phase 20 rewrites the anchor to be photoreal-forward AND adds this
+# negative block to reinforce the demand at the negative-prompt layer.
+#
+# Note: _NEGATIVE_DEFAULT already had "cartoon,anime,cel shaded,illustration,
+# drawing,comic book" + "painting,oil painting,watercolor,2d illustration,
+# storybook art" from earlier phases. This block adds the specific
+# digital-rendering / stylization terms those lists missed (3d render,
+# stylized, plastic skin, vector art, flat shading, anime style,
+# disney/pixar style, etc.).
+_NEGATIVE_PHASE20_ANTI_CARTOON = (
+    ",3d render,plastic skin,smooth plastic skin,stylized,low detail,"
+    "vector art,flat shading,toy figurine,clay model,plasticine,"
+    "video game cutscene,unreal engine art,digital painting,concept art,"
+    "comic panel,manga panel,anime style,cel-shaded render,"
+    "cartoon character design,disney style,pixar style,dreamworks style,"
+    "stylization,smooth airbrushed face,porcelain doll skin,uncanny valley"
+)
+_NEGATIVE_DEFAULT   = _NEGATIVE_DEFAULT   + _NEGATIVE_PHASE20_ANTI_CARTOON
+_NEGATIVE_RESTRAINT = _NEGATIVE_RESTRAINT + _NEGATIVE_PHASE20_ANTI_CARTOON
 
 # Backwards-compat alias — _NEGATIVE was the single global pre-2026-05-18.
 _NEGATIVE = _NEGATIVE_DEFAULT

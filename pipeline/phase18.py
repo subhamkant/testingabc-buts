@@ -392,6 +392,366 @@ def _check_story_entity_present(voiceover: str, broll: list) -> tuple[bool, str]
     return True, ""
 
 
+# ─── Phase 20 (2026-06-17) ────────────────────────────────────────────────
+# Two new validators:
+#   1. _check_verb_action_lock — Audio-Visual Verb Lock. When the anchor
+#      phrase contains an action verb (sinking / raising / striking / etc.),
+#      the image_prompt MUST contain the English equivalent so FLUX renders
+#      the ACTION not a static portrait holding the noun.
+#   2. _check_subject_diversity — film-editor cycle. Broll is not 8
+#      portraits; it cycles ACTION / REACTION / PROP / ENVIRONMENT shots.
+#
+# Both addressed in the Phase 20 plan; both ship with infinite-loop
+# protection (default-pass-closed for unmapped vocab + AMBIGUOUS escape
+# hatch in the classifier + existing best-of-N rescue path).
+
+# Devanagari ACTION-verb CONJUGATED forms → English equivalents.
+# Phase 20 plan-review fix (2026-06-17): NEVER use 2-letter verb stems
+# (रो / जल / सुन / मार / etc.) as keys — they substring-match common
+# unrelated words:
+#   रो substring-matches रोशनी (light), रोग (disease), भरोसा (trust)
+#   सुन substring-matches सुनहरा (golden — extremely common in Hindu prompts)
+#   जल substring-matches जल (water — abundant in Mahabharata vocabulary)
+#   मार substring-matches हमारा / तुम्हारा (ours / yours)
+# Instead use explicit conjugated forms (3-5 chars). Combined with
+# .startswith() on word-split tokens in _check_verb_action_lock below,
+# this eliminates both internal-substring AND prefix false positives.
+_VERB_ACTION_MAP = {
+    # raising / lifting (root उठा)
+    "उठाता":   ["raising", "lifting", "rises", "lifts"],
+    "उठाती":   ["raising", "lifting", "rises", "lifts"],
+    "उठाते":   ["raising", "lifting"],
+    "उठाई":    ["raised", "lifted"],
+    "उठाया":  ["raised", "lifted"],
+    "उठाकर":  ["raised", "lifted"],
+    "उठाने":  ["raising", "to raise"],
+
+    # falling / sinking (root गिर)
+    "गिरता":   ["falling", "sinking", "fell"],
+    "गिरती":   ["falling", "sinking"],
+    "गिरते":   ["falling"],
+    "गिरा":    ["fell", "fallen", "collapsed"],
+    "गिरी":    ["fell", "fallen"],
+    "गिराकर":  ["fallen", "dropped"],
+
+    # cutting / severing (root काट)
+    "काटता":   ["cutting", "severing"],
+    "काटती":   ["cutting", "severing"],
+    "काटी":    ["cut", "severed", "sliced"],
+    "काटा":    ["cut", "severed", "sliced"],
+    "काटकर":   ["cut", "severed"],
+
+    # striking / killing (root मार — NEVER bare; मार substring-matches हमारा/तुम्हारा)
+    "मारता":   ["striking", "killing", "slaying"],
+    "मारती":   ["striking", "killing"],
+    "मारी":    ["struck", "slain", "killed"],
+    "मारा":    ["struck", "slain", "killed"],
+    "मारकर":   ["struck", "slain"],
+    "मारने":   ["striking", "to strike"],
+
+    # hiding / concealing (root छिप)
+    "छिपा":    ["hidden", "concealed", "covered"],
+    "छिपी":    ["hidden", "concealed"],
+    "छिपाता":  ["hiding", "concealing"],
+    "छिपाती":  ["hiding", "concealing"],
+    "छिपाकर":  ["hidden", "concealed"],
+    "छिपाने":  ["hiding", "to hide"],
+
+    # flowing / shedding (root बहा)
+    "बहाता":   ["flowing", "shedding", "streaming"],
+    "बहाती":   ["flowing", "shedding", "weeping"],
+    "बहाया":   ["shed", "flowed"],
+    "बहाई":    ["shed", "flowed"],
+
+    # crying / weeping (root रो — NEVER bare; रो substring-matches रोशनी/रोग/भरोसा)
+    "रोता":    ["crying", "weeping", "sobbing"],
+    "रोती":    ["crying", "weeping", "sobbing"],
+    "रोते":    ["crying", "weeping"],
+    "रोया":    ["cried", "wept", "sobbed"],
+    "रोई":     ["cried", "wept", "sobbed"],
+    "रोकर":    ["crying", "weeping"],
+
+    # throwing / hurling (root फेंक)
+    "फेंकता":  ["throwing", "hurling"],
+    "फेंकती":  ["throwing", "hurling"],
+    "फेंका":   ["threw", "hurled", "flung"],
+    "फेंकी":   ["threw", "hurled"],
+
+    # pulling / drawing back (root खींच)
+    "खींचता":  ["pulling", "drawing back", "tugging"],
+    "खींचती":  ["pulling", "drawing back"],
+    "खींची":   ["pulled", "drew back"],
+    "खींचा":   ["pulled", "drew back"],
+
+    # breaking / shattering (root तोड़)
+    "तोड़ता":  ["breaking", "shattering"],
+    "तोड़ती":  ["breaking", "shattering"],
+    "तोड़ा":   ["broke", "shattered", "broken"],
+    "तोड़ी":   ["broke", "shattered"],
+    "तोड़कर":  ["broken", "shattered"],
+
+    # burning (root जल — NEVER bare; जल = water, abundant in Mahabharata)
+    "जलता":    ["burning", "ablaze"],
+    "जलती":    ["burning", "ablaze"],
+    "जलते":    ["burning"],
+    "जला":     ["burnt", "ablaze", "engulfed"],
+    "जली":     ["burnt", "ablaze"],
+    "जलाकर":   ["burnt", "burned"],
+    "जलाने":   ["burning", "to burn"],
+
+    # pushing / shoving (root धकेल)
+    "धकेला":   ["pushed", "shoved"],
+    "धकेलता":  ["pushing", "shoving"],
+
+    # stopping / halting (root रुक)
+    "रुका":    ["stopped", "halted", "frozen"],
+    "रुकी":    ["stopped", "halted"],
+    "रुकता":   ["stopping", "halting"],
+
+    # watching / seeing (root देख)
+    "देखता":   ["watching", "seeing", "gazing"],
+    "देखती":   ["watching", "seeing", "gazing"],
+    "देखा":    ["saw", "looked at", "gazed at"],
+    "देखी":    ["saw", "looked at"],
+    "देखकर":   ["watching", "seeing"],
+
+    # hearing (root सुन — NEVER bare; सुन substring-matches सुनहरा = golden)
+    "सुनता":   ["hearing", "listening"],
+    "सुनती":   ["hearing", "listening"],
+    "सुना":    ["heard", "listened"],
+    "सुनी":    ["heard", "listened"],
+
+    # speaking (root बोल)
+    "बोलता":   ["speaking", "saying"],
+    "बोलती":   ["speaking", "saying"],
+    "बोला":    ["said", "spoke", "uttered"],
+    "बोली":    ["said", "spoke"],
+
+    # screaming (root चीख)
+    "चीखता":   ["screaming", "shrieking"],
+    "चीखती":   ["screaming", "shrieking"],
+    "चीखा":    ["screamed", "shrieked"],
+    "चीखी":    ["screamed", "shrieked"],
+
+    # dragging (root घसीट)
+    "घसीटा":   ["dragged"],
+    "घसीटता":  ["dragging"],
+    "घसीटी":   ["dragged"],
+
+    # gripping (root पकड़)
+    "पकड़ा":   ["gripped", "grasped", "held"],
+    "पकड़ी":   ["gripped", "grasped"],
+    "पकड़ता":  ["gripping", "grasping"],
+    "पकड़कर":  ["gripping", "holding"],
+
+    # climbing (root चढ़)
+    "चढ़ता":   ["climbing", "ascending"],
+    "चढ़ी":    ["climbed", "ascended"],
+    "चढ़ा":    ["climbed", "ascended"],
+
+    # descending (root उतर)
+    "उतरा":    ["descended", "stepped down"],
+    "उतरता":   ["descending"],
+
+    # sinking / drowning (root डूब — important for Karna's chariot wheel)
+    "डूबता":   ["sinking", "drowning", "submerging"],
+    "डूबती":   ["sinking", "drowning"],
+    "डूबा":    ["sank", "drowned", "submerged"],
+    "डूबी":    ["sank", "drowned"],
+
+    # running (root दौड़)
+    "दौड़ता":  ["running", "racing", "sprinting"],
+    "दौड़ी":   ["ran", "raced"],
+    "दौड़ा":   ["ran", "raced"],
+
+    # fleeing (root भाग)
+    "भागा":    ["fled", "ran away"],
+    "भागी":    ["fled", "ran away"],
+    "भागता":   ["fleeing", "running away"],
+}
+
+
+def _check_verb_action_lock(anchor_phrase: str, image_prompt: str) -> bool:
+    """Phase 20 (2026-06-17). When anchor_phrase contains a known Devanagari
+    action-verb conjugation, image_prompt MUST contain at least one English
+    equivalent — so FLUX renders the ACTION not a static noun-holding pose.
+
+    Matching strategy: split anchor on whitespace + startswith() per token.
+    The bare-`in`-substring approach false-matched short stems against
+    unrelated nouns (रो → रोशनी / रोग / भरोसा; सुन → सुनहरा; जल → जल/water).
+    Splitting on whitespace and using startswith() on each token catches
+    valid conjugations (उठा root → उठाता / उठाई / उठाकर — all start with उठा)
+    while skipping internal substrings. We also removed all 2-letter bare
+    stems from the map for prefix-false-positive safety.
+
+    Default-pass-closed for anchors without a mapped form (conservative)."""
+    if not anchor_phrase:
+        return True
+    image_lower = image_prompt.lower()
+    tokens = anchor_phrase.split()
+    for verb_form, en_forms in _VERB_ACTION_MAP.items():
+        if any(tok.startswith(verb_form) for tok in tokens):
+            if not any(form in image_lower for form in en_forms):
+                return False
+    return True
+
+
+# ─── 4-type broll classifier for film-editing diversity ───────────────────
+# A real film editor cycles ACTION ↔ REACTION ↔ PROP ↔ ENVIRONMENT shots
+# instead of holding on one face. The LLM defaults to lazy
+# character-portrait sequences; this classifier + the diversity validator
+# below force variety at the validation layer (not just as a prompt
+# instruction the LLM can ignore).
+#
+# Classifier returns one of: ACTION, REACTION, PROP, ENVIRONMENT, AMBIGUOUS.
+# AMBIGUOUS is the escape hatch — entries that don't cleanly classify
+# pass through the diversity check (wildcards). This is the "infinite
+# rejection loop" protection: if the LLM gets creative with English
+# vocabulary that misses our keyword sets, the entry classifies AMBIGUOUS
+# and never blocks the cycle gate. Best-of-N rescue (5 attempts cap) is
+# still active as the ultimate failsafe.
+
+_SHOT_TYPE_ENV_TOKENS = (
+    "wide shot", "wide-angle", "landscape", "distant", "horizon",
+    "vista", "panoramic", "aerial view", "smoke-filled sky", "vast",
+    "across the field", "burning battlefield", "burning camp",
+    "distant chariots", "skyline", "open sky",
+)
+_SHOT_TYPE_PROP_LEADING = (
+    # The PROP rule fires when text STARTS WITH (not just contains) one of
+    # these object-leading phrases. Plan-review fix #2 (2026-06-17): the
+    # original `in leading` form false-matched "the bow" against "the
+    # bowstring" inside "Arjuna drawing back the bowstring" (which is
+    # actually an ACTION shot), and "a tear" against "Karna tear-streaked
+    # face" (which is REACTION). Using startswith() forces the PROP
+    # signature to be the LEADING SUBJECT, not a random object mentioned
+    # mid-description.
+    "extreme close-up of", "macro shot of", "macro close-up of",
+    "detail of", "tight crop of", "close detail of", "extreme detail of",
+    # Object-leading openings — note trailing spaces / explicit articles to
+    # avoid sub-word matches (e.g. "the bow " with trailing space won't match
+    # "the bowstring").
+    "the sword ", "a sword ", "the bow ", "a bow ", "the arrow", "an arrow",
+    "the chariot wheel", "a chariot wheel", "the wheel",
+    "the dice", "the chakra", "the kundal", "the mace", "the bowl",
+    "the staff ", "a wooden ", "a bronze ", "a golden ", "an iron ",
+    "a single tear", "a drop of blood",
+)
+_SHOT_TYPE_ACTION_TOKENS = (
+    "raising", "lifting", "striking", "falling", "sinking", "drawing back",
+    "running", "leaping", "hurling", "throwing", "swinging", "rushing",
+    "charging", "mid-stride", "mid-gesture", "mid-strike", "wielding",
+    "gripping", "tearing", "drawing arrow", "drawing sword", "pulling",
+    "ascending", "descending", "fleeing", "dragging",
+)
+_SHOT_TYPE_REACTION_TOKENS = (
+    "tear-streaked", "wide-eyed", "hollow-eyed", "clenched jaw",
+    "horrified", "trembling lip", "gritted teeth", "averted gaze",
+    "shocked face", "agonized", "kohl-rimmed eyes filled", "stricken face",
+    "frozen face", "screaming face", "anguished expression", "grief-stricken",
+    "fury in eyes", "tears welling",
+)
+_SHOT_TYPE_FACE_PROXIMITY = (
+    "close-up", "macro", "extreme close-up", "face", "eyes",
+)
+
+
+def _classify_broll_shot_type(image_prompt: str) -> str:
+    """Phase 20 (2026-06-17). Lightweight keyword classifier — returns
+    ACTION / REACTION / PROP / ENVIRONMENT / AMBIGUOUS. Operates on the
+    LLM-emitted image_prompt BEFORE wardrobe/iconography prefixes are
+    layered on top.
+
+    Classification logic (most-distinctive first; first match wins):
+      1. PROP — text must START WITH an object-leading phrase (strict
+         startswith — substring-match would false-fire "the bow" against
+         "Arjuna drawing back the bowstring").
+      2. ENVIRONMENT — wide-vista vocabulary without face-proximity tokens.
+      3. ACTION — contains an explicit action verb anywhere.
+      4. REACTION — contains an explicit emotion-on-face token.
+      5. AMBIGUOUS — wildcard for cycle gate (escape hatch).
+    """
+    text = image_prompt.lower().strip()
+
+    # 1. PROP — strict STARTSWITH for object-leading phrases
+    if any(text.startswith(p) for p in _SHOT_TYPE_PROP_LEADING):
+        return "PROP"
+
+    # 2. ENVIRONMENT — wide-vista language without face-proximity tokens
+    has_env = any(tok in text for tok in _SHOT_TYPE_ENV_TOKENS)
+    has_face_close = any(tok in text for tok in _SHOT_TYPE_FACE_PROXIMITY)
+    if has_env and not has_face_close:
+        return "ENVIRONMENT"
+
+    # 3. ACTION — explicit action verb anywhere in text
+    if any(tok in text for tok in _SHOT_TYPE_ACTION_TOKENS):
+        return "ACTION"
+
+    # 4. REACTION — explicit emotion-on-face
+    if any(tok in text for tok in _SHOT_TYPE_REACTION_TOKENS):
+        return "REACTION"
+
+    return "AMBIGUOUS"
+
+
+def _check_subject_diversity(broll: list) -> tuple[bool, str]:
+    """Phase 20 (2026-06-17). HARD reject when the broll's shot-type
+    distribution looks like a slideshow instead of a film edit.
+
+    Two rules — both deliberately LENIENT to avoid infinite rejection
+    loops when the LLM uses creative English vocabulary:
+
+    Rule 1 (consecutive): NO MORE than 2 consecutive HARD-classified
+    entries of the same type. AMBIGUOUS entries break the run (they
+    don't increment AND they don't count as a match).
+
+    Rule 2 (distribution): across ALL entries, at least 2 DISTINCT
+    hard-classified types must appear. (If 8 entries all classify
+    AMBIGUOUS, this fails — which is fine; that means the LLM emitted
+    8 vague prompts and needs another attempt.)
+
+    Failsafe: best-of-N rescue path (5 attempts max) is still active.
+    Worst case after 5 failed attempts, the highest-scoring attempt
+    ships with this gate failed but other gates passing."""
+    if not broll:
+        return False, "broll is empty"
+
+    types = [_classify_broll_shot_type(b.get("image_prompt", "")) for b in broll]
+
+    # Rule 1: consecutive same-type cap
+    run_type = None
+    run_count = 0
+    for i, t in enumerate(types):
+        if t == "AMBIGUOUS":
+            run_type = None
+            run_count = 0
+            continue
+        if t == run_type:
+            run_count += 1
+            if run_count > 2:  # i.e. 3 consecutive same type
+                window = types[max(0, i - 2): i + 1]
+                return False, (
+                    f"broll[{i-2}..{i}] are 3 consecutive {t} shots "
+                    f"({window}). Vary the cycle: ACTION → REACTION → "
+                    f"PROP → ENVIRONMENT like a film cut, not a portrait series."
+                )
+        else:
+            run_type = t
+            run_count = 1
+
+    # Rule 2: distribution diversity
+    hard_types = {t for t in types if t != "AMBIGUOUS"}
+    if len(hard_types) < 2:
+        return False, (
+            f"broll has only {len(hard_types)} distinct hard-classified "
+            f"shot type(s): {sorted(hard_types) or '[]'}. Need at least 2 "
+            f"of {{ACTION, REACTION, PROP, ENVIRONMENT}} to feel like a "
+            f"film edit. (Types: {types})"
+        )
+
+    return True, ""
+
+
 def validate_phase18(data: dict, lang_label: str = "Hindi") -> tuple[bool, str, dict]:
     """Aggregate validator. Returns (passed_all_gates, first_violation_label,
     info_dict). info_dict carries score, word_count, broll_count so the
@@ -461,42 +821,61 @@ def validate_phase18(data: dict, lang_label: str = "Hindi") -> tuple[bool, str, 
     wardrobe_set_ok, _wardrobe_why = _check_wardrobe_context_set(br)
     story_entity_ok, _story_why    = _check_story_entity_present(vo, br)
 
+    # Phase 20 (2026-06-17) — subject diversity + verb-action lock
+    diversity_ok, _diversity_why = _check_subject_diversity(br)
+    verb_lock_ok = all(
+        _check_verb_action_lock(b.get("anchor_phrase", ""), b.get("image_prompt", ""))
+        for b in br
+    )
+    shot_types_diagnostic = [
+        _classify_broll_shot_type(b.get("image_prompt", "")) for b in br
+    ]
+
     flags = [length_ok, broll_ok, hook_ok, hook_title_ok, loop_ok,
              shock_ok, rehook_ok, eng_ok, mono_ok, tha_ok, rep_ok,
              anchors_ok, names_ok, archetype_ok, subject_lock_ok,
              intensity_ok, bookend_ok,
-             wardrobe_set_ok, story_entity_ok]  # Phase 19
+             wardrobe_set_ok, story_entity_ok,    # Phase 19
+             diversity_ok, verb_lock_ok]          # Phase 20
     score = sum(1 for f in flags if f)
 
     info = {
-        "score":       score,
-        "word_count":  n_words,
-        "broll_count": n_broll,
-        "anchor_why":  _anchor_why,
-        "wardrobe_why": _wardrobe_why,
-        "story_why":   _story_why,
+        "score":         score,
+        "word_count":    n_words,
+        "broll_count":   n_broll,
+        "anchor_why":    _anchor_why,
+        "wardrobe_why":  _wardrobe_why,
+        "story_why":     _story_why,
+        "diversity_why": _diversity_why,    # Phase 20
+        "shot_types":    shot_types_diagnostic,  # Phase 20 diagnostic
     }
 
-    # First violation in priority order (single highest-impact gate)
+    # First violation in priority order (single highest-impact gate).
+    # Phase 20 inserts verb_action close to subject_lock (semantically
+    # both lock the image to the audio's content); subject_diversity
+    # comes right after subject_lock — they're related but diversity
+    # operates on the broll array as a whole, lock operates per entry.
     cascade = [
-        ("length",        length_ok and broll_ok),
-        ("anchors",       anchors_ok),
-        ("wardrobe_set",  wardrobe_set_ok),    # Phase 19
-        ("story_entity",  story_entity_ok),    # Phase 19
-        ("hook",          hook_ok),
-        ("shock_action",  shock_ok),
-        ("loop_closure",  loop_ok),
-        ("hook_title",    hook_title_ok),
-        ("archetype",     archetype_ok),
-        ("subject_lock",  subject_lock_ok),
-        ("intensity",     intensity_ok),
-        ("rehook",        rehook_ok),
-        ("char_names",    names_ok),
-        ("bookend",       bookend_ok),
-        ("engagement",    eng_ok),
-        ("monotony",      mono_ok),
-        ("tha_tic",       tha_ok),
-        ("repetition",    rep_ok),
+        ("length",            length_ok and broll_ok),
+        ("anchors",           anchors_ok),
+        ("wardrobe_set",      wardrobe_set_ok),    # Phase 19
+        ("story_entity",      story_entity_ok),    # Phase 19
+        ("verb_action",       verb_lock_ok),       # Phase 20
+        ("hook",              hook_ok),
+        ("shock_action",      shock_ok),
+        ("loop_closure",      loop_ok),
+        ("hook_title",        hook_title_ok),
+        ("archetype",         archetype_ok),
+        ("subject_lock",      subject_lock_ok),
+        ("subject_diversity", diversity_ok),       # Phase 20
+        ("intensity",         intensity_ok),
+        ("rehook",            rehook_ok),
+        ("char_names",        names_ok),
+        ("bookend",           bookend_ok),
+        ("engagement",        eng_ok),
+        ("monotony",          mono_ok),
+        ("tha_tic",           tha_ok),
+        ("repetition",        rep_ok),
     ]
     for label, ok in cascade:
         if not ok:
@@ -511,6 +890,8 @@ _VIOLATION_REMINDERS = {
     "anchors":      "Your broll anchor_phrase entries failed validation. Each anchor_phrase MUST be 2-4 words appearing VERBATIM in the voiceover, in ASCENDING order by character position. Final anchor MUST land in the LAST 30% of the voiceover.",
     "wardrobe_set": "Every broll entry MUST declare a wardrobe_context field, one of: WAR / PALACE / DIVINE / FOREST / JOURNEY. Pick the context that matches THAT specific broll moment (not the whole story): a dice-game palace scene is PALACE even in an Arjuna story; Yudhishthira walking to heaven's gate is JOURNEY, not WAR; Krishna in his cosmic form is DIVINE; Eklavya's forest ashram is FOREST.",
     "story_entity": "Your voiceover names a story-critical entity (e.g. कुत्ता / धनुष / सुदर्शन / कुंडल / बच्चे) but NO broll image_prompt contains its English equivalent. AT LEAST ONE broll image_prompt MUST have the entity as a clearly identifiable foreground subject — e.g. anchor 'कुत्ता का साथ' → image_prompt 'a loyal stray dog walking close beside Yudhishthira, foreground subject'. The audience cannot feel the dog's presence if FLUX never renders one.",
+    "verb_action":      "Your broll image_prompts described static portraits where the voiceover described ACTIONS. When the anchor_phrase contains an action verb (उठाई / गिरा / डूबता / काटा / etc.), the image_prompt MUST contain the English equivalent (raising / fell / sinking / cut / etc.) as the verb the image depicts. Example: anchor 'रथ का पहिया डूबता' → image_prompt 'extreme close-up of a wooden chariot wheel sinking into wet mud, mud splattered on the spokes' (NOT 'Karna's stressed face with chariot in background').",
+    "subject_diversity": "Your broll showed too many consecutive shots of the same type (3+ in a row), or used only 1 type across all entries. A real film editor CYCLES through 4 shot types: (A) CHARACTER ACTION (hero raising weapon, drawing arrow, falling) — uses action verbs in image_prompt; (B) REACTION (tear-streaked / wide-eyed / clenched-jaw close-up); (C) PROP / DETAIL (extreme close-up of an OBJECT — chariot wheel, sword tip, kundal, dice — character absent or backgrounded, image_prompt LEADS with the object); (D) ENVIRONMENT (wide vista — battlefield, sky, distant chariots — no facial close-up). Rotate types across broll entries. Two consecutive same-type entries are fine; three consecutive is rejected.",
     "hook":         "Your voiceover's first 10 words did not pass the hook validator. Open INSIDE an emotional moment with a named character (अर्जुन/कर्ण/etc.) AND/OR a paradox marker (लेकिन/पर/फिर भी). NO documentary setups (\"यह कहानी है\", \"बहुत समय पहले\").",
     "shock_action": "Your voiceover's first 8 words must contain a present-tense action verb. NO setup. Examples: \"अर्जुन धनुष उठाता है\" (raising), \"द्रौपदी आँसू बहाती है\" (shedding), \"अश्वत्थामा तलवार चलाता है\" (wielding).",
     "loop_closure": "Your voiceover must END with a question mark (?). The final clause must be an ethically-charged question to the viewer: \"क्या यही धर्म था?\" / \"क्या वो सही थे?\" / \"किसने ज्यादा खोया?\".",
@@ -739,6 +1120,52 @@ BROLL RULES (HARD — violation = REJECT):
       no captions, no banners with writing, no overlay text" (the existing
       anti-text guard).
 
+  (j) SUBJECT DIVERSITY (Phase 20, 2026-06-17) — broll is NOT 8 portraits
+      of the same character. It is a FILM EDIT. Cycle these 4 shot types
+      across your 8-10 entries. Two consecutive same-type entries are OK;
+      three consecutive will be REJECTED. At least 2 of the 4 types must
+      appear across your entries.
+
+      (A) CHARACTER ACTION — hero mid-verb. Include action verb in
+          image_prompt: "raising", "lifting", "drawing back", "falling",
+          "sinking", "striking", "running". Example: "Arjuna drawing
+          back the bowstring, fingers white-knuckled, mid-gesture, arrow
+          tip glowing"
+
+      (B) REACTION — tight close-up of EMOTION on face. Example:
+          "Yudhishthira's tear-streaked face wide-eyed in horror,
+          kohl-rimmed eyes, anguished expression, gold mukut tilted"
+
+      (C) PROP / DETAIL — OBJECT in foreground, character absent or
+          backgrounded. image_prompt MUST LEAD with the object, not
+          the character name. Examples: "extreme close-up of a wooden
+          chariot wheel sinking into wet mud, blood-streaked spokes",
+          "macro shot of the Gandiva bow, gold-and-pearl inlay glowing,
+          string drawn taut", "detail of golden kundal earrings, intricate
+          filigree, lit by oil-lamp glow"
+
+      (D) ENVIRONMENT / WIDE — vista, no facial close-up. Examples:
+          "wide shot of burning Kurukshetra battlefield, smoke-filled
+          sky, distant chariots silhouetted against the dusk", "aerial
+          view of the Pandava forest hermitage, dappled sunlight through
+          banyan canopy"
+
+      broll[0] is already constrained by the Phase 17.b opener archetype
+      directive in rule (h). Pick the type that matches that archetype:
+      archetype A → ACTION (verb in image), B → PROP, C → ACTION,
+      D → ENVIRONMENT.
+
+  (k) AUDIO-VISUAL VERB LOCK (Phase 20, 2026-06-17) — the image_prompt
+      MUST physically depict the EXACT verb in the anchor_phrase, not
+      just the noun. If anchor is "रथ का पहिया डूबता" (chariot wheel
+      sinking), image_prompt MUST contain "sinking" (or "drowning",
+      "submerging") — NOT just "chariot wheel in background". Same for
+      "बाण छोड़ा" (arrow released) → "arrow leaving the bowstring,
+      mid-flight"; "तलवार उठाई" (sword raised) → "sword raised
+      overhead, mid-strike arc". Subject_lock already enforces the noun
+      appears; verb_action_lock now enforces the action is depicted.
+      Render the VERB the audience HEARS, not a static portrait.
+
 {cliffhanger_block}
 
 ═══════════════════════════════════════════════════════════════
@@ -916,6 +1343,13 @@ def generate_phase18_script(
             elif last_violation == "story_entity":
                 why = last_info.get("story_why", "")
                 dynamic_prefix = f"Story-entity validation failed: {why[:200]}. "
+            elif last_violation == "subject_diversity":
+                why = last_info.get("diversity_why", "")
+                types = last_info.get("shot_types", [])
+                dynamic_prefix = f"Subject-diversity validation failed: {why[:240]}. (Your shot_types were: {types}.) "
+            elif last_violation == "verb_action":
+                types = last_info.get("shot_types", [])
+                dynamic_prefix = f"Verb-action lock failed — at least one broll image_prompt described a STATIC pose where the anchor's Devanagari verb required the depicted action. (Your shot_types: {types}.) "
             full_prompt = base_prompt + (
                 f"\n\n── RETRY REMINDER (attempt {attempt+1}/{MAX_ATTEMPTS}) ──\n"
                 f"{dynamic_prefix}{base_reminder}"
@@ -953,8 +1387,10 @@ def generate_phase18_script(
         vo_chars = len(data.get("voiceover", ""))
         vo_words = info.get("word_count", 0)
         br_n = info.get("broll_count", 0)
-        print(f"    [phase18-validate] score={score}/19 ok={ok} "
+        types = info.get("shot_types", [])
+        print(f"    [phase18-validate] score={score}/21 ok={ok} "
               f"voiceover={vo_words}w/{vo_chars}c broll={br_n} "
+              f"types={types} "
               f"violation={violation or 'none'}")
 
         if ok:

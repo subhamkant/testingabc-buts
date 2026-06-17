@@ -62,13 +62,13 @@ on:
         default: ""
         type: string
       phase18_decoupled:
-        description: "Phase 18 (2026-06-16) — decoupled voiceover + anchored B-roll. Flip 'true' to test the new architecture (one flowing voiceover + 8-10 literal-physical B-roll images placed at narration anchor phrases). Default 'false' = legacy Phase 17.b 13-scene hyper-cut path."
+        description: "Phase 18 (decoupled voiceover + anchored B-roll). Default 'true' as of Phase 20 (2026-06-17) — the Phoenix audit forensic confirmed the decoupled path was never engaging on scheduled cron because this defaulted to 'false'. Flip to 'false' only for emergency rollback to legacy Phase 17.b."
         required: false
-        default: "false"
+        default: "true"
         type: choice
         options:
-          - "false"
           - "true"
+          - "false"
 
 # ════════════════════════════════════════════════════════════════════════════
 # WORKFLOW STRUCTURE
@@ -187,7 +187,7 @@ jobs:
           elevenlabs-api-key-fallback: ${{ secrets.ELEVENLABS_API_KEY_FALLBACK }}
           elevenlabs-voice-id: ${{ secrets.ELEVENLABS_VOICE_ID }}
           elevenlabs-voice-id-krishna: ${{ secrets.ELEVENLABS_VOICE_ID_KRISHNA }}
-          phase18-decoupled: ${{ inputs.phase18_decoupled || 'false' }}
+          phase18-decoupled: ${{ inputs.phase18_decoupled || 'true' }}
 
   generate-and-upload-retry-1:
     needs: generate-and-upload
@@ -250,7 +250,7 @@ jobs:
           elevenlabs-api-key-fallback: ${{ secrets.ELEVENLABS_API_KEY_FALLBACK }}
           elevenlabs-voice-id: ${{ secrets.ELEVENLABS_VOICE_ID }}
           elevenlabs-voice-id-krishna: ${{ secrets.ELEVENLABS_VOICE_ID_KRISHNA }}
-          phase18-decoupled: ${{ inputs.phase18_decoupled || 'false' }}
+          phase18-decoupled: ${{ inputs.phase18_decoupled || 'true' }}
 
   generate-and-upload-retry-2:
     needs: generate-and-upload-retry-1
@@ -311,7 +311,7 @@ jobs:
           elevenlabs-api-key-fallback: ${{ secrets.ELEVENLABS_API_KEY_FALLBACK }}
           elevenlabs-voice-id: ${{ secrets.ELEVENLABS_VOICE_ID }}
           elevenlabs-voice-id-krishna: ${{ secrets.ELEVENLABS_VOICE_ID_KRISHNA }}
-          phase18-decoupled: ${{ inputs.phase18_decoupled || 'false' }}
+          phase18-decoupled: ${{ inputs.phase18_decoupled || 'true' }}
 
   generate-and-upload-retry-3:
     needs: generate-and-upload-retry-2
@@ -372,7 +372,7 @@ jobs:
           elevenlabs-api-key-fallback: ${{ secrets.ELEVENLABS_API_KEY_FALLBACK }}
           elevenlabs-voice-id: ${{ secrets.ELEVENLABS_VOICE_ID }}
           elevenlabs-voice-id-krishna: ${{ secrets.ELEVENLABS_VOICE_ID_KRISHNA }}
-          phase18-decoupled: ${{ inputs.phase18_decoupled || 'false' }}
+          phase18-decoupled: ${{ inputs.phase18_decoupled || 'true' }}
 
   # ════════════════════════════════════════════════════════════════════════
   # WhatIf English phase (4 attempts) — runs on 04:00 UTC cron
@@ -423,7 +423,7 @@ jobs:
           elevenlabs-api-key-fallback: ${{ secrets.ELEVENLABS_API_KEY_FALLBACK }}
           elevenlabs-voice-id: ${{ secrets.ELEVENLABS_VOICE_ID }}
           elevenlabs-voice-id-krishna: ${{ secrets.ELEVENLABS_VOICE_ID_KRISHNA }}
-          phase18-decoupled: ${{ inputs.phase18_decoupled || 'false' }}
+          phase18-decoupled: ${{ inputs.phase18_decoupled || 'true' }}
 
   whatif-english-retry-1:
     needs: whatif-english
@@ -471,7 +471,7 @@ jobs:
           elevenlabs-api-key-fallback: ${{ secrets.ELEVENLABS_API_KEY_FALLBACK }}
           elevenlabs-voice-id: ${{ secrets.ELEVENLABS_VOICE_ID }}
           elevenlabs-voice-id-krishna: ${{ secrets.ELEVENLABS_VOICE_ID_KRISHNA }}
-          phase18-decoupled: ${{ inputs.phase18_decoupled || 'false' }}
+          phase18-decoupled: ${{ inputs.phase18_decoupled || 'true' }}
 
   whatif-english-retry-2:
     needs: whatif-english-retry-1
@@ -519,7 +519,7 @@ jobs:
           elevenlabs-api-key-fallback: ${{ secrets.ELEVENLABS_API_KEY_FALLBACK }}
           elevenlabs-voice-id: ${{ secrets.ELEVENLABS_VOICE_ID }}
           elevenlabs-voice-id-krishna: ${{ secrets.ELEVENLABS_VOICE_ID_KRISHNA }}
-          phase18-decoupled: ${{ inputs.phase18_decoupled || 'false' }}
+          phase18-decoupled: ${{ inputs.phase18_decoupled || 'true' }}
 
   whatif-english-retry-3:
     needs: whatif-english-retry-2
@@ -567,7 +567,7 @@ jobs:
           elevenlabs-api-key-fallback: ${{ secrets.ELEVENLABS_API_KEY_FALLBACK }}
           elevenlabs-voice-id: ${{ secrets.ELEVENLABS_VOICE_ID }}
           elevenlabs-voice-id-krishna: ${{ secrets.ELEVENLABS_VOICE_ID_KRISHNA }}
-          phase18-decoupled: ${{ inputs.phase18_decoupled || 'false' }}
+          phase18-decoupled: ${{ inputs.phase18_decoupled || 'true' }}
 
   # ════════════════════════════════════════════════════════════════════════
   # WhatIf Hindi phase (4 attempts) — depends on ANY EN attempt succeeding
@@ -630,7 +630,7 @@ jobs:
           elevenlabs-api-key-fallback: ${{ secrets.ELEVENLABS_API_KEY_FALLBACK }}
           elevenlabs-voice-id: ${{ secrets.ELEVENLABS_VOICE_ID }}
           elevenlabs-voice-id-krishna: ${{ secrets.ELEVENLABS_VOICE_ID_KRISHNA }}
-          phase18-decoupled: ${{ inputs.phase18_decoupled || 'false' }}
+          phase18-decoupled: ${{ inputs.phase18_decoupled || 'true' }}
 
   whatif-hindi-retry-1:
     needs: whatif-hindi
@@ -678,7 +678,7 @@ jobs:
           elevenlabs-api-key-fallback: ${{ secrets.ELEVENLABS_API_KEY_FALLBACK }}
           elevenlabs-voice-id: ${{ secrets.ELEVENLABS_VOICE_ID }}
           elevenlabs-voice-id-krishna: ${{ secrets.ELEVENLABS_VOICE_ID_KRISHNA }}
-          phase18-decoupled: ${{ inputs.phase18_decoupled || 'false' }}
+          phase18-decoupled: ${{ inputs.phase18_decoupled || 'true' }}
 
   whatif-hindi-retry-2:
     needs: whatif-hindi-retry-1
@@ -726,7 +726,7 @@ jobs:
           elevenlabs-api-key-fallback: ${{ secrets.ELEVENLABS_API_KEY_FALLBACK }}
           elevenlabs-voice-id: ${{ secrets.ELEVENLABS_VOICE_ID }}
           elevenlabs-voice-id-krishna: ${{ secrets.ELEVENLABS_VOICE_ID_KRISHNA }}
-          phase18-decoupled: ${{ inputs.phase18_decoupled || 'false' }}
+          phase18-decoupled: ${{ inputs.phase18_decoupled || 'true' }}
 
   whatif-hindi-retry-3:
     needs: whatif-hindi-retry-2
@@ -774,4 +774,4 @@ jobs:
           elevenlabs-api-key-fallback: ${{ secrets.ELEVENLABS_API_KEY_FALLBACK }}
           elevenlabs-voice-id: ${{ secrets.ELEVENLABS_VOICE_ID }}
           elevenlabs-voice-id-krishna: ${{ secrets.ELEVENLABS_VOICE_ID_KRISHNA }}
-          phase18-decoupled: ${{ inputs.phase18_decoupled || 'false' }}
+          phase18-decoupled: ${{ inputs.phase18_decoupled || 'true' }}
