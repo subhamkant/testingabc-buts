@@ -4,7 +4,6 @@
   "_tier2_2026-05-16": "Tier 2 plan review: (a) reordered Bhishma/Karna/Draupadi arcs so each leads with its most emotionally devastating episode (first-impression effect drives playlist sub-conversion). Episode strings unchanged — already-used topics in recent_topics.json still match by topic-string. (b) Added Eklavya (devotion + caste injustice) and Ashwatthama (cursed immortal) — user-identified as naturally viral emotional archetypes. Total arcs: 5 → 7. Total topics: 35 → 49.",
   "_phase1_2026-05-29": "Phase 1 Stabilization (RULE 4 + Addition B): Reordered arcs so Karna is FIRST (Week 1 ships next 7 days), Bhishma SECOND (Week 2). Replaced Karna topics with user's emotional-reframing list. Replaced Bhishma topics with user's silence/guilt-themed list. Added `emotional_fingerprint` to each arc — character's distinct emotional DNA. The fingerprint feeds into the script_generator system prompt so every Karna script lands on rejection+loyalty, every Bhishma script lands on guilt+silence. Variance comes from fingerprints DIFFERING across arcs (Karna's loud rejection vs Bhishma's silent guilt), NOT from artificial intensity-shuffling within an arc.",
   "_phase15_2026-06-08": "Phase 15 DNA rewrite — channel analytics 2026-06-08 showed -68.8% view decline over 7 uploads driven by topic-fandom mismatch (Yudhishthira/Eklavya philosophical topics pulled 11-15 views vs Karna's 600+ floor). Deep-dive on the 158% AVP 5-24 Karna friendship video isolated a 4-part DNA: name-first hook + subversion adjective + charged moral noun + trait inversion. ALL non-Karna topics were rewritten to embed this DNA so the Phase 15 semantic gate in script_generator.py admits them as anchor-tier candidates. Guardrails: (1) NARRATIVE ALIGNMENT — the underlying event/incident is preserved; only the moral framing is subverted (e.g., Yudhishthira's truth becomes 'hidden cowardice exposed by Yaksha', not a fabricated event). (2) ENGLISH-CLICKABLE — every topic carries highly clickable English nouns (sin, mistake, lie, betrayal) alongside Hindi flavor. (3) REGEX EXACTNESS — singular noun forms only to match Phase 15's word-boundary regex. Karna arc preserved as-is — it was already 6/7 DNA-compliant and is the validated 158% AVP archetype.",
-
   "arcs": [
     {
       "name": "Karna — The Forgotten Son",
@@ -34,6 +33,48 @@
         "Bhishma's untold guilt through Kurukshetra — fighting the children he raised, killing the warriors he taught, the hidden regret of every dead soldier he carried in silence",
         "Bhishma's greatest regret on the bed of arrows — 58 days replaying the choices that doomed him, the hidden truth he never told, choosing the moment of his own departure",
         "Bhishma's final regret to Yudhishthira — the dying truth from the bed of arrows, the bitter wisdom delivered too late to undo what had been done to his bloodline"
+      ],
+      "_auto_added": [
+        {
+          "topic": "Bhishma's Untold Sin of Silence",
+          "source": "auto_expansion_v21",
+          "added_at": "2026-06-25T18:51:49.184639+00:00",
+          "validated_passes": [
+            "semantic_gate",
+            "stage2_dedup"
+          ],
+          "llm_quality_tier": "fast"
+        },
+        {
+          "topic": "Bhishma's Greatest Hidden Regret of Loyalty",
+          "source": "auto_expansion_v21",
+          "added_at": "2026-06-25T18:51:49.184730+00:00",
+          "validated_passes": [
+            "semantic_gate",
+            "stage2_dedup"
+          ],
+          "llm_quality_tier": "fast"
+        },
+        {
+          "topic": "Bhishma's Secret Guilt of Unspoken Truth",
+          "source": "auto_expansion_v21",
+          "added_at": "2026-06-25T18:51:49.184876+00:00",
+          "validated_passes": [
+            "semantic_gate",
+            "stage2_dedup"
+          ],
+          "llm_quality_tier": "fast"
+        },
+        {
+          "topic": "Bhishma's Real Curse of Unwavering Duty",
+          "source": "auto_expansion_v21",
+          "added_at": "2026-06-25T18:51:49.184987+00:00",
+          "validated_passes": [
+            "semantic_gate",
+            "stage2_dedup"
+          ],
+          "llm_quality_tier": "fast"
+        }
       ]
     },
     {
@@ -49,6 +90,58 @@
         "Arjuna's hidden lie against Bhishma — using Shikhandi as a shield, the secret betrayal of the warrior code, the greatest sin of a grandson against his grandfather",
         "Arjuna's secret lie about Ashwatthama — the untold betrayal that broke his guru Drona's spirit, the day a son's name became his hidden sin",
         "Arjuna's hidden vow after Abhimanyu — the father's secret loyalty promise born from grief, the greatest mistake that turned Kurukshetra on day fourteen"
+      ],
+      "_auto_added": [
+        {
+          "topic": "Arjuna's Real Regret: Hidden Truth of a Reluctant Warrior's Fatal Vow",
+          "source": "auto_expansion_v21",
+          "added_at": "2026-06-25T18:52:37.169975+00:00",
+          "validated_passes": [
+            "semantic_gate",
+            "stage2_dedup"
+          ],
+          "llm_quality_tier": "fast"
+        },
+        {
+          "topic": "Arjuna's Greatest Sin: The Secret Pride That Nearly Broke Him",
+          "source": "auto_expansion_v21",
+          "added_at": "2026-06-25T18:52:37.170064+00:00",
+          "validated_passes": [
+            "semantic_gate",
+            "stage2_dedup"
+          ],
+          "llm_quality_tier": "fast"
+        },
+        {
+          "topic": "Arjuna's Untold Fear: The Hidden Betrayal of His Own Glory",
+          "source": "auto_expansion_v21",
+          "added_at": "2026-06-25T18:52:37.170137+00:00",
+          "validated_passes": [
+            "semantic_gate",
+            "stage2_dedup"
+          ],
+          "llm_quality_tier": "fast"
+        },
+        {
+          "topic": "Arjuna's Hidden Loyalty: The Untold Sacrifice That Haunted Him",
+          "source": "auto_expansion_v21",
+          "added_at": "2026-06-25T18:52:37.170207+00:00",
+          "validated_passes": [
+            "semantic_gate",
+            "stage2_dedup"
+          ],
+          "llm_quality_tier": "fast"
+        },
+        {
+          "topic": "Arjuna's Fatal Doubt: The Secret Curse That Reframed His Legendary Courage",
+          "source": "auto_expansion_v21",
+          "added_at": "2026-06-25T18:52:37.170281+00:00",
+          "validated_passes": [
+            "semantic_gate",
+            "stage2_dedup"
+          ],
+          "llm_quality_tier": "fast"
+        }
       ]
     },
     {
@@ -111,5 +204,6 @@
         "Ashwatthama's greatest tragedy — the hidden truth of Mahabharata's secret cost, the man punished beyond death itself, the untold sin no era can erase"
       ]
     }
-  ]
+  ],
+  "_phase21_auto_expansion": "Phase 21 (2026-06-25) — `_auto_added` sidecar keys per arc hold auto-expander provenance objects {topic, source, added_at, validated_passes, llm_quality_tier}. The picker unions arc['topics'] and arc['_auto_added'][].topic as a single eligibility pool. See pipeline/topic_expander.py."
 }
