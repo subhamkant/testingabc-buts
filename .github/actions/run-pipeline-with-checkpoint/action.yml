@@ -200,7 +200,15 @@ runs:
         # Pull latest first to avoid push conflicts when multiple cron runs
         # finish close together.
         git pull --rebase --autostash origin master || true
-        git add assets/characters.json scheduled_topics_*.txt recent_topics.json 2>/dev/null || true
+        # Phase 21.5 hotfix (2026-06-25) — assets/character_arcs.json added
+        # so the topic_expander's _auto_added sidecar entries actually persist
+        # across cron runs. Without this, the runner writes the file (the
+        # [topic-expander] persisted log line appears) but the post-pipeline
+        # commit step never stages it — every cron loses its auto-expansion
+        # work and re-burns Gemini Flash quota on the next run. Verified
+        # broken on run 28187345262 (Phase 21 verification, 2026-06-25):
+        # 14 topics added on the runner, 0 reached the local working copy.
+        git add assets/characters.json assets/character_arcs.json scheduled_topics_*.txt recent_topics.json 2>/dev/null || true
         if git diff --staged --quiet; then
           echo "No state changes to commit."
         else
