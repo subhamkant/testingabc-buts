@@ -6,6 +6,20 @@ token.pickle
 token_base64.txt
 client_secrets.json
 client_secrets_1.json
+kaggle.json
+
+# Per-render Kaggle batch config (written into the kernel folder by
+# pipeline/image_generator.py just before `kaggle kernels push`). Stays
+# local — uploads to Kaggle along with the notebook code, never to git.
+kaggle_notebooks/*/current_run.json
+
+# Kaggle Dataset payloads (large binary weights staged for upload to Kaggle;
+# the metadata + README under kaggle_datasets/*/ IS tracked, just not the
+# actual safetensors / mp4 / weight files)
+kaggle_datasets/*/*.safetensors
+kaggle_datasets/*/*.bin
+kaggle_datasets/*/*.pt
+kaggle_datasets/*/*.ckpt
 
 # Generated outputs
 temp/
@@ -53,6 +67,12 @@ assets/music/
 
 # Claude Code internal
 .claude/
+
+# Phase 22 (2026-06-25) — quarantine dumps for scripts that fail
+# strict-pass (score < 25/25). Auto-grown by main.py:_phase22_quarantine_if_needed.
+# Local-only — not for git. Manual housekeeping; auto-prune deferred
+# until volume warrants.
+_quarantine/
 
 # Python
 __pycache__/

@@ -109,6 +109,127 @@ _INTENSITY_ADJECTIVES = (
 )
 
 
+# ─── Phase 22 (2026-06-25) — Verb-per-frame + Anti-merge + Title DNA ──────
+# Verb-per-frame: forensic on 4 channel winners (EksW2W5aP5A 655v,
+# IcSK2Sl7-p8 644v, f3oZzuAiN3Q 500v, garplHH-k3A 484v) showed every frame
+# was a VERB (someone doing something to someone), not a NOUN (a crowned
+# warrior existing in a costume). Winners 6/8 verb-frames; recents 1-2/8.
+_VERB_BLACKLIST = {
+    "standing", "looking", "gazing", "contemplating", "praying",
+    "holding", "wearing", "sitting", "watching", "observing",
+    "thinking", "meditating", "posing", "facing", "smiling",
+}
+
+_VERB_WHITELIST = {
+    "drawing", "drawing back", "drawing the string", "drawing the bow",
+    "sinking", "severing", "kneeling", "kneeling beneath",
+    "looming", "looming over", "towering", "towering over",
+    "leaning into", "leaning over", "dragging", "dragging away from",
+    "charging", "falling", "fallen", "gripping", "snarling",
+    "recoiling", "fleeing", "walking away from", "walking from",
+    "hurled", "hurling", "slashing", "parrying", "weeping over",
+    "kicking", "kicking aside", "raised in halt", "palm raised",
+    "drawing arrow", "drawing sword", "striking", "piercing",
+    "collapsing", "lunging", "advancing", "marching", "wielding",
+    "drawing back from", "leaning in",
+}
+
+_VERB_BLACKLIST_RE = re.compile(
+    r"\b(" + "|".join(re.escape(v) for v in _VERB_BLACKLIST) + r")\b",
+    re.IGNORECASE,
+)
+
+# 5 power-imbalance composition templates derived from the winners.
+# Each is a tagged prefix the LLM literally emits as the LEADING tokens
+# of a two-character image_prompt — easy to validate via substring
+# search, explicit signal to FLUX about scene geometry to defeat the
+# multi-subject merge problem (3 arms / fused faces / shared torso).
+_COMPOSITION_TEMPLATES = {
+    "OVER-SHOULDER": (
+        "Over-shoulder shot: secondary character's shoulder and head "
+        "(back/side, no face) bokeh in left foreground at 1/3 frame, "
+        "named character mid-ground facing camera in focus at "
+        "2/3 frame height. "
+    ),
+    "POWER-LOOM": (
+        "Power-imbalance two-shot: named character standing tall at "
+        "2/3 frame height in left foreground, secondary character "
+        "kneeling at lower 1/3 frame, head bowed, identity partly "
+        "obscured by shadow. Vertical scale separation. "
+    ),
+    "CONFRONTATION-WIDE": (
+        "Wide two-shot confrontation: named character in left foreground "
+        "side-profile under warm rim-light, secondary character in right "
+        "mid-ground torso-up under cool shadow zone, diagonal "
+        "light/shadow boundary cutting the frame. "
+    ),
+    "WITNESS-FROM-BEHIND": (
+        "Witness composition: named character back-of-head and shoulders "
+        "silhouette foreground (no face visible), secondary character "
+        "mid-ground facing camera in focus, named character watching "
+        "the secondary's reaction. "
+    ),
+    "THE-FALLEN": (
+        "Aftermath two-shot: named character standing at upper third of "
+        "frame, secondary character prone in dust at named character's "
+        "feet, only legs/torso/weapon visible (face withheld), low-angle "
+        "ground-level camera. "
+    ),
+}
+
+# Title DNA — Phase 22 hard gate on title wording. Forensic showed
+# winners used tribal-relational nouns (loyalty / pride / sacrifice /
+# mistake), recents drifted into mood-nouns (regret / wound / ego) and
+# YT-India-demotable identity nouns (caste / religion).
+_TITLE_ADJ_WHITELIST = {
+    "real", "hidden", "untold", "secret", "greatest", "final", "fatal",
+    "big", "biggest", "last",
+    "असली", "छुपा", "छुपी", "गुप्त", "सबसे बड़ा", "सबसे बड़ी",
+    "आखिरी", "अंतिम", "घातक",
+}
+
+_TITLE_ADJ_BLACKLIST = {
+    "silent", "internal", "intellectual", "abstract", "quiet",
+    "subtle", "deep", "inner", "spiritual", "philosophical",
+    "चुप", "मौन", "आंतरिक", "गहरा", "गहरी", "सूक्ष्म",
+}
+
+_TITLE_NOUN_WHITELIST = {
+    "sacrifice", "vow", "friendship", "pride", "loss", "fear",
+    "loyalty", "mistake", "betrayal", "curse", "promise", "doubt",
+    "oath", "debt", "shame",
+    "बलिदान", "प्रतिज्ञा", "वचन", "दोस्ती", "मित्रता", "अभिमान",
+    "घमंड", "हार", "डर", "वफ़ादारी", "गलती", "धोखा", "विश्वासघात",
+    "श्राप", "शर्म",
+}
+
+_TITLE_NOUN_BLACKLIST = {
+    # Mood / introspection (recents drifted into these)
+    "regret", "wound", "ego", "self", "war within", "rage",
+    "पछतावा", "दर्द", "घाव", "अहंकार", "स्वयं", "स्वार्थ",
+    # YT-India identity / caste / religion (algorithmic demotion risk)
+    "caste", "identity", "religion", "hindu",
+    "जाति", "वर्ण", "पहचान", "धर्म",
+    # Vague abstractions
+    "sin", "truth", "lie", "fate", "destiny",
+    "पाप", "सच", "झूठ", "भाग्य", "नियति", "काला सच",
+}
+
+# Per-character canonical-virtue inversion sets — does the title assert
+# the OPPOSITE of the hero's most celebrated virtue? Karna's loyalty
+# → mistake (sharp inversion). Mild non-inversion ("Karna's Silent
+# Wound") fails this gate.
+_CHARACTER_VIRTUE_INVERSION = {
+    "कर्ण":      ("loyalty",   {"mistake", "betrayal", "curse", "गलती", "धोखा", "श्राप"}),
+    "अर्जुन":    ("skill",     {"doubt", "fear", "mistake", "डर", "गलती"}),
+    "भीष्म":    ("vow",       {"betrayal", "mistake", "promise", "धोखा", "गलती", "वचन"}),
+    "द्रौपदी":   ("dignity",   {"shame", "betrayal", "loss", "शर्म", "धोखा", "हार"}),
+    "युधिष्ठिर":  ("dharma",   {"mistake", "shame", "loss", "गलती", "शर्म", "हार"}),
+    "एकलव्य":   ("devotion",  {"sacrifice", "betrayal", "loss", "बलिदान", "धोखा", "हार"}),
+    "अश्वत्थामा": ("vengeance", {"curse", "shame", "mistake", "श्राप", "शर्म", "गलती"}),
+}
+
+
 # Hindi rehook markers — used by middle-window subversion check
 _REHOOK_MARKERS = re.compile(
     r"लेकिन|परंतु|पर\s|फिर\s+भी|और\s+तभी|उसी\s+क्षण|"
@@ -173,6 +294,178 @@ def _check_image_intensity(image_prompt: str) -> bool:
     museum-clean output when narration is depicting violence/grief/decay."""
     image_lower = image_prompt.lower()
     return any(adj in image_lower for adj in _INTENSITY_ADJECTIVES)
+
+
+def _check_verb_per_frame_single(image_prompt: str) -> tuple[bool, str]:
+    """Phase 22 (2026-06-25). Single-frame check. The LEADING 80 chars
+    must contain a whitelist verb (single or multi-word) AND zero
+    blacklist verbs (whole-word). FLUX weights early tokens heaviest —
+    that's where the action must land."""
+    if not image_prompt:
+        return False, "empty image_prompt"
+    leading = image_prompt[:80].lower()
+
+    bl_hit = _VERB_BLACKLIST_RE.search(leading)
+    if bl_hit:
+        return False, f"leading-80 contains blacklisted noun-pose verb '{bl_hit.group(1)}'"
+
+    if not any(verb in leading for verb in _VERB_WHITELIST):
+        return False, "leading-80 lacks any action-encoding verb from whitelist"
+
+    return True, ""
+
+
+def _check_verb_per_frame(broll: list) -> tuple[bool, str]:
+    """Phase 22 (2026-06-25). Aggregate: ≥5/8 broll entries must pass
+    the single-frame verb check, AND the final broll[-1].image_prompt
+    must contain an aftermath-silhouette token. Winners had 6/8 verb-
+    frames (75%); 5/8 (62.5%) threshold leaves room for one REACTION
+    beat. Closer-token requirement matches the consequence-as-closer
+    pattern in all 4 winners."""
+    if not broll:
+        return False, "broll is empty"
+
+    passing = sum(1 for b in broll
+                  if _check_verb_per_frame_single(b.get("image_prompt", ""))[0])
+    threshold = max(5, int(len(broll) * 0.625 + 0.999))
+    if passing < threshold:
+        return False, (
+            f"verb-per-frame: {passing}/{len(broll)} broll entries lead with "
+            f"an action verb (need ≥{threshold}). Winners average 6/8 verb-"
+            f"frames; recents average 1-2/8 — this is the SINGLE most "
+            f"predictive feature in the 500-660 view dataset. Replace "
+            f"'standing/looking/holding' poses with 'drawing/sinking/"
+            f"looming over/walking away from' actions."
+        )
+
+    last_prompt = (broll[-1].get("image_prompt", "") or "").lower()
+    aftermath_tokens = ("silhouette", "abandoned", "walking away",
+                        "walking from", "withheld", "face withheld",
+                        "fading dusk", "lone diya", "prone body")
+    if not any(t in last_prompt for t in aftermath_tokens):
+        return False, (
+            "broll[-1] is not an aftermath-silhouette beat. Winners close "
+            "on consequence (silhouette walking from abandoned weapons / "
+            "victor with face withheld / lone diya beside palm of refusal). "
+            "Final broll image_prompt must contain at least one of: "
+            "silhouette, abandoned, walking away, withheld, lone diya, "
+            "prone body, fading dusk."
+        )
+
+    return True, ""
+
+
+def _check_anti_merge_composition(broll: list) -> tuple[bool, str]:
+    """Phase 22 (2026-06-25). When an image_prompt names ≥2 characters
+    from _CHARACTER_NAMES_LIST, it MUST start with a [COMPOSITION-TAG]
+    from _COMPOSITION_TEMPLATES. This forces spatial / scale separation
+    that defeats FLUX's multi-subject merge. Single-character + macro-
+    on-prop + environmental scenes are exempt (verb-per-frame covers
+    them)."""
+    from pipeline.script_generator import _CHARACTER_NAMES_LIST
+
+    for i, entry in enumerate(broll):
+        prompt = entry.get("image_prompt", "") or ""
+        prompt_lower = prompt.lower()
+        names_hit = [name for name in _CHARACTER_NAMES_LIST
+                     if name.lower() in prompt_lower]
+        if len(names_hit) < 2:
+            continue
+
+        if not any(prompt.startswith(f"[{tag}]") or tag in prompt[:60]
+                   for tag in _COMPOSITION_TEMPLATES):
+            return False, (
+                f"broll[{i}] names ≥2 characters ({names_hit[:2]}) but does "
+                f"NOT lead with an anti-merge composition tag. Required: "
+                f"start with one of {sorted(_COMPOSITION_TEMPLATES.keys())} "
+                f"to force scale/spatial separation. Without this, FLUX "
+                f"merges the two characters (3 arms, fused faces, "
+                f"shared torso)."
+            )
+    return True, ""
+
+
+def _check_aftermath_closer(broll: list) -> tuple[bool, str]:
+    """Phase 22 (2026-06-25). The final broll entry MUST declare
+    wardrobe_context: AFTERMATH — forces the silhouette / face-withheld
+    / abandoned-weapon closing beat that ALL 4 channel winners used.
+    Recents close on portrait beats (returning to character glamour)
+    which fails the title→thumbnail→payoff loop."""
+    if not broll:
+        return False, "broll is empty"
+    last_ctx = (broll[-1].get("wardrobe_context", "") or "").strip().upper()
+    if last_ctx != "AFTERMATH":
+        return False, (
+            f"broll[-1].wardrobe_context = '{last_ctx}' — must be "
+            f"'AFTERMATH'. The closing beat is the consequence frame "
+            f"(silhouette, abandoned weapon, face withheld). The 4 "
+            f"channel winners ALL closed on consequence, not triumph."
+        )
+    return True, ""
+
+
+def _check_title_dna_gate(
+    title: str,
+    character_devanagari: str = "",
+) -> tuple[bool, str, int]:
+    """Phase 22 (2026-06-25). 4-step title-DNA cascade. Returns
+    (ok, violation_msg, inversion_score 0-3).
+      Step 1: noun blacklist (mood / caste / vague)
+      Step 2: adjective blacklist (soft / introspective)
+      Step 3: require ≥1 tribal-relational whitelisted noun
+      Step 4: trait-inversion score ≥2 vs the character's canonical
+              virtue (gracefully degrades to 3-step when character is
+              empty — legacy / WhatIf / forced-topic edge cases).
+    """
+    if not title:
+        return False, "title is empty", 0
+
+    title_lower = title.lower()
+
+    for noun in _TITLE_NOUN_BLACKLIST:
+        if noun.lower() in title_lower:
+            return False, f"title contains blacklisted noun '{noun}' (mood/caste/vague)", 0
+
+    for adj in _TITLE_ADJ_BLACKLIST:
+        if adj.lower() in title_lower:
+            return False, f"title contains blacklisted soft-adjective '{adj}'", 0
+
+    if not any(n.lower() in title_lower for n in _TITLE_NOUN_WHITELIST):
+        return False, (
+            "title lacks any tribal-relational noun from whitelist. "
+            "Need one of: Sacrifice/Vow/Friendship/Pride/Loyalty/Mistake/"
+            "Betrayal/Curse/Promise/Doubt/Loss/Fear (or Devanagari "
+            "equivalents)."
+        ), 0
+
+    # Step 4 — trait-inversion score (1-3) — only if character is known
+    char_key = (character_devanagari or "").strip()
+    if not char_key:
+        # No character context — degrade to 3-step cascade. Steps 1-3
+        # already passed (no blacklist, has whitelist noun) which is
+        # enough for legacy paths.
+        return True, "", 1
+
+    score = 1
+    virtue_entry = _CHARACTER_VIRTUE_INVERSION.get(char_key)
+    if virtue_entry:
+        _virtue, inversion_nouns = virtue_entry
+        if any(n.lower() in title_lower for n in inversion_nouns):
+            score = 2
+        if any(a.lower() in title_lower for a in _TITLE_ADJ_WHITELIST):
+            score = max(score, 2)
+            if any(n.lower() in title_lower for n in inversion_nouns):
+                score = 3
+
+    if score < 2:
+        return False, (
+            f"title inversion-score={score}/3 (need ≥2). Title does not "
+            f"assert the OPPOSITE of {char_key}'s canonical virtue. "
+            f"Karna's loyalty → mistake (sharp). Mild/no-inversion "
+            f"(e.g. 'Karna's Silent Wound') = reject."
+        ), score
+
+    return True, "", score
 
 
 def _check_subject_lock(anchor_phrase: str, image_prompt: str) -> bool:
@@ -316,7 +609,13 @@ def _check_character_names_single(image_prompt: str) -> bool:
 
 # ─── Phase 19 (2026-06-16) wardrobe + story entity ────────────────────────
 
-_VALID_WARDROBE_CONTEXTS = {"WAR", "PALACE", "DIVINE", "FOREST", "JOURNEY"}
+_VALID_WARDROBE_CONTEXTS = {
+    "WAR", "PALACE", "DIVINE", "FOREST", "JOURNEY",
+    # Phase 22 (2026-06-25) — AFTERMATH required by _check_aftermath_closer
+    # for broll[-1]. Forces silhouette / face-withheld / abandoned-weapon
+    # closing beat that all 4 channel winners used.
+    "AFTERMATH",
+}
 
 # Devanagari noun → list of English equivalents the LLM should use in
 # image_prompts. When a voiceover names a story-critical entity, at least
@@ -951,51 +1250,76 @@ def validate_phase18(data: dict, lang_label: str = "Hindi") -> tuple[bool, str, 
         _classify_broll_shot_type(b.get("image_prompt", "")) for b in br
     ]
 
+    # Phase 22 (2026-06-25) — verb-per-frame + anti-merge composition
+    # + aftermath closer + title-DNA gate. See module docstring + plan.
+    verb_per_frame_ok, _verb_per_frame_why = _check_verb_per_frame(br)
+    anti_merge_ok,     _anti_merge_why     = _check_anti_merge_composition(br)
+    aftermath_ok,      _aftermath_why      = _check_aftermath_closer(br)
+    # Plan-review fix (2026-06-26): extract arc_character_devanagari from
+    # the script dict. Defensive default — when missing (mid-attempt loops,
+    # raw LLM JSON pre-metadata-bake, legacy/WhatIf paths), _check_title_dna_gate
+    # degrades to a 3-step cascade and still rejects mood/caste nouns.
+    title    = data.get("title", "") or ""
+    char_dev = data.get("arc_character_devanagari", "") or ""
+    title_dna_ok, _title_dna_why, _dna_score = _check_title_dna_gate(title, char_dev)
+
     flags = [length_ok, broll_ok, hook_ok, hook_title_ok, loop_ok,
              shock_ok, rehook_ok, eng_ok, mono_ok, tha_ok, rep_ok,
              anchors_ok, names_ok, archetype_ok, subject_lock_ok,
              intensity_ok, bookend_ok,
              wardrobe_set_ok, story_entity_ok,    # Phase 19
-             diversity_ok, verb_lock_ok]          # Phase 20
+             diversity_ok, verb_lock_ok,          # Phase 20
+             verb_per_frame_ok, anti_merge_ok,    # Phase 22
+             aftermath_ok, title_dna_ok]          # Phase 22
     score = sum(1 for f in flags if f)
 
     info = {
-        "score":         score,
-        "word_count":    n_words,
-        "broll_count":   n_broll,
-        "anchor_why":    _anchor_why,
-        "wardrobe_why":  _wardrobe_why,
-        "story_why":     _story_why,
-        "diversity_why": _diversity_why,    # Phase 20
-        "shot_types":    shot_types_diagnostic,  # Phase 20 diagnostic
+        "score":              score,
+        "word_count":         n_words,
+        "broll_count":        n_broll,
+        "anchor_why":         _anchor_why,
+        "wardrobe_why":       _wardrobe_why,
+        "story_why":          _story_why,
+        "diversity_why":      _diversity_why,    # Phase 20
+        "shot_types":         shot_types_diagnostic,  # Phase 20 diagnostic
+        "verb_per_frame_why": _verb_per_frame_why,  # Phase 22
+        "anti_merge_why":     _anti_merge_why,    # Phase 22
+        "aftermath_why":      _aftermath_why,     # Phase 22
+        "title_dna_why":      _title_dna_why,     # Phase 22
+        "title_dna_score":    _dna_score,         # Phase 22
     }
 
     # First violation in priority order (single highest-impact gate).
-    # Phase 20 inserts verb_action close to subject_lock (semantically
-    # both lock the image to the audio's content); subject_diversity
-    # comes right after subject_lock — they're related but diversity
-    # operates on the broll array as a whole, lock operates per entry.
+    # Phase 22 inserts: aftermath_closer right after wardrobe_set (both
+    # operate on wardrobe_context field); verb_per_frame right after
+    # verb_action (both verb-related, aggregate vs per-entry); title_dna
+    # right after hook_title (both title-shape gates); anti_merge_composition
+    # right after subject_diversity (both broll-array composition gates).
     cascade = [
-        ("length",            length_ok and broll_ok),
-        ("anchors",           anchors_ok),
-        ("wardrobe_set",      wardrobe_set_ok),    # Phase 19
-        ("story_entity",      story_entity_ok),    # Phase 19
-        ("verb_action",       verb_lock_ok),       # Phase 20
-        ("hook",              hook_ok),
-        ("shock_action",      shock_ok),
-        ("loop_closure",      loop_ok),
-        ("hook_title",        hook_title_ok),
-        ("archetype",         archetype_ok),
-        ("subject_lock",      subject_lock_ok),
-        ("subject_diversity", diversity_ok),       # Phase 20
-        ("intensity",         intensity_ok),
-        ("rehook",            rehook_ok),
-        ("char_names",        names_ok),
-        ("bookend",           bookend_ok),
-        ("engagement",        eng_ok),
-        ("monotony",          mono_ok),
-        ("tha_tic",           tha_ok),
-        ("repetition",        rep_ok),
+        ("length",                  length_ok and broll_ok),
+        ("anchors",                 anchors_ok),
+        ("wardrobe_set",            wardrobe_set_ok),    # Phase 19
+        ("aftermath_closer",        aftermath_ok),       # Phase 22
+        ("story_entity",            story_entity_ok),    # Phase 19
+        ("verb_action",             verb_lock_ok),       # Phase 20
+        ("verb_per_frame",          verb_per_frame_ok),  # Phase 22
+        ("hook",                    hook_ok),
+        ("shock_action",            shock_ok),
+        ("loop_closure",            loop_ok),
+        ("hook_title",              hook_title_ok),
+        ("title_dna",               title_dna_ok),       # Phase 22
+        ("archetype",               archetype_ok),
+        ("subject_lock",            subject_lock_ok),
+        ("subject_diversity",       diversity_ok),       # Phase 20
+        ("anti_merge_composition",  anti_merge_ok),      # Phase 22
+        ("intensity",               intensity_ok),
+        ("rehook",                  rehook_ok),
+        ("char_names",              names_ok),
+        ("bookend",                 bookend_ok),
+        ("engagement",              eng_ok),
+        ("monotony",                mono_ok),
+        ("tha_tic",                 tha_ok),
+        ("repetition",              rep_ok),
     ]
     for label, ok in cascade:
         if not ok:
@@ -1026,6 +1350,11 @@ _VIOLATION_REMINDERS = {
     "monotony":     "Too many sentences in voiceover end with the same suffix (>40%). Vary the cadence.",
     "tha_tic":      "Past-aux था/थी/थे ending exceeded 15% of sentences. Push to present tense; only the FINAL line may use past.",
     "repetition":   "A single word repeated >4 times in voiceover. Trim the redundant repetition.",
+    # Phase 22 (2026-06-25) — new gates
+    "verb_per_frame":         "Your broll image_prompts were noun-poses (standing/looking/holding), not action verbs. ≥5/8 image_prompts MUST start (within the first 80 chars) with an action verb from: drawing back / sinking / severing / kneeling beneath / looming over / leaning into / dragging away from / charging / falling / gripping / snarling / recoiling / fleeing / walking away from / hurled / slashing / weeping over / striking / piercing / collapsing / lunging / wielding. FORBIDDEN openers: standing / looking / gazing / holding / sitting / watching. Final broll[-1].image_prompt MUST contain one of: silhouette / abandoned / walking away / withheld / lone diya / prone body / fading dusk.",
+    "anti_merge_composition": "An image_prompt named ≥2 characters in the same frame but did NOT lead with a composition tag. Required: start two-character image_prompts with one of [OVER-SHOULDER] / [POWER-LOOM] / [CONFRONTATION-WIDE] / [WITNESS-FROM-BEHIND] / [THE-FALLEN] in literal square brackets, then continue with verb + intensity + wardrobe. Without this, FLUX merges the two subjects (3 arms, fused faces, shared torso).",
+    "aftermath_closer":       "The final broll entry (broll[-1]) must declare wardrobe_context: 'AFTERMATH' (literal string in JSON). AFTERMATH = lone silhouette / face-withheld / abandoned weapon / prone body / lone diya / fading dusk. This is the consequence-as-closer beat ALL 4 channel winners used. Set BOTH the JSON wardrobe_context field AND the matching tokens inside broll[-1].image_prompt.",
+    "title_dna":              "Your title failed the Title DNA gate. (1) NO mood/regret/wound/caste/religion/sin/truth/fate nouns. (2) NO silent/internal/abstract/quiet/deep/inner adjectives. (3) MUST contain ≥1 tribal-relational noun: Sacrifice/Vow/Friendship/Pride/Loyalty/Mistake/Betrayal/Curse/Promise/Doubt/Loss/Fear/Shame (or Devanagari equivalents बलिदान/प्रतिज्ञा/वचन/दोस्ती/अभिमान/घमंड/हार/डर/वफ़ादारी/गलती/धोखा/श्राप/शर्म). (4) Title MUST assert the OPPOSITE of the character's canonical virtue (Karna's loyalty → Karna's Biggest Mistake; Arjuna's skill → Arjuna's Greatest Doubt; Bhishma's vow → Bhishma's Greatest Betrayal). Examples that PASS: 'कर्ण की सबसे बड़ी गलती | Karna\\'s Biggest Mistake', 'अर्जुन का असली डर | Arjuna\\'s Real Fear', 'भीष्म का छुपा वचन | Bhishma\\'s Hidden Vow'. Examples that REJECT: 'Karna\\'s Silent Regret' (mood noun), 'Eklavya\\'s Caste Truth' (caste noun), 'Arjuna\\'s Deep Wound' (mood + soft adj).",
 }
 
 
@@ -1286,6 +1615,76 @@ BROLL RULES (HARD — violation = REJECT):
       appears; verb_action_lock now enforces the action is depicted.
       Render the VERB the audience HEARS, not a static portrait.
 
+  (l) VERB-PER-FRAME (Phase 22, 2026-06-25) — ≥5 of your 8-10 broll
+      image_prompts MUST start (within the first 80 chars) with an
+      ACTION VERB from this list:
+      drawing / drawing back / sinking / severing / kneeling beneath /
+      looming over / leaning into / dragging away from / charging /
+      falling / gripping / snarling / recoiling / fleeing / walking
+      away from / hurled / slashing / weeping over / towering / kicking
+      aside / raised in halt / palm raised / drawing arrow / drawing
+      sword / striking / piercing / collapsing / lunging / advancing /
+      marching / wielding.
+
+      Forbidden noun-pose verbs (auto-reject): standing / looking /
+      gazing / contemplating / praying / holding / wearing / sitting /
+      watching / observing / thinking / posing / facing / smiling.
+
+      FINAL broll[-1] entry MUST be an AFTERMATH beat. TWO requirements
+      both must hold for broll[-1] (the LAST entry in the broll array):
+
+        (1) You MUST set the "wardrobe_context" JSON field to "AFTERMATH"
+            for this entry (NOT "WAR", NOT "PALACE" — the literal string
+            "AFTERMATH" in the JSON). This is checked by the
+            _check_aftermath_closer validator BEFORE the image_prompt
+            token check fires.
+
+        (2) AND the image_prompt for broll[-1] must contain at least one
+            of: silhouette / abandoned / walking away / withheld /
+            lone diya / prone body / fading dusk.
+
+      Both gates must pass independently. Setting one without the other
+      hard-fails the render. Without requirement (1), the LLM tends to
+      write beautiful aftermath image_prompts but mislabel the
+      wardrobe_context as "WAR", triggering an infinite quarantine loop.
+
+      WHY: forensic on the channel's 500-655 view winners showed every
+      frame was a VERB (someone doing something to someone), not a
+      NOUN (a crowned warrior existing in a costume). Verb-density is
+      the single most predictive feature of view performance. AFTERMATH
+      wardrobe + image_prompt together produce the "consequence as
+      closer" beat that ALL 4 winners used.
+
+  (m) ANTI-MERGE COMPOSITION (Phase 22, 2026-06-25) — when image_prompt
+      names ≥2 characters in the same frame, it MUST start with one of
+      these tagged composition templates (literal string, in brackets):
+
+      [OVER-SHOULDER] — secondary's shoulder/head (back, no face) bokeh
+        in foreground, named character mid-ground in focus
+      [POWER-LOOM] — named character standing tall, secondary kneeling
+        below; vertical scale separation
+      [CONFRONTATION-WIDE] — named character left-foreground side-profile,
+        secondary right mid-ground torso-up; diagonal light/shadow boundary
+      [WITNESS-FROM-BEHIND] — named character back-of-head foreground,
+        secondary mid-ground facing camera
+      [THE-FALLEN] — named character standing upper-third, secondary
+        prone in dust below (face withheld)
+
+      Then continue with the rest of the image_prompt (verb, intensity,
+      wardrobe, palette).
+
+      WHY: FLUX merges multi-character scenes (3 arms, fused faces,
+      shared torso) when both subjects are at the same scale with full
+      iconographic descriptors. Power-imbalance composition geometrically
+      separates the subjects so FLUX can't merge them. The 4 channel
+      winners ALL used this technique.
+
+      For single-character scenes (1 named character + 0/N secondaries
+      described purely structurally as "a kneeling brahmin disciple" /
+      "a bound captive") AND macro-on-prop scenes (no characters): no
+      composition tag required, but you may still use [POWER-LOOM] /
+      [THE-FALLEN] if it fits.
+
 {cliffhanger_block}
 
 ═══════════════════════════════════════════════════════════════
@@ -1298,10 +1697,10 @@ OUTPUT — return ONLY valid JSON, no markdown fences, no preamble:
       "image_prompt": "<literal-physical English prompt with character + intensity + palette + 'no hands in frame, no text...'>",
       "anchor_phrase": "<2-4 Devanagari words verbatim from voiceover>",
       "mood": "<3-6 word English mood>",
-      "wardrobe_context": "<WAR | PALACE | DIVINE | FOREST | JOURNEY>"
+      "wardrobe_context": "<WAR | PALACE | DIVINE | FOREST | JOURNEY | AFTERMATH (AFTERMATH only on broll[-1])>"
     }}
   ],
-  "title": "<Bilingual <60 chars, format: '[Hindi half] | [English half]'. Hindi FIRST. Each half 24-28 chars max. MUST do ONE of: challenge a known assumption / point at a hidden cause / pose a painful question / invert a hero's moral. FORBIDDEN: pure incident-naming ('कर्ण की प्रतिज्ञा'), Story of X, episode numbering.>",
+  "title": "<Bilingual <60 chars, format: '[Hindi half] | [English half]'. Hindi FIRST. Each half 24-28 chars max. PHASE 22 HARD GATE (2026-06-25): TITLE DNA = [character] + [subversion adjective from whitelist: असली/छुपा/सबसे बड़ा/आखिरी/घातक or real/hidden/biggest/final/fatal] + [tribal-relational noun from whitelist: गलती/धोखा/श्राप/प्रतिज्ञा/अभिमान/बलिदान/वचन/हार/डर/शर्म or mistake/betrayal/curse/promise/pride/sacrifice/vow/loss/fear/shame]. MUST assert the OPPOSITE of the hero's canonical virtue (Karna's loyalty → 'Karna\\'s Biggest Mistake' = SHARP; Arjuna's skill → 'Arjuna\\'s Real Fear' = SHARP; Bhishma's vow → 'Bhishma\\'s Hidden Betrayal' = SHARP). PASS examples: 'कर्ण की सबसे बड़ी गलती | Karna\\'s Biggest Mistake' / 'अर्जुन का असली डर | Arjuna\\'s Real Fear' / 'भीष्म का छुपा वचन | Bhishma\\'s Hidden Vow'. REJECT (hard-fail): mood/regret/wound/sin/truth/fate/ego/'war within'/'काला सच'/'inner X'; identity nouns caste/religion/Hindu/जाति/धर्म; soft adjectives silent/quiet/inner/deep/spiritual/चुप/मौन/गहरा; pure incident-naming ('कर्ण की प्रतिज्ञा'); 'Story of X'; episode numbering. The title is the OPENING PROMISE the thumbnail pays off — make it sharp and binary, not pensive.>",
   "hook_title": "<1-5 words, 100% Devanagari script (NO Latin). MUST contain ≥1 named character (भीष्म/अर्जुन/कर्ण/कृष्ण/द्रौपदी/...) OR ≥1 paradox marker (लेकिन/पर/फिर भी/कभी नहीं/आखिरी/पहली/एकमात्र/जो). MUST NOT contain '?', '!', '...', emoji, or setup openers ('यह'/'ये'/'एक कहानी'/'बहुत समय'/'कहते हैं'). Examples that PASS: 'अर्जुन का अंतिम पाप', 'कर्ण की एक गलती', 'द्रौपदी का अंतिम सच'.>",
   "description": "<Hook line under 90 chars expanding the title.\\n\\n#Shorts #Mahabharata #महाभारत #Krishna #HinduMythology\\n\\n100-150 words about the story.\\n\\n#Shorts #Mahabharata #महाभारत #Hindu #BhagavadGita #भगवद_गीता #Krishna #कृष्ण #Arjuna #अर्जुन #Karna #कर्ण #Bhishma #भीष्म #Draupadi #द्रौपदी #Kurukshetra #कुरुक्षेत्र #AncientIndia #IndianMythology #Dharma #MythologyShorts #VedicWisdom #HinduDharma #IndianHistory #SpiritualShorts #PauranikKathayein #SanatanDharma #HindiShorts #trending>",
   "tags": ["topic-specific tag 1","topic-specific tag 2","named char 1","named char 1 Devanagari","Mahabharata","महाभारत","Shorts","Hindu mythology"],
@@ -1494,6 +1893,19 @@ def generate_phase18_script(
             elif last_violation == "verb_action":
                 types = last_info.get("shot_types", [])
                 dynamic_prefix = f"Verb-action lock failed — at least one broll image_prompt described a STATIC pose where the anchor's Devanagari verb required the depicted action. (Your shot_types: {types}.) "
+            elif last_violation == "verb_per_frame":
+                why = last_info.get("verb_per_frame_why", "")
+                dynamic_prefix = f"Verb-per-frame failed: {why[:280]}. "
+            elif last_violation == "anti_merge_composition":
+                why = last_info.get("anti_merge_why", "")
+                dynamic_prefix = f"Anti-merge composition failed: {why[:280]}. "
+            elif last_violation == "aftermath_closer":
+                why = last_info.get("aftermath_why", "")
+                dynamic_prefix = f"Aftermath closer failed: {why[:280]}. "
+            elif last_violation == "title_dna":
+                why = last_info.get("title_dna_why", "")
+                dna_score = last_info.get("title_dna_score", 0)
+                dynamic_prefix = f"Title DNA gate failed (score={dna_score}/3): {why[:280]}. "
             full_prompt = base_prompt + (
                 f"\n\n── RETRY REMINDER (attempt {attempt+1}/{MAX_ATTEMPTS}) ──\n"
                 f"{dynamic_prefix}{base_reminder}"
@@ -1532,7 +1944,7 @@ def generate_phase18_script(
         vo_words = info.get("word_count", 0)
         br_n = info.get("broll_count", 0)
         types = info.get("shot_types", [])
-        print(f"    [phase18-validate] score={score}/21 ok={ok} "
+        print(f"    [phase18-validate] score={score}/25 ok={ok} "
               f"voiceover={vo_words}w/{vo_chars}c broll={br_n} "
               f"types={types} "
               f"violation={violation or 'none'}")
@@ -1555,11 +1967,14 @@ def generate_phase18_script(
             "Check the [phase18-gen] log for LLM/parse errors."
         )
 
-    # Phase 21 (2026-06-25): denominator was /17 (stale Phase 19 threshold);
-    # the cascade has been /21 since Phase 20 shipped. Fixed.
-    if best_score < 21:
-        print(f"    [phase18-rescue] shipping best-of-N (score={best_score}/21, "
-              f"last violation={last_violation})")
+    # Phase 22 (2026-06-25): cascade bumped /21 → /25 (+verb_per_frame
+    # +anti_merge_composition +aftermath_closer +title_dna). The rescue
+    # PRINT remains, but main.py now quarantines any non-strict-pass
+    # via _phase18_strict_pass — see below.
+    _PHASE22_SCORE_MAX = 25
+    if best_score < _PHASE22_SCORE_MAX:
+        print(f"    [phase18-rescue] best-of-N exhausted (score={best_score}/{_PHASE22_SCORE_MAX}, "
+              f"last violation={last_violation}) — script will be QUARANTINED at main.py")
 
     # ── Bake metadata + return ──
     data = best_data
@@ -1570,6 +1985,18 @@ def generate_phase18_script(
     data["episode_n"] = episode_n
     data["arc_character_devanagari"] = arc_character_devanagari
     data["arc_character_english"] = arc_name or ""
+
+    # Phase 22 (2026-06-25): stamp strict-pass signal so main.py's
+    # quarantine gate can hard-fail rescued ships. The Phoenix audit
+    # forensic confirmed the validator rescue path is the literal
+    # mechanical cause of recent 11-36 view renders (0ZA5QwDpPho at
+    # score 14/21 shipped, DXCp with 4 AMBIGUOUS broll shipped, 3Qi2Gg
+    # failed all 5 attempts and STILL published). Quality floor is now
+    # ABSOLUTE: pass all 25 gates or don't publish.
+    data["_phase18_strict_pass"] = (best_score >= _PHASE22_SCORE_MAX)
+    data["_phase18_score"]       = best_score
+    data["_phase18_score_max"]   = _PHASE22_SCORE_MAX
+    data["_phase18_violation"]   = last_violation if best_score < _PHASE22_SCORE_MAX else ""
 
     # Cliffhanger prepend to description (mirrors legacy line 4687)
     if next_episode_teaser:

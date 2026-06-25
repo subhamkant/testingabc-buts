@@ -208,11 +208,16 @@ _CHARACTER_PALETTE = {
 # NOT a dusty battlefield).
 _WARDROBE_CONTEXT_PREFIX = {
     "WAR": (
-        "authentic Vedic-era warrior wearing kavach (engraved gold-leaf "
-        "chest-plate with sun or moon motif, NEVER European plate armor, "
-        "NEVER skull emblem, NEVER spiked helmet), Indian classical mukut "
-        "helmet with peacock feather, gold kundal earrings visible, "
-        "warm golden-bronze Indian skin tone, "
+        # Phase 22 (2026-06-25): WAR rewrite — battle damage tokens
+        # replace polished-mukut glamour. Phase 19's mukut+kundal+
+        # gold-leaf reading was over-curated; forensic showed winners
+        # ran ash + torn-dhoti + blood-smear, not mukut + gold-leaf.
+        "authentic Vedic-era warrior wearing kavach (engraved chest-plate "
+        "with sun or moon motif, NEVER European plate armor, NEVER skull "
+        "emblem, NEVER spiked helmet), torn dhoti edges, ash-streaked "
+        "face, dust-streaked tilak, blood smear on forearm, frayed "
+        "angavastram cape, broken arrow shaft fragment visible, "
+        "weathered straps, warm golden-bronze Indian skin tone, "
     ),
     "PALACE": (
         "royal subject in pristine white-and-gold silk dhoti with red "
@@ -239,6 +244,18 @@ _WARDROBE_CONTEXT_PREFIX = {
         "queen Draupadi, loyal stray dog if story-relevant), warm "
         "key-light on faces transitioning to celestial golden glow, "
         "warm golden-bronze Indian skin tone, "
+    ),
+    "AFTERMATH": (
+        # Phase 22 (2026-06-25) — NEW. Required by _check_aftermath_closer
+        # for the final broll beat. Forensic showed all 4 winners closed
+        # on consequence, not triumph.
+        "lone silhouette against fading dusk light, face withheld in "
+        "shadow (NOT a portrait, NOT a close-up of the face), helmet "
+        "rolled in dust on the ground, abandoned weapon in the "
+        "foreground (broken bow / fallen sword / shattered chariot "
+        "wheel), prone body partially visible at the edge of frame, "
+        "lone diya flickering, low-angle ground-level camera, smoke "
+        "and ash hanging in the air, muted desaturated palette, "
     ),
 }
 
@@ -267,16 +284,56 @@ def _inject_wardrobe_context(wardrobe_context: str) -> str:
 # Architectural exclusions (NO Islamic domes / NO Gothic / NO European
 # castles) live in _NEGATIVE_PHASE19_ANTI_BIAS; 2D-style exclusions live
 # in the new _NEGATIVE_PHASE20_ANTI_CARTOON below.
-_HINDU_ICONOGRAPHY_ANCHOR = (
+# Phase 22 (2026-06-25) — 3-tier anchor split. Phase 19's mono-anchor
+# baked mukut+kundal+yajnopavita into EVERY prompt, even battlefield
+# scenes — forensic on the 11-36 view recents showed FLUX rendered all
+# subjects in temple-portrait mode regardless of wardrobe_context. Split
+# the anchor by context: WAR/FOREST/JOURNEY/AFTERMATH/unknown get the
+# battle-leaning anchor (ash/dust/dhoti); only PALACE gets the mukut+
+# kundal ornament block; DIVINE gets the halo/silks variant.
+_HINDU_ICONOGRAPHY_BASE = (
     "Hyper-photorealistic live-action epic film still, 8K resolution, "
     "shot on ARRI Alexa 65, highly detailed skin pores and fabric weave, "
     "gritty naturalistic cinematic lighting, NOT painting, NOT comic book, "
     "NOT illustration, NOT 2D art, "
     "Baahubali / B.R. Chopra Mahabharat 1988 live-action wardrobe reference, "
-    "authentic Hindu Vedic iconography, warm golden-bronze Indian skin, "
-    "intricate gold kundal earrings, classical Indian mukut crown, tilak, "
-    "yajnopavita, silk dhoti, carved Hindu Nagara-style temple architecture, "
+    "authentic Hindu Vedic civilization, warm golden-bronze Indian skin, "
+    "carved Hindu Nagara-style temple architecture in background, "
 )
+
+_HINDU_ICONOGRAPHY_BATTLEFIELD_ANCHOR = _HINDU_ICONOGRAPHY_BASE + (
+    "battle-stained silk dhoti, weathered leather straps, "
+    "dust on skin, ash-streaked face, "
+)
+
+_HINDU_ICONOGRAPHY_PALACE_ANCHOR = _HINDU_ICONOGRAPHY_BASE + (
+    "classical Indian mukut crown (NEVER European helmet), tilak on "
+    "forehead, intricate gold kundal earrings, yajnopavita thread, "
+    "silk dhoti with red angavastram, "
+)
+
+_HINDU_ICONOGRAPHY_DIVINE_ANCHOR = _HINDU_ICONOGRAPHY_BASE + (
+    "ethereal divine halo, pristine white-and-gold silk with diaphanous "
+    "shawl, celestial light on face, "
+)
+
+# Back-compat alias — default to battlefield (the winners' look).
+# Kept so any in-flight code path that still references the old constant
+# falls to the battlefield variant rather than the ornament-heavy one.
+_HINDU_ICONOGRAPHY_ANCHOR = _HINDU_ICONOGRAPHY_BATTLEFIELD_ANCHOR
+
+
+def _pick_iconography_anchor(wardrobe_context: str) -> str:
+    """Phase 22 (2026-06-25). Route by wardrobe context. WAR / FOREST /
+    JOURNEY / AFTERMATH / unknown get the battlefield anchor (default).
+    Only PALACE gets the ornament-heavy mukut anchor. DIVINE gets the
+    halo+silks anchor."""
+    ctx = (wardrobe_context or "").strip().upper()
+    if ctx == "PALACE":
+        return _HINDU_ICONOGRAPHY_PALACE_ANCHOR
+    if ctx == "DIVINE":
+        return _HINDU_ICONOGRAPHY_DIVINE_ANCHOR
+    return _HINDU_ICONOGRAPHY_BATTLEFIELD_ANCHOR
 
 
 def _character_palette_directive(character_devanagari: str) -> str:
@@ -496,6 +553,25 @@ _NEGATIVE_PHASE20_ANTI_CARTOON = (
 )
 _NEGATIVE_DEFAULT   = _NEGATIVE_DEFAULT   + _NEGATIVE_PHASE20_ANTI_CARTOON
 _NEGATIVE_RESTRAINT = _NEGATIVE_RESTRAINT + _NEGATIVE_PHASE20_ANTI_CARTOON
+
+# Phase 22 (2026-06-25) — anti-ornament block. Phase 19's iconography
+# anchor over-corrected into museum portraiture: mukut + kundal +
+# rudraksha ornament tokens out-weighted wound/dust/blood tokens in FLUX
+# prompts. The intensity validator passed prompts; pixels reverted to
+# glamour. Reinforce at the negative layer.
+# NOT applied to _NEGATIVE_RESTRAINT — restraint mode already strips
+# glamour and "frontal pose" would fight legitimate face-forward grief
+# beats (the restraint cue family targets grief / aftermath / witnessed).
+_NEGATIVE_PHASE22_ANTI_ORNAMENT = (
+    ",museum portrait,museum quality,calendar art,jewelry catalog,"
+    "portrait photography,formal portrait,glamour shot,frontal pose,"
+    "ornament-heavy,gold-jewelry-dominant,devotional poster,"
+    "Mughal miniature,Tanjore painting,Rajput miniature,"
+    "Amar Chitra Katha cover,Raja Ravi Varma painting,"
+    "stiff posed subject,studio-clean,airbrushed glamour,"
+    "ornate jewelry catalog,crown-focus,jewelry close-up subject"
+)
+_NEGATIVE_DEFAULT = _NEGATIVE_DEFAULT + _NEGATIVE_PHASE22_ANTI_ORNAMENT
 
 # Backwards-compat alias — _NEGATIVE was the single global pre-2026-05-18.
 _NEGATIVE = _NEGATIVE_DEFAULT
@@ -924,23 +1000,43 @@ def _char_stable_seed(character: str, shot_index: int) -> int:
     return (h + shot_index * 17) % 99991  # prime modulus for spread
 
 
-def _inject_characters(prompt: str) -> str:
+def _inject_characters(prompt: str, wardrobe_context: str = "") -> str:
     """
     Scans the prompt for known Mahabharata character names and appends
-    their detailed visual description so every image is visually consistent.
+    their visual description so every image is visually consistent.
+
+    Phase 22 (2026-06-25): wardrobe-aware to defeat the multi-character
+    merge problem. In WAR / FOREST / JOURNEY / AFTERMATH (the
+    battlefield-leaning contexts), each match gets ONLY the ~120-char
+    `signature_lock` field (non-negotiable identifiers). In PALACE /
+    DIVINE (the ornament-friendly contexts), each match gets the full
+    250-char `visual` fingerprint. Math: PALACE two-shot ≈ 500 chars
+    stacked (merge risk); WAR two-shot ≈ 200 chars stacked (FLUX keeps
+    subjects separate).
     """
     if not _CHARACTERS:
         return prompt
+    ctx = (wardrobe_context or "").strip().upper()
+    use_full_fingerprint = ctx in ("PALACE", "DIVINE")
+
     injected = []
     prompt_lower = prompt.lower()
     for name, data in _CHARACTERS.items():
         if name.lower() in prompt_lower:
-            # 250 char cap — enough for skin/eyes/clothing/jewelry/posture
-            # without drowning the scene-specific prompt. The earlier 120 cap
-            # produced one-line descriptors that the strong style suffix
-            # routinely overpowered.
-            visual = data.get("visual", "")[:250]
-            injected.append(visual)
+            if use_full_fingerprint:
+                visual = data.get("visual", "")[:250]
+            else:
+                # Prefer signature_lock (Phase 22 schema). Fall back to
+                # a truncated visual for characters that haven't been
+                # migrated yet — the back-compat path keeps non-Phase-22
+                # characters renderable without re-editing the entire
+                # roster.
+                visual = (
+                    data.get("signature_lock", "")
+                    or data.get("visual", "")[:120]
+                )
+            if visual:
+                injected.append(visual)
     if injected:
         return prompt + ". CHARACTER DETAILS — " + "; ".join(injected)
     return prompt
@@ -1727,14 +1823,19 @@ def generate_images(scenes_or_script, single_shot: bool = False, series: str = "
             # Character injection is Mahabharata-specific (Krishna/Arjuna/etc.
             # visual descriptors); skip it for WhatIf science content.
             raw_prompt = scene["image_prompt"]
-            base_prompt = raw_prompt if series == "whatif" else _inject_characters(raw_prompt)
+            # Phase 22 (2026-06-25): pass wardrobe_context into the
+            # injector. In WAR/FOREST/JOURNEY/AFTERMATH it picks the
+            # ~120-char signature_lock (defeats multi-subject merge);
+            # in PALACE/DIVINE it uses the full 250-char visual.
+            scene_wardrobe_ctx = scene.get("wardrobe_context", "") if series == "mahabharata" else ""
+            base_prompt = raw_prompt if series == "whatif" else _inject_characters(raw_prompt, scene_wardrobe_ctx)
             # Append the imperfection cue AFTER character injection so it
             # rides on top of the character's existing descriptors instead
             # of getting buried by them. Additive — does not replace any
             # part of the scene prompt. Empty cue = no-op.
             if imperfection_cue:
                 base_prompt = f"{base_prompt}. {imperfection_cue}"
-            # Phase 19 (2026-06-16) — wardrobe-context-aware + Hindu-iconography
+            # Phase 19 / Phase 22 — wardrobe-context-aware + Hindu-iconography
             # anchored composition. Order matters: iconography anchor at the
             # front (FLUX gives more weight to early tokens) → wardrobe context
             # next → angle/composition → base_prompt last. base_prompt carries
@@ -1742,10 +1843,15 @@ def generate_images(scenes_or_script, single_shot: bool = False, series: str = "
             # (series-gated) so the curiosity / whatif / krishna pipelines stay
             # on their existing prompt-shape contracts.
             if series == "mahabharata":
-                wardrobe_ctx    = scene.get("wardrobe_context", "")
-                wardrobe_prefix = _inject_wardrobe_context(wardrobe_ctx)
+                wardrobe_ctx        = scene_wardrobe_ctx
+                wardrobe_prefix     = _inject_wardrobe_context(wardrobe_ctx)
+                # Phase 22 (2026-06-25): route the iconography anchor by
+                # wardrobe context. Battlefield/forest/journey/aftermath
+                # get the dust+ash anchor; only palace/divine get the
+                # ornament-heavy anchor.
+                iconography_anchor  = _pick_iconography_anchor(wardrobe_ctx)
                 prompt = (
-                    _HINDU_ICONOGRAPHY_ANCHOR
+                    iconography_anchor
                     + wardrobe_prefix
                     + f"{angle_label}{composition_directive}{base_prompt}"
                 )

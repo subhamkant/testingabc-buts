@@ -90,6 +90,70 @@ def _setup_logging(language: str, test_mode: bool) -> object:
     return log_file
 
 
+# ── Phase 22 quarantine gate (2026-06-25) ────────────────────────────────────
+
+def _phase22_quarantine_if_needed(script: dict, language: str) -> None:
+    """Phase 22 quarantine gate. If the script's _phase18_strict_pass
+    flag is False, dump to _quarantine/scripts/ and sys.exit(0). GHA
+    treats exit-0 as success → no retry chain burn (mirrors PAUSE_PIPELINE).
+
+    Default-pass-closed for non-phase18 paths (legacy script_generator
+    output and pre-phase18 cached checkpoints lack the flag and should
+    pass through). Phase 22 is enforced ONLY when the generator stamps
+    _phase18_strict_pass explicitly.
+
+    Position: must fire BEFORE update_characters() (so characters.json
+    doesn't absorb a failed render's prompt vocabulary) AND BEFORE
+    ck.save_json('script.json') (so retries don't resume the bad
+    script)."""
+    if script.get("_phase18_strict_pass", True):
+        return
+
+    import json as _json_q
+
+    score      = script.get("_phase18_score", 0)
+    score_max  = script.get("_phase18_score_max", 25)
+    violation  = script.get("_phase18_violation", "unknown") or "unknown"
+    topic_raw  = script.get("topic", "no-topic") or "no-topic"
+    topic_slug = (
+        topic_raw
+            .lower()
+            .replace("'", "")
+            .replace("—", "-")
+            [:50]
+            .replace(" ", "-")
+            .replace("/", "-")
+    )
+    ts = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H-%M-%S")
+    quarantine_dir = "_quarantine/scripts"
+    os.makedirs(quarantine_dir, exist_ok=True)
+    quarantine_path = (
+        f"{quarantine_dir}/{ts}_{language}_{topic_slug}_{violation}.json"
+    )
+    with open(quarantine_path, "w", encoding="utf-8") as _qf:
+        _json_q.dump({
+            "ts":        ts,
+            "language":  language,
+            "score":     score,
+            "score_max": score_max,
+            "violation": violation,
+            "topic":     topic_raw,
+            "title":     script.get("title", ""),
+            "script":    script,
+        }, _qf, ensure_ascii=False, indent=2)
+
+    print(
+        f"\n[phase22-quarantine] Script failed strict-pass: "
+        f"score={score}/{score_max}, violation={violation}"
+        f"\n[phase22-quarantine] Dumped to {quarantine_path}"
+        f"\n[phase22-quarantine] Skipping publish. "
+        f"Channel quality floor is ABSOLUTE — no rescue ships.\n"
+    )
+    # sys.exit(0) — GHA treats as success; no retry-chain burn.
+    # Mirrors the PAUSE_PIPELINE pattern at main.py:40.
+    sys.exit(0)
+
+
 # ── Temp cleanup ──────────────────────────────────────────────────────────────
 
 def cleanup_temp():
@@ -378,10 +442,31 @@ async def run_pipeline(language: str = "en", test_mode: bool = False, test_uploa
         if ck.has("script.json"):
             print("Step 1 — [resume] script loaded from checkpoint")
             script = ck.load_json("script.json")
+            # Phase 22 (2026-06-25) — resume-path belt-and-suspenders. If
+            # a stale or manually-edited checkpoint loaded a rescued script
+            # (e.g. a previous run shipped under the old /21 cascade before
+            # the strict-pass gate landed), re-quarantine here. Don't trust
+            # the cached file.
+            _phase22_quarantine_if_needed(script, language)
         else:
             print("Step 1 — Generating script with Gemini...")
             scheduled_topic = get_next_topic("mahabharata")
             script = generate_script(language, forced_topic=scheduled_topic, series="mahabharata")
+
+            # Phase 22 (2026-06-25) — quarantine gate. Kill the validator
+            # rescue path: if generate_phase18_script returned a rescued
+            # ship (any of 25 gates failed), dump to _quarantine/ and exit
+            # cleanly. The Phoenix audit forensic confirmed the rescue path
+            # is the literal mechanical cause of recent 11-36 view renders
+            # (0ZA5QwDpPho ok=False shipped, DXCp 4 AMBIGUOUS broll shipped,
+            # 3Qi2Gg failed all 5 attempts and STILL published). Quality
+            # floor is now ABSOLUTE: pass all 25 gates or don't publish.
+            #
+            # IMPORTANT: this fires BEFORE update_characters (so
+            # characters.json doesn't absorb a failed render's prompt
+            # vocabulary) AND BEFORE ck.save_json (so retries don't resume
+            # the bad script).
+            _phase22_quarantine_if_needed(script, language)
 
             # Phase 18 (2026-06-16): scene-cap and outro-append are scoped
             # to the legacy `scenes`-based path. Phase 18's voiceover ends
