@@ -59,14 +59,47 @@ CHARACTER_VARIANTS = {
 }
 
 INCIDENT_KEYWORDS = {
-    "vow":         ["vow", "pledge", "oath", "promise", "प्रतिज्ञा", "प्रण", "शपथ"],
+    # Phase 21 (2026-06-25) — Phoenix audit and post-Phase-20 forensic confirmed
+    # that broad buckets like "vow" / "death" / "sacrifice" were over-axing
+    # T1 anchor arcs because every Bhishma topic carries "vow" and every Karna
+    # topic carries "sacrifice". Split into semantic sub-buckets so dedup
+    # catches REAL duplicates (Karna's two loyalty mistakes) but lets distinct
+    # events through (Bhishma's celibacy vow vs Arjuna's kill-Jayadratha vow).
+
+    # ── Vow events — split from the original broad "vow" bucket ──────────
+    "celibacy_vow":   ["celibacy vow", "celibate", "renunciation of throne",
+                       "brahmacharya", "ब्रह्मचर्य", "विवाह त्याग"],
+    "kill_vow":       ["vow to kill", "vow of vengeance", "promised to slay",
+                       "kill jayadratha", "kill duhshasana", "kill karna",
+                       "वध की प्रतिज्ञा", "मारने की शपथ"],
+    "loyalty_vow":    ["loyalty to duryodhana", "friendship pledge", "loyalty pledge",
+                       "मित्रता की प्रतिज्ञा", "वफादारी की शपथ"],
+    "generic_vow":    ["vow", "pledge", "oath", "promise",
+                       "प्रतिज्ञा", "प्रण", "शपथ"],  # fallback — only fires if
+                       # the more-specific buckets above don't match
     "celibacy":    ["celibacy", "celibate", "marriage", "wedding", "विवाह", "ब्रह्मचर्य"],
     "vastraharan": ["vastraharan", "disrobing", "robe", "hair", "वस्त्रहरण", "अपमान", "humiliation", "humiliated"],
     "swayamvara":  ["swayamvara", "swayamwar", "स्वयंवर", "rejection", "refused", "ठुकराया"],
     "kurukshetra": ["kurukshetra", "battlefield", "battle", "war", "कुरुक्षेत्र", "युद्ध"],
-    "death":       ["death", "die", "died", "killed", "killer", "वध", "मृत्यु", "मरने", "मौत"],
+
+    # ── Death events — split from the original broad "death" bucket ──────
+    "battle_death":   ["killed in battle", "slain on the field", "fell to",
+                       "battlefield death", "war death",
+                       "युद्ध में मारा", "रणभूमि में मरा"],
+    "ritual_death":   ["self-immolation", "fasting death", "starved",
+                       "ritual suicide", "prayopavesha",
+                       "प्रायोपवेश", "उपवास मृत्यु"],
+    "generic_death":  ["death", "die", "died", "killed", "killer",
+                       "वध", "मृत्यु", "मरने", "मौत"],  # fallback
     "curse":       ["curse", "cursed", "श्राप", "शाप"],
-    "sacrifice":   ["sacrifice", "sacrificed", "बलिदान", "त्याग"],
+
+    # ── Sacrifice events — split from the original broad "sacrifice" bucket ──
+    "body_sacrifice":      ["thumb", "kavach", "kundal", "arm severed", "limb cut",
+                            "अंगूठा कटा", "कवच त्याग", "कुंडल दान"],
+    "loved_one_sacrifice": ["brother left to die", "wife wagered", "son abandoned",
+                            "abandoned for dharma",
+                            "भाई को छोड़ा", "पत्नी हार"],
+    "generic_sacrifice":   ["sacrifice", "sacrificed", "बलिदान", "त्याग"],  # fallback
     "birth":       ["birth", "born", "abandonment", "abandoned", "जन्म", "गंगा"],
     "exile":       ["exile", "forest", "वनवास", "अज्ञातवास"],
     "chakravyuha": ["chakravyuha", "chakravyuh", "चक्रव्यूह"],
@@ -211,16 +244,35 @@ def topic_overlaps_published(topic_text: str, published_signatures: list) -> boo
     """Return True if `topic_text`'s signature overlaps any published title's
     signature strongly enough to be a duplicate risk.
 
-    Overlap rule: at least ONE shared character AND at least ONE shared
-    incident keyword. A topic with no character (e.g., "Kurukshetra War")
-    can never trigger overlap — caller should still dedup those via
-    exact-string check.
+    Phase 21 (2026-06-25) — raised overlap threshold to require either:
+      (a) 2+ shared characters AND 1+ shared incident keys (multi-character
+          story sharing a meaningful event), OR
+      (b) 1+ shared character AND 2+ shared incident keys (single-character
+          story sharing multiple distinct event-signatures)
+
+    Was previously 1+1, which over-axed T1 anchor arcs because every
+    Bhishma topic shares ("bhishma" + "vow") with the channel's top
+    performer and every Karna topic shares ("karna" + "sacrifice") similarly.
+    The post-Phase-20 forensic showed 8 daily renders skewing 4-Arjuna /
+    2-Eklavya / 1-Karna / 1-Ashwatthama because T1's signatures were getting
+    wholesale-axed. Combined with the Phase 21 INCIDENT_KEYWORDS split
+    (celibacy_vow vs kill_vow vs loyalty_vow), the 2+1 / 1+2 threshold
+    catches REAL duplicates (Karna's two loyalty mistakes share 1 char + 2
+    incidents) but lets distinct events through (Bhishma's celibacy vow
+    shares 1 char + 1 incident with Arjuna's kill vow — no longer flagged).
+
+    A topic with no character (e.g., "Kurukshetra War") can never trigger
+    overlap — caller should still dedup those via exact-string check.
     """
     tc, ti = signature_of(topic_text)
     if not tc:
         return False
     for pc, pi in published_signatures:
-        if tc & pc and ti & pi:
+        char_overlap = len(tc & pc)
+        incident_overlap = len(ti & pi)
+        # Phase 21 overlap rule: (2 chars + 1 incident) OR (1 char + 2 incidents)
+        if (char_overlap >= 2 and incident_overlap >= 1) or \
+           (char_overlap >= 1 and incident_overlap >= 2):
             return True
     return False
 

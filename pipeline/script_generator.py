@@ -403,6 +403,7 @@ def _pick_next_arc_topic() -> tuple[str, int, str, str | None] | None:
         fetch_recent_title_signatures,
         topic_overlaps_published,
     )
+    from pipeline.topic_expander import expand_arcs_if_needed, arc_topic_pool
 
     arcs = _load_arcs()
     used = _load_used_topics()
@@ -411,6 +412,21 @@ def _pick_next_arc_topic() -> tuple[str, int, str, str | None] | None:
 
     # Stage 2 dedup data — fetched once per process. Returns [] on any error.
     published_sigs = fetch_recent_title_signatures()
+
+    # Phase 21 (2026-06-25) — auto-expand starving arcs BEFORE the draw.
+    # The expander is a no-op when all arcs have eligible >= threshold; it
+    # only fires when the daily cron would otherwise hard-stop on "no fresh
+    # story". Guarantees: pipeline never runs out of fresh topics → user's
+    # "new story daily, no repeats ever" constraint is structurally
+    # sustainable. See pipeline/topic_expander.py for the sidecar
+    # `_auto_added` provenance contract.
+    try:
+        added = expand_arcs_if_needed(arcs, used, published_sigs)
+        if added:
+            print(f"    [phase21-expander] added {added} auto-generated topics across starving arcs")
+    except Exception as _expander_err:
+        # Fail-safe: never block a render on the expander
+        print(f"    [phase21-expander] skipped due to error: {str(_expander_err)[:120]}")
 
     # Phase 15 (2026-06-08): TIERED WEIGHTED ROTATION replaces Phase 12
     # round-robin. Random draw across all characters with tier-based weights
@@ -433,12 +449,18 @@ def _pick_next_arc_topic() -> tuple[str, int, str, str | None] | None:
     def _try_pick_from_character(character: str, enforce_gate: bool):
         """Return (topic, episode_n, arc_name, next_topic_in_arc) for the first
         unused + non-overlapping topic in `character`'s arc, optionally
-        enforcing the semantic gate. None if no eligible topic."""
+        enforcing the semantic gate. None if no eligible topic.
+
+        Phase 21 (2026-06-25): reads the UNIONED pool — `arc["topics"]`
+        (human-curated) + `arc["_auto_added"][].topic` (auto-expander
+        provenance) — via `arc_topic_pool()`. Backwards-compatible: arcs
+        without `_auto_added` return the same list as before.
+        """
         arc_idx = char_to_arc_idx.get(character)
         if arc_idx is None:
             return None
         arc = arcs[arc_idx]
-        arc_topics = arc.get("topics", [])
+        arc_topics = arc_topic_pool(arc)   # Phase 21 — was arc.get("topics", [])
         for idx, topic in enumerate(arc_topics):
             if topic in used:
                 continue

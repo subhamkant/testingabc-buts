@@ -616,6 +616,18 @@ _SHOT_TYPE_ENV_TOKENS = (
     "vista", "panoramic", "aerial view", "smoke-filled sky", "vast",
     "across the field", "burning battlefield", "burning camp",
     "distant chariots", "skyline", "open sky",
+    # Phase 21 (2026-06-25) — mid-intensity ENV vocabulary the LLM actually
+    # uses but the original list missed (per Phoenix audit AMBIGUOUS=68%).
+    "wide view", "establishing shot", "long shot", "extreme long shot",
+    "in the distance", "stretching to the horizon", "rolling hills",
+    "battlefield stretches", "sky stretches", "open plain", "vast plain",
+    "smoke rising", "dust clouds", "across the plains", "dusk sky",
+    "dawn sky", "moonlit sky", "fog-shrouded", "mist-covered",
+    "river bend", "forest clearing", "courtyard", "palace hall",
+    "temple courtyard", "ancient ruins", "stone steps", "throne room",
+    "war camp", "encampment", "tents stretching", "rows of",
+    "silhouetted against", "backlit by", "sun setting behind",
+    "no figures in frame",
 )
 _SHOT_TYPE_PROP_LEADING = (
     # The PROP rule fires when text STARTS WITH (not just contains) one of
@@ -636,6 +648,16 @@ _SHOT_TYPE_PROP_LEADING = (
     "the dice", "the chakra", "the kundal", "the mace", "the bowl",
     "the staff ", "a wooden ", "a bronze ", "a golden ", "an iron ",
     "a single tear", "a drop of blood",
+    # Phase 21 (2026-06-25) — broken/discarded/fallen variants + additional
+    # mythological objects the LLM uses to lead PROP shots.
+    "a broken ", "a shattered ", "a discarded ", "a fallen ",
+    "the broken ", "the shattered ", "the discarded ", "the fallen ",
+    "a quiver", "the quiver", "the conch", "a conch",
+    "the rein", "the reins", "the flag", "the banner",
+    "the spear", "a spear", "a goblet", "the goblet",
+    "the lamp", "an oil lamp", "the throne", "the crown",
+    "a crown", "the helmet", "the breastplate", "the kavach",
+    "the discus",
 )
 _SHOT_TYPE_ACTION_TOKENS = (
     "raising", "lifting", "striking", "falling", "sinking", "drawing back",
@@ -643,6 +665,17 @@ _SHOT_TYPE_ACTION_TOKENS = (
     "charging", "mid-stride", "mid-gesture", "mid-strike", "wielding",
     "gripping", "tearing", "drawing arrow", "drawing sword", "pulling",
     "ascending", "descending", "fleeing", "dragging",
+    # Phase 21 (2026-06-25) — mid-intensity action verbs the LLM uses but
+    # the original "dramatic/extreme" list missed.
+    "peering", "aiming", "nocking", "loosing", "releasing",
+    "kneeling", "crouching", "lunging", "advancing", "stepping forward",
+    "turning toward", "reaching", "pulling back", "drawing the string",
+    "mid-flight", "mid-arc", "mid-draw", "mid-loose", "poised",
+    "tightening", "clenching fist", "raising hand", "extending",
+    "bracing", "stalking", "dismounting", "mounting", "marching",
+    "pacing", "pivoting", "collapsing", "plummeting", "spiraling",
+    "twisting", "wrenching", "grasping", "clawing", "parrying",
+    "slashing", "piercing", "bowing",
 )
 _SHOT_TYPE_REACTION_TOKENS = (
     "tear-streaked", "wide-eyed", "hollow-eyed", "clenched jaw",
@@ -650,26 +683,79 @@ _SHOT_TYPE_REACTION_TOKENS = (
     "shocked face", "agonized", "kohl-rimmed eyes filled", "stricken face",
     "frozen face", "screaming face", "anguished expression", "grief-stricken",
     "fury in eyes", "tears welling",
+    # Phase 21 (2026-06-25) — mid-intensity emotional vocabulary. Phoenix
+    # audit confirmed Gemini ships "stern/brooding/grim/furrowed/narrowed"
+    # but the original list only caught high-intensity "tear-streaked /
+    # wide-eyed / horrified". Expansion drops AMBIGUOUS from 68% to ~25%.
+    "stern gaze", "brooding", "grim expression", "grim face",
+    "furrowed brow", "knitted brow", "hardened expression",
+    "narrowed eyes", "piercing gaze", "intense stare", "haunted eyes",
+    "conflicted expression", "troubled face", "weary face",
+    "sorrowful eyes", "downcast eyes", "lowered gaze",
+    "set jaw", "tight-lipped", "lips parted", "lips pressed",
+    "tearful", "moist eyes", "glassy eyes", "blank stare",
+    "thousand-yard stare", "vacant expression", "stoic face",
+    "resolute face", "defiant glare", "mournful expression",
+    "rage-flushed", "guilt-haunted", "shame-bowed", "despair-sunken",
 )
 _SHOT_TYPE_FACE_PROXIMITY = (
     "close-up", "macro", "extreme close-up", "face", "eyes",
 )
 
+# Phase 21 (2026-06-25) — wide-shot LEADING tokens. When the prompt STARTS
+# with one of these, it's an ENVIRONMENT shot regardless of downstream
+# facial mentions. Closes the plan-review false-positive: "Wide shot of
+# the courtyard, Arjuna standing in the distance with a solemn expression
+# on his face" is unambiguously a wide environment shot, but the bare
+# `has_face_close` gate at the next priority misclassifies it as REACTION
+# because of "face" + "solemn expression". The wide-shot leading override
+# fires BEFORE the has_face_close fallback.
+_SHOT_TYPE_ENV_LEADING = (
+    "wide shot of", "wide-angle shot of", "wide shot",
+    "wide cinematic shot of", "wide cinematic landscape",
+    "aerial view of", "aerial shot of",
+    "panoramic view of", "panoramic shot of", "panoramic",
+    "establishing shot of", "establishing shot",
+    "long shot of", "extreme long shot",
+    "vista of", "sweeping view of",
+)
+
+# Phase 21 (2026-06-25) — explicit close-up modifiers. If the prompt
+# contains any of these, the wide-shot leading override is NOT applied
+# (it's a genuine close-up that happens to mention a wider environment
+# as backdrop). Prevents the override from swallowing legitimate
+# close-ups that mention an aerial/wide setting.
+_SHOT_TYPE_EXPLICIT_CLOSE = (
+    "close-up", "macro shot", "macro close-up", "extreme close-up",
+    "close shot", "tight shot", "tight crop",
+)
+
 
 def _classify_broll_shot_type(image_prompt: str) -> str:
-    """Phase 20 (2026-06-17). Lightweight keyword classifier — returns
-    ACTION / REACTION / PROP / ENVIRONMENT / AMBIGUOUS. Operates on the
-    LLM-emitted image_prompt BEFORE wardrobe/iconography prefixes are
-    layered on top.
+    """Phase 20 (2026-06-17) + Phase 21 (2026-06-25). Lightweight keyword
+    classifier — returns ACTION / REACTION / PROP / ENVIRONMENT / AMBIGUOUS.
+    Operates on the LLM-emitted image_prompt BEFORE wardrobe/iconography
+    prefixes are layered on top.
 
-    Classification logic (most-distinctive first; first match wins):
-      1. PROP — text must START WITH an object-leading phrase (strict
-         startswith — substring-match would false-fire "the bow" against
-         "Arjuna drawing back the bowstring").
-      2. ENVIRONMENT — wide-vista vocabulary without face-proximity tokens.
-      3. ACTION — contains an explicit action verb anywhere.
-      4. REACTION — contains an explicit emotion-on-face token.
-      5. AMBIGUOUS — wildcard for cycle gate (escape hatch).
+    Classification priority (most-distinctive first; first match wins):
+      1.   PROP                    — STARTSWITH an object-leading phrase
+      1.5. ENVIRONMENT (wide-lead) — STARTSWITH wide-shot leading AND no
+                                     explicit close-up modifier. Phase 21
+                                     override added to fix the plan-review
+                                     false-positive: "Wide shot of the
+                                     courtyard, X standing with solemn
+                                     expression on his face" was being
+                                     misclassified as REACTION because of
+                                     the "face" mention. The leading
+                                     wide-shot anchor now wins regardless
+                                     of downstream facial mentions UNLESS
+                                     an explicit close-up modifier is also
+                                     present.
+      2.   ENVIRONMENT (fallback)  — wide-vista vocabulary AND no
+                                     face-proximity tokens
+      3.   ACTION                  — explicit action verb anywhere
+      4.   REACTION                — explicit emotion-on-face token
+      5.   AMBIGUOUS               — wildcard for cycle gate (escape hatch)
     """
     text = image_prompt.lower().strip()
 
@@ -677,7 +763,16 @@ def _classify_broll_shot_type(image_prompt: str) -> str:
     if any(text.startswith(p) for p in _SHOT_TYPE_PROP_LEADING):
         return "PROP"
 
-    # 2. ENVIRONMENT — wide-vista language without face-proximity tokens
+    # 1.5 ENVIRONMENT-WIDE-OVERRIDE (Phase 21) — STARTSWITH wide-shot leading,
+    # and NO explicit close-up modifier elsewhere in the prompt. Fires BEFORE
+    # the has_face_close fallback so "Wide shot of X, character with solemn
+    # expression on his face" classifies ENV not REACTION.
+    has_wide_lead     = any(text.startswith(p) for p in _SHOT_TYPE_ENV_LEADING)
+    has_explicit_close = any(p in text for p in _SHOT_TYPE_EXPLICIT_CLOSE)
+    if has_wide_lead and not has_explicit_close:
+        return "ENVIRONMENT"
+
+    # 2. ENVIRONMENT-FALLBACK — wide-vista language without face-proximity
     has_env = any(tok in text for tok in _SHOT_TYPE_ENV_TOKENS)
     has_face_close = any(tok in text for tok in _SHOT_TYPE_FACE_PROXIMITY)
     if has_env and not has_face_close:
@@ -747,6 +842,31 @@ def _check_subject_diversity(broll: list) -> tuple[bool, str]:
             f"shot type(s): {sorted(hard_types) or '[]'}. Need at least 2 "
             f"of {{ACTION, REACTION, PROP, ENVIRONMENT}} to feel like a "
             f"film edit. (Types: {types})"
+        )
+
+    # Rule 3 (Phase 21, 2026-06-25) — hard-cap on REACTION+AMBIGUOUS share.
+    # Even with the Phase 21 classifier vocab expansion, some entries will
+    # still classify REACTION or AMBIGUOUS. This rule kills the failure mode
+    # where 7/8 broll entries are character-portrait reactions and only 1
+    # is action/prop/environment. >65% REACTION+AMBIGUOUS share = rendered
+    # video looks like a portrait gallery — exactly the channel-grid
+    # templating that collapsed views from 500-700 to 10-30 per the
+    # 2026-06-25 post-Phase-20 forensic.
+    reaction_ambiguous_count = sum(
+        1 for t in types if t in ("REACTION", "AMBIGUOUS")
+    )
+    share = reaction_ambiguous_count / max(len(types), 1)
+    if share > 0.65:
+        # How many entries must be swapped to non-{REACTION,AMBIGUOUS}?
+        to_replace = int(reaction_ambiguous_count - 0.65 * len(types) + 0.999)
+        return False, (
+            f"REACTION+AMBIGUOUS share is {reaction_ambiguous_count}/{len(types)} "
+            f"({100*share:.0f}%) — exceeds 65% cap. Your broll is a portrait "
+            f"gallery, not a film edit. Replace at least {to_replace} "
+            f"REACTION/AMBIGUOUS entries with explicit ACTION shots "
+            f"(drawing back, raising, sinking, mid-strike) or PROP shots "
+            f"(extreme close-up of...) or ENVIRONMENT shots (wide shot of...). "
+            f"(Types: {types})"
         )
 
     return True, ""
@@ -1327,13 +1447,37 @@ def generate_phase18_script(
             if last_violation == "length":
                 w = last_info.get("word_count", 0)
                 b = last_info.get("broll_count", 0)
-                dynamic_prefix = (
-                    f"YOUR LAST VOICEOVER WAS ONLY {w} WORDS (broll={b}). "
-                    f"You MUST write 75-115 words — aim for ~95. "
-                    f"That is THREE times what you just produced. "
-                    f"At Charon's 2.2 wps that's ~43s narration — anything "
-                    f"shorter than 75 words = <34s = a quarter-finished Short. "
-                )
+                # Phase 21 (2026-06-25): symmetric overshoot branch. The
+                # original undershoot-only framing ("THREE times what you
+                # produced") was triggering overcorrection — the post-Phase-20
+                # forensic showed LLM swinging from 31-38w (undershoot) to
+                # 119-153w (overshoot) because the retry prompt only ever
+                # said "write MORE" with no anti-overshoot guard.
+                if w < 75:
+                    dynamic_prefix = (
+                        f"YOUR LAST VOICEOVER WAS ONLY {w} WORDS (broll={b}). "
+                        f"You MUST write 75-115 words — aim for ~95. "
+                        f"That is roughly TRIPLE what you just produced. "
+                        f"At Charon's 2.2 wps that's ~43s narration — anything "
+                        f"shorter than 75 words = <34s = a quarter-finished Short. "
+                    )
+                elif w > 115:
+                    dynamic_prefix = (
+                        f"YOUR LAST VOICEOVER WAS {w} WORDS — OVER the 115-word "
+                        f"cap (broll={b}). You MUST trim to 75-115 words — "
+                        f"aim for ~95. Over-length voiceovers compress B-roll "
+                        f"breathing room, push audio past the Shorts 60s "
+                        f"ceiling risk, and viewer retention collapses past "
+                        f"45s. Cut the WEAKEST sensory beat. Remove one "
+                        f"adjective per remaining sentence. DO NOT add new "
+                        f"ideas. NOT 130. NOT 150. AIM FOR 95. "
+                    )
+                else:
+                    # Length is in-range but broll count failed (8-10 entries)
+                    dynamic_prefix = (
+                        f"Length OK ({w}w) but broll count={b} is out of "
+                        f"range — you MUST produce 8-10 broll entries. "
+                    )
             elif last_violation == "anchors":
                 why = last_info.get("anchor_why", "")
                 dynamic_prefix = f"Anchor validation failed: {why[:200]}. "
@@ -1411,8 +1555,10 @@ def generate_phase18_script(
             "Check the [phase18-gen] log for LLM/parse errors."
         )
 
-    if best_score < 17:
-        print(f"    [phase18-rescue] shipping best-of-N (score={best_score}/17, "
+    # Phase 21 (2026-06-25): denominator was /17 (stale Phase 19 threshold);
+    # the cascade has been /21 since Phase 20 shipped. Fixed.
+    if best_score < 21:
+        print(f"    [phase18-rescue] shipping best-of-N (score={best_score}/21, "
               f"last violation={last_violation})")
 
     # ── Bake metadata + return ──
