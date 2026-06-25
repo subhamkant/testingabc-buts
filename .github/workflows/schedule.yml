@@ -24,8 +24,16 @@ on:
   #   2026-06-14: re-enabled at 12:10 UTC (5:40 PM IST nominal)
   #   2026-06-14: shifted to 12:20 UTC (5:50 PM IST) per owner target
   #               of 6:05-6:10 PM IST publish landing
-  schedule:
-    - cron: "20 12 * * *"   # 5:50 PM IST nominal → 6:05-6:10 PM IST publish
+  #   2026-06-25: DISABLED by owner — pausing daily publishing while
+  #               post-Phase-20 forensic audit is in flight. Best-of-N
+  #               rescue firing on every render (4/4 sampled at 14-18 / 21
+  #               score), AMBIGUOUS classifier rate at 50-87%, length
+  #               overshoot 119-153w vs 75-115 target, topic-rotation
+  #               drift (Arjuna 4/8 vs target 15%). Re-enable by uncommenting
+  #               the `- cron:` line below once Phase 21 fixes are shipped.
+  #               workflow_dispatch (manual trigger) still works for testing.
+  # schedule:
+  #   - cron: "20 12 * * *"   # 5:50 PM IST nominal → 6:05-6:10 PM IST publish
   workflow_dispatch:
     inputs:
       target:
