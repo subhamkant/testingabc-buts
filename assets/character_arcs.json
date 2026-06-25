@@ -18,6 +18,48 @@
         "Why Karna could never defeat Arjuna — the hidden weight of his greatest curse, lost armor, sunken chariot wheel, and the gods themselves siding against him in his final hour",
         "Karna's final lie — the hidden truth about his identity he chose to bury even as he died, the secret he kept from everyone including himself, even from Duryodhana",
         "Karna's last regret on the battlefield — the dying thoughts of a man who realized too late that his loyalty to the wrong friend had cost him everything"
+      ],
+      "_auto_added": [
+        {
+          "topic": "Karna's Hidden Pride Destroyed Him",
+          "source": "auto_expansion_v21",
+          "added_at": "2026-06-25T19:08:03.332799+00:00",
+          "validated_passes": [
+            "semantic_gate",
+            "stage2_dedup"
+          ],
+          "llm_quality_tier": "fast"
+        },
+        {
+          "topic": "Karna's Untold Regret Haunted Loyalty",
+          "source": "auto_expansion_v21",
+          "added_at": "2026-06-25T19:08:03.332881+00:00",
+          "validated_passes": [
+            "semantic_gate",
+            "stage2_dedup"
+          ],
+          "llm_quality_tier": "fast"
+        },
+        {
+          "topic": "Karna's Greatest Mistake Was Rejection",
+          "source": "auto_expansion_v21",
+          "added_at": "2026-06-25T19:08:03.332980+00:00",
+          "validated_passes": [
+            "semantic_gate",
+            "stage2_dedup"
+          ],
+          "llm_quality_tier": "fast"
+        },
+        {
+          "topic": "Karna's Secret Jealousy Betrayed Himself",
+          "source": "auto_expansion_v21",
+          "added_at": "2026-06-25T19:08:03.333123+00:00",
+          "validated_passes": [
+            "semantic_gate",
+            "stage2_dedup"
+          ],
+          "llm_quality_tier": "fast"
+        }
       ]
     },
     {
