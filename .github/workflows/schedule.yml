@@ -77,6 +77,14 @@ on:
         options:
           - "true"
           - "false"
+      pause_pipeline:
+        description: "Kill-switch (2026-06-25). When 'true', main.py exits IMMEDIATELY without running any pipeline work — survives the chained-retry siblings cleanly. Use to pause during audits / hotfix windows. Default 'false' = pipeline runs normally."
+        required: false
+        default: "false"
+        type: choice
+        options:
+          - "false"
+          - "true"
 
 # ════════════════════════════════════════════════════════════════════════════
 # WORKFLOW STRUCTURE
@@ -196,6 +204,7 @@ jobs:
           elevenlabs-voice-id: ${{ secrets.ELEVENLABS_VOICE_ID }}
           elevenlabs-voice-id-krishna: ${{ secrets.ELEVENLABS_VOICE_ID_KRISHNA }}
           phase18-decoupled: ${{ inputs.phase18_decoupled || 'true' }}
+          pause-pipeline: ${{ inputs.pause_pipeline || 'false' }}
 
   generate-and-upload-retry-1:
     needs: generate-and-upload
@@ -259,6 +268,7 @@ jobs:
           elevenlabs-voice-id: ${{ secrets.ELEVENLABS_VOICE_ID }}
           elevenlabs-voice-id-krishna: ${{ secrets.ELEVENLABS_VOICE_ID_KRISHNA }}
           phase18-decoupled: ${{ inputs.phase18_decoupled || 'true' }}
+          pause-pipeline: ${{ inputs.pause_pipeline || 'false' }}
 
   generate-and-upload-retry-2:
     needs: generate-and-upload-retry-1
@@ -320,6 +330,7 @@ jobs:
           elevenlabs-voice-id: ${{ secrets.ELEVENLABS_VOICE_ID }}
           elevenlabs-voice-id-krishna: ${{ secrets.ELEVENLABS_VOICE_ID_KRISHNA }}
           phase18-decoupled: ${{ inputs.phase18_decoupled || 'true' }}
+          pause-pipeline: ${{ inputs.pause_pipeline || 'false' }}
 
   generate-and-upload-retry-3:
     needs: generate-and-upload-retry-2
@@ -381,6 +392,7 @@ jobs:
           elevenlabs-voice-id: ${{ secrets.ELEVENLABS_VOICE_ID }}
           elevenlabs-voice-id-krishna: ${{ secrets.ELEVENLABS_VOICE_ID_KRISHNA }}
           phase18-decoupled: ${{ inputs.phase18_decoupled || 'true' }}
+          pause-pipeline: ${{ inputs.pause_pipeline || 'false' }}
 
   # ════════════════════════════════════════════════════════════════════════
   # WhatIf English phase (4 attempts) — runs on 04:00 UTC cron
@@ -432,6 +444,7 @@ jobs:
           elevenlabs-voice-id: ${{ secrets.ELEVENLABS_VOICE_ID }}
           elevenlabs-voice-id-krishna: ${{ secrets.ELEVENLABS_VOICE_ID_KRISHNA }}
           phase18-decoupled: ${{ inputs.phase18_decoupled || 'true' }}
+          pause-pipeline: ${{ inputs.pause_pipeline || 'false' }}
 
   whatif-english-retry-1:
     needs: whatif-english
@@ -480,6 +493,7 @@ jobs:
           elevenlabs-voice-id: ${{ secrets.ELEVENLABS_VOICE_ID }}
           elevenlabs-voice-id-krishna: ${{ secrets.ELEVENLABS_VOICE_ID_KRISHNA }}
           phase18-decoupled: ${{ inputs.phase18_decoupled || 'true' }}
+          pause-pipeline: ${{ inputs.pause_pipeline || 'false' }}
 
   whatif-english-retry-2:
     needs: whatif-english-retry-1
@@ -528,6 +542,7 @@ jobs:
           elevenlabs-voice-id: ${{ secrets.ELEVENLABS_VOICE_ID }}
           elevenlabs-voice-id-krishna: ${{ secrets.ELEVENLABS_VOICE_ID_KRISHNA }}
           phase18-decoupled: ${{ inputs.phase18_decoupled || 'true' }}
+          pause-pipeline: ${{ inputs.pause_pipeline || 'false' }}
 
   whatif-english-retry-3:
     needs: whatif-english-retry-2
@@ -576,6 +591,7 @@ jobs:
           elevenlabs-voice-id: ${{ secrets.ELEVENLABS_VOICE_ID }}
           elevenlabs-voice-id-krishna: ${{ secrets.ELEVENLABS_VOICE_ID_KRISHNA }}
           phase18-decoupled: ${{ inputs.phase18_decoupled || 'true' }}
+          pause-pipeline: ${{ inputs.pause_pipeline || 'false' }}
 
   # ════════════════════════════════════════════════════════════════════════
   # WhatIf Hindi phase (4 attempts) — depends on ANY EN attempt succeeding
@@ -639,6 +655,7 @@ jobs:
           elevenlabs-voice-id: ${{ secrets.ELEVENLABS_VOICE_ID }}
           elevenlabs-voice-id-krishna: ${{ secrets.ELEVENLABS_VOICE_ID_KRISHNA }}
           phase18-decoupled: ${{ inputs.phase18_decoupled || 'true' }}
+          pause-pipeline: ${{ inputs.pause_pipeline || 'false' }}
 
   whatif-hindi-retry-1:
     needs: whatif-hindi
@@ -687,6 +704,7 @@ jobs:
           elevenlabs-voice-id: ${{ secrets.ELEVENLABS_VOICE_ID }}
           elevenlabs-voice-id-krishna: ${{ secrets.ELEVENLABS_VOICE_ID_KRISHNA }}
           phase18-decoupled: ${{ inputs.phase18_decoupled || 'true' }}
+          pause-pipeline: ${{ inputs.pause_pipeline || 'false' }}
 
   whatif-hindi-retry-2:
     needs: whatif-hindi-retry-1
@@ -735,6 +753,7 @@ jobs:
           elevenlabs-voice-id: ${{ secrets.ELEVENLABS_VOICE_ID }}
           elevenlabs-voice-id-krishna: ${{ secrets.ELEVENLABS_VOICE_ID_KRISHNA }}
           phase18-decoupled: ${{ inputs.phase18_decoupled || 'true' }}
+          pause-pipeline: ${{ inputs.pause_pipeline || 'false' }}
 
   whatif-hindi-retry-3:
     needs: whatif-hindi-retry-2
@@ -783,3 +802,4 @@ jobs:
           elevenlabs-voice-id: ${{ secrets.ELEVENLABS_VOICE_ID }}
           elevenlabs-voice-id-krishna: ${{ secrets.ELEVENLABS_VOICE_ID_KRISHNA }}
           phase18-decoupled: ${{ inputs.phase18_decoupled || 'true' }}
+          pause-pipeline: ${{ inputs.pause_pipeline || 'false' }}

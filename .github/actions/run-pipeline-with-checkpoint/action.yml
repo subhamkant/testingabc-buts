@@ -73,6 +73,12 @@ inputs:
   # Default "false" so the cron continues to ship Phase 17.b until smoke
   # confirms. Flip to "true" via workflow_dispatch input to test live.
   phase18-decoupled:             { required: false, default: "false" }
+  # Kill-switch (added 2026-06-25) — when "true", main.py exits immediately
+  # without running ANY pipeline work. Survives the chained-retry siblings
+  # (every retry reads the same env-var, so all attempts no-op cleanly).
+  # Use this for fast pause during audits / hotfix windows without disabling
+  # the workflow file. Default "false" = pipeline runs normally.
+  pause-pipeline:                { required: false, default: "false" }
 
 runs:
   using: composite
@@ -129,6 +135,9 @@ runs:
         # Phase 18 (2026-06-16) — opt-in decoupled voiceover + broll path.
         # See pipeline/phase18.py + main.py shim. Default "false".
         PHASE18_DECOUPLED: ${{ inputs.phase18-decoupled }}
+        # Kill-switch (2026-06-25) — when "true", main.py exits before any
+        # work begins. Survives chained-retry siblings.
+        PAUSE_PIPELINE: ${{ inputs.pause-pipeline }}
       run: ${{ inputs.pipeline-cmd }} 2>&1 | tee pipeline_output.txt
 
     - name: Persist unsaved assembled video to checkpoint (cancellation race)

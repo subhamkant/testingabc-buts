@@ -21,6 +21,24 @@ if hasattr(sys.stdout, "reconfigure"):
 from dotenv import load_dotenv
 load_dotenv()
 
+# ── PAUSE_PIPELINE kill-switch (added 2026-06-25) ───────────────────────────
+# When PAUSE_PIPELINE=true is set in the GHA env (via action.yml), main.py
+# exits IMMEDIATELY with code 0 before any work begins. This lets the owner
+# stop scheduled + retry-chain renders mid-flight via a single env-var flip,
+# without touching schedule.yml's cron block or `gh run cancel` racing the
+# retry siblings (which is what published Eklavya ep 63 on 2026-06-25 even
+# after cancellation).
+#
+# Reads BEFORE any imports of pipeline modules so a paused run doesn't even
+# touch Gemini / FLUX / YouTube auth. Default OFF (empty / "false" / "0").
+_pause = os.environ.get("PAUSE_PIPELINE", "").strip().lower()
+if _pause in ("true", "1", "yes", "on"):
+    print(f"[PAUSE_PIPELINE={_pause}] Pipeline paused by env-var kill-switch. "
+          "Exiting cleanly without doing any work. Flip to false/empty in "
+          "action.yml (or set phase18_decoupled=true workflow_dispatch input) "
+          "to re-enable.")
+    sys.exit(0)
+
 from pipeline.script_generator import generate_script
 from pipeline.tts_generator import generate_full_narration
 from pipeline.image_generator import (
