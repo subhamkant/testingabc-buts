@@ -32,8 +32,16 @@ on:
   #               drift (Arjuna 4/8 vs target 15%). Re-enable by uncommenting
   #               the `- cron:` line below once Phase 21 fixes are shipped.
   #               workflow_dispatch (manual trigger) still works for testing.
-  # schedule:
-  #   - cron: "20 12 * * *"   # 5:50 PM IST nominal → 6:05-6:10 PM IST publish
+  #   2026-06-26: RE-ENABLED post-Phase-22 ship (commit 854b42a). Cadence
+  #               cut from daily-7 to 4-per-week: Tue / Thu / Sat / Sun
+  #               at 5:45 PM IST (12:15 UTC). Phase 22 quarantine gate is
+  #               in place — any sub-25/25 score sys.exit(0)'s without
+  #               publishing, so a worst-case "every cron quarantines"
+  #               outcome means silent no-op rather than bad publishes.
+  schedule:
+    # 12:15 UTC = 5:45 PM IST nominal → 6:00-6:05 PM IST publish landing.
+    # Day codes (POSIX): 0=Sun, 2=Tue, 4=Thu, 6=Sat.
+    - cron: "15 12 * * 0,2,4,6"
   workflow_dispatch:
     inputs:
       target:
