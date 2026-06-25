@@ -1403,12 +1403,26 @@ EPISODE: {episode_n}
 PHASE 18 SCHEMA — TWO DECOUPLED OUTPUTS
 ═══════════════════════════════════════════════════════════════
 
-OUTPUT 1 — `voiceover`: ONE flowing Hindi paragraph, 75-115 words (AIM FOR ~95).
+OUTPUT 1 — `voiceover`: ONE flowing Hindi paragraph, 75-115 words (AIM FOR ~100).
 
-  *** WORD COUNT IS THE #1 HARD RULE. ***
-  *** SCRIPTS UNDER 75 WORDS WILL BE REJECTED. ***
-  *** AIM FOR ~95 WORDS. AT CHARON 2.2 wps THAT'S ~43s SPOKEN — THE BOTTOM
-      OF THE YOUTUBE SHORTS ATTENTION WINDOW. ***
+  *** WORD COUNT IS THE #1 HARD RULE — APPLIES IN BOTH DIRECTIONS. ***
+  *** SCRIPTS UNDER 75 WORDS WILL BE REJECTED (too short). ***
+  *** SCRIPTS OVER 115 WORDS WILL BE REJECTED (too long). ***
+  *** AIM FOR ~100 WORDS. NOT 130. NOT 140. NOT 150. ONE HUNDRED. ***
+  *** AT CHARON 2.2 wps THAT'S ~45s SPOKEN — THE BOTTOM OF THE
+      YOUTUBE SHORTS ATTENTION WINDOW. PAST 50s VIEWERS DROP. ***
+
+  WORD-COUNT METHOD (Phase 22.1, 2026-06-26): after drafting your
+  voiceover, count the SPACE-SEPARATED tokens — that is the exact metric
+  the validator uses (Python `len(voiceover.split())`). It does NOT
+  match Gemini's internal token count; Hindi composed-glyph awareness
+  in Gemini's tokenizer chronically undercounts vs space-split. If your
+  internal estimate says ~95 words, your actual space-split count is
+  often 120-150. To compensate: aim for what FEELS short (your gut "85
+  words") and your space-split count will land near 100. The forensic
+  on 5 prior renders showed Gemini's "I wrote ~95" came out as 127, 132,
+  138, 150, 111 — overshoot by 15-50%. CALIBRATE YOUR INTERNAL ESTIMATE
+  DOWN BY 20-30%.
 
   This is the master VO. Charon TTS reads it as ONE continuous emotional
   monologue at ~2.2 words/sec → 34-52 seconds spoken.
@@ -1426,7 +1440,11 @@ OUTPUT 1 — `voiceover`: ONE flowing Hindi paragraph, 75-115 words (AIM FOR ~95
   opening तलवार उठाता है).
 
   RULES (all HARD — violations are rejected):
-  - 75-115 words. NOT 30. NOT 50. NOT 70. SEVENTY-FIVE TO ONE-HUNDRED-FIFTEEN.
+  - 75-115 words. NOT 30. NOT 50. NOT 70. NOT 120. NOT 130. NOT 150.
+    SEVENTY-FIVE TO ONE-HUNDRED-FIFTEEN. INCLUSIVE BOTH ENDS.
+    Sweet spot: 95-110. If you must err, err SHORT (90), not LONG (130).
+    Over-length voiceovers compress B-roll breathing room, push past
+    the Shorts 60s ceiling, and viewer retention collapses past 45s.
   - NO line breaks between fragments. NO `।` between every micro-sentence.
     Use natural Hindi punctuation: commas for short pauses, `...` for
     dramatic pauses (TTS reads triple-dot as a measured pause), `?` only
@@ -1855,21 +1873,28 @@ def generate_phase18_script(
                 if w < 75:
                     dynamic_prefix = (
                         f"YOUR LAST VOICEOVER WAS ONLY {w} WORDS (broll={b}). "
-                        f"You MUST write 75-115 words — aim for ~95. "
+                        f"You MUST write 75-115 words — aim for ~100. "
                         f"That is roughly TRIPLE what you just produced. "
                         f"At Charon's 2.2 wps that's ~43s narration — anything "
                         f"shorter than 75 words = <34s = a quarter-finished Short. "
                     )
                 elif w > 115:
+                    overshoot = w - 110
                     dynamic_prefix = (
-                        f"YOUR LAST VOICEOVER WAS {w} WORDS — OVER the 115-word "
-                        f"cap (broll={b}). You MUST trim to 75-115 words — "
-                        f"aim for ~95. Over-length voiceovers compress B-roll "
-                        f"breathing room, push audio past the Shorts 60s "
-                        f"ceiling risk, and viewer retention collapses past "
-                        f"45s. Cut the WEAKEST sensory beat. Remove one "
-                        f"adjective per remaining sentence. DO NOT add new "
-                        f"ideas. NOT 130. NOT 150. AIM FOR 95. "
+                        f"YOUR LAST VOICEOVER WAS {w} WORDS — {overshoot} OVER "
+                        f"the 110-word target (cap is 115, broll={b}). You MUST "
+                        f"trim to 75-115 words — aim for ~100. Over-length "
+                        f"voiceovers compress B-roll breathing room, push audio "
+                        f"past the Shorts 60s ceiling, and viewer retention "
+                        f"collapses past 45s. Phase 22.1 calibration (2026-06-26): "
+                        f"Gemini's internal token count chronically undercounts "
+                        f"vs Python's space-split — if your gut says 'just 95', "
+                        f"your space-split count is often 130. CALIBRATE YOUR "
+                        f"INTERNAL ESTIMATE DOWN BY 20-30%. Cut the WEAKEST "
+                        f"sensory beat. Remove one adjective per remaining "
+                        f"sentence. DO NOT add new ideas. NOT {w}. NOT 130. "
+                        f"NOT 150. AIM FOR 100. After drafting, manually count "
+                        f"your space-separated Hindi tokens before submitting. "
                     )
                 else:
                     # Length is in-range but broll count failed (8-10 entries)

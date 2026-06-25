@@ -208,7 +208,17 @@ runs:
         # work and re-burns Gemini Flash quota on the next run. Verified
         # broken on run 28187345262 (Phase 21 verification, 2026-06-25):
         # 14 topics added on the runner, 0 reached the local working copy.
-        git add assets/characters.json assets/character_arcs.json scheduled_topics_*.txt recent_topics.json 2>/dev/null || true
+        # Phase 22.1 hotfix (2026-06-26) — `_quarantine/scripts/*.json` added so
+        # the post-Phase-22 quarantine dumps survive the runner shutdown.
+        # Verified broken on run 28193029409 (first Phase 22 verification render,
+        # 2026-06-26): 5 attempts quarantined at score 19/25 best, JSON dumped
+        # to `_quarantine/scripts/2026-06-25T18-57-03_hi_ashwatthamas...length.json`
+        # on the runner — but with the dir gitignored and absent from this `git
+        # add` list, we had no local copy to inspect the failure mode. The
+        # gitignore exception added in commit 5e50bfc+1 lets `git add` track them
+        # despite the `_quarantine/` ignore. Glob expands to nothing on a clean
+        # runner; `2>/dev/null || true` swallows the no-op cleanly.
+        git add assets/characters.json assets/character_arcs.json scheduled_topics_*.txt recent_topics.json _quarantine/scripts/*.json 2>/dev/null || true
         if git diff --staged --quiet; then
           echo "No state changes to commit."
         else
