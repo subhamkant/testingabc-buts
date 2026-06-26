@@ -1,0 +1,90 @@
+{
+  "ts": "2026-06-26T03-10-34",
+  "language": "hi",
+  "score": 20,
+  "score_max": 25,
+  "violation": "anchors",
+  "topic": "Arjuna's hidden vow after Abhimanyu — the father's secret loyalty promise born from grief, the greatest mistake that turned Kurukshetra on day fourteen",
+  "title": "अर्जुन का छुपा वचन | Arjuna's Hidden Vow",
+  "script": {
+    "voiceover": "अर्जुन का हृदय चीख उठता है, जब अभिमन्यु का रक्त कुरुक्षेत्र की भूमि पर बहता है। उसकी आँखें लाल, हाथों में गांडीव काँप रहा है, हर सांस में बेटे की चीख। यह सिर्फ युद्ध नहीं था, यह एक पिता का टूटता विश्वास था, एक योद्धा का खोया हुआ रास्ता। उसी क्षण, उसने एक अदृश्य प्रतिज्ञा ली – 'जयद्रथ को मारना ही होगा!' पर उसके पीछे छिपा था कृष्ण से एक मौन वादा... कि जीत के लिए हर सीमा पार होगी, चाहे कुछ भी जल जाए। लेकिन क्या ये सिर्फ बदला था, या एक पिता का अपने बच्चे के लिए, भविष्य के युद्ध के लिए, अंधा समर्पण? उस रात के बाद... अर्जुन की आँखों में वो आग कभी नहीं बुझी... क्या इस प्रतिज्ञा ने उसे भीतर से खोखला नहीं कर दिया?",
+    "broll": [
+      {
+        "image_prompt": "Weapon / artifact detail — bloodied hand on hilt — the object that carries the violence, blurred motion behind. Close-up of Arjuna's blood-soaked hand gripping the hilt of his sword, his face partially visible, tear-streaked and grim, heroic gold + cobalt, high saturation, golden-bronze skin, vital divine charm, strong key-light, golden-hour, hero composition with rim-light halo, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text.",
+        "anchor_phrase": "अभिमन्यु का रक्त",
+        "mood": "Grief, rage, despair",
+        "wardrobe_context": "WAR"
+      },
+      {
+        "image_prompt": "Gripping Arjuna's Gandiva bow, close-up of a white-knuckled hand trembling on the blood-streaked golden bowstring, the intricate gold inlay glowing faintly in dim light, heroic gold + cobalt, high saturation, golden-bronze skin, vital divine charm, strong key-light, golden-hour, hero composition with rim-light halo, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text.",
+        "anchor_phrase": "गांडीव काँप रहा है",
+        "mood": "Furious, desperate, shaking",
+        "wardrobe_context": "WAR"
+      },
+      {
+        "image_prompt": "Arjuna's tear-streaked face, eyes wide-eyed in anguish, looking towards the distant battlefield, a single tear rolling down his dust-choked cheek, heroic gold + cobalt, high saturation, golden-bronze skin, vital divine charm, strong key-light, golden-hour, hero composition with rim-light halo, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text.",
+        "anchor_phrase": "एक पिता का",
+        "mood": "Anguish, disbelief, horror",
+        "wardrobe_context": "WAR"
+      },
+      {
+        "image_prompt": "Kneeling beneath a smoke-filled, blood-red sky, Arjuna warrior with his head bowed, clenching his fists, making a solemn, hidden vow, his armor scorched and dusty, heroic gold + cobalt, high saturation, golden-bronze skin, vital divine charm, strong key-light, golden-hour, hero composition with rim-light halo, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text.",
+        "anchor_phrase": "अदृश्य प्रतिज्ञा ली",
+        "mood": "Solemn, determined, desperate",
+        "wardrobe_context": "WAR"
+      },
+      {
+        "image_prompt": "Arjuna leaning into Krishna, his face etched with grim determination, armor blood-streaked and dusty. Krishna with a calm expression, hand slightly raised in a gesture of divine guidance, a subtle glow around him, heroic gold + cobalt, high saturation, golden-bronze skin, vital divine charm, strong key-light, golden-hour, hero composition with rim-light halo, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text.",
+        "anchor_phrase": "कृष्ण से एक",
+        "mood": "Divine counsel, desperate plea",
+        "wardrobe_context": "WAR"
+      },
+      {
+        "image_prompt": "Slashing his sword through the air, Arjuna warrior, his face a grimace of fury, eyes burning with a vengeful fire, surrounded by the chaotic, dust-choked battlefield, heroic gold + cobalt, high saturation, golden-bronze skin, vital divine charm, strong key-light, golden-hour, hero composition with rim-light halo, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text.",
+        "anchor_phrase": "क्या ये सिर्फ बदला",
+        "mood": "Vengeful, furious, determined",
+        "wardrobe_context": "WAR"
+      },
+      {
+        "image_prompt": "Close-up of Arjuna's intense, wide-eyed, kohl-rimmed eyes, burning with a flickering internal fire, reflecting the distant flames of Kurukshetra, a single tear tracing a path through the ash-covered skin, heroic gold + cobalt, high saturation, golden-bronze skin, vital divine charm, strong key-light, golden-hour, hero composition with rim-light halo, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text.",
+        "anchor_phrase": "आँखों में वो आग",
+        "mood": "Intense, haunted, fiery",
+        "wardrobe_context": "WAR"
+      },
+      {
+        "image_prompt": "Walking away from the blood-soaked, smoldering battlefield at fading dusk, Arjuna warrior in silhouette, his head bowed, the weight of his vows and victories heavy on his shoulders, an abandoned arrow lying in the foreground, heroic gold + cobalt, high saturation, golden-bronze skin, vital divine charm, strong key-light, golden-hour, hero composition with rim-light halo, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text.",
+        "anchor_phrase": "खोखला नहीं कर दिया",
+        "mood": "Desolate, burdened, hollow",
+        "wardrobe_context": "AFTERMATH"
+      }
+    ],
+    "title": "अर्जुन का छुपा वचन | Arjuna's Hidden Vow",
+    "hook_title": "अर्जुन का छुपा वचन",
+    "description": "▶️ अगला भाग: Arjuna's Real Regret: Hidden Truth of a Reluctant Warrior's \n\nअभिमन्यु की मौत के बाद, अर्जुन ने एक ऐसा वचन लिया जिसने कुरुक्षेत्र का भाग्य बदल दिया।\n\nकुरुक्षेत्र की रक्त-रंजित भूमि पर, जब अभिमन्यु का शरीर lifeless पड़ा था, तो अर्जुन का हृदय टूट गया। यह सिर्फ एक पुत्र का निधन नहीं था, यह एक पिता के विश्वास का क्षय था। उस गहरे दुख और क्रोध में, अर्जुन ने जयद्रथ को मारने की प्रतिज्ञा ली, लेकिन यह सिर्फ बाहरी युद्ध नहीं था। भीतर ही भीतर, उसने एक गहरा, मौन वादा किया – कि इस पीड़ा को कभी दोहराया नहीं जाएगा, भले ही इसके लिए उसे अपने धर्म की सीमाएं क्यों न तोड़नी पड़ें। कृष्ण की उपस्थिति में लिया गया यह वचन, केवल जयद्रथ के वध तक सीमित नहीं था, बल्कि यह अर्जुन की आत्मा पर एक स्थायी छाप छोड़ गया। चौदहवें दिन की जीत अर्जुन की थी, पर क्या यह जीत उसके भीतर कुछ ऐसा तोड़ गई जिसे कभी जोड़ा नहीं जा सका? यह प्रतिज्ञा ही थी जिसने अर्जुन को एक नए, जटिल पथ पर धकेल दिया, जहाँ उसकी गौरवमयी जीत में भी एक गहरा घाव छिपा था।\n\n#Shorts #Mahabharata #महाभारत #Krishna #HinduMythology #BhagavadGita #भगवद_गीता #Arjuna #अर्जुन #Kurukshetra #कुरुक्षेत्र #AncientIndia #IndianMythology #Dharma #MythologyShorts #VedicWisdom #HinduDharma #IndianHistory #SpiritualShorts #PauranikKathayein #SanatanDharma #HindiShorts #trending",
+    "tags": [
+      "Arjuna's Vow",
+      "Abhimanyu's Death",
+      "Arjuna",
+      "अर्जुन",
+      "Mahabharata",
+      "महाभारत",
+      "Shorts",
+      "Hindu Mythology"
+    ],
+    "thumbnail_prompt": "Arjuna warrior, tear-streaked face, eyes burning with a desperate vow, wielding Gandiva bow, a blood-soaked battlefield in blurred background, heroic gold + cobalt, high saturation, golden-bronze skin, vital divine charm, strong key-light, golden-hour, hero composition with rim-light halo, cinematic, portrait composition, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text.",
+    "quotable_line": "अर्जुन की प्रतिज्ञा केवल बदला नहीं, उसकी सबसे बड़ी मज़बूरी थी।",
+    "pinned_question": "❓ अर्जुन की प्रतिज्ञा केवल बदला नहीं, उसकी सबसे बड़ी मज़बूरी थी। क्या आप अर्जुन के इस निर्णय से सहमत हैं?",
+    "next_seed": "और यही वचन अर्जुन के सबसे बड़े अफ़सोस की जड़ बनेगा।",
+    "language": "hi",
+    "content_type": "story",
+    "topic": "Arjuna's hidden vow after Abhimanyu — the father's secret loyalty promise born from grief, the greatest mistake that turned Kurukshetra on day fourteen",
+    "series": "mahabharata",
+    "episode_n": 37,
+    "arc_character_devanagari": "अर्जुन",
+    "arc_character_english": "Arjuna — The Reluctant Warrior",
+    "_phase18_strict_pass": false,
+    "_phase18_score": 20,
+    "_phase18_score_max": 25,
+    "_phase18_violation": "anchors"
+  }
+}
