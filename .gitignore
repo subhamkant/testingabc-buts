@@ -70,13 +70,15 @@ assets/music/
 
 # Phase 22 (2026-06-25) — quarantine dumps for scripts that fail
 # strict-pass (score < 25/25). Auto-grown by main.py:_phase22_quarantine_if_needed.
-_quarantine/
-# Phase 22.1 (2026-06-26): EXCEPTION — track the JSON dumps so the GHA
-# runner's quarantine state lands in the repo for local diagnosis. The
-# dumps are small (~5-15 KB each) and the forensic value beats the repo-
-# bloat cost. Auto-prune deferred until volume warrants. The MP4 / image
-# / clip artifacts (if any) under other _quarantine/ subdirs stay
-# gitignored — only the JSON dumps under scripts/ are tracked.
+#
+# Phase 22.2 hotfix (2026-06-26): pattern was `_quarantine/` which is a
+# directory exclusion — gitignore CANNOT re-include children of an excluded
+# directory (well-known gotcha, see git-scm.com/docs/gitignore). The
+# `!_quarantine/scripts/*.json` exception silently no-op'd; run
+# 28194021676's JSON dump was written on the runner but never staged.
+# Pattern is now `_quarantine/*` (matches the FILES inside, not the dir
+# itself) so the negation exceptions take effect.
+_quarantine/*
 !_quarantine/scripts/
 !_quarantine/scripts/*.json
 
