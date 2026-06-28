@@ -1803,6 +1803,63 @@ BROLL RULES (HARD — violation = REJECT):
       composition tag required, but you may still use [POWER-LOOM] /
       [THE-FALLEN] if it fits.
 
+  (n) GROUP-SCENE MANDATE (Phase 23.1, 2026-06-28) — AT LEAST 3 of your
+      8-10 broll image_prompts MUST name 2+ named characters in the same
+      scene. Single-character image_prompts cap at 7 of 10. This is the
+      narrative-density rule — the 500+ view winners ALL had multi-
+      character layered compositions (Bhima + Draupadi + Shakuni at the
+      dice game; Bhishma + Drona + Arjuna at the court). The Phase 22
+      X-LWlg1DW5s render showed the SAME single warrior in 5 of 5 frames
+      because the LLM emitted only single-character image_prompts —
+      anti_merge_composition never even fires when there's only 1
+      character to merge with.
+
+      How to write a group-scene image_prompt: combine a named
+      protagonist with a named secondary (brother, parent, guru,
+      adversary, attendant, queen) IN THE SAME FRAME with an action.
+      The composition tags from rule (m) apply here.
+
+      Examples that satisfy (n):
+        [OVER-SHOULDER] Eklavya kneeling before his clay idol of Drona
+          while Arjuna watches from behind a tree, jungle ashram,
+          dappled sunlight, sweat-drenched fingers gripping bow
+        [POWER-LOOM] Drona standing tall over a kneeling Arjuna in the
+          shadow-heavy royal training hall, hand on disciple's shoulder,
+          oil-lamp glow
+        [THE-FALLEN] Karna's chariot wheel sinking into mud while Arjuna
+          raises Gandiva bow in foreground, dust hanging in air,
+          battlefield smoke
+        [CONFRONTATION-WIDE] Yudhishthira facing Indra at heaven's gate
+          with the loyal Dharma dog at his feet, celestial light beams,
+          marble courtyard
+
+      Examples that FAIL (n):
+        "Arjuna with stern gaze and Gandiva bow" — only 1 character
+        "Karna's tear-streaked face in close-up" — only 1 character
+        "Wide battlefield with smoke and broken weapons" — 0 characters
+          (this is fine as 1 of your ≥7 non-group entries, but doesn't
+          count toward the 3-group minimum)
+
+  (o) CULTURAL LOCK (Phase 23.1, 2026-06-28) — every named character in
+      every image_prompt MUST be described with AUTHENTIC INDIAN VEDIC
+      attire. FLUX's training set defaults to European/Norse/medieval
+      aesthetics whenever you don't aggressively forbid them.
+      REQUIRED tokens to include when describing a warrior:
+        "golden-bronze Indian skin" / "wheatish-bronze skin"
+        "silk dhoti" / "Vedic kavacha breastplate" / "angavastram"
+        "kundal earrings" (when applicable to character)
+        "Indian classical mukut" (PALACE/DIVINE only; NOT in WAR)
+      FORBIDDEN tokens (auto-rejected by FLUX negative — don't write
+      these in image_prompts either, FLUX may render around them):
+        "leather armor" / "plate mail" / "chain mail"
+        "European helmet" / "Norse helmet" / "spike crown"
+        "viking" / "gladiator" / "knight" / "medieval"
+        "Game of Thrones" / "Lord of the Rings" / "western fantasy"
+      The signature_lock injected at render time already enforces this,
+      but the LLM's image_prompt itself must STAY AUTHENTIC — using
+      "warrior" without an Indian descriptor lets FLUX latch onto its
+      Western-fantasy default.
+
 {cliffhanger_block}
 
 ═══════════════════════════════════════════════════════════════

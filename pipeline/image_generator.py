@@ -657,6 +657,27 @@ _NEGATIVE_PHASE23_ANTI_BOKEH = (
     "subject isolated against blur,blurry environment"
 )
 
+# Phase 23.1 (2026-06-28) — anti-Western cultural lock. The Phase 23 force-
+# render at 17:02 produced generic Western-fantasy warriors: heavy iron
+# plate, leather pauldrons, Mughal/Persian spike-crowns, Viking-style
+# dreadlocks. FLUX's training set defaults to European/Norse/medieval
+# aesthetics whenever the prompt doesn't aggressively forbid them. Applied
+# to _NEGATIVE_DEFAULT (ALWAYS-ON, not conditional like anti-bokeh) — this
+# is cultural protection that must fire on every Mahabharata render
+# regardless of aspect ratio or shot type. Complements Phase 19's existing
+# _NEGATIVE_PHASE19_ANTI_BIAS but adds the specific failure modes the
+# Phase 23 anchor rewrite re-opened.
+_NEGATIVE_PHASE23_1_ANTI_WESTERN = (
+    ",european armor,roman armor,plate mail,iron plate armor,"
+    "leather pauldrons,leather shoulder pads,viking style,viking dreadlocks,"
+    "medieval knight,spartan helmet,gladiator,roman centurion,"
+    "game of thrones style,western fantasy,norse warrior,germanic warrior,"
+    "Persian spike crown,Mughal headdress,Ottoman turban,"
+    "chain mail,gambeson,European cloak,Tudor style,Renaissance fair,"
+    "Lord of the Rings style,Witcher style,Vikings TV style"
+)
+_NEGATIVE_DEFAULT = _NEGATIVE_DEFAULT + _NEGATIVE_PHASE23_1_ANTI_WESTERN
+
 # Backwards-compat alias — _NEGATIVE was the single global pre-2026-05-18.
 _NEGATIVE = _NEGATIVE_DEFAULT
 
