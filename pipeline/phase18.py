@@ -1343,6 +1343,105 @@ def validate_phase18(data: dict, lang_label: str = "Hindi") -> tuple[bool, str, 
     return True, "", info
 
 
+def _enumerate_failing_gates(data: dict, lang_label: str = "Hindi") -> set:
+    """Phase 22.4 (2026-06-28). Return the FULL set of failing gate labels
+    for `data` — not just the cascade's first-violation label. Used by
+    `generate_phase18_script` to compute the two-gate strict-pass:
+
+        strict_pass = (score ≥ floor) AND (no Phase 22 fatal-gate failures)
+
+    Implemented as a thin re-runner: re-validates the same data and returns
+    every cascade entry whose flag is False. NOT folded into validate_phase18
+    because that function's `(ok, first_violation, info)` contract is
+    relied on by all the per-attempt retry logic in the best-of-N loop.
+    """
+    vo = data.get("voiceover", "") or ""
+    br = data.get("broll", []) or []
+    words = vo.split()
+    n_words = len(words)
+    n_broll = len(br)
+    episode_n = int(data.get("episode_n", 0) or 0)
+
+    length_ok = 75 <= n_words <= 170
+    broll_ok  = 8 <= n_broll <= 10
+
+    first_10 = " ".join(words[:10])
+    hook_ok = _check_hook_pattern_text(first_10)
+
+    from pipeline.script_generator import _check_hook_title
+    hook_title_ok, _ = _check_hook_title(data.get("hook_title", ""), language="hi")
+
+    loop_ok = vo.rstrip().endswith("?")
+    shock_ok = _check_shock_action(words[:8])
+
+    mid_start = int(n_words * 0.3)
+    mid_end   = int(n_words * 0.6)
+    mid_text  = " ".join(words[mid_start:mid_end])
+    rehook_ok = bool(_REHOOK_MARKERS.search(mid_text))
+
+    eng_ok  = _check_engagement_density_text(vo)
+    mono_ok = _check_ending_monotony_text(vo)
+    tha_ok  = _check_past_aux_tic_text(vo)
+    rep_ok  = _check_repetition_text(vo)
+
+    anchors_ok, _ = _validate_anchors(vo, br)
+    names_ok = all(_check_character_names_single(b.get("image_prompt", "")) for b in br)
+
+    archetype_idx = episode_n % len(_OPENER_ARCHETYPES_PHASE18)
+    archetype_text = _OPENER_ARCHETYPES_PHASE18[archetype_idx][1]
+    archetype_prefix = archetype_text[:35]
+    img0 = br[0].get("image_prompt", "") if br else ""
+    archetype_ok = bool(br) and archetype_prefix in img0[:200]
+
+    subject_lock_ok = all(
+        _check_subject_lock(b.get("anchor_phrase", ""), b.get("image_prompt", ""))
+        for b in br
+    )
+    intensity_ok = all(_check_image_intensity(b.get("image_prompt", "")) for b in br)
+    bookend_ok = _check_bookend_text(vo)
+    wardrobe_set_ok, _ = _check_wardrobe_context_set(br)
+    story_entity_ok, _ = _check_story_entity_present(vo, br)
+    diversity_ok, _ = _check_subject_diversity(br)
+    verb_lock_ok = all(
+        _check_verb_action_lock(b.get("anchor_phrase", ""), b.get("image_prompt", ""))
+        for b in br
+    )
+    verb_per_frame_ok, _ = _check_verb_per_frame(br)
+    anti_merge_ok, _     = _check_anti_merge_composition(br)
+    aftermath_ok, _      = _check_aftermath_closer(br)
+    title    = data.get("title", "") or ""
+    char_dev = data.get("arc_character_devanagari", "") or ""
+    title_dna_ok, _, _   = _check_title_dna_gate(title, char_dev)
+
+    gates = {
+        "length":                 length_ok and broll_ok,
+        "anchors":                anchors_ok,
+        "wardrobe_set":           wardrobe_set_ok,
+        "aftermath_closer":       aftermath_ok,
+        "story_entity":           story_entity_ok,
+        "verb_action":            verb_lock_ok,
+        "verb_per_frame":         verb_per_frame_ok,
+        "hook":                   hook_ok,
+        "shock_action":           shock_ok,
+        "loop_closure":           loop_ok,
+        "hook_title":             hook_title_ok,
+        "title_dna":              title_dna_ok,
+        "archetype":              archetype_ok,
+        "subject_lock":           subject_lock_ok,
+        "subject_diversity":      diversity_ok,
+        "anti_merge_composition": anti_merge_ok,
+        "intensity":              intensity_ok,
+        "rehook":                 rehook_ok,
+        "char_names":             names_ok,
+        "bookend":                bookend_ok,
+        "engagement":             eng_ok,
+        "monotony":               mono_ok,
+        "tha_tic":                tha_ok,
+        "repetition":             rep_ok,
+    }
+    return {label for label, ok in gates.items() if not ok}
+
+
 # ─── Prompt builder ───────────────────────────────────────────────────────
 
 _VIOLATION_REMINDERS = {
@@ -1985,14 +2084,49 @@ def generate_phase18_script(
             "Check the [phase18-gen] log for LLM/parse errors."
         )
 
-    # Phase 22 (2026-06-25): cascade bumped /21 → /25 (+verb_per_frame
-    # +anti_merge_composition +aftermath_closer +title_dna). The rescue
-    # PRINT remains, but main.py now quarantines any non-strict-pass
-    # via _phase18_strict_pass — see below.
-    _PHASE22_SCORE_MAX = 25
-    if best_score < _PHASE22_SCORE_MAX:
-        print(f"    [phase18-rescue] best-of-N exhausted (score={best_score}/{_PHASE22_SCORE_MAX}, "
-              f"last violation={last_violation}) — script will be QUARANTINED at main.py")
+    # Phase 22 (2026-06-25): cascade bumped /21 → /25.
+    # Phase 22.4 (2026-06-28): TWO-GATE strict-pass.
+    #   • SCORE FLOOR (22/25) — up to 3 cosmetic / structural misses
+    #     among the 21 OLD Phase 18-20 gates (length / anchors / archetype
+    #     / monotony / etc.) are forgiven. Gemini Flash misses these
+    #     intermittently; previous "25/25 absolute" blocked 4 verification
+    #     renders for 4 days with 0 publishes.
+    #   • FATAL GATES — the 4 NEW Phase 22 visual gates that DEFINE the
+    #     channel's visual thesis (verb-led frames, anti-merge composition,
+    #     aftermath closer, title-DNA inversion). ANY failure here =
+    #     quarantine, regardless of total score. A script scoring 24/25
+    #     with verb_per_frame=False would otherwise ship as the templated-
+    #     portrait slideshow Phase 22 was built to ELIMINATE.
+    #   • COMBINED: strict_pass = (score ≥ 22) AND (all fatal gates clean)
+    _PHASE22_SCORE_MAX   = 25
+    _PHASE22_SCORE_FLOOR = 22
+    _PHASE22_FATAL_GATES = {
+        "verb_per_frame",
+        "anti_merge_composition",
+        "aftermath_closer",
+        "title_dna",
+    }
+
+    _all_failing_gates = _enumerate_failing_gates(best_data)
+    _fatal_failures   = _all_failing_gates & _PHASE22_FATAL_GATES
+    _score_floor_ok   = (best_score >= _PHASE22_SCORE_FLOOR)
+    _fatal_clean      = (len(_fatal_failures) == 0)
+    _strict_pass      = _score_floor_ok and _fatal_clean
+
+    if not _strict_pass:
+        if _fatal_failures:
+            print(f"    [phase18-quarantine] FATAL Phase 22 visual gates "
+                  f"failed: {sorted(_fatal_failures)} — non-negotiable. "
+                  f"Score {best_score}/{_PHASE22_SCORE_MAX}.")
+        else:
+            print(f"    [phase18-quarantine] score {best_score}/{_PHASE22_SCORE_MAX} "
+                  f"below floor {_PHASE22_SCORE_FLOOR} — too many cosmetic-gate "
+                  f"misses. Failing: {sorted(_all_failing_gates)}.")
+    elif best_score < _PHASE22_SCORE_MAX:
+        print(f"    [phase18-rescue] SHIPPING at score={best_score}/"
+              f"{_PHASE22_SCORE_MAX} (≥{_PHASE22_SCORE_FLOOR} floor, "
+              f"Phase 22 fatal gates CLEAN). "
+              f"Acceptable cosmetic misses: {sorted(_all_failing_gates)}.")
 
     # ── Bake metadata + return ──
     data = best_data
@@ -2004,17 +2138,13 @@ def generate_phase18_script(
     data["arc_character_devanagari"] = arc_character_devanagari
     data["arc_character_english"] = arc_name or ""
 
-    # Phase 22 (2026-06-25): stamp strict-pass signal so main.py's
-    # quarantine gate can hard-fail rescued ships. The Phoenix audit
-    # forensic confirmed the validator rescue path is the literal
-    # mechanical cause of recent 11-36 view renders (0ZA5QwDpPho at
-    # score 14/21 shipped, DXCp with 4 AMBIGUOUS broll shipped, 3Qi2Gg
-    # failed all 5 attempts and STILL published). Quality floor is now
-    # ABSOLUTE: pass all 25 gates or don't publish.
-    data["_phase18_strict_pass"] = (best_score >= _PHASE22_SCORE_MAX)
-    data["_phase18_score"]       = best_score
-    data["_phase18_score_max"]   = _PHASE22_SCORE_MAX
-    data["_phase18_violation"]   = last_violation if best_score < _PHASE22_SCORE_MAX else ""
+    data["_phase18_strict_pass"]    = _strict_pass
+    data["_phase18_score"]          = best_score
+    data["_phase18_score_max"]      = _PHASE22_SCORE_MAX
+    data["_phase18_score_floor"]    = _PHASE22_SCORE_FLOOR
+    data["_phase18_violation"]      = last_violation if not _strict_pass else ""
+    data["_phase18_failing_gates"]  = sorted(_all_failing_gates)
+    data["_phase18_fatal_failures"] = sorted(_fatal_failures)
 
     # Cliffhanger prepend to description (mirrors legacy line 4687)
     if next_episode_teaser:
