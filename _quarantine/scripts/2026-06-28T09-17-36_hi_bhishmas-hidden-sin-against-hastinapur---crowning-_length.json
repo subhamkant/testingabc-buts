@@ -1,0 +1,106 @@
+{
+  "ts": "2026-06-28T09-17-36",
+  "language": "hi",
+  "score": 19,
+  "score_max": 25,
+  "violation": "length",
+  "topic": "Bhishma's hidden sin against Hastinapur — crowning blind Dhritarashtra over his brother Pandu's lineage, the secret succession mistake that planted the war's first seed",
+  "title": "भीष्म की असली गलती | Bhishma's Real Mistake",
+  "script": {
+    "voiceover": "भीष्म की आँखें राजसिंहासन की ओर देखती हैं, जहां धृतराष्ट्र, अंधा होते हुए भी, उत्तराधिकार का सपना बुन रहा था। उनके माथे पर चिंता की गहरी लकीरें थीं। धर्म कहता था, 'पाण्डु राजा बने', पर उनकी प्रतिज्ञा ने उन्हें बांध रखा था। पितामह जानते थे यह निर्णय हस्तिनापुर का भविष्य तय करेगा, और उनके भीतर कर्तव्य और प्रतिज्ञा का भीषण युद्ध चल रहा था। लेकिन उस पल, उन्होंने अपनी ही ज़िद के आगे घुटने टेके, धर्म के बजाय अपनी प्रतिज्ञा को चुना और अंध राजा को सिंहासन पर बिठाया। यह सिर्फ एक गलत निर्णय नहीं था, यह वह मौन पाप था जिसने हस्तिनापुर के विनाश का बीज बोया। उनकी आत्मा अंदर ही अंदर चीख रही थी, पर होठों पर चुप्पी थी, आँखों में गहरा पश्चाताप। लेकिन असली विनाश अभी बाकी था... अगले भाग में, भीष्म की चुप्पी का सच। क्या राजसिंहासन की यह प्रतिज्ञा ही सबसे बड़ा विनाश नहीं थी?",
+    "broll": [
+      {
+        "image_prompt": "Extreme macro close-up on Bhishma's eyes — single tear / pupils dilated / lashes wet — caught mid-blink, tear-streaked face, cool moonlit silver-blue, restrained noble tones, faces clearly lit, cold pre-dawn moonlight, dignified, no deep shadows, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "भीष्म की आँखें",
+        "mood": "deep sorrow regret",
+        "wardrobe_context": "PALACE"
+      },
+      {
+        "image_prompt": "Leaning into the frame, a dignified King Dhritarashtra, blindfolded with a white cloth, eyes hollow-eyed behind it, a tormented expression, cool moonlit silver-blue, restrained noble tones, white-and-silver silk dhoti, faces clearly lit, candlelit interior, faces visible and dignified, no deep shadows, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "धृतराष्ट्र, अंधा होते",
+        "mood": "tormented suppressed despair",
+        "wardrobe_context": "PALACE"
+      },
+      {
+        "image_prompt": "Towering with quiet strength, Prince Pandu stands, his resolute face etched with rightful determination, cool moonlit silver-blue, restrained noble tones, white-and-silver silk dhoti, faces clearly lit, cold pre-dawn moonlight, faces visible and dignified, no deep shadows, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "पाण्डु राजा बने",
+        "mood": "rightful claim tension",
+        "wardrobe_context": "PALACE"
+      },
+      {
+        "image_prompt": "Gripping his chest, Bhishma standing alone in a dimly lit chamber, his face profoundly conflicted, sweat-drenched brow, cool moonlit silver-blue, restrained noble tones, white-and-silver silk dhoti, faces clearly lit, candlelit interior, faces visible and dignified, no deep shadows, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "प्रतिज्ञा का भीषण युद्ध",
+        "mood": "internal conflict torment",
+        "wardrobe_context": "PALACE"
+      },
+      {
+        "image_prompt": "[POWER-LOOM] Leaning into the coronation, Bhishma, solemn-faced, gently placing a heavy gold crown upon a kneeling, tear-streaked King Dhritarashtra, cool moonlit silver-blue, restrained noble tones, white-and-silver silk dhoti, faces clearly lit, cold pre-dawn moonlight, faces visible and dignified, no deep shadows, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "सिंहासन पर बिठाया",
+        "mood": "fateful decision somber",
+        "wardrobe_context": "PALACE"
+      },
+      {
+        "image_prompt": "Sinking into the shattered marble floor of a royal palace, an ancient, ominous seed, glowing with a faint, menacing light, cool moonlit silver-blue, restrained noble tones, faces clearly lit, cold pre-dawn moonlight, dignified, no deep shadows, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "विनाश का बीज बोया",
+        "mood": "ominous silent beginning",
+        "wardrobe_context": "PALACE"
+      },
+      {
+        "image_prompt": "Weeping over his fate, Bhishma alone in a vast, empty palace hall, his face anguish-filled, mouth clenched shut, cool moonlit silver-blue, restrained noble tones, white-and-silver silk dhoti, faces clearly lit, candlelit interior, faces visible and dignified, no deep shadows, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "आत्मा अंदर ही अंदर",
+        "mood": "anguished silent torment",
+        "wardrobe_context": "PALACE"
+      },
+      {
+        "image_prompt": "A close-up of Bhishma's hollow-eyed face, his gaze distant and filled with profound regret, illuminated by a fading, cold moonlight, cool moonlit silver-blue, restrained noble tones, white-and-silver silk dhoti, faces clearly lit, faces visible and dignified, no deep shadows, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "आँखों में गहरा पश्चाताप",
+        "mood": "profound silent regret",
+        "wardrobe_context": "PALACE"
+      },
+      {
+        "image_prompt": "Walking away from a grand palace, Bhishma's silhouette against a cold, fading dusk sky, lone diya flickering in the foreground, cool moonlit silver-blue, restrained noble tones, faces clearly lit, dignified, no deep shadows, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "भीष्म की चुप्पी",
+        "mood": "aftermath haunting silence",
+        "wardrobe_context": "AFTERMATH"
+      }
+    ],
+    "title": "भीष्म की असली गलती | Bhishma's Real Mistake",
+    "hook_title": "भीष्म की एक गलती",
+    "description": "▶️ अगला भाग: Bhishma's Untold Sin of Silence\n\nभीष्म की एक गलती ने कैसे बो दिया कुरुक्षेत्र का बीज? जानें उस मौन पाप की कहानी!\n\n#Shorts #Mahabharata #महाभारत #Krishna #HinduMythology\n\nमहाभारत में हर नायक अपने अंदर एक युद्ध लड़ रहा था। भीष्म की प्रतिज्ञा ने उन्हें हस्तिनापुर का संरक्षक तो बना दिया, लेकिन उन्हें एक ऐसे मोड़ पर खड़ा कर दिया जहाँ उन्हें धर्म के खिलाफ जाना पड़ा। धृतराष्ट्र की आँखें नहीं थीं, और धर्म कहता था कि पाण्डु ही राजा बने। लेकिन अपनी कठोर प्रतिज्ञा के कारण, भीष्म ने उस सत्य को दबा दिया। उन्होंने धृतराष्ट्र को सिंहासन पर बिठाया, यह जानते हुए कि यह निर्णय भविष्य में विनाश का बीज बोएगा। उनका यह मौन निर्णय, उनकी चुप्पी, हस्तिनापुर के पतन का पहला कदम था। इस वीडियो में हम उस क्षण की गहराई में उतरते हैं जब एक महान योद्धा ने अपनी प्रतिज्ञा को धर्म से ऊपर रखा, और उस आंतरिक विनाश को महसूस करते हैं जो इस निर्णय के बाद उन्हें ताउम्र खाता रहा। क्या एक नायक की सबसे बड़ी शक्ति, उसकी प्रतिज्ञा, ही उसकी सबसे बड़ी कमजोरी बन गई?\n\n#Shorts #Mahabharata #महाभारत #Hindu #BhagavadGita #भगवद_गीता #Krishna #कृष्ण #Arjuna #अर्जुन #Karna #कर्ण #Bhishma #भीष्म #Draupadi #द्रौपदी #Kurukshetra #कुरुक्षेत्र #AncientIndia #IndianMythology #Dharma #MythologyShorts #VedicWisdom #HinduDharma #IndianHistory #SpiritualShorts #PauranikKathayein #SanatanDharma #HindiShorts #trending",
+    "tags": [
+      "Bhishma's vow",
+      "Hastinapur succession",
+      "Bhishma",
+      "भीष्म",
+      "Mahabharata",
+      "महाभारत",
+      "Shorts",
+      "Hindu mythology"
+    ],
+    "thumbnail_prompt": "Dramatic Mahabharata thumbnail of Bhishma's anguished face, caught between a blind Dhritarashtra's shadowy silhouette and a faint, glowing image of Pandu, set against a backdrop of a crumbling Hastinapur palace, cool moonlit silver-blue, restrained noble tones, faces clearly lit, cold pre-dawn moonlight, faces visible and dignified, no deep shadows, vibrant colours, cinematic, portrait composition",
+    "quotable_line": "एक प्रतिज्ञा ने धर्म को नहीं, हस्तिनापुर के भाग्य को बदल दिया।",
+    "pinned_question": "❓ एक प्रतिज्ञा ने धर्म को नहीं, हस्तिनापुर के भाग्य को बदल दिया। क्या भीष्म ने सही किया या धर्म से बड़ा कुछ भी नहीं?",
+    "next_seed": "और यही मौन भीष्म को एक बड़े युद्ध में फंसा देगा।",
+    "language": "hi",
+    "content_type": "story",
+    "topic": "Bhishma's hidden sin against Hastinapur — crowning blind Dhritarashtra over his brother Pandu's lineage, the secret succession mistake that planted the war's first seed",
+    "series": "mahabharata",
+    "episode_n": 24,
+    "arc_character_devanagari": "भीष्म",
+    "arc_character_english": "Bhishma — The Vow That Doomed a Dynasty",
+    "_phase18_strict_pass": false,
+    "_phase18_score": 19,
+    "_phase18_score_max": 25,
+    "_phase18_score_floor": 20,
+    "_phase18_violation": "length",
+    "_phase18_failing_gates": [
+      "archetype",
+      "char_names",
+      "engagement",
+      "intensity",
+      "subject_diversity",
+      "tha_tic"
+    ],
+    "_phase18_fatal_failures": []
+  }
+}
