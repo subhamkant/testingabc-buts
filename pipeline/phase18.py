@@ -1943,9 +1943,27 @@ def generate_phase18_script(
     )
 
     # ── Best-of-N loop ──
-    MAX_ATTEMPTS = 5
-    best_score = -1
-    best_data: dict | None = None
+    # Phase 22.7 (2026-06-28):
+    #   • MAX_ATTEMPTS 5 → 8 (Improvement A). Gemini Flash variance is the
+    #     real blocker — 7 verification runs showed best-of-N=5 producing
+    #     fatal-clean 19+/25 in only 2/7 renders (~28% ship rate). At 8
+    #     attempts, expected ship rate climbs above ~70% even under the
+    #     same per-attempt distribution.
+    #   • Selection prefers fatal-clean over higher-but-fatal-failed
+    #     (Improvement B). Old logic picked max(score) regardless. So a
+    #     20/25 with `anti_merge_composition` fatal-failed beat an 18/25
+    #     fatal-clean — but the 20/25 will NEVER ship (fatal-blocked),
+    #     while the 18/25 was one cosmetic away from publish. Picking
+    #     fatal-clean attempts when they exist is the correct selection
+    #     under the Phase 22.4 two-gate strict-pass.
+    _PHASE22_FATAL_GATES_FOR_SELECT = {
+        "verb_per_frame",
+        "anti_merge_composition",
+        "aftermath_closer",
+        "title_dna",
+    }
+    MAX_ATTEMPTS = 8
+    attempts: list = []   # each: {data, score, is_fatal_clean, violation, info, fatal_failures}
     last_violation = ""
     last_info: dict = {}
 
@@ -2061,28 +2079,65 @@ def generate_phase18_script(
         vo_words = info.get("word_count", 0)
         br_n = info.get("broll_count", 0)
         types = info.get("shot_types", [])
+
+        # Phase 22.7 (2026-06-28): compute fatal-clean per attempt so the
+        # post-loop selection can prefer fatal-clean attempts over
+        # higher-but-fatal-failed ones. Cheap (~25 small predicate calls).
+        failing_gates  = _enumerate_failing_gates(data)
+        fatal_failures = failing_gates & _PHASE22_FATAL_GATES_FOR_SELECT
+        is_fatal_clean = (len(fatal_failures) == 0)
+
         print(f"    [phase18-validate] score={score}/25 ok={ok} "
+              f"fatal_clean={is_fatal_clean} "
               f"voiceover={vo_words}w/{vo_chars}c broll={br_n} "
               f"types={types} "
               f"violation={violation or 'none'}")
 
+        attempts.append({
+            "data":            data,
+            "score":           score,
+            "is_fatal_clean":  is_fatal_clean,
+            "fatal_failures":  fatal_failures,
+            "violation":       violation,
+            "info":            info,
+        })
+
+        # Strict 25/25 strict-pass — no need to keep trying.
         if ok:
-            best_data = data
-            best_score = score
             break
 
-        if score > best_score:
-            best_score = score
-            best_data = data
         last_violation = violation
         last_info = info
 
-    if best_data is None:
+    if not attempts:
         raise RuntimeError(
             f"Phase 18 script generation failed all {MAX_ATTEMPTS} attempts "
             "(no valid JSON across the entire best-of-N). "
             "Check the [phase18-gen] log for LLM/parse errors."
         )
+
+    # Phase 22.7 (2026-06-28): fatal-clean-preferring selection.
+    # If ANY attempt was fatal-clean, pick the highest-scoring among
+    # those (publishable under the Phase 22.4 two-gate strict-pass).
+    # Otherwise fall back to the highest score overall — that attempt
+    # won't ship either way (fatal-blocked), but it gives the cleanest
+    # forensic signal in the quarantine dump.
+    fatal_clean_attempts = [a for a in attempts if a["is_fatal_clean"]]
+    if fatal_clean_attempts:
+        chosen = max(fatal_clean_attempts, key=lambda a: a["score"])
+        print(f"    [phase18-select] FATAL-CLEAN candidate selected: "
+              f"score={chosen['score']}/25 from {len(fatal_clean_attempts)}/"
+              f"{len(attempts)} fatal-clean attempts.")
+    else:
+        chosen = max(attempts, key=lambda a: a["score"])
+        print(f"    [phase18-select] no fatal-clean attempts in {len(attempts)} "
+              f"tries — falling back to highest-score for forensic review: "
+              f"score={chosen['score']}/25 fatal_failures={sorted(chosen['fatal_failures'])}.")
+
+    best_data      = chosen["data"]
+    best_score     = chosen["score"]
+    last_violation = chosen["violation"]
+    last_info      = chosen["info"]
 
     # Phase 22 (2026-06-25): cascade bumped /21 → /25.
     # Phase 22.4 (2026-06-28): TWO-GATE strict-pass.
