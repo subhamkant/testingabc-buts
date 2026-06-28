@@ -1,0 +1,121 @@
+{
+  "ts": "2026-06-28T10-56-26",
+  "language": "hi",
+  "score": 17,
+  "score_max": 25,
+  "violation": "length",
+  "topic": "Arjuna's greatest fear about Eklavya — the hidden seven-arrow truth in the dog's mouth, the secret archer who exposed Drona's biggest lie",
+  "title": "अर्जुन का असली डर | Arjuna's Real Fear",
+  "script": {
+    "voiceover": "अर्जुन उस कुत्ते को देखता है, जिसके मुँह में सात बाण इतनी सटीकता से गड़े हैं कि एक बूँद रक्त भी नहीं गिरा। उसके अहंकार को चोट लगती है, क्योंकि गुरु द्रोण ने उसे दुनिया का सर्वश्रेष्ठ धनुर्धर होने का वचन दिया था। यह किसी इंसान का नहीं, बल्कि एक ऐसे दैवीय लक्ष्यवेध का काम था जो उसकी सारी शिक्षा पर सवाल उठा रहा था। लेकिन तभी एक गहरा डर उसके भीतर घुस जाता है, एक असहनीय जलन उसके हृदय को जलाती है। कौन था यह अदृश्य योद्धा जिसने उसके गुरु के सबसे बड़े झूठ को उजागर कर दिया? वह जानता था कि द्रोण को इस डर को खत्म करना होगा, चाहे उसकी कीमत कुछ भी हो। \"गुरु, यह कौन है जो मुझसे भी श्रेष्ठ है?\" उसने पूछा। द्रोण का चेहरा एक पल को सफेद पड़ गया, अपनी प्रतिज्ञा का बोझ उनकी आत्मा पर भारी था। और जो एकलव्य ने अगले ही पल में किया, उसकी कथा आज भी कांप उठाती है। क्या यह सिर्फ एक शिष्य की बलि थी, या गुरु के अभिमान का सबसे बड़ा डर?",
+    "broll": [
+      {
+        "image_prompt": "Extreme macro close-up on Arjuna's eyes — pupils dilated, lashes wet — caught mid-blink, reflecting fear, forest greens + earth-browns, dappled golden sunlight, warm Indian skin tone, untouched by court colors, dappled sunlight through banyan canopy, faces clearly lit, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "कुत्ते को देखता",
+        "mood": "shocked, fearful, intense",
+        "wardrobe_context": "FOREST",
+        "shot_type": "AMBIGUOUS"
+      },
+      {
+        "image_prompt": "Piercing close-up of a stray dog's mouth, seven arrows precisely lodged without a drop of blood, its fur matted and dirty, forest greens + earth-browns, dappled golden sunlight, warm Indian skin tone, untouched by court colors, dappled sunlight through banyan canopy, faces clearly lit, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "सात बाण",
+        "mood": "precise, unsettling, mysterious",
+        "wardrobe_context": "FOREST",
+        "shot_type": "ACTION"
+      },
+      {
+        "image_prompt": "Gripping close-up on Arjuna's hand, white-knuckled fist clenching, showing internal turmoil and wounded pride, sweat-drenched skin, forest greens + earth-browns, dappled golden sunlight, warm Indian skin tone, untouched by court colors, dappled sunlight through banyan canopy, faces clearly lit, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "अहंकार को चोट",
+        "mood": "frustrated, injured, agitated",
+        "wardrobe_context": "FOREST",
+        "shot_type": "ACTION"
+      },
+      {
+        "image_prompt": "Recoiling Arjuna, his face etched with confusion and dawning realization, questioning glance upwards, sweat-drenched brow, forest greens + earth-browns, dappled golden sunlight, warm Indian skin tone, untouched by court colors, dappled sunlight through banyan canopy, faces clearly lit, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "शिक्षा पर सवाल",
+        "mood": "confused, questioning, dawning dread",
+        "wardrobe_context": "FOREST",
+        "shot_type": "AMBIGUOUS"
+      },
+      {
+        "image_prompt": "Recoiling Arjuna, a palpable wave of fear washing over his face, eyes wide-eyed, a shadow-heavy expression of dread, forest greens + earth-browns, dappled golden sunlight, warm Indian skin tone, untouched by court colors, dappled sunlight through banyan canopy, faces clearly lit, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "डर उसके भीतर",
+        "mood": "panic, fear, insecurity",
+        "wardrobe_context": "FOREST",
+        "shot_type": "REACTION"
+      },
+      {
+        "image_prompt": "Drawing back a bowstring, a shadowy, unseen archer's silhouette, powerful and precise, glowing arrow nocked, dappled golden sunlight filtering through dense forest, forest greens + earth-browns, warm Indian skin tone, untouched by court colors, dappled sunlight through banyan canopy, faces clearly lit, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "अदृश्य योद्धा",
+        "mood": "mysterious, powerful, unseen threat",
+        "wardrobe_context": "FOREST",
+        "shot_type": "ACTION"
+      },
+      {
+        "image_prompt": "[CONFRONTATION-WIDE] Arjuna left-foreground side-profile, accusatory gaze, Drona right mid-ground torso-up, his face grim and conflicted, a diagonal light/shadow boundary between them, forest greens + earth-browns, dappled golden sunlight, warm Indian skin tone, untouched by court colors, dappled sunlight through banyan canopy, faces clearly lit, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "मुझसे भी श्रेष्ठ",
+        "mood": "accusing, conflicted, tense",
+        "wardrobe_context": "FOREST",
+        "shot_type": "AMBIGUOUS"
+      },
+      {
+        "image_prompt": "Flinching Drona, his face visibly pale and sweat-drenched, eyes hollow-eyed with the burden of a broken promise, dim shadow-heavy frame, forest greens + earth-browns, dappled golden sunlight, warm Indian skin tone, untouched by court colors, dappled sunlight through banyan canopy, faces clearly lit, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "चेहरा एक पल",
+        "mood": "guilty, burdened, fearful",
+        "wardrobe_context": "FOREST",
+        "shot_type": "REACTION"
+      },
+      {
+        "image_prompt": "Kneeling Eklavya, his prone body slumped, a blood-soaked thumb severed, lying in the dusty forest ground before a clay idol of Drona, fading dusk light, a lone diya flickering nearby, forest greens + earth-browns, dappled golden sunlight, warm Indian skin tone, untouched by court colors, dappled sunlight through banyan canopy, faces clearly lit, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "कांप उठाती है",
+        "mood": "tragic, sacrificed, aftermath",
+        "wardrobe_context": "AFTERMATH",
+        "shot_type": "ACTION"
+      }
+    ],
+    "title": "अर्जुन का असली डर | Arjuna's Real Fear",
+    "hook_title": "अर्जुन का असली डर",
+    "description": "▶️ अगला भाग: Eklavya's untold legacy as Nishadha king\n\nअर्जुन का अहंकार टूटता है जब एक अदृश्य तीरंदाज, एकलव्य, उसकी श्रेष्ठता पर सवाल उठाता है। गुरु द्रोण की प्रतिज्ञा और उस पर खड़े झूठ की कीमत क्या थी? जानें कैसे एक कुत्ते के मुँह में लगे सात बाणों ने महाभारत के सबसे बड़े तीरंदाज के भीतर एक गहरा डर भर दिया।\n\n#Shorts #Mahabharata #महाभारत #Krishna #HinduMythology\n\nयह वीडियो अर्जुन के आंतरिक संघर्ष को दर्शाता है, जब उसे एहसास होता है कि कोई उससे भी श्रेष्ठ हो सकता है। गुरु द्रोण की एकलव्य से की गई अमानवीय माँग, और अर्जुन के मन में उपजा असुरक्षा का भाव, इस कहानी का मर्म है। यह सिर्फ एक धनुर्धर की कहानी नहीं, बल्कि छल, अभिमान और बलिदान की गाथा है जो आज भी प्रासंगिक है। हर हीरो के भीतर कितनी तबाही छिपी होती है?\n\n#Shorts #Mahabharata #महाभारत #Hindu #BhagavadGita #भगवद_गीता #Krishna #कृष्ण #Arjuna #अर्जुन #Karna #कर्ण #Bhishma #भीष्म #Draupadi #द्रौपदी #Kurukshetra #कुरुक्षेत्र #AncientIndia #IndianMythology #Dharma #MythologyShorts #VedicWisdom #HinduDharma #IndianHistory #SpiritualShorts #PauranikKathayein #SanatanDharma #HindiShorts #trending}",
+    "tags": [
+      "Arjuna's fear",
+      "Eklavya's sacrifice",
+      "Arjuna",
+      "अर्जुन",
+      "Drona",
+      "द्रोण",
+      "Eklavya",
+      "एकलव्य",
+      "Mahabharata",
+      "महाभारत",
+      "Shorts",
+      "Hindu mythology"
+    ],
+    "thumbnail_prompt": "Dramatic Mahabharata thumbnail — Arjuna's face, wide-eyed and sweat-drenched, reflecting a terrified realization, dappled golden sunlight, forest greens + earth-browns, cinematic, portrait composition",
+    "quotable_line": "गुरु की प्रतिज्ञा ने अर्जुन का डर, और एकलव्य का बलिदान तय किया।",
+    "pinned_question": "❓ गुरु की प्रतिज्ञा ने अर्जुन का डर, और एकलव्य का बलिदान तय किया। क्या यह न्याय था या अन्याय?",
+    "next_seed": "एकलव्य की निष्ठा ने उसे एक नया साम्राज्य दिया, पर किस कीमत पर?",
+    "language": "hi",
+    "content_type": "story",
+    "topic": "Arjuna's greatest fear about Eklavya — the hidden seven-arrow truth in the dog's mouth, the secret archer who exposed Drona's biggest lie",
+    "series": "mahabharata",
+    "episode_n": 64,
+    "arc_character_devanagari": "एकलव्य",
+    "arc_character_english": "Eklavya — The Devotion That Cost a Thumb",
+    "_phase18_strict_pass": false,
+    "_phase18_score": 17,
+    "_phase18_score_max": 25,
+    "_phase18_score_floor": 19,
+    "_phase18_violation": "length",
+    "_phase18_failing_gates": [
+      "archetype",
+      "bookend",
+      "char_names",
+      "engagement",
+      "intensity",
+      "length",
+      "tha_tic",
+      "verb_action"
+    ],
+    "_phase18_fatal_failures": []
+  }
+}
