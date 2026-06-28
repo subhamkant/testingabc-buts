@@ -1,0 +1,112 @@
+{
+  "ts": "2026-06-28T09-08-27",
+  "language": "hi",
+  "score": 17,
+  "score_max": 25,
+  "violation": "verb_action",
+  "topic": "Draupadi's greatest humiliation in the Kuru sabha — the queen pulled by her hair, the secret sin every elder watched in silence, the untold betrayal that lit the war",
+  "title": "द्रौपदी की सबसे बड़ी शर्म | Draupadi's Biggest Shame",
+  "script": {
+    "voiceover": "द्रौपदी सभा के बीच खींचकर लाई जाती है — बाल बिखरे, आँखें क्रोध से जल रही हैं। कौरवों का घमंड, पांडवों की लाचारी, और सभा में बैठे भीष्म, द्रोण, धृतराष्ट्र... सबकी चुप्पी, वो भयानक मौन जो किसी भी चीत्कार से ज़्यादा दर्दनाक था। “तुमने धर्म खो दिया है!” द्रौपदी चिल्लाती है, लेकिन कोई नहीं सुनता। अपमान की अग्नि उसके भीतर सुलग रही थी, एक ऐसी आग जो सब कुछ जलाकर राख कर देगी। उसने अपने पतियों को देखा, उनके चेहरे पर शर्मिंदगी, पर हाथ बंधे थे। क्या कोई स्त्री इतनी असहाय हो सकती है कि उसका चीर हरण हो और धर्म के रक्षक बस देखते रहें? लेकिन असली पाप तो सभा के हर उस 'महान' व्यक्ति का था, जिसने अपनी आँखें बंद कर लीं, अपनी आत्मा को बेच दिया। यह तो सिर्फ शुरुआत थी... अगले भाग में: द्रुपद का छुपा पाप। क्या ये सब सिर्फ द्रौपदी का अपमान था, या उससे कहीं ज़्यादा, एक युग का अंत?",
+    "broll": [
+      {
+        "image_prompt": "Weapon / artifact detail — a regal red-and-gold sari being violently pulled and torn, blurred motion behind, bloodied fabric edges, firelit crimson + saffron, warm Indian skin tone, court grandeur, warm torchlight and oil-lamp, contrasted, intense BUT faces clearly visible, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "खींचकर लाई जाती है",
+        "mood": "Violent desecration, shocking",
+        "wardrobe_context": "PALACE"
+      },
+      {
+        "image_prompt": "Weeping with burning rage, Draupadi's tear-streaked face, wide-eyed, kohl-rimmed eyes, dishevelled hair, close-up, firelit crimson + saffron, regal red-and-gold sari, warm Indian skin tone, court grandeur, warm torchlight and oil-lamp, contrasted, intense BUT faces clearly visible, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "आँखें क्रोध से जल रही हैं",
+        "mood": "Burning fury, anguish",
+        "wardrobe_context": "PALACE"
+      },
+      {
+        "image_prompt": "[CONFRONTATION-WIDE] Duryodhana sneering from his throne on the right, Draupadi's distant, desperate figure on the left, foreground, with a wide shot of the silent, shadow-heavy assembly of elderly Kuru elders, including Bhishma and Drona, watching with averted, downcast faces, firelit crimson + saffron, regal red-and-gold sari, warm Indian skin tone, court grandeur, warm torchlight and oil-lamp, contrasted, intense BUT faces clearly visible, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "सभा में बैठे भीष्म",
+        "mood": "Betrayal, heavy silence",
+        "wardrobe_context": "PALACE"
+      },
+      {
+        "image_prompt": "Weeping over her torn garments, Draupadi, mouth open in a pained scream, body slightly slumped, hair dishevelled, firelit crimson + saffron, regal red-and-gold sari, warm Indian skin tone, court grandeur, warm torchlight and oil-lamp, contrasted, intense BUT faces clearly visible, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "द्रौपदी चिल्लाती है",
+        "mood": "Desperate plea, agony",
+        "wardrobe_context": "PALACE"
+      },
+      {
+        "image_prompt": "Flickering oil lamp, reflecting in Draupadi's kohl-rimmed, wide-eyed face, abstract flames consuming her pupils, symbolic of the burning humiliation within, firelit crimson + saffron, regal red-and-gold sari, warm Indian skin tone, court grandeur, warm torchlight and oil-lamp, contrasted, intense BUT faces clearly visible, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "सुलग रही थी",
+        "mood": "Internal inferno, silent wrath",
+        "wardrobe_context": "PALACE"
+      },
+      {
+        "image_prompt": "Gripping with shame, Yudhishthira's tear-streaked face, eyes downcast in utter helplessness, Bhima's clenched jaw, Arjuna's hollow-eyed gaze, all three in a tight, shadow-heavy composition, firelit crimson + saffron, regal red-and-gold sari, warm Indian skin tone, court grandeur, warm torchlight and oil-lamp, contrasted, intense BUT faces clearly visible, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "चेहरे पर शर्मिंदगी",
+        "mood": "Deep shame, helplessness",
+        "wardrobe_context": "PALACE"
+      },
+      {
+        "image_prompt": "[POWER-LOOM] Looming over the silent figures of Bhishma and Drona, Draupadi stands defiantly, wind-whipped hair, looking up at the towering figures seated above her on thrones, their faces grim and shadowed, firelit crimson + saffron, regal red-and-gold sari, warm Indian skin tone, court grandeur, warm torchlight and oil-lamp, contrasted, intense BUT faces clearly visible, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "बस देखते रहें",
+        "mood": "Defiance, silent accusation",
+        "wardrobe_context": "PALACE"
+      },
+      {
+        "image_prompt": "Walking away from the desolate, empty court, a lone Draupadi silhouette, her red sari trailing on the dust-choked floor, fading dusk light illuminating the abandoned throne room, firelit crimson + saffron, regal red-and-gold sari, warm Indian skin tone, court grandeur, warm torchlight and oil-lamp, contrasted, intense BUT faces clearly visible, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "आँखें बंद कर लीं",
+        "mood": "Despair, eerie aftermath",
+        "wardrobe_context": "AFTERMATH"
+      }
+    ],
+    "title": "द्रौपदी की सबसे बड़ी शर्म | Draupadi's Biggest Shame",
+    "hook_title": "द्रौपदी का अपमान",
+    "description": "▶️ अगला भाग: Draupadi's hidden birth from sacrificial fire\n\nकुरु सभा में द्रौपदी का अपमान — वो क्षण जिसने एक युग को बदल दिया। अपमान और क्रोध की वो अग्नि जो एक साम्राज्य को राख कर देगी। द्रौपदी की सबसे बड़ी शर्मिंदगी सिर्फ उसके चीर हरण में नहीं थी, बल्कि उन 'महान' पुरुषों की चुप्पी में थी जिन्होंने धर्म को नीचा होते देखा। यह सिर्फ एक रानी का अपमान नहीं, बल्कि एक युग का अंत था, जहाँ न्याय और नैतिकता ने आँखें मूंद लीं। इस क्षण ने महाभारत युद्ध की नींव रखी, जब भीतर का विनाश बाहर की तबाही बन गया।\n\n#Shorts #Mahabharata #महाभारत #Krishna #HinduMythology\n#Hindu #BhagavadGita #भगवद_गीता #Krishna #कृष्ण #Arjuna #अर्जुन #Karna #कर्ण #Bhishma #भीष्म #Draupadi #द्रौपदी #Kurukshetra #कुरुक्षेत्र #AncientIndia #IndianMythology #Dharma #MythologyShorts #VedicWisdom #HinduDharma #IndianHistory #SpiritualShorts #PauranikKathayein #SanatanDharma #HindiShorts #trending",
+    "tags": [
+      "Draupadi's humiliation",
+      "Kuru Sabha",
+      "Draupadi",
+      "द्रौपदी",
+      "Mahabharata",
+      "महाभारत",
+      "Shorts",
+      "Hindu mythology",
+      "Duryodhana",
+      "दुर्योधन",
+      "Bhishma",
+      "भीष्म",
+      "emotional truth",
+      "betrayal",
+      "humiliation"
+    ],
+    "thumbnail_prompt": "Draupadi's tear-streaked face, kohl-rimmed eyes blazing with fury and deep humiliation, dishevelled hair, close-up, dramatic side lighting, firelit crimson and saffron tones, regal red-and-gold sari, intense and sorrowful expression, cinematic quality, portrait composition, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+    "quotable_line": "अधर्म पर चुप रहना, अपमान से भी बड़ा पाप है।",
+    "pinned_question": "❓ अधर्म पर चुप रहना, अपमान से भी बड़ा पाप है। क्या आप सहमत हैं?",
+    "next_seed": "और यही अपमान उसके जन्म के रहस्य को उजागर करेगा।",
+    "language": "hi",
+    "content_type": "story",
+    "topic": "Draupadi's greatest humiliation in the Kuru sabha — the queen pulled by her hair, the secret sin every elder watched in silence, the untold betrayal that lit the war",
+    "series": "mahabharata",
+    "episode_n": 41,
+    "arc_character_devanagari": "द्रौपदी",
+    "arc_character_english": "Draupadi — The Queen Who Lit the War",
+    "_phase18_strict_pass": false,
+    "_phase18_score": 17,
+    "_phase18_score_max": 25,
+    "_phase18_score_floor": 22,
+    "_phase18_violation": "verb_action",
+    "_phase18_failing_gates": [
+      "anti_merge_composition",
+      "archetype",
+      "bookend",
+      "char_names",
+      "subject_diversity",
+      "subject_lock",
+      "tha_tic",
+      "verb_per_frame"
+    ],
+    "_phase18_fatal_failures": [
+      "anti_merge_composition",
+      "verb_per_frame"
+    ]
+  }
+}
