@@ -1840,25 +1840,55 @@ BROLL RULES (HARD — violation = REJECT):
          armor fused to bare chest, intricate gold kundal earrings,
          battle-stained dark red silk dhoti, NO leather pauldrons"
 
+      MAHABHARATA WARDROBE DOCTRINE (Phase 23.4, 2026-06-28) — Vedic
+      kshatriya warriors fight BARE-CHESTED with only yajnopavita
+      thread + gold armbands + gold necklaces ON BARE SKIN. The
+      "kavacha" for Karna/Duryodhana is a divine GLOW emanating from
+      WITHIN the bare chest skin, NOT a Western plate-mail breastplate
+      worn over a shirt. FLUX defaults to Roman/medieval plate armor
+      when given the word "warrior" without an explicit "bare chest"
+      anchor — so EVERY warrior image_prompt MUST include the literal
+      phrase "bare chest visible" and append the negative tail
+      "NO breastplate, NO chest plate, NO cuirass, NO plate armor,
+      NO Western armor, NO leather pauldrons". Reference images from
+      the channel owner: Karna with sun-medallion kavacha glowing
+      FROM bare chest skin (no armor over it); Arjuna bare-chested
+      with gold yajnopavita + ornate gold arm bands + ornate gold-
+      edged quiver across bare back (NO chest plate); Bhima bare-
+      chested with thick gold necklace on bare chest. PALACE / DIVINE
+      contexts are the only exceptions (court silk robes / celestial
+      diaphanous shawls cover the chest legitimately).
+
       CANONICAL CHARACTER SIGNATURES (use these EXACT phrases):
 
-      Krishna: "vivid cobalt-blue divine Indian skin, dark wavy hair,
+      Krishna: "vivid cobalt-blue divine Indian skin, BARE CHEST
+        visible, gold yajnopavita thread across bare chest, layered
+        gold-jewel chain necklaces on bare chest, dark wavy hair with
         twin peacock feathers NOT a full crown, yellow pitambara silk
-        dhoti, holding bansuri flute, youthful athletic teenage build"
+        dhoti at waist only, holding bansuri flute, youthful build,
+        NO breastplate"
 
       Karna: "radiant golden-bronze Indian skin, broad-shouldered
-        warrior, luminous divine golden kavacha armor fused to bare
-        chest, intricate gold kundal earrings ALWAYS visible,
-        battle-stained dark red silk dhoti"
+        warrior, BARE-CHESTED with luminous divine sun-kavacha glow
+        emanating FROM WITHIN bare chest skin (kavacha embedded INTO
+        chest skin, NOT armor worn over it, NOT a breastplate),
+        intricate gold kundal earrings ALWAYS visible, battle-stained
+        dark red silk dhoti at waist, NO chest armor"
 
       Arjuna: "wheatish golden-bronze Indian skin, dark wavy hair tied
-        back, non-ornate silver-gold Vedic kavacha breastplate, leather
-        quiver across his back, drawing the colossal Gandiva bow,
-        simple silk dhoti"
+        back, BARE-CHESTED warrior (NO breastplate, NO kavacha, NO
+        plate, NO shirt on torso), sacred gold yajnopavita thread
+        crossing bare chest diagonally, ornate gold armbands on bare
+        upper biceps, ornate gold-edged leather quiver slung across
+        bare back, drawing colossal Gandiva bow, cream silk dhoti at
+        waist, NO chest armor"
 
       Bhishma: "weathered late-50s Indian face, long majestic silver-
-        white beard flowing down to mid-chest NO mustache, austere
-        off-white silk dhoti, simple golden armlets on bare skin"
+        white beard flowing to mid-chest NO mustache, BARE-CHESTED
+        elder warrior (NO breastplate, NO leather chest plate, NO
+        plate, NO shirt), sacred gold yajnopavita thread crossing
+        bare chest, simple gold armlets on bare upper arms, austere
+        off-white silk dhoti at waist, NO chest armor"
 
       Draupadi: "luminous dark Indian skin, large expressive lotus
         eyes, long untied black hair blowing in the wind, flowing
@@ -1875,14 +1905,19 @@ BROLL RULES (HARD — violation = REJECT):
         ash-smeared blood-streaked skin, tattered dark cloth dhoti"
 
       Bhima: "dark golden-bronze Indian skin, colossal heavily-muscled
-        warrior, bare-chested with thick gold necklace, rugged leather
-        belt over thick red dhoti, gripping a massive battle-dented
-        iron Gada mace, fierce dark moustache"
+        warrior, BARE-CHESTED (NO breastplate, NO kavacha, NO plate,
+        NO shirt on torso), thick chunky gold necklace on bare massive
+        chest, ornate gold armbands on bare bulging biceps, rugged
+        leather belt over thick red silk dhoti at waist, gripping
+        massive battle-dented iron Gada mace, fierce dark moustache"
 
       Yudhishthira: "warm golden-bronze Indian skin, salt-and-pepper
-        short beard, deep sorrowful eyes, modest white-and-gold silk
-        dhoti with angavastram drape across shoulder, calm dignified
-        posture"
+        short beard, deep sorrowful eyes, BARE-CHESTED (NO breastplate,
+        NO kavacha, NO plate, NO shirt on torso), sacred gold
+        yajnopavita thread crossing bare chest, soft red-gold
+        angavastram drape over ONE shoulder only (leaving other side
+        of chest bare), modest white-and-gold silk dhoti at waist,
+        NO chest armor, NO crown by default"
 
       Duryodhana: "warm golden-bronze Indian skin, massive arrogant
         prince, muscular broad-chested build, rich purple and gold

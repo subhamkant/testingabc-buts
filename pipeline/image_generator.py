@@ -312,6 +312,11 @@ _HINDU_ICONOGRAPHY_BATTLEFIELD_ANCHOR = _HINDU_ICONOGRAPHY_BASE + (
     "ash and smoke drifting across dust-streaked battlefield, broken "
     "chariot wheels and discarded weapons in mid-ground, distant marching "
     "armies on the horizon, low-angle warm golden-hour light, "
+    # Phase 23.4 (2026-06-28): bare-chest doctrine for warrior shots.
+    # Vedic kshatriyas fight bare-chested; ornaments sit on bare skin.
+    "WARRIORS BARE-CHESTED with ornate gold ornaments on bare skin, "
+    "no plate breastplate, no Western chest armor, gold yajnopavita "
+    "thread + gold armbands on bare upper body, "
 )
 
 _HINDU_ICONOGRAPHY_PALACE_ANCHOR = _HINDU_ICONOGRAPHY_BASE + (
@@ -336,6 +341,9 @@ _HINDU_ICONOGRAPHY_AFTERMATH_ANCHOR = _HINDU_ICONOGRAPHY_BASE + (
     "smoke and ash hanging in the air, low-angle ground-level perspective, "
     "muted desaturated palette with one warm accent (lone diya / "
     "horizon ember), prone body partially visible at the edge of frame, "
+    # Phase 23.4: bare-chest doctrine for warrior silhouettes.
+    "WARRIORS BARE-CHESTED with ornate gold ornaments on bare skin, "
+    "no plate breastplate, no Western chest armor, "
 )
 
 # Phase 23: NEW. FOREST + JOURNEY share the battlefield-leaning default
@@ -345,6 +353,10 @@ _HINDU_ICONOGRAPHY_FOREST_ANCHOR = _HINDU_ICONOGRAPHY_BASE + (
     "dense forest hermitage with banyan canopy and dappled sunlight, "
     "moss-covered stones, simple thatched ashram huts in mid-ground, "
     "wildlife and natural elements visible in deep background, "
+    # Phase 23.4: bare-chest doctrine for forest tribals / ascetics.
+    "FIGURES BARE-CHESTED with simple natural cotton or bark-cloth "
+    "lower garments only, rudraksha bead necklaces on bare skin, "
+    "no plate breastplate, no Western armor, "
 )
 
 _HINDU_ICONOGRAPHY_JOURNEY_ANCHOR = _HINDU_ICONOGRAPHY_BASE + (
@@ -677,6 +689,24 @@ _NEGATIVE_PHASE23_1_ANTI_WESTERN = (
     "chain mail,gambeson,European cloak,Tudor style,Renaissance fair,"
     "Lord of the Rings style,Witcher style,Vikings TV style"
 )
+
+# Phase 23.4 (2026-06-28) — explicit anti-plate-chest tokens. The Phase 23.2
+# force-render produced warriors in plate armor despite the anti-Western
+# block, because none of the existing tokens specifically banned
+# "breastplate" / "chest plate" / "cuirass" / "body armor". Worse, the
+# Arjuna signature_lock literally contained "kavacha breastplate" → FLUX
+# read "breastplate" and rendered plate every time. User's reference images
+# show Mahabharata warriors BARE-CHESTED with ornate gold ornaments on bare
+# skin (Karna sun-kavacha glowing FROM chest, Arjuna gold yajnopavita +
+# arm bands + ornate quiver). These tokens close the gap.
+_NEGATIVE_PHASE23_4_ANTI_PLATE = (
+    ",breastplate,chest plate,decorative breastplate,ornamental breastplate,"
+    "cuirass,body armor,full plate armor,gold breastplate,bronze breastplate,"
+    "armored chest,armored torso,covered torso,torso armor,metal chest guard,"
+    "kavacha breastplate,ornate breastplate,shirted warrior,tunic warrior"
+)
+_NEGATIVE_PHASE23_1_ANTI_WESTERN = _NEGATIVE_PHASE23_1_ANTI_WESTERN + _NEGATIVE_PHASE23_4_ANTI_PLATE
+
 _NEGATIVE_DEFAULT = _NEGATIVE_DEFAULT + _NEGATIVE_PHASE23_1_ANTI_WESTERN
 
 # Backwards-compat alias — _NEGATIVE was the single global pre-2026-05-18.
