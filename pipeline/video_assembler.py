@@ -399,7 +399,8 @@ def get_audio_duration(audio_path: str) -> float:
 # ── Ken Burns motion expressions (portrait 1080×1920) ─────────────────────────
 
 def _ken_burns_expr(motion: str, frames: int, intensity: float = 1.0,
-                    source_aspect: str = "portrait") -> str:
+                    source_aspect: str = "portrait",
+                    scene_index: int = 0) -> str:
     """
     Returns the FFmpeg filter string for Ken Burns motion at 1080x1920 portrait.
 
@@ -416,34 +417,38 @@ def _ken_burns_expr(motion: str, frames: int, intensity: float = 1.0,
         (zoompan strictly forbids negative spatial coords). The new
         pre-pass guarantees ih=1920 → y='0' is stable.
 
+    `scene_index` (Phase 23.2, 2026-06-28): for WIDE sources, alternates
+    pan direction deterministically by index parity (even → left-to-right,
+    odd → right-to-left). The previous Phase 23 implementation relied on
+    the randomly-assigned `motion` name to pick direction, which produced
+    runs of same-direction pans across consecutive scenes. Gemini's
+    analysis flagged the panorama sweep as "not working" — the actual
+    failure mode was monotonous direction, not missing motion. This
+    fix produces the alternating left↔right rhythm of real period-film
+    documentary cinematography.
+
     `intensity` scales the zoom delta (defaults to 1.0).
-    Per-scene escalation passes intensity 0.8 for the opening hook and ramps
-    to 1.4 for the climax so visual motion rises with the music's 4-section
-    volume curve. Pan motions are unaffected (they use a fixed zoom = 1.15
-    and just shift x/y — scaling those would just amplify the canvas crop).
     """
     if source_aspect == "wide":
         # Phase 23: 16:9 source → scale height to 1920 (preserves aspect →
         # ~3360 wide), then horizontal sweep with z=1.0 (no zoom, just pan).
         # iw=3360, ih=1920 inside zoompan; y='0' is now stable.
-        # Motion choices for wide:
-        #   pan_right  — left edge → right edge over duration
-        #   pan_left   — right edge → left edge over duration
-        # All other motion names fall back to pan_right (a sensible default
-        # for landscape sweep).
+        # Phase 23.2: direction is now driven by scene_index parity (not by
+        # the random motion name), so consecutive wide scenes alternate
+        # left → right → left → right deterministically.
         base = "scale=-1:1920:flags=lanczos,"
         out  = f"s=1080x1920:fps={FPS}"
-        if motion == "pan_left":
-            # Right edge → left edge
-            expr = (
-                f"zoompan=z='1.0'"
-                f":x='(iw-1080)*(1-on/{frames})':y='0':d={frames}:{out}"
-            )
-        else:
-            # Default + explicit pan_right: left edge → right edge
+        if scene_index % 2 == 0:
+            # EVEN scene index: left edge → right edge sweep
             expr = (
                 f"zoompan=z='1.0'"
                 f":x='(iw-1080)*on/{frames}':y='0':d={frames}:{out}"
+            )
+        else:
+            # ODD scene index: right edge → left edge sweep
+            expr = (
+                f"zoompan=z='1.0'"
+                f":x='(iw-1080)-(iw-1080)*on/{frames}':y='0':d={frames}:{out}"
             )
         return base + expr
 
@@ -511,11 +516,17 @@ def _render_image_clip(
     with_audio: str = None,
     intensity: float = 1.0,
     source_aspect: str = "",
+    scene_index: int = 0,
 ) -> bool:
     """Phase 23 (2026-06-28): added `source_aspect` parameter. When "wide"
     (or auto-detected as wide from the image file), the Ken Burns filter
     uses the horizontal-sweep pan path with the scale=-1:1920 pre-pass
-    that prevents the negative-y zoompan crash on landscape sources."""
+    that prevents the negative-y zoompan crash on landscape sources.
+
+    Phase 23.2 (2026-06-28): added `scene_index` parameter. For wide
+    sources, even-index scenes pan left→right and odd-index scenes pan
+    right→left, producing the alternating documentary-style sweep
+    rhythm (replaces the prior random-motion-name driven direction)."""
     frames = max(int(duration * FPS), 50)
 
     # Phase 23 — auto-detect source aspect when not explicitly provided.
@@ -541,7 +552,8 @@ def _render_image_clip(
 
     vf_parts = [
         _ken_burns_expr(motion, frames, intensity=intensity,
-                        source_aspect=source_aspect),
+                        source_aspect=source_aspect,
+                        scene_index=scene_index),
         COLOR_GRADE,
         FILM_GRAIN,
     ]
@@ -2188,6 +2200,7 @@ def _make_silent_image_scene_clip(image_paths, output_path: str, duration: float
             fade_in=(j == 0 and scene_index != 0),
             fade_out=(j == n_subs - 1),
             intensity=intensity,
+            scene_index=scene_index,  # Phase 23.2 — drives wide-pan direction
         )
         if not ok:
             subprocess.run([

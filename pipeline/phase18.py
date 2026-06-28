@@ -1803,62 +1803,148 @@ BROLL RULES (HARD — violation = REJECT):
       composition tag required, but you may still use [POWER-LOOM] /
       [THE-FALLEN] if it fits.
 
-  (n) GROUP-SCENE MANDATE (Phase 23.1, 2026-06-28) — AT LEAST 3 of your
-      8-10 broll image_prompts MUST name 2+ named characters in the same
-      scene. Single-character image_prompts cap at 7 of 10. This is the
-      narrative-density rule — the 500+ view winners ALL had multi-
-      character layered compositions (Bhima + Draupadi + Shakuni at the
-      dice game; Bhishma + Drona + Arjuna at the court). The Phase 22
-      X-LWlg1DW5s render showed the SAME single warrior in 5 of 5 frames
-      because the LLM emitted only single-character image_prompts —
-      anti_merge_composition never even fires when there's only 1
-      character to merge with.
+  (n) ARCHITECTURAL PROMPT FORMAT (Phase 23.2, 2026-06-28) — every
+      image_prompt MUST follow this exact 3-part structure:
 
-      How to write a group-scene image_prompt: combine a named
-      protagonist with a named secondary (brother, parent, guru,
-      adversary, attendant, queen) IN THE SAME FRAME with an action.
-      The composition tags from rule (m) apply here.
+      [CANVAS]  →  [ACTION]  →  [CHARACTER SIGNATURE]
 
-      Examples that satisfy (n):
-        [OVER-SHOULDER] Eklavya kneeling before his clay idol of Drona
-          while Arjuna watches from behind a tree, jungle ashram,
-          dappled sunlight, sweat-drenched fingers gripping bow
-        [POWER-LOOM] Drona standing tall over a kneeling Arjuna in the
-          shadow-heavy royal training hall, hand on disciple's shoulder,
-          oil-lamp glow
-        [THE-FALLEN] Karna's chariot wheel sinking into mud while Arjuna
-          raises Gandiva bow in foreground, dust hanging in air,
-          battlefield smoke
-        [CONFRONTATION-WIDE] Yudhishthira facing Indra at heaven's gate
-          with the loyal Dharma dog at his feet, celestial light beams,
-          marble courtyard
+      • CANVAS = wide environmental opener. Describes the SCENE / setting
+        the camera is in. Examples:
+          "Wide cinematic shot, sun-baked battlefield of Kurukshetra,
+           broken chariot wheels half-buried in mud,"
+          "Sweeping panoramic shot, ornate Nagara-style palace court
+           with carved stone columns and marigold petals on marble floor,"
+          "Extreme macro close-up of dice mid-roll on polished marble,"
 
-      Examples that FAIL (n):
-        "Arjuna with stern gaze and Gandiva bow" — only 1 character
-        "Karna's tear-streaked face in close-up" — only 1 character
-        "Wide battlefield with smoke and broken weapons" — 0 characters
-          (this is fine as 1 of your ≥7 non-group entries, but doesn't
-          count toward the 3-group minimum)
+      • ACTION = what happens IN that canvas. Verb-led. Examples:
+          "...Karna draws back his bow with white-knuckled fingers..."
+          "...Draupadi recoils, her hair untied, eyes blazing..."
+          "...the dice clatter to a stop, three sixes face-up..."
 
-  (o) CULTURAL LOCK (Phase 23.1, 2026-06-28) — every named character in
-      every image_prompt MUST be described with AUTHENTIC INDIAN VEDIC
-      attire. FLUX's training set defaults to European/Norse/medieval
-      aesthetics whenever you don't aggressively forbid them.
-      REQUIRED tokens to include when describing a warrior:
-        "golden-bronze Indian skin" / "wheatish-bronze skin"
-        "silk dhoti" / "Vedic kavacha breastplate" / "angavastram"
-        "kundal earrings" (when applicable to character)
-        "Indian classical mukut" (PALACE/DIVINE only; NOT in WAR)
-      FORBIDDEN tokens (auto-rejected by FLUX negative — don't write
-      these in image_prompts either, FLUX may render around them):
-        "leather armor" / "plate mail" / "chain mail"
-        "European helmet" / "Norse helmet" / "spike crown"
-        "viking" / "gladiator" / "knight" / "medieval"
-        "Game of Thrones" / "Lord of the Rings" / "western fantasy"
-      The signature_lock injected at render time already enforces this,
-      but the LLM's image_prompt itself must STAY AUTHENTIC — using
-      "warrior" without an Indian descriptor lets FLUX latch onto its
-      Western-fantasy default.
+      • CHARACTER SIGNATURE = the canonical Vedic descriptors from the
+        signature library below. Use these EXACT phrases — they will
+        land in FLUX cross-attention as iconographic anchors.
+
+      DO NOT start image_prompts with a character's name. Start with
+      the canvas. FLUX weights early tokens heaviest — if the first
+      word is "Karna," FLUX commits all its rendering budget to drawing
+      Karna and the environment becomes a bokeh wall.
+
+      WRONG (Phase 22 X-LWlg1DW5s failure mode):
+        "Karna draws back his bow at sunset, golden-bronze skin..."
+      RIGHT (Phase 23.2 architectural format):
+        "Wide cinematic shot, sun-baked Kurukshetra battlefield with
+         broken chariot wheels and distant marching armies, Karna draws
+         back the Gandiva bow with white-knuckled fingers, radiant
+         golden-bronze Indian skin, luminous divine golden kavacha
+         armor fused to bare chest, intricate gold kundal earrings,
+         battle-stained dark red silk dhoti, NO leather pauldrons"
+
+      CANONICAL CHARACTER SIGNATURES (use these EXACT phrases):
+
+      Krishna: "vivid cobalt-blue divine Indian skin, dark wavy hair,
+        twin peacock feathers NOT a full crown, yellow pitambara silk
+        dhoti, holding bansuri flute, youthful athletic teenage build"
+
+      Karna: "radiant golden-bronze Indian skin, broad-shouldered
+        warrior, luminous divine golden kavacha armor fused to bare
+        chest, intricate gold kundal earrings ALWAYS visible,
+        battle-stained dark red silk dhoti"
+
+      Arjuna: "wheatish golden-bronze Indian skin, dark wavy hair tied
+        back, non-ornate silver-gold Vedic kavacha breastplate, leather
+        quiver across his back, drawing the colossal Gandiva bow,
+        simple silk dhoti"
+
+      Bhishma: "weathered late-50s Indian face, long majestic silver-
+        white beard flowing down to mid-chest NO mustache, austere
+        off-white silk dhoti, simple golden armlets on bare skin"
+
+      Draupadi: "luminous dark Indian skin, large expressive lotus
+        eyes, long untied black hair blowing in the wind, flowing
+        battle-stained crimson red silk sari, fierce proud posture"
+
+      Eklavya: "dark mud-streaked tribal Indian skin, bare-chested
+        with natural bark-cloth lower garment, severed right thumb
+        ALWAYS visible (sometimes dripping blood), rudraksha bead
+        necklace, intense devoted eyes"
+
+      Ashwatthama: "gaunt Indian face, haunted feral eyes, glowing
+        ruby-like gem embedded into the center of his forehead casting
+        a faint red light down his face, prematurely curse-white hair,
+        ash-smeared blood-streaked skin, tattered dark cloth dhoti"
+
+      Bhima: "dark golden-bronze Indian skin, colossal heavily-muscled
+        warrior, bare-chested with thick gold necklace, rugged leather
+        belt over thick red dhoti, gripping a massive battle-dented
+        iron Gada mace, fierce dark moustache"
+
+      Yudhishthira: "warm golden-bronze Indian skin, salt-and-pepper
+        short beard, deep sorrowful eyes, modest white-and-gold silk
+        dhoti with angavastram drape across shoulder, calm dignified
+        posture"
+
+      Duryodhana: "warm golden-bronze Indian skin, massive arrogant
+        prince, muscular broad-chested build, rich purple and gold
+        silk dhoti, intricate golden kavacha, ornate royal mukut crown,
+        gripping a heavy golden Gada mace on shoulder"
+
+      Shakuni: "sharp angular Indian features, grey-streaked beard,
+        calculating gleaming eyes, slightly hunched posture, dark
+        green and black silk dhoti, leaning heavily on a carved wooden
+        cane, tossing two bone dice with a sly wicked smile"
+
+      Drona / Dronacharya: "weathered elderly Indian face, white hair
+        tied in a sage's topknot, long white beard, simple white cotton
+        dhoti, white angavastram, sacred yajnopavita thread across
+        bare chest, pointing an intricate wooden bow"
+
+      Kunti: "weary but graceful older Indian woman, pale golden Indian
+        skin, sorrowful dignified eyes, silver-streaked dark hair,
+        simple unadorned white silk sari, holding a simple earthen pot"
+
+  (o) GROUP-SCENE MANDATE (Phase 23.1) — AT LEAST 3 of your 8-10
+      image_prompts must include 2+ named characters in the SAME canvas.
+      Single-character image_prompts cap at 7 of 10. This is the
+      narrative-density rule. The 500+ view winners ALL had multi-
+      character layered compositions (Bhima + Draupadi + Shakuni at
+      the dice game; Eklavya kneeling + Arjuna watching from behind
+      a tree). When you write a 2-character canvas, lead with a
+      composition tag from rule (m):
+        "[OVER-SHOULDER] Sweeping shot of ornate palace court,
+         Eklavya kneels before his clay idol of Drona while Arjuna
+         watches from behind a banyan tree..."
+
+  (p) NON-HUMAN FOCUS RULE (Phase 23.2, 2026-06-28) — if the story beat
+      involves an animal (dog, horse, snake, eagle) OR a named object
+      (severed thumb, dice, chariot wheel, kavacha, Gandiva bow,
+      sudarshana chakra, akshaya patra, lone diya), the image_prompt
+      MUST NOT start with a character's name. It MUST lead with the
+      object/animal as the foreground subject. FLUX weights early
+      tokens heaviest — if a character name comes first, FLUX spends
+      100% of its rendering budget on the character and IGNORES the
+      object entirely.
+
+      WRONG: "Eklavya looking angry after shooting the dog"
+        → FLUX renders an angry warrior, the dog is absent.
+
+      RIGHT: "Extreme macro close-up of a stray dog's mouth, seven
+              finely crafted arrows piercing the air around its muzzle
+              without injury, drops of blood, dense forest backdrop
+              with dappled sunlight, Eklavya's tribal silhouette
+              mid-ground in soft focus"
+
+      RIGHT: "Close-up shot of an iron Gandiva bowstring drawn taut,
+              knuckles white in foreground, distant battlefield with
+              marching armies behind"
+
+      RIGHT: "Macro shot of two bone dice mid-roll on polished marble
+              palace floor, lone diya flickering nearby, Shakuni's
+              calculating hand in shallow focus"
+
+      Use this object-led pattern for AT LEAST 1 of your 8-10
+      image_prompts whenever the voiceover names a non-human story
+      element (dog / weapon / object / divine entity).
 
 {cliffhanger_block}
 

@@ -668,11 +668,12 @@ _NEGATIVE_PHASE23_ANTI_BOKEH = (
 # _NEGATIVE_PHASE19_ANTI_BIAS but adds the specific failure modes the
 # Phase 23 anchor rewrite re-opened.
 _NEGATIVE_PHASE23_1_ANTI_WESTERN = (
-    ",european armor,roman armor,plate mail,iron plate armor,"
-    "leather pauldrons,leather shoulder pads,viking style,viking dreadlocks,"
-    "medieval knight,spartan helmet,gladiator,roman centurion,"
+    ",european armor,roman armor,plate mail,iron plate armor,iron breastplate,"
+    "leather pauldrons,leather shoulder pads,heavy leather cloak,studded leather,"
+    "viking style,viking dreadlocks,medieval knight,spartan helmet,"
+    "gladiator,gladiator chestplate,roman centurion,"
     "game of thrones style,western fantasy,norse warrior,germanic warrior,"
-    "Persian spike crown,Mughal headdress,Ottoman turban,"
+    "Persian spike crown,spiked crown,Mughal headdress,Ottoman turban,"
     "chain mail,gambeson,European cloak,Tudor style,Renaissance fair,"
     "Lord of the Rings style,Witcher style,Vikings TV style"
 )
