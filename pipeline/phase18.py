@@ -1881,24 +1881,63 @@ BROLL RULES (HARD — violation = REJECT):
          armor fused to bare chest, intricate gold kundal earrings,
          battle-stained dark red silk dhoti, NO leather pauldrons"
 
-      MAHABHARATA WARDROBE DOCTRINE (Phase 23.4, 2026-06-28) — Vedic
-      kshatriya warriors fight BARE-CHESTED with only yajnopavita
+      MAHABHARATA WARDROBE DOCTRINE (Phase 23.4 → 23.9, 2026-06-28) —
+      Vedic kshatriya warriors fight BARE-CHESTED with only yajnopavita
       thread + gold armbands + gold necklaces ON BARE SKIN. The
       "kavacha" for Karna/Duryodhana is a divine GLOW emanating from
       WITHIN the bare chest skin, NOT a Western plate-mail breastplate
-      worn over a shirt. FLUX defaults to Roman/medieval plate armor
-      when given the word "warrior" without an explicit "bare chest"
-      anchor — so EVERY warrior image_prompt MUST include the literal
-      phrase "bare chest visible" and append the negative tail
-      "NO breastplate, NO chest plate, NO cuirass, NO plate armor,
-      NO Western armor, NO leather pauldrons". Reference images from
-      the channel owner: Karna with sun-medallion kavacha glowing
-      FROM bare chest skin (no armor over it); Arjuna bare-chested
-      with gold yajnopavita + ornate gold arm bands + ornate gold-
-      edged quiver across bare back (NO chest plate); Bhima bare-
-      chested with thick gold necklace on bare chest. PALACE / DIVINE
-      contexts are the only exceptions (court silk robes / celestial
-      diaphanous shawls cover the chest legitimately).
+      worn over a shirt.
+
+      *** PHASE 23.9 HARD RULE (2026-06-28) — image_prompt VOCABULARY: ***
+
+      FORBIDDEN WORDS in your image_prompts (your rendered output's
+      OUTPUT will be REJECTED by FLUX's negative prompt if any of these
+      appear — and the gate validator may quarantine the script):
+        armor / armored / breastplate / plate / chestplate / chest plate
+        / cuirass / pauldrons / shoulder pads / gauntlets / chainmail /
+        chain mail / helm / helmet (unless preceded by "Indian classical
+        mukut") / armored warrior / armored commander / heavy steel /
+        steel plates / metal plates / segmented plates
+
+      REQUIRED in EVERY warrior-character image_prompt: at least ONE of
+      these literal phrases must appear verbatim, ideally near the
+      character description:
+        "bare-chested" / "bare chest visible" / "bare muscular chest"
+
+      REQUIRED-TYPE TOKENS (use 2+ in every warrior image_prompt):
+        "silk angavastram" / "silk dhoti" / "gold yajnopavita thread" /
+        "carved bronze armlets" / "heavy gold necklace on bare skin" /
+        "rudraksha mala" / "saffron silk drape"
+
+      Replace "armor" with "ornate gold ornaments". Replace "armored
+      warrior" with "bare-chested warrior with gold yajnopavita".
+      Replace "breastplate" with "bare chest" or (for Karna only)
+      "luminous sun-kavacha glow embedded into bare chest skin".
+      Replace "shoulder pads / pauldrons" with "bare shoulders draped
+      with silk angavastram" or "carved bronze armlets". Replace
+      "helmet" with "Indian classical mukut" (PALACE/DIVINE only —
+      WAR/FOREST/JOURNEY scenes the warrior wears NO crown).
+
+      WHY: FLUX defaults to Roman/medieval plate armor when given the
+      word "warrior" without an explicit "bare chest" anchor. Phase 23.7
+      anti-Western negatives caught the WORST cases (no overt RPG spikes
+      / Christian crosses) but FLUX still found "armored commander"
+      pattern paths via the LLM-emitted base_prompt itself. By
+      FORBIDDING the LLM from emitting the word "armor" entirely, and
+      REQUIRING the literal "bare-chested" anchor, we starve FLUX of
+      the Western tokens it wants to use. This is the LLM-emission-
+      level fix that closes the Phase 23.7/23.8 gap.
+
+      Reference images from the channel owner: Karna with sun-medallion
+      kavacha glowing FROM bare chest skin (no armor over it); Arjuna
+      bare-chested with gold yajnopavita + ornate gold arm bands +
+      ornate gold-edged quiver across bare back (NO chest plate); Bhima
+      bare-chested with thick gold necklace on bare chest.
+
+      PALACE / DIVINE contexts are the only exceptions (court silk
+      robes / celestial diaphanous shawls cover the chest legitimately).
+      In those contexts you may write "silk court robes" or "celestial
+      silk drape" but still NOT "armor" or "breastplate".
 
       CANONICAL CHARACTER SIGNATURES (use these EXACT phrases):
 
@@ -2453,6 +2492,28 @@ def generate_phase18_script(
     # script-gen → image-gen → assembly pipeline.
     for _br in data.get("broll", []):
         _br["shot_type"] = _classify_broll_shot_type(_br.get("image_prompt", ""))
+
+    # Phase 23.9 / Fix 1 reinforcement (2026-06-28) — runtime archetype
+    # prepend on broll[0]. The user's forensic on the Phase 24 render
+    # showed the LLM IGNORED rule (h) ("broll[0].image_prompt MUST begin
+    # VERBATIM with this archetype directive") and emitted a wide-
+    # environmental opener on the 0:00-0:02 shot, blowing the 3-second
+    # swipe-stop ratio. Validator catches this as cosmetic `archetype`
+    # miss but doesn't block ship. Belt-and-suspenders: if broll[0]
+    # doesn't already lead with the rotated hook-only archetype directive,
+    # prepend it at runtime. The LLM's intended scene-action follows the
+    # directive; FLUX reads the archetype tokens first → enforces
+    # PROP-LED ZOOM / HARD ACTION composition regardless of LLM cooperation.
+    if data.get("broll"):
+        _arch_idx = episode_n % len(_OPENER_ARCHETYPES_HOOK_ONLY)
+        _arch_letter, _arch_text = _OPENER_ARCHETYPES_HOOK_ONLY[_arch_idx]
+        _arch_prefix_check = _arch_text[:35]
+        _br0_prompt = data["broll"][0].get("image_prompt", "")
+        if _arch_prefix_check not in _br0_prompt[:200]:
+            # LLM forgot the directive — prepend it as a hard hook.
+            data["broll"][0]["image_prompt"] = f"{_arch_text}. {_br0_prompt}"
+            print(f"    [phase23.9-hook-prepend] broll[0] lacked archetype "
+                  f"{_arch_letter} prefix — auto-prepended for FLUX swipe-stop")
 
     # Cliffhanger prepend to description (mirrors legacy line 4687)
     if next_episode_teaser:
