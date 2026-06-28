@@ -1,0 +1,93 @@
+{
+  "ts": "2026-06-28T09-25-44",
+  "language": "hi",
+  "score": 16,
+  "score_max": 25,
+  "violation": "anchors",
+  "topic": "Arjuna's greatest fear about Eklavya — the hidden seven-arrow truth in the dog's mouth, the secret archer who exposed Drona's biggest lie",
+  "title": "एकलव्य का असली डर | Eklavya's Real Fear",
+  "script": {
+    "voiceover": "द्रोणाचार्य की मिट्टी की मूर्ति के सामने बालक एकलव्य ने समर्पण की जो ज्वाला जलाई, वह किसी भी शिष्य ने कभी नहीं देखी। उसने तीर चलाना सीखा, अपनी आत्मा को आकार दिया, पर जब गुरु ने दक्षिणा मांगी, तो उसकी भक्ति के बदले हाथ कट गया। अर्जुन के मन में हमेशा एक डर था, कि कहीं एकलव्य जैसा कोई अदृश्य धनुर्धर उसके राज्य को न हिला दे। लेकिन जिस क्षण एकलव्य ने अपना अंगूठा गुरु को सौंप दिया, उसने सिर्फ अपना हाथ नहीं, बल्कि अपने सारे भविष्य के सपने भी त्याग दिए। क्या वो समर्पण था, या विवशता का एक खामोश चीत्कार?",
+    "broll": [
+      {
+        "image_prompt": "Extreme macro close-up on Eklavya's eyes — pupils dilated, lashes wet with unshed tears — caught mid-blink, golden dappled sunlight through banyan canopy, faces clearly lit. Eklavya, barefoot, wearing valkala bark-cloth, rudraksha mala. Forest greens and earth-browns palette. no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "बालक एकलव्य ने",
+        "mood": "hesitant hope, building devotion",
+        "wardrobe_context": "FOREST"
+      },
+      {
+        "image_prompt": "Eklavya kneeling beneath his clay Drona idol, drawing back a rough-hewn bow, fingers white-knuckled, mid-gesture, arrow tip glowing, ash-covered, dim shadow-heavy frame. Forest greens and earth-browns palette, dappled sunlight through banyan canopy, faces clearly lit. no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "तीर चलाना सीखा",
+        "mood": "intense focus, silent learning",
+        "wardrobe_context": "FOREST"
+      },
+      {
+        "image_prompt": "Drona's weathered hand extended, palm up, receiving Eklavya's severed thumb, blood-streaked, smoldering embers of injustice in the background, harsh light. Forest greens and earth-browns palette, dappled sunlight through banyan canopy, faces clearly lit. no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "हाथ कट गया",
+        "mood": "shocking sacrifice, profound loss",
+        "wardrobe_context": "FOREST"
+      },
+      {
+        "image_prompt": "Arjuna's wide-eyed face, tear-streaked, white-knuckled grip on his bow, staring into the dark shadows of his own doubt, a sense of hidden threat looming over. Golden dappled sunlight through banyan canopy, faces clearly lit. Forest greens and earth-browns palette. no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "अर्जुन के मन",
+        "mood": "gnawing fear, gnawing doubt",
+        "wardrobe_context": "FOREST"
+      },
+      {
+        "image_prompt": "Macro shot of a single, blood-streaked thumb lying on the forest floor, abandoned and forgotten, bathed in dappled golden sunlight, a stark reminder of a broken promise. Forest greens and earth-browns palette, dappled sunlight through banyan canopy, faces clearly lit. no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "अंगूठा गुरु को",
+        "mood": "stark finality, tragic surrender",
+        "wardrobe_context": "FOREST"
+      },
+      {
+        "image_prompt": "Eklavya's face, stoic yet hollow-eyed, walking away from his past, the dappled sunlight casting long, fading shadows, a lone diya flickering weakly in the encroaching dusk. Forest greens and earth-browns palette, dappled sunlight through banyan canopy, faces clearly lit. no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "खामोश चीत्कार",
+        "mood": "resigned despair, haunting silence",
+        "wardrobe_context": "AFTERMATH"
+      }
+    ],
+    "title": "एकलव्य का असली डर | Eklavya's Real Fear",
+    "hook_title": "एकलव्य का अंतिम त्याग",
+    "description": "▶️ अगला भाग: Eklavya's untold legacy as Nishadha king\n\nक्या एकलव्य का समर्पण गुरुभक्ति थी या मजबूरी? अर्जुन का छिपा हुआ डर और एकलव्य की अनसुनी कहानी।\n\n#Shorts #Mahabharata #महाभारत #Eklavya #एकलव्य #GuruDakshina #Drona #द्रोणाचार्य #Arjuna #अर्जुन #HinduMythology #IndianMythology #Dharma #MythologyShorts #VedicWisdom #HinduDharma #IndianHistory #SpiritualShorts #PauranikKathayein #SanatanDharma #HindiShorts #trending",
+    "tags": [
+      "Eklavya's Sacrifice",
+      "Drona's Betrayal",
+      "Eklavya",
+      "एकलव्य",
+      "Mahabharata",
+      "महाभारत",
+      "Shorts",
+      "Hindu mythology"
+    ],
+    "thumbnail_prompt": "Dramatic Mahabharata thumbnail — vibrant greens and browns, cinematic, Eklavya kneeling with bowed head, his severed thumb visible, dappled forest light, portrait composition.",
+    "quotable_line": "भक्ति की आड़ में हुआ सबसे बड़ा अपमान।",
+    "pinned_question": "❓ भक्ति की आड़ में हुआ सबसे बड़ा अपमान। आपकी नज़र में यह किसकी गलती थी?",
+    "next_seed": "और जो एकलव्य ने आगे किया... हस्तिनापुर आज भी कांप उठाता है।",
+    "language": "hi",
+    "content_type": "story",
+    "topic": "Arjuna's greatest fear about Eklavya — the hidden seven-arrow truth in the dog's mouth, the secret archer who exposed Drona's biggest lie",
+    "series": "mahabharata",
+    "episode_n": 64,
+    "arc_character_devanagari": "एकलव्य",
+    "arc_character_english": "Eklavya — The Devotion That Cost a Thumb",
+    "_phase18_strict_pass": false,
+    "_phase18_score": 16,
+    "_phase18_score_max": 25,
+    "_phase18_score_floor": 19,
+    "_phase18_violation": "anchors",
+    "_phase18_failing_gates": [
+      "archetype",
+      "bookend",
+      "char_names",
+      "engagement",
+      "intensity",
+      "length",
+      "shock_action",
+      "subject_diversity",
+      "verb_per_frame"
+    ],
+    "_phase18_fatal_failures": [
+      "verb_per_frame"
+    ]
+  }
+}
