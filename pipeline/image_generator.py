@@ -707,6 +707,25 @@ _NEGATIVE_PHASE23_4_ANTI_PLATE = (
 )
 _NEGATIVE_PHASE23_1_ANTI_WESTERN = _NEGATIVE_PHASE23_1_ANTI_WESTERN + _NEGATIVE_PHASE23_4_ANTI_PLATE
 
+# Phase 23.7 (2026-06-28) — close the specific gaps surfaced by the
+# 1GtELyfh-qU frame forensic + user's Phase 23.2 Action Blueprint:
+#   • full-face visor helmet — frame 35 of the published render had one
+#   • steel pauldrons — frame 0 had oversized metal shoulder guards
+#   • chainmail cloak — high-fantasy silhouette regression
+#   • spiked pauldrons / gothic plate — "Sauron-effect" silhouette
+#   • Christian cross pendant — frame 5 had a white cross on chest
+#     (FLUX hallucinated European religious iconography even with
+#     existing _NEGATIVE_PHASE19_ANTI_BIAS in place)
+_NEGATIVE_PHASE23_7_HOLE_PATCHES = (
+    ",full-face visor helmet,visor helmet,closed-face helmet,"
+    "steel pauldrons,metal pauldrons,oversized shoulder pads,"
+    "chainmail cloak,mail cloak,gothic plate armor,gothic armor,"
+    "spiked pauldrons,spiked shoulder guards,Sauron-style armor,"
+    "Christian cross,religious cross pendant,crucifix,"
+    "European religious iconography,church symbol,christian crucifix"
+)
+_NEGATIVE_PHASE23_1_ANTI_WESTERN = _NEGATIVE_PHASE23_1_ANTI_WESTERN + _NEGATIVE_PHASE23_7_HOLE_PATCHES
+
 _NEGATIVE_DEFAULT = _NEGATIVE_DEFAULT + _NEGATIVE_PHASE23_1_ANTI_WESTERN
 
 # Backwards-compat alias — _NEGATIVE was the single global pre-2026-05-18.
