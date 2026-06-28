@@ -121,6 +121,7 @@ _VERB_BLACKLIST = {
 }
 
 _VERB_WHITELIST = {
+    # Character-action verbs (Phase 22 baseline)
     "drawing", "drawing back", "drawing the string", "drawing the bow",
     "sinking", "severing", "kneeling", "kneeling beneath",
     "looming", "looming over", "towering", "towering over",
@@ -132,6 +133,24 @@ _VERB_WHITELIST = {
     "drawing arrow", "drawing sword", "striking", "piercing",
     "collapsing", "lunging", "advancing", "marching", "wielding",
     "drawing back from", "leaning in",
+    # Phase 23.6 (2026-06-28) — PROP-action + REACTION-emotion verbs.
+    # Phase 23.2's architectural format produces canvas-first prompts
+    # where PROP shots lead with kinetic object descriptors ("half-
+    # buried bow", "scattered weapons", "dissolving glow") and REACTION
+    # shots lead with emotional-motion descriptors ("trembling beard",
+    # "wincing eyes"). These are still verb-encoded (not noun-poses)
+    # and should pass verb_per_frame. The whitelist was Phase 22-only
+    # character-action verbs — Phase 23.6 expands to cover the full
+    # vocabulary of the new architectural format.
+    "scattered", "half-buried", "shattered", "smoldering", "smoking",
+    "burning", "glowing", "dissolving", "drifting", "hanging",
+    "spilled", "rolled", "embedded", "carved", "etched",
+    "trembling", "shaking", "wincing", "casting", "casting down",
+    "raising", "raising the bow", "raising sword",
+    "running", "racing", "sprinting", "leaping", "diving",
+    "clutching", "clenching", "wielding",
+    "rising", "ascending", "descending", "swooping",
+    "thrown", "tossed", "flung",
 }
 
 _VERB_BLACKLIST_RE = re.compile(
@@ -297,20 +316,27 @@ def _check_image_intensity(image_prompt: str) -> bool:
 
 
 def _check_verb_per_frame_single(image_prompt: str) -> tuple[bool, str]:
-    """Phase 22 (2026-06-25). Single-frame check. The LEADING 80 chars
-    must contain a whitelist verb (single or multi-word) AND zero
-    blacklist verbs (whole-word). FLUX weights early tokens heaviest —
-    that's where the action must land."""
+    """Phase 22 (2026-06-25) / Phase 23.5 (2026-06-28). Single-frame
+    check. The LEADING 150 chars must contain a whitelist verb (single
+    or multi-word) AND zero blacklist verbs (whole-word).
+
+    Phase 23.5 window expansion: was 80 chars. Phase 23.2's rule (n)
+    architectural format intentionally puts the [CANVAS] environment
+    opener (~60-90 chars) BEFORE the [ACTION] verb. Verbs were landing
+    at position 80-110 and getting silently dropped by the 80-char
+    window. The 150-char window covers the canvas opener + action verb
+    in early-token weight zone while still requiring action to appear
+    near the start (not buried 200+ chars deep)."""
     if not image_prompt:
         return False, "empty image_prompt"
-    leading = image_prompt[:80].lower()
+    leading = image_prompt[:150].lower()
 
     bl_hit = _VERB_BLACKLIST_RE.search(leading)
     if bl_hit:
-        return False, f"leading-80 contains blacklisted noun-pose verb '{bl_hit.group(1)}'"
+        return False, f"leading-150 contains blacklisted noun-pose verb '{bl_hit.group(1)}'"
 
     if not any(verb in leading for verb in _VERB_WHITELIST):
-        return False, "leading-80 lacks any action-encoding verb from whitelist"
+        return False, "leading-150 lacks any action-encoding verb from whitelist"
 
     return True, ""
 
