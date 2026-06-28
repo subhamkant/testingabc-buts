@@ -284,56 +284,127 @@ def _inject_wardrobe_context(wardrobe_context: str) -> str:
 # Architectural exclusions (NO Islamic domes / NO Gothic / NO European
 # castles) live in _NEGATIVE_PHASE19_ANTI_BIAS; 2D-style exclusions live
 # in the new _NEGATIVE_PHASE20_ANTI_CARTOON below.
-# Phase 22 (2026-06-25) — 3-tier anchor split. Phase 19's mono-anchor
-# baked mukut+kundal+yajnopavita into EVERY prompt, even battlefield
-# scenes — forensic on the 11-36 view recents showed FLUX rendered all
-# subjects in temple-portrait mode regardless of wardrobe_context. Split
-# the anchor by context: WAR/FOREST/JOURNEY/AFTERMATH/unknown get the
-# battle-leaning anchor (ash/dust/dhoti); only PALACE gets the mukut+
-# kundal ornament block; DIVINE gets the halo/silks variant.
+# Phase 22 (2026-06-25) — 3-tier anchor split.
+# Phase 23 (2026-06-28) — V2 anchor: STRIP portrait-cinematography tokens
+# ("skin pores", "ARRI Alexa 65", "fabric weave" — all instructions to FLUX
+# to do facial close-ups) and ADD scene-composition tokens (wide cinematic,
+# deep focus, environment readable). Forensic on the first Phase 22 video
+# (X-LWlg1DW5s) showed the V1 anchor caused FLUX to render 5/5 portraits.
+# The old 500+ view winners (L1ZPCZJLDe0) had multi-character layered
+# compositions with readable architecture; their prompts didn't carry
+# "skin pores" cinematography baggage.
 _HINDU_ICONOGRAPHY_BASE = (
     "Hyper-photorealistic live-action epic film still, 8K resolution, "
-    "shot on ARRI Alexa 65, highly detailed skin pores and fabric weave, "
-    "gritty naturalistic cinematic lighting, NOT painting, NOT comic book, "
-    "NOT illustration, NOT 2D art, "
-    "Baahubali / B.R. Chopra Mahabharat 1988 live-action wardrobe reference, "
-    "authentic Hindu Vedic civilization, warm golden-bronze Indian skin, "
-    "carved Hindu Nagara-style temple architecture in background, "
+    "wide cinematic composition with deep focus across foreground / "
+    "mid-ground / background, everything in sharp focus, environment "
+    "readable and richly detailed, gritty naturalistic cinematic lighting, "
+    "NOT painting, NOT comic book, NOT illustration, NOT 2D art, "
+    "Baahubali / B.R. Chopra Mahabharat 1988 live-action reference, "
+    "authentic Hindu Vedic civilization, "
 )
 
+# Phase 23: scene-descriptor anchors (NOT character-anatomy). The wardrobe
+# context determines the SCENE the camera is in — battlefield vs palace
+# vs divine realm — not what the character is wearing. Character anatomy
+# is handled by _inject_characters_v2 downstream, on a tight ≤45-char
+# signature_lock budget.
 _HINDU_ICONOGRAPHY_BATTLEFIELD_ANCHOR = _HINDU_ICONOGRAPHY_BASE + (
-    "battle-stained silk dhoti, weathered leather straps, "
-    "dust on skin, ash-streaked face, "
+    "ash and smoke drifting across dust-streaked battlefield, broken "
+    "chariot wheels and discarded weapons in mid-ground, distant marching "
+    "armies on the horizon, low-angle warm golden-hour light, "
 )
 
 _HINDU_ICONOGRAPHY_PALACE_ANCHOR = _HINDU_ICONOGRAPHY_BASE + (
-    "classical Indian mukut crown (NEVER European helmet), tilak on "
-    "forehead, intricate gold kundal earrings, yajnopavita thread, "
-    "silk dhoti with red angavastram, "
+    "ornate Nagara-style palace court with carved stone columns, polished "
+    "marble floor with scattered marigold petals, arched windows admitting "
+    "morning light, multiple courtiers and elders visible in mid-ground, "
+    "warm oil-lamp glow filling the chamber, "
 )
 
 _HINDU_ICONOGRAPHY_DIVINE_ANCHOR = _HINDU_ICONOGRAPHY_BASE + (
-    "ethereal divine halo, pristine white-and-gold silk with diaphanous "
-    "shawl, celestial light on face, "
+    "ethereal divine realm with celestial light beams cutting through "
+    "swirling mist, towering cosmic architecture, divine radiance filling "
+    "the frame, clouds parting to reveal cosmic vistas, "
+)
+
+# Phase 23: NEW. AFTERMATH gets its own anchor — the consequence beat
+# that closes every Phase-22-compliant render. Wide composition,
+# silhouette-friendly framing, abandoned-weapon mid-ground anchor.
+_HINDU_ICONOGRAPHY_AFTERMATH_ANCHOR = _HINDU_ICONOGRAPHY_BASE + (
+    "lone silhouette against fading dusk sky, abandoned weapons in "
+    "foreground (broken bow / fallen sword / shattered chariot wheel), "
+    "smoke and ash hanging in the air, low-angle ground-level perspective, "
+    "muted desaturated palette with one warm accent (lone diya / "
+    "horizon ember), prone body partially visible at the edge of frame, "
+)
+
+# Phase 23: NEW. FOREST + JOURNEY share the battlefield-leaning default
+# (no ornament). Dedicated scene anchors so the camera sees the forest /
+# pilgrimage path, not a character portrait against blurred trees.
+_HINDU_ICONOGRAPHY_FOREST_ANCHOR = _HINDU_ICONOGRAPHY_BASE + (
+    "dense forest hermitage with banyan canopy and dappled sunlight, "
+    "moss-covered stones, simple thatched ashram huts in mid-ground, "
+    "wildlife and natural elements visible in deep background, "
+)
+
+_HINDU_ICONOGRAPHY_JOURNEY_ANCHOR = _HINDU_ICONOGRAPHY_BASE + (
+    "winding mountain pilgrimage path, distant Himalayan peaks on the "
+    "horizon, scattered prayer flags and roadside shrines along the way, "
+    "companions visible at varying distances along the trail, "
 )
 
 # Back-compat alias — default to battlefield (the winners' look).
-# Kept so any in-flight code path that still references the old constant
-# falls to the battlefield variant rather than the ornament-heavy one.
 _HINDU_ICONOGRAPHY_ANCHOR = _HINDU_ICONOGRAPHY_BATTLEFIELD_ANCHOR
 
 
 def _pick_iconography_anchor(wardrobe_context: str) -> str:
-    """Phase 22 (2026-06-25). Route by wardrobe context. WAR / FOREST /
-    JOURNEY / AFTERMATH / unknown get the battlefield anchor (default).
-    Only PALACE gets the ornament-heavy mukut anchor. DIVINE gets the
-    halo+silks anchor."""
+    """Phase 22 (2026-06-25) / Phase 23 (2026-06-28). Route by wardrobe
+    context. Each context gets a SCENE descriptor (environment + depth +
+    multi-character cues), not character anatomy.
+      PALACE     → ornate court + marble + courtiers
+      DIVINE     → cosmic realm + light beams + clouds
+      AFTERMATH  → silhouette + abandoned weapons + fading dusk
+      FOREST     → banyan canopy + ashram huts + dappled sunlight
+      JOURNEY    → pilgrimage path + Himalayan peaks
+      WAR/default→ ash + smoke + chariot wheels + distant armies
+    """
     ctx = (wardrobe_context or "").strip().upper()
     if ctx == "PALACE":
         return _HINDU_ICONOGRAPHY_PALACE_ANCHOR
     if ctx == "DIVINE":
         return _HINDU_ICONOGRAPHY_DIVINE_ANCHOR
+    if ctx == "AFTERMATH":
+        return _HINDU_ICONOGRAPHY_AFTERMATH_ANCHOR
+    if ctx == "FOREST":
+        return _HINDU_ICONOGRAPHY_FOREST_ANCHOR
+    if ctx == "JOURNEY":
+        return _HINDU_ICONOGRAPHY_JOURNEY_ANCHOR
     return _HINDU_ICONOGRAPHY_BATTLEFIELD_ANCHOR
+
+
+# Phase 23 (2026-06-28) — per-shot-type resolution routing.
+# Forensic showed FLUX produced portrait-crop output at 768x1344 even when
+# image_prompts described scenes. Wide aspect ratios force FLUX out of
+# portrait latent space and into landscape composition. ENVIRONMENT / ACTION
+# / PROP shots get 16:9 (1344x768) — these benefit from horizontal sweep.
+# REACTION close-ups stay 9:16 (768x1344) — facial emotion is a vertical
+# composition. AMBIGUOUS defaults to vertical (safe fallback).
+_RESOLUTION_BY_SHOT_TYPE = {
+    "ENVIRONMENT": (1344, 768),
+    "ACTION":      (1344, 768),
+    "PROP":        (1344, 768),
+    "REACTION":    (768, 1344),
+    "AMBIGUOUS":   (768, 1344),
+}
+
+
+def _resolution_for_shot_type(shot_type: str) -> tuple[int, int]:
+    """Phase 23 (2026-06-28). Return (width, height) for a broll shot_type.
+    Wide aspect ratios for environment/action/prop, vertical for reaction."""
+    return _RESOLUTION_BY_SHOT_TYPE.get(
+        (shot_type or "").strip().upper(),
+        (768, 1344),
+    )
 
 
 def _character_palette_directive(character_devanagari: str) -> str:
@@ -572,6 +643,19 @@ _NEGATIVE_PHASE22_ANTI_ORNAMENT = (
     "ornate jewelry catalog,crown-focus,jewelry close-up subject"
 )
 _NEGATIVE_DEFAULT = _NEGATIVE_DEFAULT + _NEGATIVE_PHASE22_ANTI_ORNAMENT
+
+# Phase 23 (2026-06-28) — anti-bokeh block. Applied ONLY to wide-aspect
+# shots (ENVIRONMENT / ACTION / PROP). Vertical REACTION shots legitimately
+# use shallow DoF for emotional close-ups; don't penalize them. The
+# bokeh-wall blur is what made the X-LWlg1DW5s frames look templated —
+# every background was muddy out-of-focus sandstone texture instead of
+# readable scene context.
+_NEGATIVE_PHASE23_ANTI_BOKEH = (
+    ",bokeh,shallow depth of field,blurred background,blurred backdrop,"
+    "portrait crop,head-and-shoulders shot,macro lens,facial close-up dominant,"
+    "out of focus background,bokeh wall,background mush,"
+    "subject isolated against blur,blurry environment"
+)
 
 # Backwards-compat alias — _NEGATIVE was the single global pre-2026-05-18.
 _NEGATIVE = _NEGATIVE_DEFAULT
@@ -1006,13 +1090,15 @@ def _inject_characters(prompt: str, wardrobe_context: str = "") -> str:
     their visual description so every image is visually consistent.
 
     Phase 22 (2026-06-25): wardrobe-aware to defeat the multi-character
-    merge problem. In WAR / FOREST / JOURNEY / AFTERMATH (the
-    battlefield-leaning contexts), each match gets ONLY the ~120-char
-    `signature_lock` field (non-negotiable identifiers). In PALACE /
-    DIVINE (the ornament-friendly contexts), each match gets the full
-    250-char `visual` fingerprint. Math: PALACE two-shot ≈ 500 chars
-    stacked (merge risk); WAR two-shot ≈ 200 chars stacked (FLUX keeps
-    subjects separate).
+    merge problem.
+    Phase 23 (2026-06-28): TIGHT bracketed format. Frame 1 of X-LWlg1DW5s
+    showed that the verbose CHARACTER DETAILS — <125 chars> paragraph
+    appended at the END of the prompt was still character-anatomy-heavy
+    enough to push FLUX into portrait composition. New format wraps each
+    signature_lock in [Name: lock] brackets and keeps total injection
+    ≤80 chars per character. In PALACE/DIVINE we still allow the full
+    visual fingerprint because court scenes legitimately benefit from
+    ornament detail.
     """
     if not _CHARACTERS:
         return prompt
@@ -1025,20 +1111,23 @@ def _inject_characters(prompt: str, wardrobe_context: str = "") -> str:
         if name.lower() in prompt_lower:
             if use_full_fingerprint:
                 visual = data.get("visual", "")[:250]
+                if visual:
+                    injected.append(visual)
             else:
-                # Prefer signature_lock (Phase 22 schema). Fall back to
-                # a truncated visual for characters that haven't been
-                # migrated yet — the back-compat path keeps non-Phase-22
-                # characters renderable without re-editing the entire
-                # roster.
-                visual = (
+                # Phase 23: tight bracketed [Name: lock] format — each
+                # entry ~50-70 chars including the brackets, vs the prior
+                # 100-150 char per-character paragraph.
+                lock = (
                     data.get("signature_lock", "")
-                    or data.get("visual", "")[:120]
+                    or data.get("visual", "")[:60]
                 )
-            if visual:
-                injected.append(visual)
+                if lock:
+                    injected.append(f"[{name}: {lock}]")
     if injected:
-        return prompt + ". CHARACTER DETAILS — " + "; ".join(injected)
+        if use_full_fingerprint:
+            return prompt + ". CHARACTER DETAILS — " + "; ".join(injected)
+        # Phase 23: bracket-list format for non-court contexts.
+        return prompt + " " + " ".join(injected)
     return prompt
 
 
@@ -1835,25 +1924,32 @@ def generate_images(scenes_or_script, single_shot: bool = False, series: str = "
             # part of the scene prompt. Empty cue = no-op.
             if imperfection_cue:
                 base_prompt = f"{base_prompt}. {imperfection_cue}"
-            # Phase 19 / Phase 22 — wardrobe-context-aware + Hindu-iconography
-            # anchored composition. Order matters: iconography anchor at the
-            # front (FLUX gives more weight to early tokens) → wardrobe context
-            # next → angle/composition → base_prompt last. base_prompt carries
-            # the LLM-emitted character + intensity + palette. Mahabharata-only
-            # (series-gated) so the curiosity / whatif / krishna pipelines stay
-            # on their existing prompt-shape contracts.
+            # Phase 19 / Phase 22 / Phase 23 — wardrobe-context-aware +
+            # scene-anchored composition. Phase 23 INVERTS the token stack:
+            # composition + scene + LLM action FIRST (FLUX weights early
+            # tokens heaviest, so the action verb and environment land in
+            # the strongest cross-attention slots), cultural anchor SECOND,
+            # tight character details LAST. The X-LWlg1DW5s forensic showed
+            # the old order (anchor + character anatomy + ... + action verb
+            # buried at the end) made FLUX commit to portrait composition
+            # before it ever read the verb.
             if series == "mahabharata":
                 wardrobe_ctx        = scene_wardrobe_ctx
-                wardrobe_prefix     = _inject_wardrobe_context(wardrobe_ctx)
-                # Phase 22 (2026-06-25): route the iconography anchor by
-                # wardrobe context. Battlefield/forest/journey/aftermath
-                # get the dust+ash anchor; only palace/divine get the
-                # ornament-heavy anchor.
+                shot_type           = (scene.get("shot_type", "") or "AMBIGUOUS").strip().upper()
                 iconography_anchor  = _pick_iconography_anchor(wardrobe_ctx)
+                # Phase 23: composition first → action verb (in base_prompt)
+                # second → tight character bracket third → scene anchor fourth.
+                # We drop the legacy wardrobe_prefix entirely — its character-
+                # anatomy tokens (ash-streaked face / blood smear / golden-
+                # bronze skin) double-loaded the prompt tail with portrait
+                # cues. The new signature_lock (≤45 chars) and the per-
+                # context iconography_anchor (scene descriptor) carry the
+                # same information without crushing the verb + environment.
                 prompt = (
-                    iconography_anchor
-                    + wardrobe_prefix
-                    + f"{angle_label}{composition_directive}{base_prompt}"
+                    f"{angle_label}{composition_directive}"
+                    + base_prompt          # raw LLM prompt (verb + scene action) + [Name: lock]
+                    + " "
+                    + iconography_anchor   # scene descriptor (env + depth + multi-character)
                 )
             else:
                 prompt = f"{angle_label}{composition_directive}{base_prompt}"
@@ -1863,11 +1959,25 @@ def generate_images(scenes_or_script, single_shot: bool = False, series: str = "
             hero = "" if series == "whatif" else _primary_character(raw_prompt)
             seed = _char_stable_seed(hero, j) if hero else (i * 137 + j * 31)
 
+            # Phase 23 (2026-06-28): dynamic aspect ratio + conditional
+            # anti-bokeh negative. Wide shots (ENVIRONMENT/ACTION/PROP)
+            # render at 1344x768 (16:9 landscape) — FLUX out of portrait
+            # latent space, multi-character compositions possible. Vertical
+            # shots (REACTION/AMBIGUOUS) render at 768x1344 (9:16 portrait).
+            # Anti-bokeh negative only applies to wide shots — vertical
+            # REACTION close-ups legitimately use shallow DoF.
+            if series == "mahabharata":
+                img_w, img_h = _resolution_for_shot_type(shot_type)
+                if img_w > img_h:  # wide → add anti-bokeh
+                    scene_negative = scene_negative + _NEGATIVE_PHASE23_ANTI_BOKEH
+            else:
+                img_w, img_h = 768, 1344  # backwards-compat for non-mahabharata
+
             success = False
             for attempt in range(3):
                 try:
                     img_bytes, provider = generate_image_bytes(
-                        prompt, seed=seed, width=768, height=1344, mood=mood,
+                        prompt, seed=seed, width=img_w, height=img_h, mood=mood,
                         style_suffix=style_suffix,
                         negative_prompt=scene_negative,
                     )

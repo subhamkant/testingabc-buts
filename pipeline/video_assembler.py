@@ -398,17 +398,56 @@ def get_audio_duration(audio_path: str) -> float:
 
 # ── Ken Burns motion expressions (portrait 1080×1920) ─────────────────────────
 
-def _ken_burns_expr(motion: str, frames: int, intensity: float = 1.0) -> str:
+def _ken_burns_expr(motion: str, frames: int, intensity: float = 1.0,
+                    source_aspect: str = "portrait") -> str:
     """
     Returns the FFmpeg filter string for Ken Burns motion at 1080x1920 portrait.
-    Pre-scales to 2160x3840 so pans have canvas without hitting black borders.
 
-    `intensity` scales the zoom delta (defaults to 1.0 = current behavior).
+    `source_aspect` (Phase 23, 2026-06-28):
+      • "portrait"  (default, 9:16 source) — existing behavior: pre-scales
+        to 2160×3840 then applies zoompan inside that canvas. Same as
+        Phase 22.
+      • "wide"      (16:9 source, e.g. 1344×768 from FLUX) — pre-scales by
+        HEIGHT to 1920 (scale=-1:1920) producing a ~3360×1920 canvas, then
+        applies a horizontal sweep zoompan that pans from left to right
+        across the full landscape into the 1080×1920 viewport. Critical
+        fix: the original `y='(ih-1920)/2'` evaluated to negative
+        coordinates on a 768-tall source and would crash ffmpeg
+        (zoompan strictly forbids negative spatial coords). The new
+        pre-pass guarantees ih=1920 → y='0' is stable.
+
+    `intensity` scales the zoom delta (defaults to 1.0).
     Per-scene escalation passes intensity 0.8 for the opening hook and ramps
     to 1.4 for the climax so visual motion rises with the music's 4-section
     volume curve. Pan motions are unaffected (they use a fixed zoom = 1.15
     and just shift x/y — scaling those would just amplify the canvas crop).
     """
+    if source_aspect == "wide":
+        # Phase 23: 16:9 source → scale height to 1920 (preserves aspect →
+        # ~3360 wide), then horizontal sweep with z=1.0 (no zoom, just pan).
+        # iw=3360, ih=1920 inside zoompan; y='0' is now stable.
+        # Motion choices for wide:
+        #   pan_right  — left edge → right edge over duration
+        #   pan_left   — right edge → left edge over duration
+        # All other motion names fall back to pan_right (a sensible default
+        # for landscape sweep).
+        base = "scale=-1:1920:flags=lanczos,"
+        out  = f"s=1080x1920:fps={FPS}"
+        if motion == "pan_left":
+            # Right edge → left edge
+            expr = (
+                f"zoompan=z='1.0'"
+                f":x='(iw-1080)*(1-on/{frames})':y='0':d={frames}:{out}"
+            )
+        else:
+            # Default + explicit pan_right: left edge → right edge
+            expr = (
+                f"zoompan=z='1.0'"
+                f":x='(iw-1080)*on/{frames}':y='0':d={frames}:{out}"
+            )
+        return base + expr
+
+    # Portrait path (legacy / 9:16 source) — unchanged behavior.
     base = (
         "scale=2160:3840:force_original_aspect_ratio=increase:flags=lanczos,"
         "crop=2160:3840,"
@@ -471,11 +510,38 @@ def _render_image_clip(
     fade_out: bool = True,
     with_audio: str = None,
     intensity: float = 1.0,
+    source_aspect: str = "",
 ) -> bool:
+    """Phase 23 (2026-06-28): added `source_aspect` parameter. When "wide"
+    (or auto-detected as wide from the image file), the Ken Burns filter
+    uses the horizontal-sweep pan path with the scale=-1:1920 pre-pass
+    that prevents the negative-y zoompan crash on landscape sources."""
     frames = max(int(duration * FPS), 50)
 
+    # Phase 23 — auto-detect source aspect when not explicitly provided.
+    # ffprobe is faster than PIL for a single header read and is already a
+    # pipeline dependency. Wide = width > height.
+    if not source_aspect:
+        try:
+            probe = subprocess.run(
+                ["ffprobe", "-v", "error",
+                 "-select_streams", "v:0",
+                 "-show_entries", "stream=width,height",
+                 "-of", "csv=p=0:s=x", image_path],
+                capture_output=True, text=True, timeout=5,
+            )
+            if probe.returncode == 0 and "x" in probe.stdout:
+                w_str, h_str = probe.stdout.strip().split("x")[:2]
+                if int(w_str) > int(h_str):
+                    source_aspect = "wide"
+                else:
+                    source_aspect = "portrait"
+        except Exception:
+            source_aspect = "portrait"  # safe fallback — existing behavior
+
     vf_parts = [
-        _ken_burns_expr(motion, frames, intensity=intensity),
+        _ken_burns_expr(motion, frames, intensity=intensity,
+                        source_aspect=source_aspect),
         COLOR_GRADE,
         FILM_GRAIN,
     ]

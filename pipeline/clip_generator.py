@@ -436,16 +436,74 @@ async def generate_video_clips(
 
     os.makedirs("temp/clips", exist_ok=True)
 
+    # Phase 23 (2026-06-28) — bypass I2V for wide-aspect source images.
+    # I2V providers (fal.ai/WAN, Replicate/WAN-2.5, HF/LTX-2) all hardcode
+    # `"aspect_ratio": "9:16"` output. Feeding a 1344×768 wide image into
+    # those providers either gets center-cropped (60%+ horizontal content
+    # lost) or distorts. Wide images route directly to Ken Burns horizontal
+    # pan in video_assembler.py instead — which is what produced the
+    # cinematic sweep look in the 500+ view winners.
+    #
+    # Detection: probe each image's dimensions; if width > height, mark
+    # the index for exclusion from the AI-clip target_set.
+    _wide_indices = set()
+    import subprocess as _sp_phase23
+    for _idx, _img_path in enumerate(image_files):
+        if not _img_path:
+            continue
+        try:
+            _probe = _sp_phase23.run(
+                ["ffprobe", "-v", "error", "-select_streams", "v:0",
+                 "-show_entries", "stream=width,height",
+                 "-of", "csv=p=0:s=x", _img_path],
+                capture_output=True, text=True, timeout=5,
+            )
+            if _probe.returncode == 0 and "x" in _probe.stdout:
+                _w, _h = _probe.stdout.strip().split("x")[:2]
+                if int(_w) > int(_h):
+                    _wide_indices.add(_idx)
+        except Exception:
+            pass  # safe fallback — treat as portrait (existing behavior)
+    if _wide_indices:
+        print(f"    [phase23-pan] {len(_wide_indices)} wide-aspect scene(s) "
+              f"{sorted(_wide_indices)} bypass I2V → Ken Burns horizontal pan")
+
     # Resolve target indices for AI-clip generation.
     if scene_indices is None:
-        target_set = set(range(len(scenes)))
-        skip_count = 0
+        # v2.1 (2026-06-13) — curiosity Shorts: if any shot in any scene
+        # carries `requires_motion: true`, restrict AI-clip generation to
+        # ONLY those scenes. Saves Wan/Replicate quota on non-motion shots.
+        #
+        # Mahabharata isolation: Mahabharata's scenes from script_generator.py
+        # never set `requires_motion` on shots → `shot.get("requires_motion")`
+        # is always None/False → flagged stays empty → target_set falls through
+        # to `set(range(len(scenes)))` which matches current Mahabharata behavior
+        # exactly. Verified by grep: only curiosity_script.py emits this field.
+        flagged = [
+            i for i, scene in enumerate(scenes)
+            if any(shot.get("requires_motion") for shot in scene.get("visual_track", []))
+        ]
+        if flagged:
+            target_set = set(flagged)
+            skip_count = len(scenes) - len(target_set)
+            print(f"    [REQUIRES_MOTION] AI-clip generation restricted to "
+                  f"scenes {sorted(target_set)} (per requires_motion flags); "
+                  f"{skip_count} scene(s) will use Ken Burns fallback.")
+        else:
+            target_set = set(range(len(scenes)))
+            skip_count = 0
     else:
         target_set = set(scene_indices)
         skip_count = len(scenes) - len(target_set)
         print(f"    [WAN_HOOK_ONLY] AI-clip generation restricted to scene "
               f"indices {sorted(target_set)}; {skip_count} scene(s) will use "
               f"Ken Burns fallback (saves provider quota).")
+
+    # Phase 23: subtract wide-aspect scenes from the target set so they
+    # route directly to Ken Burns horizontal pan instead of going through
+    # the 9:16-locked I2V cascade.
+    if _wide_indices:
+        target_set = target_set - _wide_indices
 
     # Step 3b — parallel cascade, but ONLY for target indices
     sem     = asyncio.Semaphore(MAX_CONCURRENT)

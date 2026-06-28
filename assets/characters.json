@@ -3,35 +3,35 @@
 
   "Krishna": {
     "visual": "Lord Krishna with vivid bright medium cobalt-blue divine skin (saturated true-blue, NOT dark indigo, NOT teal, NOT navy — luminous mid-tone blue like an azure or cornflower hue), youthful soft graceful divine face with large dark soulful lotus eyes, full slightly rose-pink lips, smooth refined features, long flowing wavy/curly jet-black hair cascading down to the chest on both sides, urdhva pundra tilak on the forehead (white U-shape with a vertical red center line), small gold ornament jewel above the third-eye between his brows, twin peacock feathers (morpankh) tucked at the top of his head — NOT a full crown, just the two feathers with a small gold clasp, gold drop earrings (kundal), multiple layered gold chain necklaces with jeweled pendants on the chest, vaijayanti mala (long flower garland of red, white, and green forest flowers) draped from neck reaching to the waist, gold armbands with blue jewels on the upper arms, slim youthful athletic teenage figure (lean, NOT a muscular warrior build, soft smooth chest, no heavy muscle definition), wearing pristine cream-white silk dhoti tied with a gold-edged sash at the waist (OR canonical yellow pitambara), holding divine flute (bansuri), serene contemplative enchanting expression with a faint loving smile",
-    "signature_lock": "vivid cobalt-blue skin, twin peacock feathers in hair (NOT a full crown), dark wavy hair, youthful athletic teenage build, holding bansuri flute",
+    "signature_lock": "cobalt-blue skin, twin peacock feathers, bansuri",
     "colors": "vivid bright medium cobalt-blue divine skin (not dark indigo, not teal), jet-black long flowing curly hair, cream-white or saffron-yellow silk dhoti, gold and blue-jeweled ornaments, vaijayanti red-white-green flower garland, peacock-green-and-blue morpankh feathers"
   },
 
   "Arjuna": {
     "_revised": "Phase 4 identity-anchor rewrite 2026-05-17. Phase 2/3 burden anchor added 2026-05-18 (calloused bow-hands). Phase 22 (2026-06-25) signature_lock added — crown demoted to PALACE only.",
     "visual": "Arjuna — tall athletic warrior, broad shoulders, calloused bow-hands. wheatish golden-brown skin, dark wavy hair, late 20s-30s. ornate kshatriya armor, gold-trimmed breastplate, jeweled crown. carries divine bow Gandiva and quiver.",
-    "signature_lock": "tall athletic warrior, wheatish golden-brown skin, dark wavy hair, carries Gandiva bow with quiver, silver-gold breastplate (NOT ornate full crown — crown only in PALACE)",
+    "signature_lock": "wheatish-bronze warrior, Gandiva bow + quiver",
     "colors": "wheatish golden-bronze skin, silver-gold armor, jeweled crown, dark wavy hair, glowing Gandiva bow"
   },
 
   "Draupadi": {
     "_revised": "Phase 22 (2026-06-25) signature_lock added — battlefield-leaning fingerprint omits ornament-piled hair tokens.",
     "visual": "Draupadi Panchali, exceptionally beautiful dark-complexioned queen with luminous dark skin, large expressive black lotus eyes, flowing black lustrous hair, wearing royal silk sari in crimson and gold, adorned with exquisite jewelry including necklace earrings bangles, regal dignified proud posture, fierce intelligent eyes that hold both grace and fire, the most beautiful woman of her era",
-    "signature_lock": "luminous dark skin, large expressive black lotus eyes, flowing long braided black hair (NOT ornament-piled), crimson silk sari, regal proud posture, fierce intelligent eyes",
+    "signature_lock": "luminous dark skin, crimson sari, fierce eyes",
     "colors": "dark luminous skin, crimson-gold silk sari, gold ornaments, black flowing hair"
   },
 
   "Bhishma": {
     "_revised": "Phase 4 identity-anchor rewrite 2026-05-17. Phase 2/3 burden anchor added 2026-05-18. Phase 22 (2026-06-25) signature_lock added.",
     "visual": "Bhishma — tall imposing elder warrior, burdened shoulders. silver-white beard to mid-chest, no mustache. weathered late-50s-to-60s face, haunted eyes carrying authority. saffron-bronze dhoti, brown leather chest plate, silver sun-emblem.",
-    "signature_lock": "tall imposing elder warrior, silver-white beard to mid-chest with no mustache, weathered late-50s face with haunted authority, restrained burdened posture, arrow-scarred body",
+    "signature_lock": "elder warrior, silver-white beard, no mustache",
     "colors": "silver-white hair and beard, saffron-bronze dhoti, brown leather chest plate, silver sun-emblem, weathered noble complexion, burdened bearing"
   },
 
   "Karna": {
     "_revised": "Phase 4 identity-anchor rewrite 2026-05-17. Phase 2/3 burden anchor added 2026-05-18. Phase 22 (2026-06-25) signature_lock added — kundal + kavacha + golden-bronze radiance pinned as non-negotiable identifiers.",
     "visual": "Karna — broad-shouldered warrior, strong muscular chest with weary stance, luminous golden-bronze radiant skin. natural divine armor (kavacha) fused to chest, golden earrings (kundala) — ALWAYS visible. late 20s-30s, haunted eyes.",
-    "signature_lock": "broad-shouldered warrior, luminous golden-bronze radiant skin, natural divine kavacha armor fused to chest, golden kundal earrings ALWAYS visible, red warrior attire, weary haunted eyes",
+    "signature_lock": "golden-bronze warrior, kavacha + kundal earrings",
     "colors": "luminous golden-bronze radiant skin, divine golden kavacha glow, golden kundala earrings, red warrior attire, weary haunted bearing"
   },
 
@@ -43,21 +43,21 @@
   "Yudhishthira": {
     "_revised": "Phase 19 (2026-06-16) anti-Sauron rewrite. Phase 22 (2026-06-25) signature_lock added — crown demoted to PALACE only, battle-context strips mukut entirely.",
     "visual": "Yudhishthira Dharmaraja the just king, warm golden-bronze Indian skin, salt-pepper beard, calm deep eyes, white-and-gold silk dhoti with red-gold angavastram (NO iron armor unless battlefield, NO European helmet), classical Indian mukut crown with peacock feather, tilak on forehead, gold kundal earrings, yajnopavita thread, gold scepter or walking staff",
-    "signature_lock": "warm golden-bronze skin, salt-pepper beard, calm deep eyes, modest white-and-gold silk dhoti, NO crown by default (crown only in PALACE), no iron armor",
+    "signature_lock": "golden-bronze, salt-pepper beard, white silk dhoti",
     "colors": "warm golden-bronze Indian skin, white-and-gold silk dhoti, gold mukut crown, ruby-and-gold jewelry"
   },
 
   "Eklavya": {
     "_added": "Phase 22 (2026-06-25) — was missing from JSON, needed for tribal-archer arc topics. Pinned signature_lock: bare-chested tribal forest archer, severed right thumb ALWAYS visible, NOT a crowned prince.",
     "visual": "Eklavya — young tribal forest archer, bare-chested with natural cotton lower garment, dust-streaked skin, holding a hand-carved bow, missing right thumb (severed in guru-dakshina) ALWAYS visible, jungle backdrop, rudraksha bead necklace, NOT a crowned prince, NOT royal attire, weathered authentic forest dweller, no jewelry except rudraksha",
-    "signature_lock": "tribal forest archer, bare-chested with natural cotton lower garment, dust-streaked skin, missing right thumb (severed) ALWAYS visible, jungle backdrop, NOT a crowned prince, NOT royal attire, no jewelry except rudraksha",
+    "signature_lock": "tribal archer, bare-chested, severed right thumb",
     "colors": "dust-streaked warm tan skin, simple cotton + rudraksha brown"
   },
 
   "Ashwatthama": {
     "_added": "Phase 22 (2026-06-25) — was missing from JSON, needed for cursed-warrior arc topics. Pinned signature_lock: mid-forehead embedded gem (the iconic curse mark) ALWAYS visible, curse-white prematurely-aged hair, blood smear.",
     "visual": "Ashwatthama — son of Drona, mid-forehead gem embedded in skin ALWAYS visible (the iconic curse mark), curse-white prematurely-aged hair, blood smear on skin, warrior build, haunted feral eyes, dark warrior attire (battle-stained dhoti + leather straps, NOT royal silk), forehead gem casts faint light, NOT a clean royal warrior, weathered and cursed",
-    "signature_lock": "mid-forehead gem embedded in skin ALWAYS visible, curse-white prematurely-aged hair, blood smear on skin, warrior build, haunted feral eyes, NOT a clean royal warrior",
+    "signature_lock": "forehead gem, curse-white hair, blood smear",
     "colors": "curse-white hair, blood-streaked skin, dark battle dhoti"
   },
 

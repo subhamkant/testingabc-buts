@@ -2221,6 +2221,15 @@ def generate_phase18_script(
     data["_phase18_failing_gates"]  = sorted(_all_failing_gates)
     data["_phase18_fatal_failures"] = sorted(_fatal_failures)
 
+    # Phase 23 (2026-06-28): stamp shot_type onto each broll entry. The
+    # downstream image_generator routes width/height per shot_type
+    # (ENVIRONMENT/ACTION/PROP → 1344x768 wide; REACTION/AMBIGUOUS →
+    # 768x1344 vertical). Computing once here vs re-classifying at render
+    # time keeps the classifier output deterministic across the
+    # script-gen → image-gen → assembly pipeline.
+    for _br in data.get("broll", []):
+        _br["shot_type"] = _classify_broll_shot_type(_br.get("image_prompt", ""))
+
     # Cliffhanger prepend to description (mirrors legacy line 4687)
     if next_episode_teaser:
         teaser_title = next_episode_teaser.split("—")[0].strip()[:60] or next_episode_teaser[:60]
