@@ -1,0 +1,113 @@
+{
+  "ts": "2026-06-28T11-04-45",
+  "language": "hi",
+  "score": 20,
+  "score_max": 25,
+  "violation": "verb_per_frame",
+  "topic": "Yudhishthira's hidden sin in the dice game — the truthful king's greatest betrayal, gambling away his wife and his brothers as the secret cost of his pride",
+  "title": "युधिष्ठिर का छुपा अभिमान | Yudhishthira's Hidden Pride",
+  "script": {
+    "voiceover": "युधिष्ठिर पांसे फेंकते हैं — उनकी आँखों में अजीब सी चमक, होंठ सूखे, पर हाथ रुक नहीं सकते। हर दांव धर्म का नाम लेकर, हर चाल में अभिमान का जहर। पहले साम्राज्य, फिर भाई, एक-एक कर सब दांव पर लगा दिए। लेकिन जिस क्षण द्रौपदी को दांव पर लगाने का विचार आता है, उनके भीतर कुछ टूट जाता है। उनकी 'सत्यनिष्ठा' का मुखौटा उतर जाता है, और एक राजा का घमंड ही उन्हें अंधा कर देता है। चीखती द्रौपदी के आंसू, भाइयों की बेबसी, सब एक ही पाप का परिणाम था। \"तुमने अपने ही घर को जला दिया है,\" एक आवाज उनके भीतर गूँजती है। और जो युधिष्ठिर ने अगले पल में किया... आज भी कांप उठाता है। क्या यही सत्यवादी राजा का सबसे बड़ा अभिमान नहीं था, जिसने अपने ही धर्म को बेच डाला?",
+    "broll": [
+      {
+        "image_prompt": "Extreme macro close-up on Yudhishthira's eyes — pupils dilated, lashes wet — caught mid-blink, a strange flickering light reflecting, wide-eyed, warm oil-lamp glow on white-and-gold silk dhoti, carved sandstone palace interior, contemplative dignified, faces clearly lit with key-light, warm oil-lamp + soft fill from skylight, dignified, faces visible, NO deep shadows, NO dark fantasy, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "पांसे फेंकते हैं",
+        "mood": "intense internal conflict",
+        "wardrobe_context": "PALACE",
+        "shot_type": "REACTION"
+      },
+      {
+        "image_prompt": "Gripping a pair of ornate dice, Yudhishthira's fingers trembling slightly, his face a grim mask of resolve, shadowed by inner conflict, sweat-drenched brow, warm oil-lamp glow on white-and-gold silk dhoti, carved sandstone palace interior, contemplative dignified, faces clearly lit with key-light, warm oil-lamp + soft fill from skylight, dignified, faces visible, NO deep shadows, NO dark fantasy, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "अभिमान का जहर",
+        "mood": "desperate, prideful resolve",
+        "wardrobe_context": "PALACE",
+        "shot_type": "ACTION"
+      },
+      {
+        "image_prompt": "[WITNESS-FROM-BEHIND] Yudhishthira's back-of-head foreground, recoiling slightly, as he views his brothers (Bhima, Arjuna, Nakula, Sahadeva) in the mid-ground, their faces wide-eyed in shock and despair, their royal robes disheveled, forced to witness the gamble, warm oil-lamp glow on white-and-gold silk dhoti, carved sandstone palace interior, contemplative dignified, faces clearly lit with key-light, warm oil-lamp + soft fill from skylight, dignified, faces visible, NO deep shadows, NO dark fantasy, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "भाई, एक-एक",
+        "mood": "despair, powerlessness",
+        "wardrobe_context": "PALACE",
+        "shot_type": "REACTION"
+      },
+      {
+        "image_prompt": "[POWER-LOOM] Yudhishthira standing tall, his back to the viewer, looming over a distraught Draupadi kneeling beneath him, her royal garments torn, tear-streaked face hidden in her hands, a deep shadow casting over her, warm oil-lamp glow on white-and-gold silk dhoti, carved sandstone palace interior, contemplative dignified, faces clearly lit with key-light, warm oil-lamp + soft fill from skylight, dignified, faces visible, NO deep shadows, NO dark fantasy, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "द्रौपदी को दांव",
+        "mood": "shattering despair, betrayal",
+        "wardrobe_context": "PALACE",
+        "shot_type": "ACTION"
+      },
+      {
+        "image_prompt": "Falling away, a fractured mask-like illusion of Yudhishthira's face, revealing his anguished expression beneath, kohl-rimmed eyes wide-eyed in horror at his own actions, warm oil-lamp glow on white-and-gold silk dhoti, carved sandstone palace interior, contemplative dignified, faces clearly lit with key-light, warm oil-lamp + soft fill from skylight, dignified, faces visible, NO deep shadows, NO dark fantasy, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "मुखौटा उतर जाता है",
+        "mood": "shattering revelation, horror",
+        "wardrobe_context": "PALACE",
+        "shot_type": "ACTION"
+      },
+      {
+        "image_prompt": "Weeping over her fate, Draupadi's tear-streaked face, eyes closed in anguish, a single pearl-like tear rolling down her cheek, her vibrant saree now appearing faded and torn, shadow-heavy lighting on her face, warm oil-lamp glow on white-and-gold silk dhoti, carved sandstone palace interior, contemplative dignified, faces clearly lit with key-light, warm oil-lamp + soft fill from skylight, dignified, faces visible, NO deep shadows, NO dark fantasy, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "द्रौपदी के आंसू",
+        "mood": "profound sorrow, indignity",
+        "wardrobe_context": "PALACE",
+        "shot_type": "REACTION"
+      },
+      {
+        "image_prompt": "[POWER-LOOM] A distorted, shadow-heavy figure, representing Yudhishthira's inner conscience, towering over Yudhishthira who is collapsing to his knees, clutching his chest, his face contorted in pain and self-reproach, warm oil-lamp glow on white-and-gold silk dhoti, carved sandstone palace interior, contemplative dignified, faces clearly lit with key-light, warm oil-lamp + soft fill from skylight, dignified, faces visible, NO deep shadows, NO dark fantasy, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "भीतर गूँजती है",
+        "mood": "agonizing guilt, self-condemnation",
+        "wardrobe_context": "PALACE",
+        "shot_type": "ACTION"
+      },
+      {
+        "image_prompt": "An abandoned royal dice board, scattered dice on the carved sandstone palace floor, a lone flickering oil lamp casting long, dim shadows over the scene, a sense of profound emptiness and ruin, fading dusk light, warm oil-lamp glow on white-and-gold silk dhoti, carved sandstone palace interior, contemplative dignified, faces clearly lit with key-light, warm oil-lamp + soft fill from skylight, dignified, faces visible, NO deep shadows, NO dark fantasy, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "सबसे बड़ा अभिमान",
+        "mood": "desolate, ruinous consequence",
+        "wardrobe_context": "AFTERMATH",
+        "shot_type": "AMBIGUOUS"
+      }
+    ],
+    "title": "युधिष्ठिर का छुपा अभिमान | Yudhishthira's Hidden Pride",
+    "hook_title": "युधिष्ठिर का असली धोखा",
+    "description": "▶️ अगला भाग: Yudhishthira's greatest lie\n\nसत्यवादी राजा युधिष्ठिर ने कैसे दांव पर लगा दिया अपना धर्म और सम्मान? युधिष्ठिर की 'सत्यनिष्ठा' का मुखौटा कैसे उतरा जब उनके अभिमान ने उन्हें अपने भाइयों और पत्नी को भी दांव पर लगाने पर मजबूर कर दिया। महाभारत के सबसे निर्णायक पलों में से एक, यह घटना उनके भीतर के संघर्ष, उनके घमंड की कीमत और एक राजा की सबसे बड़ी नैतिक हार को दर्शाती है। देखें कैसे 'धर्मराज' के इस छुपे हुए पाप ने पूरे कुरुक्षेत्र युद्ध की नींव रखी।\n\n#Shorts #Mahabharata #महाभारत #Krishna #HinduMythology\n#Shorts #Mahabharata #महाभारत #Hindu #BhagavadGita #भगवद_गीता #Krishna #कृष्ण #Arjuna #अर्जुन #Karna #कर्ण #Bhishma #भीष्म #Draupadi #द्रौपदी #Kurukshetra #कुरुक्षेत्र #AncientIndia #IndianMythology #Dharma #MythologyShorts #VedicWisdom #HinduDharma #IndianHistory #SpiritualShorts #PauranikKathayein #SanatanDharma #HindiShorts #trending",
+    "tags": [
+      "Yudhishthira",
+      "Draupadi",
+      "DiceGame",
+      "Gambling",
+      "पांसे",
+      "अभिमान",
+      "युधिष्ठिर",
+      "द्रौपदी",
+      "Mahabharata",
+      "महाभारत",
+      "Shorts",
+      "Hindu mythology"
+    ],
+    "thumbnail_prompt": "Dramatic portrait of Yudhishthira, tear-streaked face, eyes wide with inner torment, gold mukut slightly askew, a single ornate dice held loosely in the foreground, palace interior background, vibrant colours, cinematic, portrait composition, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+    "quotable_line": "सच का अभिमान भी सबसे बड़ा धोखा बन जाता है।",
+    "pinned_question": "❓ सच का अभिमान भी सबसे बड़ा धोखा बन जाता है। क्या आप इससे सहमत हैं?",
+    "next_seed": "और जो युधिष्ठिर ने अगले पल में किया... आज भी कांप उठाता है।",
+    "language": "hi",
+    "content_type": "story",
+    "topic": "Yudhishthira's hidden sin in the dice game — the truthful king's greatest betrayal, gambling away his wife and his brothers as the secret cost of his pride",
+    "series": "mahabharata",
+    "episode_n": 52,
+    "arc_character_devanagari": "युधिष्ठिर",
+    "arc_character_english": "Yudhishthira — The Cost of Truth",
+    "_phase18_strict_pass": false,
+    "_phase18_score": 20,
+    "_phase18_score_max": 25,
+    "_phase18_score_floor": 19,
+    "_phase18_violation": "verb_per_frame",
+    "_phase18_failing_gates": [
+      "archetype",
+      "bookend",
+      "char_names",
+      "monotony",
+      "verb_per_frame"
+    ],
+    "_phase18_fatal_failures": [
+      "verb_per_frame"
+    ]
+  }
+}
