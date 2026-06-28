@@ -1,0 +1,111 @@
+{
+  "ts": "2026-06-28T14-15-21",
+  "language": "hi",
+  "score": 20,
+  "score_max": 25,
+  "violation": "anchors",
+  "topic": "Ashwatthama's hidden truth in Yudhishthira's lie — the secret name that killed his father Drona from grief not blade, the greatest sin of war",
+  "title": "युधिष्ठिर का सबसे बड़ा धोखा | Yudhishthira's Biggest Betrayal",
+  "script": {
+    "voiceover": "द्रोण की आँखें काँपती हैं, जब युद्धभूमि में अफवाह तैरती है — \"अश्वत्थामा मारा गया!\" उसकी आत्मा चीख उठती है, विश्वास नहीं कर पा रही थी। तभी युधिष्ठिर की आवाज़ सुनाई देती है, \"अश्वत्थामा हतो नरो वा कुंजरोवा\" — पर 'कुंजर' शब्द हवा में घुल जाता है, मानो कभी था ही नहीं। गुरु द्रोण, अपने पुत्र की मृत्यु के इस आधे-अधूरे सत्य पर विश्वास करके, हथियार त्याग देते हैं। लेकिन ये सिर्फ एक झूठ नहीं था, बल्कि छल का वो घातक बाण था जिसने उनके अंदर के पिता को मार डाला। उनका माथा झुक जाता है, हाथों से धनुष छूटता है, और आँखों में गहरा अँधेरा छा जाता है। यह तो सिर्फ शुरुआत थी... अगले भाग में: कृष्ण का तीन हज़ार साल का श्राप। क्या एक पिता की मौत का सच हमेशा युद्ध के झूठों में दब जाता है?",
+    "broll": [
+      {
+        "image_prompt": "Wide environmental disaster — blood-soaked battlefield with broken chariots and scattered weapons, smoke-choked sky, distant screams, chaos that the narration described, no character close-up, blood-red + smoke-grey accents on warm bronze skin, fevered, cursed but face clearly visible, flickering firelight with key-light on face, hard shadows on armor but face exposed, hellish edge, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "युद्धभूमि में अफवाह",
+        "mood": "Chaotic despair, horrifying",
+        "wardrobe_context": "WAR",
+        "shot_type": "AMBIGUOUS"
+      },
+      {
+        "image_prompt": "Close-up shot of Dronacharya's weathered elderly Indian face, his long white beard trembling, wide-eyed in profound grief and shock, tears welling, kohl-rimmed eyes, simple white cotton dhoti, white angavastram, sacred yajnopavita thread across bare chest, pointing an intricate wooden bow, NO breastplate, NO chest plate, NO cuirass, NO plate armor, NO Western armor, NO leather pauldrons, blood-red + smoke-grey accents on warm bronze skin, fevered, cursed but face clearly visible, flickering firelight with key-light on face, hard shadows on armor but face exposed, hellish edge, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "द्रोण की आँखें काँपती",
+        "mood": "Deep sorrow, betrayal, shock",
+        "wardrobe_context": "WAR",
+        "shot_type": "REACTION"
+      },
+      {
+        "image_prompt": "[CONFRONTATION-WIDE] Sweeping shot of a blood-soaked battlefield at dusk, Yudhishthira casting down his gaze, delivering a half-truth, solemn golden-bronze Indian skin, salt-and-pepper short beard, deep sorrowful eyes, BARE-CHESTED (NO breastplate, NO kavacha, NO plate, NO shirt on torso), sacred gold yajnopavita thread crossing bare chest, soft red-gold angavastram drape over ONE shoulder only (leaving other side of chest bare), modest white-and-gold silk dhoti at waist, NO chest armor, NO crown by default, Dronacharya listening mid-ground, his weathered elderly Indian face etched with confusion, white hair, long white beard, simple white cotton dhoti, white angavastram, pointing an intricate wooden bow, NO breastplate, blood-red + smoke-grey accents on warm bronze skin, fevered, cursed but face clearly visible, flickering firelight with key-light on face, hard shadows on armor but face exposed, hellish edge, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "युधिष्ठिर की आवाज़",
+        "mood": "Deceit, heavy burden",
+        "wardrobe_context": "WAR",
+        "shot_type": "REACTION"
+      },
+      {
+        "image_prompt": "Extreme close-up of the hazy, smoke-choked air on a battlefield, a faint ethereal glow dissolving into nothing, representing the 'kunjar' sound fading away, no character close-up, blood-red + smoke-grey accents, flickering firelight with key-light, hellish edge, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "'कुंजर' शब्द हवा",
+        "mood": "Illusory, vanishing truth",
+        "wardrobe_context": "WAR",
+        "shot_type": "PROP"
+      },
+      {
+        "image_prompt": "Extreme close-up of a intricately carved wooden bow, mud-streaked, half-buried in blood-soaked earth, its string snapped, a lone arrow shaft broken nearby, Dronacharya's defeated face blurred in the background, weathered elderly Indian face, white hair, simple white cotton dhoti, white angavastram, sacred yajnopavita thread across bare chest, NO breastplate, blood-red + smoke-grey accents on warm bronze skin, fevered, cursed but face clearly visible, flickering firelight with key-light on face, hard shadows on armor but face exposed, hellish edge, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "हाथों से धनुष छूटता",
+        "mood": "Despair, shattered will",
+        "wardrobe_context": "WAR",
+        "shot_type": "PROP"
+      },
+      {
+        "image_prompt": "Close-up of Ashwatthama's gaunt Indian face, haunted feral eyes wide-eyed with maddening grief and searing rage, glowing ruby-like gem embedded into the center of his forehead casting a faint red light down his ash-smeared blood-streaked skin, prematurely curse-white hair, tattered dark cloth dhoti, BARE CHEST visible, NO chest armor, NO breastplate, NO plate armor, NO Western armor, NO leather pauldrons, blood-red + smoke-grey accents on warm bronze skin, fevered, cursed but face clearly visible, flickering firelight with key-light on face, hard shadows on armor but face exposed, hellish edge, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "एक बेटे के बदले",
+        "mood": "Maddening rage, cursed fury",
+        "wardrobe_context": "WAR",
+        "shot_type": "REACTION"
+      },
+      {
+        "image_prompt": "[POWER-LOOM] Sweeping view of a desolate battlefield, Krishna towering over a kneeling Ashwatthama, vivid cobalt-blue divine Indian skin, BARE CHEST visible, gold yajnopavita thread across bare chest, layered gold-jewel chain necklaces on bare chest, dark wavy hair with twin peacock feathers NOT a full crown, yellow pitambara silk dhoti at waist only, youthful build, NO breastplate, his face stern and sorrowful, Ashwatthama kneeling below, gaunt Indian face, haunted feral eyes, glowing ruby-like gem embedded into the center of his forehead, prematurely curse-white hair, ash-smeared blood-streaked skin, tattered dark cloth dhoti, BARE CHEST visible, NO chest armor, NO breastplate, blood-red + smoke-grey accents on warm bronze skin, fevered, cursed but face clearly visible, flickering firelight with key-light on face, hard shadows on armor but face exposed, hellish edge, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "कृष्ण का तीन हज़ार",
+        "mood": "Divine judgment, despair",
+        "wardrobe_context": "DIVINE",
+        "shot_type": "ACTION"
+      },
+      {
+        "image_prompt": "Walking away from the burning remnants of a battle, a lone silhouette of Ashwatthama, gaunt Indian face, haunted feral eyes, glowing ruby-like gem embedded into the center of his forehead, prematurely curse-white hair, ash-smeared blood-streaked skin, tattered dark cloth dhoti, BARE CHEST visible, NO chest armor, fading dusk light, blood-red + smoke-grey accents, fevered, cursed but face clearly visible, hellish edge, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "युद्ध के झूठों",
+        "mood": "Eternal suffering, isolation",
+        "wardrobe_context": "AFTERMATH",
+        "shot_type": "AMBIGUOUS"
+      }
+    ],
+    "title": "युधिष्ठिर का सबसे बड़ा धोखा | Yudhishthira's Biggest Betrayal",
+    "hook_title": "युधिष्ठिर का घातक झूठ",
+    "description": "▶️ अगला भाग: Krishna's greatest curse on Ashwatthama\n\nयुधिष्ठिर के आधे सच ने कैसे एक पिता की जान ली और एक बेटे को पागलपन की ओर धकेला?\n\nयुद्धभूमि में युधिष्ठिर का एक 'आधा सच' कैसे गुरु द्रोण की मृत्यु का कारण बना, और अश्वत्थामा के भीतर प्रतिशोध का ज्वालामुखी प्रज्वलित कर गया। जानें कि कैसे एक नायक का नैतिक समझौता महाभारत के सबसे बड़े पापों में से एक बन गया। यह कहानी सिर्फ युद्ध की नहीं, बल्कि एक पिता के दिल टूटने और एक पुत्र के भीतर पलते पागलपन की है, जो अंततः उसे एक भयानक श्राप की ओर ले जाता है। हर जीत की अपनी कीमत होती है, और कुछ कीमतें ऐसी होती हैं जो अंदर से तोड़ देती हैं।\n\n#Shorts #Mahabharata #महाभारत #Hindu #BhagavadGita #भगवद_गीता #Krishna #कृष्ण #Arjuna #अर्जुन #Karna #कर्ण #Bhishma #भीष्म #Draupadi #द्रौपदी #Kurukshetra #कुरुक्षेत्र #AncientIndia #IndianMythology #Dharma #MythologyShorts #VedicWisdom #HinduDharma #IndianHistory #SpiritualShorts #PauranikKathayein #SanatanDharma #HindiShorts #trending",
+    "tags": [
+      "Ashwatthama",
+      "Drona",
+      "Yudhishthira",
+      "युधिष्ठिर",
+      "अश्वत्थामा",
+      "द्रोण",
+      "Mahabharata",
+      "महाभारत",
+      "Shorts",
+      "Hindu mythology"
+    ],
+    "thumbnail_prompt": "Dramatic portrait of Dronacharya's weathered elderly Indian face, tears streaking down his long white beard, his eyes wide with profound grief and betrayal, an indistinct, shadowy Yudhishthira figure with a solemn expression whispering in the background, smoke-filled battlefield, flickering firelight highlighting the sorrow, blood-red + smoke-grey accents on warm bronze skin, fevered, cursed, cinematic, portrait composition, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+    "quotable_line": "युद्ध में सत्य का आधा मरना, पूरे झूठ से भी घातक होता है।",
+    "pinned_question": "❓ युद्ध में सत्य का आधा मरना, पूरे झूठ से भी घातक होता है। क्या आप युधिष्ठिर के इस कर्म को धर्म कहेंगे या अधर्म?",
+    "next_seed": "और यही श्राप अश्वत्थामा को अनंतकाल तक भटकाएगा।",
+    "language": "hi",
+    "content_type": "story",
+    "topic": "Ashwatthama's hidden truth in Yudhishthira's lie — the secret name that killed his father Drona from grief not blade, the greatest sin of war",
+    "series": "mahabharata",
+    "episode_n": 71,
+    "arc_character_devanagari": "अश्वत्थामा",
+    "arc_character_english": "Ashwatthama — The Cursed One",
+    "_phase18_strict_pass": false,
+    "_phase18_score": 20,
+    "_phase18_score_max": 25,
+    "_phase18_score_floor": 19,
+    "_phase18_violation": "anchors",
+    "_phase18_failing_gates": [
+      "anchors",
+      "archetype",
+      "char_names",
+      "repetition",
+      "verb_per_frame"
+    ],
+    "_phase18_fatal_failures": [
+      "verb_per_frame"
+    ]
+  }
+}
