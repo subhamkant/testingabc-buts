@@ -2421,8 +2421,56 @@ _FINAL_SCENE_MIN_S = float(os.environ.get("FINAL_SCENE_MIN_S", "7.5"))
 _OUTRO_MIN_S       = float(os.environ.get("OUTRO_MIN_S", "3.5"))
 
 
+def _accelerate_climax(durs: list, multiplier: float = 0.7,
+                       min_floor: float = 2.5) -> list:
+    """Phase 24 / Fix 4 (2026-06-28) — climax pacing acceleration.
+
+    YouTube Shorts retention requires accelerating tempo at the climax.
+    A video composed of uniformly-paced 5-7s scenes feels like a
+    slideshow regardless of art quality. The 500+ view winners showed
+    a 2-3s rapid-cut wedge before the aftermath closer.
+
+    Strategy: compress scenes in the back-half-but-not-final 30% of
+    the timeline by `multiplier` (default 0.7×), with a `min_floor`
+    (default 2.5s — keeps Whisper word-card subtitles legible).
+    Redistribute the saved time to the FINAL scene (broll[-1] is the
+    Phase 22 AFTERMATH closer — silhouette + lone diya + abandoned
+    weapon) so the consequence beat gets more visual weight, not less.
+
+    For n=8 broll: compresses durs[5] + durs[6] (the climax wedge),
+    leaves durs[0..4] alone (setup), saves the compressed time, adds
+    it all to durs[7] (the aftermath closer). Net duration preserved.
+
+    Skipped when n < 4 (not enough scenes to define a climax wedge)."""
+    if len(durs) < 4:
+        return durs
+    out = list(durs)
+    n = len(out)
+    # Climax wedge: from int(n * 0.7) to n - 1 (exclusive of n-1 itself,
+    # which is the aftermath closer). For n=8: indices 5, 6. For n=10: 7, 8.
+    climax_start = max(int(n * 0.7), 1)
+    climax_end_excl = n - 1   # exclusive
+    saved = 0.0
+    for i in range(climax_start, climax_end_excl):
+        original = out[i]
+        compressed = max(original * multiplier, min_floor)
+        if compressed < original:
+            saved += (original - compressed)
+            out[i] = compressed
+    # Redistribute saved time to the aftermath closer (broll[-1]).
+    # This is the Phase 22 aftermath_closer beat — extra weight on it
+    # amplifies the "consequence as closer" pattern the 4 winners used.
+    if saved > 0:
+        out[-1] += saved
+        print(f"    [climax-accel] compressed scenes [{climax_start}..{climax_end_excl-1}] "
+              f"by {multiplier}×, redistributed {saved:.2f}s to aftermath closer "
+              f"(broll[-1]: {durs[-1]:.1f}s → {out[-1]:.1f}s)")
+    return out
+
+
 def _per_scene_durations(audio_duration: float, char_weights: list, n: int,
-                         protect_tail: bool = True) -> list:
+                         protect_tail: bool = True,
+                         accelerate_climax: bool = True) -> list:
     """Per-scene clip durations so the final xfaded timeline = audio_duration.
     Accounts for the (n-1) xfade overlaps. Distributes proportionally to
     char_weights when provided, otherwise evenly.
@@ -2437,24 +2485,31 @@ def _per_scene_durations(audio_duration: float, char_weights: list, n: int,
     what gives Parts A-E (aftermath imagery + outro restraint) the
     emotional-settling time they were architected to need.
 
+    Phase 24 / Fix 4 (2026-06-28): when `accelerate_climax=True`, the
+    climax wedge (scenes [int(n*0.7), n-1)) gets compressed by 0.7×
+    with a 2.5s minimum floor. Saved time goes to the aftermath closer
+    (durs[-1]) for extra dramatic weight. This produces the rapid-cut
+    tempo escalation the YouTube Shorts algorithm rewards at climax.
+
     Set `protect_tail=False` for non-mahabharata callers (explainer
     longform, WhatIf science) that don't follow the aftermath architecture.
     """
     target_sum = audio_duration + (n - 1) * XFADE_DURATION
     if not char_weights or len(char_weights) != n or sum(char_weights) <= 0:
-        return [target_sum / max(n, 1)] * n
+        even = [target_sum / max(n, 1)] * n
+        return _accelerate_climax(even) if accelerate_climax else even
     total_w = sum(char_weights)
     durs = [(w / total_w) * target_sum for w in char_weights]
 
     if not protect_tail or n < 3:
-        return durs
+        return _accelerate_climax(durs) if accelerate_climax else durs
 
     # Compute deficit: how much each protected-tail slot is short of its floor.
     final_deficit = max(0.0, _FINAL_SCENE_MIN_S - durs[-2])
     outro_deficit = max(0.0, _OUTRO_MIN_S       - durs[-1])
     deficit = final_deficit + outro_deficit
     if deficit <= 0:
-        return durs
+        return _accelerate_climax(durs) if accelerate_climax else durs
 
     # Steal from earlier scenes proportionally. Require donor scenes to
     # retain at least 1.0s of total after donation — fall through to
@@ -2464,7 +2519,7 @@ def _per_scene_durations(audio_duration: float, char_weights: list, n: int,
         print(f"    [per-scene] WARN: tail-protect needs {deficit:.2f}s but "
               f"early scenes only have {donor_total:.2f}s — keeping baseline "
               f"split (tail will be short).")
-        return durs
+        return _accelerate_climax(durs) if accelerate_climax else durs
 
     scale = (donor_total - deficit) / donor_total
     for i in range(n - 2):
@@ -2473,6 +2528,9 @@ def _per_scene_durations(audio_duration: float, char_weights: list, n: int,
     durs[-1] = max(durs[-1], _OUTRO_MIN_S)
     print(f"    [per-scene] protected tail: stole {deficit:.2f}s from early "
           f"scenes (final={durs[-2]:.1f}s, outro={durs[-1]:.1f}s)")
+    # Phase 24 / Fix 4: climax acceleration. Apply on top of tail-protect.
+    if accelerate_climax:
+        durs = _accelerate_climax(durs)
     return durs
 
 
@@ -2717,6 +2775,15 @@ def assemble_video_continuous_audio(
                 ratio = slack / shaveable_sum
                 durations = [d * (1 - ratio) for d in durations[:-1]] + [durations[-1]]
 
+        # Phase 24 / Fix 4 (2026-06-28) — climax pacing acceleration.
+        # Compress the climax wedge (final 30% before the aftermath closer)
+        # by 0.7× with a 2.5s subtitle-legibility floor; redistribute saved
+        # time to broll[-1] (Phase 22 aftermath closer) for the consequence-
+        # beat visual weight. Anchor-derived durations skew heavily uneven
+        # (one anchor can claim 20+s); this normalizes the back third into
+        # the rapid-cut tempo Shorts retention rewards.
+        durations = _accelerate_climax(durations)
+
         print(f"    [phase18-assembler] anchor placement: "
               f"timestamps={[f'{t:.1f}s' for t in timestamps]}")
         print(f"    [phase18-assembler] per-image durations: "
@@ -2903,6 +2970,9 @@ def assemble_from_video_clips_continuous_audio(
             if shaveable_sum > 0:
                 ratio = slack / shaveable_sum
                 durations = [d * (1 - ratio) for d in durations[:-1]] + [durations[-1]]
+        # Phase 24 / Fix 4 (2026-06-28) — climax pacing acceleration.
+        # Same logic as the silent-image Phase 18 path above.
+        durations = _accelerate_climax(durations)
         print(f"    [phase18-clip-assembler] anchor placement: "
               f"timestamps={[f'{t:.1f}s' for t in timestamps]}")
         print(f"    [phase18-clip-assembler] per-image durations: "

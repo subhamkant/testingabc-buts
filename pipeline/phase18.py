@@ -297,6 +297,18 @@ _OPENER_ARCHETYPES_PHASE18 = [
     ("D", "Wide environmental disaster — burning camp / blood-soaked battlefield / crashing chariot wheel / collapsing palace pillar — chaos that the narration described, no character close-up"),
 ]
 
+# Phase 24 / Fix 1 (2026-06-28) — broll[0] swipe-stop restriction.
+# YouTube Shorts decides a video's fate in the first 3 seconds via the
+# Viewed-vs-Swiped ratio. Slow openers (close-up eyes A, wide environmental
+# D) lose this contest. Restrict scene-0 to ONLY archetypes B (PROP-LED
+# ZOOM — weapon/artifact detail mid-strike) and C (HARD ACTION moment
+# frozen mid-gesture). These produce the highest-intensity first frame.
+# The full 4-archetype rotation still applies to subsequent scenes via
+# the LLM's natural shot-type variation.
+_OPENER_ARCHETYPES_HOOK_ONLY = [
+    a for a in _OPENER_ARCHETYPES_PHASE18 if a[0] in ("B", "C")
+]
+
 
 def phase18_enabled() -> bool:
     """Env flag gate. Default OFF until smoke-validated and a live render
@@ -1260,8 +1272,10 @@ def validate_phase18(data: dict, lang_label: str = "Hindi") -> tuple[bool, str, 
     # Archetype check: broll[0].image_prompt must begin with the rotated
     # archetype's first 35 chars. Substring match at offset 0; the LLM is
     # expected to copy the directive verbatim as the first sentence.
-    archetype_idx = episode_n % len(_OPENER_ARCHETYPES_PHASE18)
-    archetype_text = _OPENER_ARCHETYPES_PHASE18[archetype_idx][1]
+    # Phase 24 / Fix 1 (2026-06-28): rotation now over HOOK_ONLY archetypes
+    # (B + C only) for the 3-second swipe-stop ratio.
+    archetype_idx = episode_n % len(_OPENER_ARCHETYPES_HOOK_ONLY)
+    archetype_text = _OPENER_ARCHETYPES_HOOK_ONLY[archetype_idx][1]
     archetype_prefix = archetype_text[:35]
     img0 = br[0].get("image_prompt", "") if br else ""
     archetype_ok = bool(br) and archetype_prefix in img0[:200]
@@ -1413,8 +1427,9 @@ def _enumerate_failing_gates(data: dict, lang_label: str = "Hindi") -> set:
     anchors_ok, _ = _validate_anchors(vo, br)
     names_ok = all(_check_character_names_single(b.get("image_prompt", "")) for b in br)
 
-    archetype_idx = episode_n % len(_OPENER_ARCHETYPES_PHASE18)
-    archetype_text = _OPENER_ARCHETYPES_PHASE18[archetype_idx][1]
+    # Phase 24 / Fix 1: rotation over HOOK_ONLY archetypes (B + C).
+    archetype_idx = episode_n % len(_OPENER_ARCHETYPES_HOOK_ONLY)
+    archetype_text = _OPENER_ARCHETYPES_HOOK_ONLY[archetype_idx][1]
     archetype_prefix = archetype_text[:35]
     img0 = br[0].get("image_prompt", "") if br else ""
     archetype_ok = bool(br) and archetype_prefix in img0[:200]
@@ -2106,10 +2121,15 @@ def generate_phase18_script(
         print(f"    [phase18-palette] {arc_character_devanagari} -> {palette_directive[:60]}...")
 
     # ── Phase 17.b opener archetype rotation ──
-    archetype_idx = episode_n % len(_OPENER_ARCHETYPES_PHASE18)
-    archetype_letter, archetype_text = _OPENER_ARCHETYPES_PHASE18[archetype_idx]
+    # Phase 24 / Fix 1 (2026-06-28) — broll[0] swipe-stop restriction.
+    # Rotate only across hook-only archetypes (B PROP-LED ZOOM + C HARD
+    # ACTION). Slow openers (A eyes / D wide environmental) lose the
+    # 3-second swipe-vs-view ratio that decides Shorts retention.
+    archetype_idx = episode_n % len(_OPENER_ARCHETYPES_HOOK_ONLY)
+    archetype_letter, archetype_text = _OPENER_ARCHETYPES_HOOK_ONLY[archetype_idx]
     print(f"    [phase18-opener] archetype {archetype_letter} "
-          f"(episode_n={episode_n} mod {len(_OPENER_ARCHETYPES_PHASE18)})")
+          f"(episode_n={episode_n} mod {len(_OPENER_ARCHETYPES_HOOK_ONLY)} "
+          f"hook-only: {[a[0] for a in _OPENER_ARCHETYPES_HOOK_ONLY]})")
 
     # ── Cliffhanger pattern selection ──
     cliffhanger_block = ""

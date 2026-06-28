@@ -314,9 +314,17 @@ _HINDU_ICONOGRAPHY_BATTLEFIELD_ANCHOR = _HINDU_ICONOGRAPHY_BASE + (
     "armies on the horizon, low-angle warm golden-hour light, "
     # Phase 23.4 (2026-06-28): bare-chest doctrine for warrior shots.
     # Vedic kshatriyas fight bare-chested; ornaments sit on bare skin.
-    "WARRIORS BARE-CHESTED with ornate gold ornaments on bare skin, "
-    "no plate breastplate, no Western chest armor, gold yajnopavita "
-    "thread + gold armbands on bare upper body, "
+    # Phase 23.8 (2026-06-28): textile-explicit language. FLUX renders
+    # abstract "ornate gold ornaments" as fantasy spike-armor when not
+    # anchored to NAMED TEXTILES. Replaced with specific Vedic fabrics
+    # + light ornaments. Reference: user's Karna/Arjuna images show
+    # fine silk + draped angavastram + gold NECKLACES (not chest plates)
+    # + carved bronze ARMLETS (not metal pauldrons).
+    "WARRIORS BARE-CHESTED wearing authentic fine silk angavastram "
+    "draped over bare shoulders, heavy gold necklaces resting on bare "
+    "skin, intricately carved bronze armlets on upper arms, gold "
+    "yajnopavita thread, zero plate armor, zero shoulder spikes, "
+    "zero chest insignia, "
 )
 
 _HINDU_ICONOGRAPHY_PALACE_ANCHOR = _HINDU_ICONOGRAPHY_BASE + (
@@ -725,6 +733,22 @@ _NEGATIVE_PHASE23_7_HOLE_PATCHES = (
     "European religious iconography,church symbol,christian crucifix"
 )
 _NEGATIVE_PHASE23_1_ANTI_WESTERN = _NEGATIVE_PHASE23_1_ANTI_WESTERN + _NEGATIVE_PHASE23_7_HOLE_PATCHES
+
+# Phase 23.8 (2026-06-28) — anti-fantasy / anti-digital-art guard.
+# Phase 23.7 eliminated Western iconography but FLUX overcorrected into
+# generic "dark fantasy" aesthetic: spiked shoulder pads, chest-stamped
+# sword insignia (cross-like motif), dark metal plates with digital-art
+# textures. The remaining failure mode is FLUX defaulting to "video-game
+# fantasy warrior" when the cultural lock removes "Western" but doesn't
+# explicitly forbid "fantasy". These tokens close that gap.
+_NEGATIVE_PHASE23_8_ANTI_FANTASY = (
+    ",spiked shoulder pads,shoulder spikes,fantasy armor,high fantasy armor,"
+    "video-game armor,dark fantasy warrior,World of Warcraft style,"
+    "chest insignia,cross motif,sword stamped on chest,dagger motif on armor,"
+    "dark metal plates,modern digital art armor,deviantart fantasy,"
+    "non-historical costume,fantasy game character,RPG warrior"
+)
+_NEGATIVE_PHASE23_1_ANTI_WESTERN = _NEGATIVE_PHASE23_1_ANTI_WESTERN + _NEGATIVE_PHASE23_8_ANTI_FANTASY
 
 _NEGATIVE_DEFAULT = _NEGATIVE_DEFAULT + _NEGATIVE_PHASE23_1_ANTI_WESTERN
 
