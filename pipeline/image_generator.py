@@ -1377,6 +1377,84 @@ def _cf_is_quota_error(status: int, body_text: str) -> bool:
     return False
 
 
+# Phase 23.3 (2026-06-28) — preflight clamp for Cloudflare Workers AI
+# FLUX-1-schnell. CF rejects prompts (or negative prompts) longer than its
+# 2048-char per-field cap with status=400 — all 5 accounts return the same
+# 400 because the prompt is identical → cascade burns through every account
+# uselessly, falls to HF. Phase 23.2's canonical signature library bumped
+# per-character signature_locks to 250-340 chars; two-character scenes can
+# stack ~1700 chars before the LLM's image_prompt + iconography_anchor pile
+# on. Better to clamp before sending than to fail-and-fallback.
+#
+# Trim strategy:
+#   • POSITIVE prompt — truncate from the END. Phase 23.2's architectural
+#     format puts the canvas + action verb at the START; signature_lock
+#     character brackets are at the END. Trimming the end first loses some
+#     character iconography but preserves scene composition (which is what
+#     FLUX needs early-token weight on).
+#   • NEGATIVE prompt — truncate from the END. The negative is built up
+#     across phases (19 → 20 → 22 → 23.1 → 23-anti-bokeh) with the newest
+#     guardrails appended last. End-truncation loses the newest tokens
+#     (anti-Western, anti-bokeh) which would be bad, so we use a different
+#     strategy: keep the latest Phase 23.1+ guardrails as priority and trim
+#     the older Phase 19/20 redundancy.
+_CF_PROMPT_MAX   = 2000   # leave 48-char margin under CF's 2048 hard cap
+_CF_NEGATIVE_MAX = 2000
+
+
+def _clamp_for_cf(prompt: str, negative: str) -> tuple[str, str, dict]:
+    """Phase 23.3 (2026-06-28). Preflight trim positive + negative prompts
+    so they fit Cloudflare Workers AI FLUX-1-schnell's 2048-char cap on
+    each field. Returns (clamped_prompt, clamped_negative, diag).
+
+    Smoke-test findings (2026-06-28):
+      _NEGATIVE_DEFAULT is 3734 chars BEFORE adding Phase 23 anti-bokeh.
+      WIDE-aspect negative grows to ~3973 chars. We've been silently
+      hitting CF's 2048 limit on every render — only the explicit 400s
+      surfaced when other factors compounded the overflow.
+
+    Positive trim: tail-truncate. Phase 23.2's architectural format
+      puts canvas + action at the START; signature_lock brackets at the
+      END. Tail-trim preserves the most important early-token weight
+      (which is what FLUX renders first).
+
+    Negative trim: PRIORITY-PRESERVING. The negative is built up across
+      phases (19 → 20 → 22 → 23.1 → 23-anti-bokeh) with the NEWEST
+      guardrails appended LAST. The newest tokens are also the highest-
+      priority (they fight the specific failure modes we've diagnosed:
+      anti-Western from Phase 23.1, anti-bokeh from Phase 23). So:
+        1. Drop redundant older blocks (Phase 19/20) one at a time.
+        2. If still over cap, keep the LAST `_CF_NEGATIVE_MAX` chars
+           (head-truncate instead of tail-truncate) — preserves the
+           Phase 22/23.1/23 guardrails at the cost of some base
+           anatomy/text negatives at the front.
+    """
+    diag = {"p_orig": len(prompt), "n_orig": len(negative),
+            "p_trim": 0, "n_trim": 0}
+
+    if len(prompt) > _CF_PROMPT_MAX:
+        diag["p_trim"] = len(prompt) - _CF_PROMPT_MAX
+        prompt = prompt[:_CF_PROMPT_MAX].rstrip(" ,.;")
+
+    if len(negative) > _CF_NEGATIVE_MAX:
+        # Step 1: drop redundant older Phase 19/20 blocks one at a time.
+        for drop_marker in (
+            _NEGATIVE_PHASE19_ANTI_BIAS,
+            _NEGATIVE_PHASE20_ANTI_CARTOON,
+        ):
+            if len(negative) <= _CF_NEGATIVE_MAX:
+                break
+            if drop_marker and drop_marker in negative:
+                negative = negative.replace(drop_marker, "", 1)
+        # Step 2: if still too long, HEAD-truncate (keep the END which
+        # has the newest, highest-priority Phase 22/23.1/23 guardrails).
+        if len(negative) > _CF_NEGATIVE_MAX:
+            negative = negative[-_CF_NEGATIVE_MAX:].lstrip(" ,")
+        diag["n_trim"] = diag["n_orig"] - len(negative)
+
+    return prompt, negative, diag
+
+
 def _gen_cloudflare(prompt: str, seed: int, width: int, height: int,
                     negative: str = _NEGATIVE_DEFAULT) -> bytes:
     """
@@ -1413,6 +1491,19 @@ def _gen_cloudflare(prompt: str, seed: int, width: int, height: int,
     accounts = _cloudflare_accounts()
     if not accounts:
         raise RuntimeError("no CLOUDFLARE_ACCOUNT_ID/API_TOKEN pairs configured")
+
+    # Phase 23.3 (2026-06-28) — preflight clamp before constructing the
+    # request body. Cloudflare's hard cap is 2048 chars per field;
+    # sending more produces a uniform status=400 across every account
+    # (the cascade can't recover because all accounts reject the same
+    # request). Trim if needed + log so we can tune signature_lock /
+    # anchor sizes when this fires.
+    prompt, negative, _clamp_diag = _clamp_for_cf(prompt, negative)
+    if _clamp_diag["p_trim"] or _clamp_diag["n_trim"]:
+        print(f"    [cf-clamp] prompt={_clamp_diag['p_orig']}→{len(prompt)} "
+              f"(trimmed {_clamp_diag['p_trim']}), "
+              f"negative={_clamp_diag['n_orig']}→{len(negative)} "
+              f"(trimmed {_clamp_diag['n_trim']})")
 
     body = {
         "prompt":          prompt,
