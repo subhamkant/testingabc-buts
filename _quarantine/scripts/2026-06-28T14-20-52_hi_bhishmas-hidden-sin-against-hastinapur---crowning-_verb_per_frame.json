@@ -1,0 +1,122 @@
+{
+  "ts": "2026-06-28T14-20-52",
+  "language": "hi",
+  "score": 18,
+  "score_max": 25,
+  "violation": "verb_per_frame",
+  "topic": "Bhishma's hidden sin against Hastinapur — crowning blind Dhritarashtra over his brother Pandu's lineage, the secret succession mistake that planted the war's first seed",
+  "title": "भीष्म की छुपी गलती | Bhishma's Hidden Mistake",
+  "script": {
+    "voiceover": "भीष्म आँखों में गहरा खालीपन लिए देखते हैं जब वह हस्तिनापुर के सिंहासन पर धृतराष्ट्र को बिठाते हैं। यह सिर्फ एक ताजपोशी नहीं, यह एक मौन अपराध था, एक ऐसी गलती जिसकी कीमत सदियों तक चुकाई जानी थी। उन्हें पता था, अंधा राजा अपने अंधे मोह में प्रजा को डुबो देगा, पर उनकी प्रतिज्ञा ने उन्हें बांध रखा था। अंदर ही अंदर वह टूट रहे थे, अपनी ही बनाई जंजीरों में जकड़े हुए। लेकिन असली विनाश अभी बाकी था। उन्होंने सोचा था 'यह मेरी अंतिम सेवा है,' पर यह उनकी सबसे बड़ी भूल थी। उनके होठों पर चुप्पी थी, पर आत्मा चीख रही थी। धृतराष्ट्र का राज्याभिषेक केवल एक सिंहासन का बदलाव नहीं था, यह न्याय की आँखों पर बंधी पट्टी थी, जिसकी वजह से पांडु का हक छीना गया। अगले भाग में, भीष्म के मौन के गहरे पाप से हस्तिनापुर का टूटना देखेंगे। क्या एक प्रतिज्ञा का ऐसा बोझ पूरे कुल को डुबो सकता है, भीष्म?",
+    "broll": [
+      {
+        "image_prompt": "Extreme macro close-up on Bhishma's eyes — pupils dilated, lashes wet — caught mid-blink, a single glistening tear on his weathered late-50s Indian face, reflecting cold pre-dawn moonlight, his long majestic silver-white beard in soft focus, cool moonlit silver-blue, restrained noble tones, faces clearly lit, cold pre-dawn moonlight, faces visible and dignified, no deep shadows, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "आँखों में गहरा",
+        "mood": "somber regretful anguish",
+        "wardrobe_context": "PALACE",
+        "shot_type": "AMBIGUOUS"
+      },
+      {
+        "image_prompt": "[POWER-LOOM] Ornate Nagara-style palace court with carved stone columns and flickering candlelit shadows, Bhishma, weathered late-50s Indian face, long majestic silver-white beard, BARE-CHESTED elder warrior, sacred gold yajnopavita thread crossing bare chest, simple gold armlets, austere off-white silk dhoti at waist, gently placing a heavy golden mukut crown onto the head of blind elderly Indian king Dhritarashtra, wide-eyed but vacant expression, luxurious golden mukut crown, heavy gold jewelry, rich purple silk dhoti, regal posture, cool moonlit silver-blue, restrained noble tones, faces clearly lit, candlelit interior, faces visible and dignified, no deep shadows, NO breastplate, NO chest plate, NO cuirass, NO plate armor, NO Western armor, NO leather pauldrons, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "सिंहासन पर धृतराष्ट्र",
+        "mood": "solemn fated coronation",
+        "wardrobe_context": "PALACE",
+        "shot_type": "REACTION"
+      },
+      {
+        "image_prompt": "[WITNESS-FROM-BEHIND] Dim palace corridor with ornate carved pillar, Bhishma leans into the pillar with a hollow-eyed and distant expression, a single tear tracing a path on his weathered late-50s Indian face, long majestic silver-white beard, BARE-CHESTED elder warrior, sacred gold yajnopavita thread crossing bare chest, simple gold armlets, austere off-white silk dhoti at waist, while a sorrowful youthful Indian prince Pandu, handsome but downcast face, royal gold mukut crown, simple white silk dhoti, watches from a shadowed archway in the mid-ground, cool moonlit silver-blue, restrained noble tones, faces clearly lit, candlelit interior, faces visible and dignified, no deep shadows, NO breastplate, NO chest plate, NO cuirass, NO plate armor, NO Western armor, NO leather pauldrons, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "टूट रहे थे",
+        "mood": "internal shattered despair",
+        "wardrobe_context": "PALACE",
+        "shot_type": "REACTION"
+      },
+      {
+        "image_prompt": "Grand palace hall, Bhishma grips an ornate gold hilt of a ceremonial sword, his knuckles white, eyes downcast with profound guilt on his weathered late-50s Indian face, long majestic silver-white beard, BARE-CHESTED elder warrior, sacred gold yajnopavita thread crossing bare chest, simple gold armlets, austere off-white silk dhoti at waist, cool moonlit silver-blue, restrained noble tones, white-and-silver silk dhoti, faces clearly lit, candlelit interior, faces visible and dignified, no deep shadows, NO breastplate, NO chest plate, NO cuirass, NO plate armor, NO Western armor, NO leather pauldrons, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "जंजीरों में जकड़े",
+        "mood": "trapped silent burden",
+        "wardrobe_context": "PALACE",
+        "shot_type": "AMBIGUOUS"
+      },
+      {
+        "image_prompt": "Harshly illuminated palace chamber with a fading candle flame, Bhishma recoils slightly, his eyes wide-eyed in a moment of agonizing realization on his weathered late-50s Indian face, long majestic silver-white beard, BARE-CHESTED elder warrior, sacred gold yajnopavita thread crossing bare chest, simple gold armlets, austere off-white silk dhoti at waist, cool moonlit silver-blue, restrained noble tones, faces clearly lit, candlelit interior, faces visible and dignified, no deep shadows, NO breastplate, NO chest plate, NO cuirass, NO plate armor, NO Western armor, NO leather pauldrons, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "सबसे बड़ी भूल",
+        "mood": "stark regretful realization",
+        "wardrobe_context": "PALACE",
+        "shot_type": "REACTION"
+      },
+      {
+        "image_prompt": "Close-up of Bhishma's sweat-drenched face, his mouth clenched shut, eyes burning with internal silent agony, weathered late-50s Indian face, long majestic silver-white beard, BARE-CHESTED elder warrior, sacred gold yajnopavita thread crossing bare chest, simple gold armlets, cool moonlit silver-blue, restrained noble tones, faces clearly lit, candlelit interior, faces visible and dignified, no deep shadows, NO breastplate, NO chest plate, NO cuirass, NO plate armor, NO Western armor, NO leather pauldrons, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "आत्मा चीख रही",
+        "mood": "silent burning torment",
+        "wardrobe_context": "PALACE",
+        "shot_type": "AMBIGUOUS"
+      },
+      {
+        "image_prompt": "Extreme macro close-up of a luxurious, intricately woven gold blindfold (पट्टी) tightly tied over the eyes of a magnificent golden mukut crown, resting on a velvet cushion, symbolic of justice being blinded, cool moonlit silver-blue, restrained noble tones, faces clearly lit, cold pre-dawn moonlight or candlelit interior, faces visible and dignified, no deep shadows, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "आँखों पर बंधी पट्टी",
+        "mood": "symbolic unjust blindness",
+        "wardrobe_context": "PALACE",
+        "shot_type": "AMBIGUOUS"
+      },
+      {
+        "image_prompt": "[WITNESS-FROM-BEHIND] Palace interior, Bhishma's solemn back-of-head foreground, weathered late-50s Indian face profile, long majestic silver-white beard, BARE-CHESTED elder warrior, sacred gold yajnopavita thread crossing bare chest, simple gold armlets, austere off-white silk dhoti, turning away with a heavy heart from a youthful Indian prince Pandu, handsome but sorrowful face, royal gold mukut crown, simple white silk dhoti, standing in shadow, slightly behind the prominently seated Dhritarashtra, blind elderly Indian king, wide-eyed but vacant expression, luxurious golden mukut crown, rich purple silk dhoti, cool moonlit silver-blue, restrained noble tones, faces clearly lit, candlelit interior, faces visible and dignified, no deep shadows, NO breastplate, NO chest plate, NO cuirass, NO plate armor, NO Western armor, NO leather pauldrons, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "पांडु का हक",
+        "mood": "hidden sorrowful injustice",
+        "wardrobe_context": "PALACE",
+        "shot_type": "REACTION"
+      },
+      {
+        "image_prompt": "Dimly lit, abandoned throne room, Bhishma walks away, his silhouette receding into the fading dusk, weathered late-50s Indian face, long majestic silver-white beard, BARE-CHESTED elder warrior, sacred gold yajnopavita thread crossing bare chest, simple gold armlets, austere off-white silk dhoti at waist, the grand palace now empty and shadowed behind him, cool moonlit silver-blue, restrained noble tones, faces clearly lit, fading dusk, faces visible and dignified, no deep shadows, NO breastplate, NO chest plate, NO cuirass, NO plate armor, NO Western armor, NO leather pauldrons, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "कुल को डुबो",
+        "mood": "somber lonely consequence",
+        "wardrobe_context": "AFTERMATH",
+        "shot_type": "AMBIGUOUS"
+      }
+    ],
+    "title": "भीष्म की छुपी गलती | Bhishma's Hidden Mistake",
+    "hook_title": "भीष्म का मौन पाप",
+    "description": "▶️ अगला भाग: Bhishma's Untold Sin of Silence\n\nहस्तिनापुर के सिंहासन पर भीष्म की एक गलती, जिसने युद्ध का बीज बोया।\n\nभीष्म की प्रतिज्ञा ने उन्हें हस्तिनापुर के संरक्षक के रूप में बांध दिया, लेकिन जब उन्होंने अंधे धृतराष्ट्र को सिंहासन पर बिठाया, तो उन्होंने एक ऐसी गलती की जिसका परिणाम विनाशकारी था। उनका यह मौन निर्णय, पांडु के rightful हक को छीनकर, कौरवों और पांडवों के बीच आने वाले महायुद्ध की पहली और सबसे गहरी जड़ बन गया। इस एपिसोड में हम उस आंतरिक संघर्ष को उजागर करते हैं जो भीष्म को अंदर ही अंदर तोड़ रहा था, उनकी प्रतिज्ञा के बोझ तले दबी उनकी आत्मा की चीख। क्या एक प्रतिज्ञा का ऐसा भारी बोझ पूरे कुल को डुबो सकता है? यह सिर्फ एक राज्याभिषेक नहीं था; यह न्याय की आँखों पर बंधी पट्टी थी।\n\n#Shorts #Mahabharata #महाभारत #Hindu #BhagavadGita #भगवद_गीता #Krishna #कृष्ण #Arjuna #अर्जुन #Karna #कर्ण #Bhishma #भीष्म #Draupadi #द्रौपदी #Kurukshetra #कुरुक्षेत्र #AncientIndia #IndianMythology #Dharma #MythologyShorts #VedicWisdom #HinduDharma #IndianHistory #SpiritualShorts #PauranikKathayein #SanatanDharma #HindiShorts #trending}",
+    "tags": [
+      "Bhishma",
+      "Bhishma's Mistake",
+      "Dhritarashtra",
+      "Pandu",
+      "Succession",
+      "भीष्म",
+      "धृतराष्ट्र",
+      "पांडु",
+      "Mahabharata",
+      "महाभारत",
+      "Shorts",
+      "Hindu mythology"
+    ],
+    "thumbnail_prompt": "Dramatic Mahabharata thumbnail — weathered late-50s Bhishma's tear-streaked face, long majestic silver-white beard, anguished expression, cool moonlit silver-blue palette, ornate palace throne dimly lit in background, portrait composition",
+    "quotable_line": "एक प्रतिज्ञा का बोझ, पूरे कुल को डुबो सकता है।",
+    "pinned_question": "❓ एक प्रतिज्ञा का बोझ, पूरे कुल को डुबो सकता है। क्या भीष्म सही थे या गलत?",
+    "next_seed": "और यही मौन, एक दिन हस्तिनापुर को तोड़ देगा।",
+    "language": "hi",
+    "content_type": "story",
+    "topic": "Bhishma's hidden sin against Hastinapur — crowning blind Dhritarashtra over his brother Pandu's lineage, the secret succession mistake that planted the war's first seed",
+    "series": "mahabharata",
+    "episode_n": 24,
+    "arc_character_devanagari": "भीष्म",
+    "arc_character_english": "Bhishma — The Vow That Doomed a Dynasty",
+    "_phase18_strict_pass": false,
+    "_phase18_score": 18,
+    "_phase18_score_max": 25,
+    "_phase18_score_floor": 19,
+    "_phase18_violation": "verb_per_frame",
+    "_phase18_failing_gates": [
+      "archetype",
+      "char_names",
+      "engagement",
+      "intensity",
+      "subject_diversity",
+      "tha_tic",
+      "verb_per_frame"
+    ],
+    "_phase18_fatal_failures": [
+      "verb_per_frame"
+    ]
+  }
+}
