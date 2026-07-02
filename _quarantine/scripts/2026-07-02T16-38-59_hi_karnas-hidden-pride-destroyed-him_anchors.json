@@ -1,0 +1,126 @@
+{
+  "ts": "2026-07-02T16-38-59",
+  "language": "hi",
+  "score": 18,
+  "score_max": 25,
+  "violation": "anchors",
+  "topic": "Karna's Hidden Pride Destroyed Him",
+  "title": "कर्ण का छुपा अभिमान | Karna's Hidden Pride",
+  "script": {
+    "voiceover": "कर्ण युद्धभूमि में अपना रथ चलाता है — हर वार एक प्रतिशोध, हर साँस में एक अनदेखा घाव। उसे हमेशा नीचा दिखाया गया, पर दुर्योधन की दोस्ती ने एक पहचान दी थी। उसके दिल में आग थी, खुद को साबित करने की, दुनिया को गलत ठहराने की। कुंती ने उसे अपना पुत्र कहा, कृष्ण ने समझाया, \"तुम पांडवों के भाई हो,\" पर उस छुपे हुए अभिमान ने उसे अपने सच से मुँह मोड़ने पर मजबूर कर दिया। लेकिन इसी गर्व ने उसे हर उस मौके को ठुकराया जो उसे बचा सकता था। वह जानता था कि यह युद्ध विनाशकारी है, पर उसकी अटल निष्ठा और उसका घमंड एक साथ जल रहे थे। उसकी आँखों में आग थी, पर भीतर सब राख हो रहा था। क्या उसका यही छिपा अभिमान ही उसका सबसे बड़ा शत्रु था, जिसने उसे जन्म से मृत्यु तक अकेले ही नष्ट किया?",
+    "broll": [
+      {
+        "image_prompt": "Weapon / artifact detail — sword tip mid-strike / glowing arrow / bloodied hand on hilt / dice mid-roll — the object that carries the violence, blurred motion behind. Weapon / artifact detail — bloodied hand gripping a chariot hilt — the object that carries the violence, blurred motion behind. Wide cinematic shot, sun-baked battlefield of Kurukshetra, Karna gripping the hilt of his sword with a white-knuckled, bloodied hand, his radiant golden-bronze Indian skin, bare-chested with luminous divine sun-kavacha glow emanating FROM WITHIN bare chest skin (kavacha embedded INTO chest skin, NOT armor worn over it, NOT a breastplate), intricate gold kundal earrings ALWAYS visible, battle-stained dark red silk dhoti at waist, NO chest armor, warm sunset amber + bronze, golden divine glow on kavach armor, saffron-and-crimson palette, faces clearly lit, harsh golden-hour edge-light, embers in foreground, faces visible and warm, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "रथ चलाता है",
+        "mood": "intense battle fury",
+        "wardrobe_context": "WAR",
+        "shot_type": "ACTION"
+      },
+      {
+        "image_prompt": "Wide cinematic shot, dust-choked battlefield of Kurukshetra, Karna recoiling, his face etched with pain, hollow-eyed, radiant golden-bronze Indian skin, bare-chested with luminous divine sun-kavacha glow emanating FROM WITHIN bare chest skin (kavacha embedded INTO chest skin, NOT armor worn over it, NOT a breastplate), intricate gold kundal earrings ALWAYS visible, battle-stained dark red silk dhoti at waist, NO chest armor, warm sunset amber + bronze, golden divine glow on kavach armor, saffron-and-crimson palette, faces clearly lit, harsh golden-hour edge-light, embers in foreground, faces visible and warm, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "एक अनदेखा घाव",
+        "mood": "deep hidden anguish",
+        "wardrobe_context": "WAR",
+        "shot_type": "REACTION"
+      },
+      {
+        "image_prompt": "[CONFRONTATION-WIDE] Sweeping panoramic shot, ornate Nagara-style palace court with carved stone columns and marigold petals on marble floor, Duryodhana leaning into Karna, a shared, determined gaze, Karna's radiant golden-bronze Indian skin, bare-chested with luminous divine sun-kavacha glow emanating FROM WITHIN bare chest skin (kavacha embedded INTO chest skin, NOT armor worn over it, NOT a breastplate), intricate gold kundal earrings ALWAYS visible, battle-stained dark red silk dhoti at waist, NO chest armor, Duryodhana's warm golden-bronze Indian skin, massive arrogant prince, muscular broad-chested build, rich purple and gold silk dhoti, intricate golden kavacha, ornate royal mukut crown, gripping a heavy golden Gada mace on shoulder, warm sunset amber + bronze, golden divine glow on kavach armor, saffron-and-crimson palette, faces clearly lit, harsh golden-hour edge-light, embers in foreground, faces visible and warm, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "दुर्योधन की दोस्ती",
+        "mood": "intense loyal bond",
+        "wardrobe_context": "PALACE",
+        "shot_type": "ACTION"
+      },
+      {
+        "image_prompt": "[POWER-LOOM] Wide cinematic shot, misty riverbank at dawn, Kunti kneeling beneath Karna, her face tear-streaked and pleading, Kunti's weary but graceful older Indian woman, pale golden Indian skin, sorrowful dignified eyes, silver-streaked dark hair, simple unadorned white silk sari, holding a simple earthen pot, Karna standing tall, rigid and defiant, radiant golden-bronze Indian skin, bare-chested with luminous divine sun-kavacha glow emanating FROM WITHIN bare chest skin (kavacha embedded INTO chest skin, NOT armor worn over it, NOT a breastplate), intricate gold kundal earrings ALWAYS visible, battle-stained dark red silk dhoti at waist, NO chest armor, warm sunset amber + bronze, golden divine glow on kavach armor, saffron-and-crimson palette, faces clearly lit, harsh golden-hour edge-light, embers in foreground, faces visible and warm, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "कुंती ने उसे",
+        "mood": "heartbreaking revelation",
+        "wardrobe_context": "FOREST",
+        "shot_type": "ACTION"
+      },
+      {
+        "image_prompt": "[CONFRONTATION-WIDE] Wide cinematic shot, desolate battlefield during a brief lull, Karna recoiling from Krishna's divine presence, Krishna's vivid cobalt-blue divine Indian skin, BARE CHEST visible, gold yajnopavita thread across bare chest, layered gold-jewel chain necklaces on bare chest, dark wavy hair with twin peacock feathers NOT a full crown, yellow pitambara silk dhoti at waist only, holding bansuri flute, youthful build, NO breastplate, Karna's radiant golden-bronze Indian skin, bare-chested with luminous divine sun-kavacha glow emanating FROM WITHIN bare chest skin (kavacha embedded INTO chest skin, NOT armor worn over it, NOT a breastplate), intricate gold kundal earrings ALWAYS visible, battle-stained dark red silk dhoti at waist, NO chest armor, warm sunset amber + bronze, golden divine glow on kavach armor, saffron-and-crimson palette, faces clearly lit, harsh golden-hour edge-light, embers in foreground, faces visible and warm, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "पांडवों के भाई हो",
+        "mood": "divine intervention conflict",
+        "wardrobe_context": "WAR",
+        "shot_type": "AMBIGUOUS"
+      },
+      {
+        "image_prompt": "Close-up shot of Karna's face, his eyes wide-eyed and defiant, reflecting a hidden, stubborn pride, Karna gripping the hilt of his sword, radiant golden-bronze Indian skin, bare-chested with luminous divine sun-kavacha glow emanating FROM WITHIN bare chest skin (kavacha embedded INTO chest skin, NOT armor worn over it, NOT a breastplate), intricate gold kundal earrings ALWAYS visible, battle-stained dark red silk dhoti at waist, NO chest armor, warm sunset amber + bronze, golden divine glow on kavach armor, saffron-and-crimson palette, faces clearly lit, harsh golden-hour edge-light, embers in foreground, faces visible and warm, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "छुपे हुए अभिमान",
+        "mood": "stubborn self-deception",
+        "wardrobe_context": "WAR",
+        "shot_type": "ACTION"
+      },
+      {
+        "image_prompt": "Wide cinematic shot, sun-drenched forest path, Karna walking away from a metaphorical crossroads, his back to a fading light, a sense of opportunity rejected, radiant golden-bronze Indian skin, bare-chested with luminous divine sun-kavacha glow emanating FROM WITHIN bare chest skin (kavacha embedded INTO chest skin, NOT armor worn over it, NOT a breastplate), intricate gold kundal earrings ALWAYS visible, battle-stained dark red silk dhoti at waist, NO chest armor, warm sunset amber + bronze, golden divine glow on kavach armor, saffron-and-crimson palette, faces clearly lit, harsh golden-hour edge-light, embers in foreground, faces visible and warm, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "अवसरों को ठुकराया",
+        "mood": "regretful missed chances",
+        "wardrobe_context": "JOURNEY",
+        "shot_type": "AMBIGUOUS"
+      },
+      {
+        "image_prompt": "Extreme macro close-up of a broken chariot wheel, spokes shattered, sinking deep into blood-soaked mud, distant burning Kurukshetra battlefield with Karna's silhouette in far background, warm sunset amber + bronze, golden divine glow on kavach armor, saffron-and-crimson palette, faces clearly lit, harsh golden-hour edge-light, embers in foreground, faces visible and warm, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "युद्ध विनाशकारी है",
+        "mood": "devastating consequence of war",
+        "wardrobe_context": "WAR",
+        "shot_type": "ACTION"
+      },
+      {
+        "image_prompt": "Wide cinematic shot, dust-choked Kurukshetra battlefield, Karna charging forward with grim determination, his face sweat-drenched and fierce, radiating unwavering loyalty, radiant golden-bronze Indian skin, bare-chested with luminous divine sun-kavacha glow emanating FROM WITHIN bare chest skin (kavacha embedded INTO chest skin, NOT armor worn over it, NOT a breastplate), intricate gold kundal earrings ALWAYS visible, battle-stained dark red silk dhoti at waist, NO chest armor, warm sunset amber + bronze, golden divine glow on kavach armor, saffron-and-crimson palette, faces clearly lit, harsh golden-hour edge-light, embers in foreground, faces visible and warm, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "अटल निष्ठा",
+        "mood": "unwavering resolve",
+        "wardrobe_context": "WAR",
+        "shot_type": "ACTION"
+      },
+      {
+        "image_prompt": "Wide cinematic shot, desolate, ash-covered Kurukshetra battlefield at fading dusk, Karna's silhouette walking away from the destruction, a lone diya flickering in the foreground, warm sunset amber + bronze, golden divine glow on kavach armor, saffron-and-crimson palette, faces clearly lit, harsh golden-hour edge-light, embers in foreground, faces visible and warm, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "सबसे बड़ा शत्रु",
+        "mood": "melancholic, final regret",
+        "wardrobe_context": "AFTERMATH",
+        "shot_type": "AMBIGUOUS"
+      }
+    ],
+    "title": "कर्ण का छुपा अभिमान | Karna's Hidden Pride",
+    "hook_title": "कर्ण का छुपा अभिमान",
+    "description": "▶️ अगला भाग: Karna's Untold Regret Haunted Loyalty\n\nकुरुक्षेत्र के मैदान में, कर्ण का छुपा हुआ अभिमान ही उसका सबसे बड़ा शत्रु साबित हुआ। हर मौके पर उसने अपनी पहचान को ठुकराया और अपनी वफ़ादारी में जलता रहा। इस वीडियो में जानें कैसे कर्ण के भीतर की आग ने उसे बाहर से नष्ट कर दिया।\n\n#Shorts #Mahabharata #महाभारत #Krishna #HinduMythology\n\nकर्ण, जिसे हमेशा 'सूतपुत्र' कहकर नीचा दिखाया गया, उसने अपनी पहचान और सम्मान के लिए दुर्योधन का साथ चुना। लेकिन जब कुंती ने उसे अपना पुत्र होने का सच बताया और कृष्ण ने उसे पांडवों के पक्ष में आने को कहा, तब भी उसके अंदर का छुपा अभिमान उसे अपने भाग्य से मुँह मोड़ने नहीं दिया। उसकी अटूट निष्ठा और घमंड ने उसे उन सभी अवसरों से दूर रखा जो उसे बचा सकते थे। उसने अपने ही हाथों अपना विनाश कैसे लिखा, यह कहानी हमें बताती है कि कैसे भीतर का अहंकार एक व्यक्ति को पूरी तरह नष्ट कर सकता है।\n\n#Shorts #Mahabharata #महाभारत #Hindu #BhagavadGita #भगवद_गीता #Krishna #कृष्ण #Arjuna #अर्जुन #Karna #कर्ण #Bhishma #भीष्म #Draupadi #द्रौपदी #Kurukshetra #कुरुक्षेत्र #AncientIndia #IndianMythology #Dharma #MythologyShorts #VedicWisdom #HinduDharma #IndianHistory #SpiritualShorts #PauranikKathayein #SanatanDharma #HindiShorts #trending}",
+    "tags": [
+      "Karna",
+      "कर्ण",
+      "Karna's pride",
+      "Hidden pride",
+      "Mahabharata lessons",
+      "Emotional truth",
+      "Karna's destruction",
+      "Mahabharata",
+      "महाभारत",
+      "Shorts",
+      "Hindu mythology"
+    ],
+    "thumbnail_prompt": "Dramatic Mahabharata thumbnail of Karna, radiant golden-bronze Indian skin, bare-chested with luminous divine sun-kavacha glow emanating FROM WITHIN bare chest skin (kavacha embedded INTO chest skin, NOT armor worn over it, NOT a breastplate), intricate gold kundal earrings ALWAYS visible, tear-streaked eyes full of defiance and hidden pain, battle-stained dark red silk dhoti at waist, gripping a heavy bow, background of burning Kurukshetra at warm sunset amber + bronze, golden divine glow, saffron-and-crimson palette, cinematic, portrait composition, harsh golden-hour edge-light, embers in foreground, faces visible and warm, no text, no watermarks",
+    "quotable_line": "कभी-कभी, व्यक्ति का छुपा अभिमान ही उसे भीतर से नष्ट कर देता है।",
+    "pinned_question": "❓ कभी-कभी, व्यक्ति का छुपा अभिमान ही उसे भीतर से नष्ट कर देता है। क्या यह कर्म का फल था या नियति का खेल?",
+    "next_seed": "कर्ण का अनकहा पश्चाताप उसे सोने नहीं देता।",
+    "language": "hi",
+    "content_type": "story",
+    "topic": "Karna's Hidden Pride Destroyed Him",
+    "series": "mahabharata",
+    "episode_n": 18,
+    "arc_character_devanagari": "कर्ण",
+    "arc_character_english": "Karna — The Forgotten Son",
+    "_phase18_strict_pass": false,
+    "_phase18_score": 18,
+    "_phase18_score_max": 25,
+    "_phase18_score_floor": 19,
+    "_phase18_violation": "anchors",
+    "_phase18_failing_gates": [
+      "anchors",
+      "archetype",
+      "bookend",
+      "engagement",
+      "repetition",
+      "shock_action",
+      "tha_tic"
+    ],
+    "_phase18_fatal_failures": []
+  }
+}
