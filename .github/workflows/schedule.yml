@@ -38,10 +38,16 @@ on:
   #               in place — any sub-25/25 score sys.exit(0)'s without
   #               publishing, so a worst-case "every cron quarantines"
   #               outcome means silent no-op rather than bad publishes.
+  #   2026-07-02: DAILY cadence restored (Operation 500K, Sprint 0.2).
+  #               Full-channel API forensic proved the view collapse
+  #               (500-800 → 12-140) began with the Jun 9-13 four-day
+  #               pause and never recovered under erratic scheduling.
+  #               The winners era (May 7 - Jun 8) was daily. Consistency
+  #               is the algorithmic trust signal; quarantine gate makes
+  #               daily safe (bad days = silent no-op, never bad publish).
   schedule:
     # 12:15 UTC = 5:45 PM IST nominal → 6:00-6:05 PM IST publish landing.
-    # Day codes (POSIX): 0=Sun, 2=Tue, 4=Thu, 6=Sat.
-    - cron: "15 12 * * 0,2,4,6"
+    - cron: "15 12 * * *"
   workflow_dispatch:
     inputs:
       target:
@@ -93,6 +99,14 @@ on:
         options:
           - "false"
           - "true"
+      yt_privacy:
+        description: "Sprint 0.1 (2026-07-02, Operation 500K) — upload privacy for MANUAL runs. Default 'private': test/verification renders land unlisted-from-feed for Studio review instead of polluting the live channel (10+ test publics during Jun trust-rebuild window measurably hurt seeding). Cron runs pass no inputs → fall through to 'public' automatically. Only flip to 'public' manually when you explicitly intend a manual publish."
+        required: false
+        default: "private"
+        type: choice
+        options:
+          - "private"
+          - "public"
 
 # ════════════════════════════════════════════════════════════════════════════
 # WORKFLOW STRUCTURE
@@ -213,6 +227,9 @@ jobs:
           elevenlabs-voice-id-krishna: ${{ secrets.ELEVENLABS_VOICE_ID_KRISHNA }}
           phase18-decoupled: ${{ inputs.phase18_decoupled || 'true' }}
           pause-pipeline: ${{ inputs.pause_pipeline || 'false' }}
+          # Sprint 0.1: cron passes no inputs → empty → action default 'public'.
+          # Manual dispatch defaults to 'private' (test isolation).
+          yt-privacy: ${{ inputs.yt_privacy || 'public' }}
 
   generate-and-upload-retry-1:
     needs: generate-and-upload
@@ -277,6 +294,9 @@ jobs:
           elevenlabs-voice-id-krishna: ${{ secrets.ELEVENLABS_VOICE_ID_KRISHNA }}
           phase18-decoupled: ${{ inputs.phase18_decoupled || 'true' }}
           pause-pipeline: ${{ inputs.pause_pipeline || 'false' }}
+          # Sprint 0.1: cron passes no inputs → empty → action default 'public'.
+          # Manual dispatch defaults to 'private' (test isolation).
+          yt-privacy: ${{ inputs.yt_privacy || 'public' }}
 
   generate-and-upload-retry-2:
     needs: generate-and-upload-retry-1
@@ -339,6 +359,9 @@ jobs:
           elevenlabs-voice-id-krishna: ${{ secrets.ELEVENLABS_VOICE_ID_KRISHNA }}
           phase18-decoupled: ${{ inputs.phase18_decoupled || 'true' }}
           pause-pipeline: ${{ inputs.pause_pipeline || 'false' }}
+          # Sprint 0.1: cron passes no inputs → empty → action default 'public'.
+          # Manual dispatch defaults to 'private' (test isolation).
+          yt-privacy: ${{ inputs.yt_privacy || 'public' }}
 
   generate-and-upload-retry-3:
     needs: generate-and-upload-retry-2
@@ -401,6 +424,9 @@ jobs:
           elevenlabs-voice-id-krishna: ${{ secrets.ELEVENLABS_VOICE_ID_KRISHNA }}
           phase18-decoupled: ${{ inputs.phase18_decoupled || 'true' }}
           pause-pipeline: ${{ inputs.pause_pipeline || 'false' }}
+          # Sprint 0.1: cron passes no inputs → empty → action default 'public'.
+          # Manual dispatch defaults to 'private' (test isolation).
+          yt-privacy: ${{ inputs.yt_privacy || 'public' }}
 
   # ════════════════════════════════════════════════════════════════════════
   # WhatIf English phase (4 attempts) — runs on 04:00 UTC cron
@@ -453,6 +479,9 @@ jobs:
           elevenlabs-voice-id-krishna: ${{ secrets.ELEVENLABS_VOICE_ID_KRISHNA }}
           phase18-decoupled: ${{ inputs.phase18_decoupled || 'true' }}
           pause-pipeline: ${{ inputs.pause_pipeline || 'false' }}
+          # Sprint 0.1: cron passes no inputs → empty → action default 'public'.
+          # Manual dispatch defaults to 'private' (test isolation).
+          yt-privacy: ${{ inputs.yt_privacy || 'public' }}
 
   whatif-english-retry-1:
     needs: whatif-english
@@ -502,6 +531,9 @@ jobs:
           elevenlabs-voice-id-krishna: ${{ secrets.ELEVENLABS_VOICE_ID_KRISHNA }}
           phase18-decoupled: ${{ inputs.phase18_decoupled || 'true' }}
           pause-pipeline: ${{ inputs.pause_pipeline || 'false' }}
+          # Sprint 0.1: cron passes no inputs → empty → action default 'public'.
+          # Manual dispatch defaults to 'private' (test isolation).
+          yt-privacy: ${{ inputs.yt_privacy || 'public' }}
 
   whatif-english-retry-2:
     needs: whatif-english-retry-1
@@ -551,6 +583,9 @@ jobs:
           elevenlabs-voice-id-krishna: ${{ secrets.ELEVENLABS_VOICE_ID_KRISHNA }}
           phase18-decoupled: ${{ inputs.phase18_decoupled || 'true' }}
           pause-pipeline: ${{ inputs.pause_pipeline || 'false' }}
+          # Sprint 0.1: cron passes no inputs → empty → action default 'public'.
+          # Manual dispatch defaults to 'private' (test isolation).
+          yt-privacy: ${{ inputs.yt_privacy || 'public' }}
 
   whatif-english-retry-3:
     needs: whatif-english-retry-2
@@ -600,6 +635,9 @@ jobs:
           elevenlabs-voice-id-krishna: ${{ secrets.ELEVENLABS_VOICE_ID_KRISHNA }}
           phase18-decoupled: ${{ inputs.phase18_decoupled || 'true' }}
           pause-pipeline: ${{ inputs.pause_pipeline || 'false' }}
+          # Sprint 0.1: cron passes no inputs → empty → action default 'public'.
+          # Manual dispatch defaults to 'private' (test isolation).
+          yt-privacy: ${{ inputs.yt_privacy || 'public' }}
 
   # ════════════════════════════════════════════════════════════════════════
   # WhatIf Hindi phase (4 attempts) — depends on ANY EN attempt succeeding
@@ -664,6 +702,9 @@ jobs:
           elevenlabs-voice-id-krishna: ${{ secrets.ELEVENLABS_VOICE_ID_KRISHNA }}
           phase18-decoupled: ${{ inputs.phase18_decoupled || 'true' }}
           pause-pipeline: ${{ inputs.pause_pipeline || 'false' }}
+          # Sprint 0.1: cron passes no inputs → empty → action default 'public'.
+          # Manual dispatch defaults to 'private' (test isolation).
+          yt-privacy: ${{ inputs.yt_privacy || 'public' }}
 
   whatif-hindi-retry-1:
     needs: whatif-hindi
@@ -713,6 +754,9 @@ jobs:
           elevenlabs-voice-id-krishna: ${{ secrets.ELEVENLABS_VOICE_ID_KRISHNA }}
           phase18-decoupled: ${{ inputs.phase18_decoupled || 'true' }}
           pause-pipeline: ${{ inputs.pause_pipeline || 'false' }}
+          # Sprint 0.1: cron passes no inputs → empty → action default 'public'.
+          # Manual dispatch defaults to 'private' (test isolation).
+          yt-privacy: ${{ inputs.yt_privacy || 'public' }}
 
   whatif-hindi-retry-2:
     needs: whatif-hindi-retry-1
@@ -762,6 +806,9 @@ jobs:
           elevenlabs-voice-id-krishna: ${{ secrets.ELEVENLABS_VOICE_ID_KRISHNA }}
           phase18-decoupled: ${{ inputs.phase18_decoupled || 'true' }}
           pause-pipeline: ${{ inputs.pause_pipeline || 'false' }}
+          # Sprint 0.1: cron passes no inputs → empty → action default 'public'.
+          # Manual dispatch defaults to 'private' (test isolation).
+          yt-privacy: ${{ inputs.yt_privacy || 'public' }}
 
   whatif-hindi-retry-3:
     needs: whatif-hindi-retry-2
@@ -811,3 +858,6 @@ jobs:
           elevenlabs-voice-id-krishna: ${{ secrets.ELEVENLABS_VOICE_ID_KRISHNA }}
           phase18-decoupled: ${{ inputs.phase18_decoupled || 'true' }}
           pause-pipeline: ${{ inputs.pause_pipeline || 'false' }}
+          # Sprint 0.1: cron passes no inputs → empty → action default 'public'.
+          # Manual dispatch defaults to 'private' (test isolation).
+          yt-privacy: ${{ inputs.yt_privacy || 'public' }}

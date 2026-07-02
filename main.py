@@ -670,6 +670,27 @@ async def run_pipeline(language: str = "en", test_mode: bool = False, test_uploa
         # `main.py hi` runs the full publish pipeline). The mp4 still
         # gets rendered + saved to output/; just no upload occurs.
         local_only = os.environ.get("LOCAL_ONLY", "false").strip().lower() == "true"
+        # Sprint 0 (2026-07-02, Operation 500K) — privacy + multi-upload guard.
+        yt_privacy = os.environ.get("YT_PRIVACY", "public").strip().lower()
+        _upload_guard_hit = False
+        if (yt_privacy == "public"
+                and not local_only
+                and not ck.has("uploaded.json")
+                and os.environ.get("FORCE_SECOND_UPLOAD", "").strip().lower()
+                    not in ("true", "1", "yes")):
+            # Same-day multi-upload guard: exactly ONE public video per day
+            # (IST). Multi-upload days split the seed audience — API forensic
+            # showed every 2-3-upload day underperformed. Guard fails OPEN on
+            # API errors so a hiccup never blocks the daily cron.
+            from pipeline.youtube_uploader import published_public_today
+            _today_vid = published_public_today()
+            if _today_vid:
+                _upload_guard_hit = True
+                print(f"\n[upload-guard] A public video was already published "
+                      f"today (IST): https://youtube.com/watch?v={_today_vid}")
+                print("[upload-guard] Skipping upload — one public video per "
+                      "day. Set FORCE_SECOND_UPLOAD=true to override. "
+                      "The mp4 is saved in output/ for manual publishing.")
         video_id = None
         if ck.has("uploaded.json"):
             uploaded = ck.load_json("uploaded.json")
@@ -677,6 +698,8 @@ async def run_pipeline(language: str = "en", test_mode: bool = False, test_uploa
             print(f"\nStep 5 — [resume] already uploaded as https://youtube.com/watch?v={video_id}")
         elif local_only:
             print("\nStep 5 — SKIPPED via LOCAL_ONLY=true (mp4 saved locally only)")
+        elif _upload_guard_hit:
+            pass  # guard message already printed; video_id stays None
         elif (not test_mode or test_upload) and os.path.exists("client_secrets.json"):
             # Phase 16 D2 (2026-06-09) — env-gated FORCED-FRAME thumbnail
             # bake-in. When BAKE_THUMBNAIL_PATH points to an existing PNG
@@ -726,9 +749,15 @@ async def run_pipeline(language: str = "en", test_mode: bool = False, test_uploa
         # that block the topic from being retried on the next cron.
         # (The 2026-05-16 16:19 UTC cron's invalid_grant failure
         #  created exactly such a ghost for "Bhishma in Kurukshetra war".)
-        if video_id and not ck.has("logged.done"):
+        # Sprint 0.1 (2026-07-02): topic-ledger logging is PUBLIC-ONLY.
+        # Private test renders must not burn topics — the same topic stays
+        # eligible for the real (public) cron publish.
+        if video_id and yt_privacy == "public" and not ck.has("logged.done"):
             log_video(video_path, script, language)
             ck.mark_done("logged.done")
+        elif video_id and yt_privacy != "public":
+            print(f"    [skip-log] {yt_privacy} upload — NOT recording topic "
+                  "as used (test render; topic stays eligible for cron)")
         elif not video_id:
             print("    [skip-log] upload failed/skipped — NOT recording topic "
                   "as used (prevents ghost entries in recent_topics.json)")

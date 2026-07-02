@@ -79,6 +79,12 @@ inputs:
   # Use this for fast pause during audits / hotfix windows without disabling
   # the workflow file. Default "false" = pipeline runs normally.
   pause-pipeline:                { required: false, default: "false" }
+  # Sprint 0.1 (2026-07-02, Operation 500K) — YouTube upload privacy.
+  # "public" (default, cron path) or "private" (manual test renders).
+  # pipeline/youtube_uploader.py reads YT_PRIVACY; private uploads also
+  # skip topic-ledger logging + pinned comments (main.py gating) so test
+  # renders never burn topics or post bot comments.
+  yt-privacy:                    { required: false, default: "public" }
 
 runs:
   using: composite
@@ -138,6 +144,10 @@ runs:
         # Kill-switch (2026-06-25) — when "true", main.py exits before any
         # work begins. Survives chained-retry siblings.
         PAUSE_PIPELINE: ${{ inputs.pause-pipeline }}
+        # Sprint 0.1 (2026-07-02) — "private" for manual test renders,
+        # "public" for cron. Uploader reads directly; main.py gates
+        # topic-logging + engagement on public-only.
+        YT_PRIVACY: ${{ inputs.yt-privacy }}
       run: ${{ inputs.pipeline-cmd }} 2>&1 | tee pipeline_output.txt
 
     - name: Persist unsaved assembled video to checkpoint (cancellation race)

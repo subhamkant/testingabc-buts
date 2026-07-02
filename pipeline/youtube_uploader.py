@@ -561,25 +561,76 @@ def upload_to_youtube(
         except Exception as e:
             print(f"    [!] Thumbnail upload failed (need verified channel): {e}")
 
-    # Add to series playlist (non-fatal if scope insufficient)
-    _add_to_playlist(youtube, video_id, series)
+    # Sprint 0.1 (2026-07-02, Operation 500K): playlist membership + story
+    # thread + pinned comment are PUBLIC-ONLY. Private test renders must
+    # not join public playlists or post bot comments — they're for Studio
+    # review, not distribution.
+    _is_public = body["status"]["privacyStatus"] == "public"
+    if _is_public:
+        # Add to series playlist (non-fatal if scope insufficient)
+        _add_to_playlist(youtube, video_id, series)
 
-    # Post + pin a series-specific comment to drive the early engagement
-    # signal. Non-fatal — re-auth is required for the wider scope, and even
-    # without pinning the comment helps with keyword density.
-    _append_story_thread(
-        video_id, series,
-        script_data.get("title", ""),
-        script_data.get("next_seed", ""),
-    )
+        # Post + pin a series-specific comment to drive the early engagement
+        # signal. Non-fatal — re-auth is required for the wider scope, and even
+        # without pinning the comment helps with keyword density.
+        _append_story_thread(
+            video_id, series,
+            script_data.get("title", ""),
+            script_data.get("next_seed", ""),
+        )
 
-    _post_pinned_comment(
-        youtube, video_id, series,
-        override=script_data.get("pinned_question"),
-        next_seed=script_data.get("next_seed"),
-    )
+        _post_pinned_comment(
+            youtube, video_id, series,
+            override=script_data.get("pinned_question"),
+            next_seed=script_data.get("next_seed"),
+        )
+    else:
+        print(f"    [privacy] {body['status']['privacyStatus']} upload — "
+              f"skipping playlist/story-thread/pinned-comment (public-only)")
 
     return video_id
+
+
+def published_public_today() -> str | None:
+    """Sprint 0.4 (2026-07-02, Operation 500K) — same-day multi-upload guard.
+
+    Returns the video_id of a PUBLIC video already published today (IST) on
+    the channel, or None. Used by main.py to prevent a manual dispatch +
+    cron collision from double-publishing — the winners-era pattern is
+    exactly ONE public video per day; multi-upload days split the same
+    seed audience and both videos underperform.
+
+    Non-fatal by design: any API error returns None (guard fails OPEN so
+    an API hiccup never blocks the daily cron publish)."""
+    try:
+        from datetime import datetime, timezone, timedelta
+        youtube = get_youtube_service()
+        ch = youtube.channels().list(part="contentDetails", mine=True).execute()
+        uploads_pl = ch["items"][0]["contentDetails"]["relatedPlaylists"]["uploads"]
+        r = youtube.playlistItems().list(
+            part="contentDetails", playlistId=uploads_pl, maxResults=10,
+        ).execute()
+        ids = [it["contentDetails"]["videoId"] for it in r.get("items", [])]
+        if not ids:
+            return None
+        vids = youtube.videos().list(
+            part="status,snippet", id=",".join(ids),
+        ).execute()
+        ist = timezone(timedelta(hours=5, minutes=30))
+        today_ist = datetime.now(ist).date()
+        for v in vids.get("items", []):
+            if v["status"].get("privacyStatus") != "public":
+                continue
+            pub = v["snippet"].get("publishedAt", "")
+            if not pub:
+                continue
+            pub_dt = datetime.fromisoformat(pub.replace("Z", "+00:00"))
+            if pub_dt.astimezone(ist).date() == today_ist:
+                return v["id"]
+        return None
+    except Exception as e:
+        print(f"    [upload-guard] check failed (guard fails open): {str(e)[:100]}")
+        return None
 
 
 def _post_pinned_comment(
