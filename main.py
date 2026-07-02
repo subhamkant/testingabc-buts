@@ -656,6 +656,18 @@ async def run_pipeline(language: str = "en", test_mode: bool = False, test_uploa
                 )
             except Exception as sub_err:
                 print(f"    Subtitles failed (non-fatal): {sub_err}")
+
+            # Sprint 1.5 (2026-07-02, Operation 500K) — visual loop-close.
+            # Hook frame fades in over the final 0.4s → seamless rewatch
+            # loop. A/B gated (default OFF); duration-preserving overlay.
+            if os.environ.get("LOOP_ECHO", "false").strip().lower() == "true":
+                _hook_img = "temp/images/scene_00_shot_00.jpg"
+                try:
+                    from pipeline.video_assembler import apply_loop_echo
+                    apply_loop_echo(video_path, _hook_img)
+                except Exception as echo_err:
+                    print(f"    [loop-echo] non-fatal: {echo_err}")
+
             # Cache the final video regardless of subtitle success/failure
             # so a retry doesn't redo this expensive step.
             if os.path.exists(video_path):

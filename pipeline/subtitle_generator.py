@@ -363,6 +363,22 @@ def _group_into_cards(words: list, max_words: int = WORDS_PER_CARD) -> list:
 
 # ── PNG card rendering ────────────────────────────────────────────────────────
 
+# Sprint 1.4 (2026-07-02, Operation 500K) — charged-word emphasis.
+# Cards containing an emotionally-charged Devanagari word render in
+# RED-ORANGE instead of the default yellow ("Hormozi-style" keyword pop —
+# a known Shorts retention lever for sound-off viewers). Word list mirrors
+# the Title-DNA charged vocabulary in pipeline/phase18.py (kept local to
+# avoid importing the heavy phase18 → script_generator chain here).
+# Substring match handles Hindi inflections (धोखा / धोखे / धोखेबाज़).
+_CHARGED_WORDS = (
+    "धोखा", "धोखे", "गलती", "गलतियां", "श्राप", "शाप", "पाप", "बलिदान",
+    "डर", "हार", "शर्म", "घमंड", "अभिमान", "विश्वासघात", "प्रतिज्ञा",
+    "वचन", "अपमान", "झूठ", "खत्म", "मौत", "मृत्यु", "रक्त", "खून",
+    "आँसू", "आंसू", "क्रोध", "बदला", "कायर", "छल",
+)
+_CHARGED_FILL_RGBA = (255, 80, 40, 255)   # red-orange keyword pop
+
+
 def _render_card_pngs(cards: list, out_dir: str) -> list:
     """
     Render each card to an RGBA PNG using HarfBuzz shaping. Returns a list of
@@ -380,13 +396,19 @@ def _render_card_pngs(cards: list, out_dir: str) -> list:
 
     os.makedirs(out_dir, exist_ok=True)
     rendered = []
+    n_charged = 0
     for i, c in enumerate(cards):
+        # Sprint 1.4: charged-word cards pop in red-orange.
+        card_fill = fill_rgba
+        if any(w in c["text"] for w in _CHARGED_WORDS):
+            card_fill = _CHARGED_FILL_RGBA
+            n_charged += 1
         try:
             img = render_text_card(
                 c["text"],
                 font_path=FONT_PATH,
                 font_size=FONT_SIZE,
-                fill=fill_rgba,
+                fill=card_fill,
                 outline=outline_rgba,
                 outline_px=OUTLINE_PX,
                 shadow=shadow_rgba,
@@ -406,6 +428,9 @@ def _render_card_pngs(cards: list, out_dir: str) -> list:
             "w":     w,
             "h":     h,
         })
+    if n_charged:
+        print(f"    [subs] {n_charged}/{len(cards)} cards charged-word "
+              f"emphasized (red-orange)")
     return rendered
 
 

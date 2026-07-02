@@ -1241,7 +1241,14 @@ def validate_phase18(data: dict, lang_label: str = "Hindi") -> tuple[bool, str, 
     #     REVERT to 130 once Phase 22.4 (two-pass compression) ships — then
     #     Gemini freely generates 150-170w and a second compression-pass
     #     trims to 100-120w preserving anchors + structure.
-    length_ok = 75 <= n_words <= 170
+    #   • 2026-07-02 (Sprint 1.1, Operation 500K): cap 170 → 130. The
+    #     two-pass compression pass now runs INSIDE the attempt loop
+    #     (before validation): Gemini free-writes 130-170w, compression
+    #     trims to 95-110w preserving anchors verbatim. Winners-era
+    #     videos were 40-59s; 130w ≈ 59s at Charon 2.2 wps is the hard
+    #     ceiling; the compressed typical case lands 45-50s — the
+    #     retention sweet spot for Shorts tier escalation.
+    length_ok = 75 <= n_words <= 130
     broll_ok  = 8 <= n_broll <= 10
 
     first_10 = " ".join(words[:10])
@@ -1402,7 +1409,7 @@ def _enumerate_failing_gates(data: dict, lang_label: str = "Hindi") -> set:
     n_broll = len(br)
     episode_n = int(data.get("episode_n", 0) or 0)
 
-    length_ok = 75 <= n_words <= 170
+    length_ok = 75 <= n_words <= 130   # Sprint 1.1: cap 170→130 (compression pass)
     broll_ok  = 8 <= n_broll <= 10
 
     first_10 = " ".join(words[:10])
@@ -1486,7 +1493,7 @@ def _enumerate_failing_gates(data: dict, lang_label: str = "Hindi") -> set:
 # ─── Prompt builder ───────────────────────────────────────────────────────
 
 _VIOLATION_REMINDERS = {
-    "length":       "Your voiceover word count was out of range. Voiceover MUST be 75-170 Hindi words (sweet spot 100-130). Match the SHAPE of the concrete 96-word example in the prompt — open with an 8-word action verb, build 3-4 mid-paragraph beats with sensory anchors, embed a dialogue beat in quotes, insert लेकिन/परंतु around the midpoint, close with a question that echoes the opener noun. broll MUST be 8-10 entries.",
+    "length":       "Your voiceover word count was out of range AFTER compression (final text must be 75-130 Hindi words; the compression pass targets 95-110 but could not safely trim your draft — usually because anchor phrases were too long or too densely packed to preserve). Write a TIGHTER draft this time: aim 100-120 words directly, keep anchor_phrases short (2-3 words), match the SHAPE of the concrete 96-word example — 8-word action-verb opener, 3-4 sensory beats, dialogue beat in quotes, लेकिन/परंतु midpoint, closing question echoing the opener noun. broll MUST be 8-10 entries.",
     "anchors":      "Your broll anchor_phrase entries failed validation. Each anchor_phrase MUST be 2-4 words appearing VERBATIM in the voiceover, in ASCENDING order by character position. Final anchor MUST land in the LAST 30% of the voiceover.",
     "wardrobe_set": "Every broll entry MUST declare a wardrobe_context field, one of: WAR / PALACE / DIVINE / FOREST / JOURNEY. Pick the context that matches THAT specific broll moment (not the whole story): a dice-game palace scene is PALACE even in an Arjuna story; Yudhishthira walking to heaven's gate is JOURNEY, not WAR; Krishna in his cosmic form is DIVINE; Eklavya's forest ashram is FOREST.",
     "story_entity": "Your voiceover names a story-critical entity (e.g. कुत्ता / धनुष / सुदर्शन / कुंडल / बच्चे) but NO broll image_prompt contains its English equivalent. AT LEAST ONE broll image_prompt MUST have the entity as a clearly identifiable foreground subject — e.g. anchor 'कुत्ता का साथ' → image_prompt 'a loyal stray dog walking close beside Yudhishthira, foreground subject'. The audience cannot feel the dog's presence if FLUX never renders one.",
@@ -1512,6 +1519,78 @@ _VIOLATION_REMINDERS = {
     "aftermath_closer":       "The final broll entry (broll[-1]) must declare wardrobe_context: 'AFTERMATH' (literal string in JSON). AFTERMATH = lone silhouette / face-withheld / abandoned weapon / prone body / lone diya / fading dusk. This is the consequence-as-closer beat ALL 4 channel winners used. Set BOTH the JSON wardrobe_context field AND the matching tokens inside broll[-1].image_prompt.",
     "title_dna":              "Your title failed the Title DNA gate. (1) NO mood/regret/wound/caste/religion/sin/truth/fate nouns. (2) NO silent/internal/abstract/quiet/deep/inner adjectives. (3) MUST contain ≥1 tribal-relational noun: Sacrifice/Vow/Friendship/Pride/Loyalty/Mistake/Betrayal/Curse/Promise/Doubt/Loss/Fear/Shame (or Devanagari equivalents बलिदान/प्रतिज्ञा/वचन/दोस्ती/अभिमान/घमंड/हार/डर/वफ़ादारी/गलती/धोखा/श्राप/शर्म). (4) Title MUST assert the OPPOSITE of the character's canonical virtue (Karna's loyalty → Karna's Biggest Mistake; Arjuna's skill → Arjuna's Greatest Doubt; Bhishma's vow → Bhishma's Greatest Betrayal). Examples that PASS: 'कर्ण की सबसे बड़ी गलती | Karna\\'s Biggest Mistake', 'अर्जुन का असली डर | Arjuna\\'s Real Fear', 'भीष्म का छुपा वचन | Bhishma\\'s Hidden Vow'. Examples that REJECT: 'Karna\\'s Silent Regret' (mood noun), 'Eklavya\\'s Caste Truth' (caste noun), 'Arjuna\\'s Deep Wound' (mood + soft adj).",
 }
+
+
+def _compress_voiceover(data: dict) -> dict:
+    """Sprint 1.1 (2026-07-02, Operation 500K) — two-pass length compression.
+
+    Runs INSIDE the attempt loop, immediately after JSON parse and BEFORE
+    validate_phase18 (plan-review fix: compressing after validation would
+    rewrite a script whose anchors/verb-frames were validated against the
+    LONG text → broll desyncs from the voiceover).
+
+    Gemini free-writes 130-170w (its natural distribution); this pass
+    compresses to 95-110w so finished videos land at the winners-era
+    45-55s instead of 65-77s. Higher AVD% = Shorts tier escalation.
+
+    Anchor safety: the compression prompt REQUIRES every broll
+    anchor_phrase verbatim, in order. If compression drops one, the
+    normal `anchors` gate catches it downstream and the retry loop
+    handles it — validation always sees the final text. On any
+    compression failure this returns the ORIGINAL data unchanged
+    (never lose a render to compression)."""
+    vo = data.get("voiceover", "") or ""
+    words = vo.split()
+    if len(words) <= 115:
+        return data
+
+    anchors = [b.get("anchor_phrase", "") for b in data.get("broll", [])
+               if b.get("anchor_phrase")]
+    anchor_list = "\n".join(f"  {i+1}. {a}" for i, a in enumerate(anchors))
+    prompt = f"""Compress this Hindi voiceover from {len(words)} words to 95-110 words.
+
+HARD RULES:
+1. Every one of these anchor phrases MUST appear VERBATIM (exact same
+   Devanagari characters) in the compressed text, in this exact order:
+{anchor_list}
+2. Keep the OPENING action verb phrase (first 8 words' verb must survive).
+3. Keep the closing question (must still end with ?).
+4. Keep the लेकिन / परंतु subversion marker.
+5. Cut adjectives, redundant beats, repeated sentiments — NOT the anchors.
+6. Return ONLY the compressed Hindi paragraph. No preamble, no quotes,
+   no markdown.
+
+VOICEOVER:
+{vo}"""
+    try:
+        from pipeline.script_generator import _call_llm
+        raw = _call_llm(prompt, quality="best").strip()
+        # Strip accidental fences/quotes
+        raw = raw.strip('`"“” \n')
+        if raw.startswith("json"):
+            raw = raw[4:].strip()
+        new_words = raw.split()
+        # Sanity: reasonable length + all anchors present in order
+        if not (85 <= len(new_words) <= 120):
+            print(f"    [compress] rejected: {len(new_words)}w out of 85-120 "
+                  f"sanity band — keeping original {len(words)}w")
+            return data
+        pos = 0
+        for a in anchors:
+            idx = raw.find(a, pos)
+            if idx < 0:
+                print(f"    [compress] rejected: anchor '{a[:25]}' lost — "
+                      f"keeping original {len(words)}w")
+                return data
+            pos = idx + len(a)
+        out = dict(data)
+        out["voiceover"] = raw
+        print(f"    [compress] {len(words)}w → {len(new_words)}w "
+              f"(all {len(anchors)} anchors preserved)")
+        return out
+    except Exception as e:
+        print(f"    [compress] failed (non-fatal, keeping original): {str(e)[:80]}")
+        return data
 
 
 def _build_phase18_prompt(
@@ -2258,16 +2337,19 @@ def generate_phase18_script(
                         f"At Charon's 2.2 wps that's ~55s narration — anything "
                         f"shorter than 75 words = <34s = a quarter-finished Short. "
                     )
-                elif w > 170:
-                    # Phase 22.3 (2026-06-26): cap raised 130→170 tactically
-                    # to ship a Phase-22-compliant render to YouTube.
-                    overshoot = w - 130
+                elif w > 130:
+                    # Sprint 1.1 (2026-07-02): compressed text still over
+                    # the 130 cap = the compression pass couldn't safely
+                    # trim (anchors too long/dense). Ask for a tighter draft.
+                    overshoot = w - 110
                     dynamic_prefix = (
-                        f"YOUR LAST VOICEOVER WAS {w} WORDS — {overshoot} OVER "
-                        f"the 130-word sweet-spot target (cap is 170, broll={b}). "
-                        f"You MUST trim to 75-170 words. Cut the WEAKEST "
-                        f"sensory beat. Remove one adjective per remaining "
-                        f"sentence. DO NOT add new ideas. AIM FOR 120. "
+                        f"YOUR LAST VOICEOVER LANDED AT {w} WORDS after the "
+                        f"compression pass — {overshoot} over the ~110-word "
+                        f"target (hard cap 130, broll={b}). Write a TIGHTER "
+                        f"draft: aim 100-120 words directly, keep each "
+                        f"anchor_phrase to 2-3 short words so the compressor "
+                        f"can preserve them. Cut the WEAKEST sensory beat. "
+                        f"DO NOT add new ideas. "
                     )
                 else:
                     # Length is in-range but broll count failed (8-10 entries)
@@ -2335,6 +2417,11 @@ def generate_phase18_script(
         except Exception as e:
             print(f"    [phase18-gen] JSON parse failed: {str(e)[:120]}")
             continue
+
+        # Sprint 1.1 (2026-07-02): two-pass compression BEFORE validation.
+        # Gemini free-writes long; this trims to 95-110w preserving anchors.
+        # Validation below always sees the FINAL text (plan-review fix).
+        data = _compress_voiceover(data)
 
         ok, violation, info = validate_phase18(data)
         score = info.get("score", 0)

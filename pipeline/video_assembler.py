@@ -1015,6 +1015,16 @@ _SFX_DIR = "assets/sfx"
 # substrings (case-insensitive). First match wins; falls back to chime.
 _SFX_KEYWORD_MAP = [
     # (keywords, sfx_file, volume)
+    # Sprint 1.3 (2026-07-02, Operation 500K) — 3 new synthesized SFX
+    # (stdlib-synthesized like dark_ambient.mp3; licensing-safe).
+    # Listed FIRST for precedence: betrayal/twist beats get the cinematic
+    # sub-bass braam; arrow/archer beats get the sharp air-cut; wide
+    # sweeping vistas get the whoosh that sells the 16:9 pan.
+    (("betray", "twist", "reveal", "deception", "shatter",
+      "broken trust"),                                       "braam.mp3",        0.40),
+    (("arrow", "bow", "archer", "gandiva", "quiver"),        "arrow_whoosh.mp3", 0.40),
+    (("sweep", "vista", "landscape", "horizon", "wind",
+      "vast", "wide"),                                       "whoosh.mp3",       0.35),
     (("battle", "war", "fight", "fierce", "rage", "anger", "sword", "vadh", "kill",
       "fury", "duel"),                                       "sword_clang.mp3", 0.45),
     (("divine", "god", "krishna", "miracle", "blessing", "sacred", "holy",
@@ -1815,6 +1825,77 @@ def _legacy_end_chop(output_path: str, dur: float, max_s: float, reason: str = "
             os.remove(trimmed)
 
 
+def apply_loop_echo(video_path: str, hook_image_path: str,
+                    echo_s: float = 0.4, max_alpha: float = 0.65) -> bool:
+    """Sprint 1.5 (2026-07-02, Operation 500K) — visual loop-close.
+
+    Overlays the HOOK frame (scene 0 image) fading in over the FINAL
+    `echo_s` seconds of the video, so the last thing the viewer sees
+    visually morphs back into the first frame → seamless rewatch loop.
+    Rewatch rate is the single strongest Shorts ranking signal.
+
+    Duration-preserving by design: this is an overlay INSIDE the existing
+    tail, not an append — audio untouched (-c:a copy), total duration
+    identical. Gated by env LOOP_ECHO=true at the call site (A/B).
+    Returns True on success; any failure leaves the video unchanged."""
+    if not (os.path.exists(video_path) and os.path.exists(hook_image_path)):
+        return False
+    try:
+        probe = subprocess.run(
+            ["ffprobe", "-v", "quiet", "-print_format", "json",
+             "-show_format", video_path],
+            capture_output=True, text=True,
+        )
+        dur = float(json.loads(probe.stdout)["format"]["duration"])
+        t0 = max(dur - echo_s, 0.0)
+        out = video_path.replace(".mp4", "_loopecho.mp4")
+        # Hook image: scale/crop to 1080x1920, loop as video, fade alpha in
+        # across [0, echo_s], then shift to start at t0 via overlay enable +
+        # a setpts offset on the overlay stream.
+        vf = (
+            f"[1:v]scale=1080:1920:force_original_aspect_ratio=increase,"
+            f"crop=1080:1920,format=rgba,"
+            f"fade=t=in:st=0:d={echo_s:.3f}:alpha=1,"
+            f"colorchannelmixer=aa={max_alpha:.2f},"
+            f"setpts=PTS+{t0:.3f}/TB[echo];"
+            f"[0:v][echo]overlay=enable='gte(t,{t0:.3f})':eof_action=pass[vout]"
+        )
+        r = subprocess.run([
+            "ffmpeg", "-y",
+            "-i", video_path,
+            "-loop", "1", "-t", f"{echo_s + 0.2:.2f}", "-i", hook_image_path,
+            "-filter_complex", vf,
+            "-map", "[vout]", "-map", "0:a?",
+            "-c:v", "libx264", "-preset", "fast", "-crf", "20",
+            "-c:a", "copy",
+            "-movflags", "+faststart",
+            out,
+        ], capture_output=True)
+        if r.returncode != 0:
+            print(f"    [loop-echo] ffmpeg failed (non-fatal): "
+                  f"{r.stderr.decode(errors='replace')[-200:]}")
+            return False
+        # Duration guard: output must match input to within 0.2s.
+        probe2 = subprocess.run(
+            ["ffprobe", "-v", "quiet", "-print_format", "json",
+             "-show_format", out],
+            capture_output=True, text=True,
+        )
+        dur2 = float(json.loads(probe2.stdout)["format"]["duration"])
+        if abs(dur2 - dur) > 0.2:
+            print(f"    [loop-echo] duration drift {dur:.2f}s → {dur2:.2f}s "
+                  f"— rejecting, keeping original")
+            os.remove(out)
+            return False
+        os.replace(out, video_path)
+        print(f"    [OK] Loop echo: hook frame fades in over final "
+              f"{echo_s}s (alpha {max_alpha}) — duration preserved {dur2:.2f}s")
+        return True
+    except Exception as e:
+        print(f"    [loop-echo] non-fatal failure: {str(e)[:120]}")
+        return False
+
+
 def _apply_background_music(output_path: str, series: str = "mahabharata"):
     """
     Mixes a randomly selected background track at 10% base volume with
@@ -1939,7 +2020,46 @@ def _apply_background_music(output_path: str, series: str = "mahabharata"):
     # 0.020 volume so chunk gaps don't feel like dead silence. Otherwise
     # use the 2-input continuous-music graph (Tier 1.5 behavior).
     use_ambient_layer = chunking_enabled and ambient_bed_path and chunked_music_path != music_path
+
+    # ── Sprint 1.2 (2026-07-02, Operation 500K) — tension beds ─────────────
+    # Layer the previously-orphaned tension assets under two windows:
+    #   slow_tension_build.wav → the VALLEY window (quiet dread under the
+    #     music dip; vol 0.015 stays below the 0.021 emotion-section music)
+    #   heartbeat_climax.wav   → valley_end → video end (the climax tail;
+    #     vol 0.030 — audible pulse, still far under narration)
+    # DURATION GUARD (plan-review fix): each bed is hard-sliced to its
+    # window via atrim + asetpts BEFORE adelay, and the final amix gets
+    # duration=first — belt-and-suspenders so a long WAV can never extend
+    # the video (default amix duration=longest would freeze-frame the tail).
+    _bed_specs = []   # (path, start_t, end_t, volume)
+    if series == "mahabharata":
+        _tension_p   = os.path.join("assets", "slow_tension_build.wav")
+        _heartbeat_p = os.path.join("assets", "heartbeat_climax.wav")
+        if os.path.exists(_tension_p) and valley_end_t > valley_start_t:
+            _bed_specs.append((_tension_p, valley_start_t, valley_end_t, 0.015))
+        if os.path.exists(_heartbeat_p) and video_duration > valley_end_t:
+            _bed_specs.append((_heartbeat_p, valley_end_t, video_duration, 0.030))
+
+    _bed_filters = ""
+    _bed_labels  = ""
+    _bed_inputs  = []
+    _next_idx = 3 if use_ambient_layer else 2
+    for _bi, (_bp, _bt0, _bt1, _bvol) in enumerate(_bed_specs):
+        _win = _bt1 - _bt0
+        _dly = int(_bt0 * 1000)
+        _bed_filters += (
+            f"[{_next_idx + _bi}:a]atrim=0:{_win:.3f},asetpts=PTS-STARTPTS,"
+            f"adelay={_dly}|{_dly},volume={_bvol}[bed{_bi}];"
+        )
+        _bed_labels += f"[bed{_bi}]"
+        _bed_inputs += ["-stream_loop", "-1", "-i", _bp]
+    if _bed_specs:
+        print(f"    [tension-beds] {len(_bed_specs)} bed(s): "
+              + ", ".join(f"{os.path.basename(p)} @{t0:.1f}-{t1:.1f}s vol={v}"
+                          for p, t0, t1, v in _bed_specs))
+
     if use_ambient_layer:
+        _n_mix = 3 + len(_bed_specs)
         duck_filter = (
             f"[0:a]asplit=2[voice_mix][voice_sc];"
             f"[1:a]atrim=0:{video_duration:.3f},asetpts=PTS-STARTPTS,"
@@ -1948,27 +2068,34 @@ def _apply_background_music(output_path: str, series: str = "mahabharata"):
             f"threshold=0.02:ratio=7:attack=80:release=450:makeup=1[music_ducked];"
             f"[2:a]atrim=0:{video_duration:.3f},asetpts=PTS-STARTPTS,"
             f"volume=0.020[ambient_flat];"
-            f"[voice_mix][music_ducked][ambient_flat]amix=inputs=3:normalize=0,"
+            f"{_bed_filters}"
+            f"[voice_mix][music_ducked][ambient_flat]{_bed_labels}"
+            f"amix=inputs={_n_mix}:normalize=0:duration=first,"
             f"{audio_chain}[aout]"
         )
         ffmpeg_inputs = [
             "-i", output_path,
             "-stream_loop", "-1", "-i", chunked_music_path,
             "-stream_loop", "-1", "-i", ambient_bed_path,
+            *_bed_inputs,
         ]
     else:
+        _n_mix = 2 + len(_bed_specs)
         duck_filter = (
             f"[0:a]asplit=2[voice_mix][voice_sc];"
             f"[1:a]atrim=0:{video_duration:.3f},asetpts=PTS-STARTPTS,"
             f"volume='{music_volume_expr}':eval=frame[music_raw];"
             f"[music_raw][voice_sc]sidechaincompress="
             f"threshold=0.02:ratio=7:attack=80:release=450:makeup=1[music_ducked];"
-            f"[voice_mix][music_ducked]amix=inputs=2:normalize=0,"
+            f"{_bed_filters}"
+            f"[voice_mix][music_ducked]{_bed_labels}"
+            f"amix=inputs={_n_mix}:normalize=0:duration=first,"
             f"{audio_chain}[aout]"
         )
         ffmpeg_inputs = [
             "-i", output_path,
             "-stream_loop", "-1", "-i", chunked_music_path,
+            *_bed_inputs,
         ]
 
     result = subprocess.run([
