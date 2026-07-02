@@ -181,12 +181,17 @@ def _gemini_tts(text: str, output_mp3: str, voice: str = None) -> bool:
     if _style_prompt:
         tts_contents = f"{_style_prompt}\n\n{text}"
     elif _style == "dramatic":
+        # Sprint 1.7 (2026-07-03): tempo PINNED. The first A/B's "slow
+        # measured pacing" wording made Gemini speak at 0.45 wps (236s
+        # for 106 words — 5× over budget). Drama must come from tone
+        # and emphasis, never from speed.
         tts_contents = (
             "Narrate the following Hindi story in a deep, gripping, "
-            "dramatic storyteller voice — slow measured pacing, weight "
-            "and gravity on emotional words, brief tense pauses at "
-            "dashes and ellipses, rising intensity toward the end, "
-            "the final question delivered as a haunting whisper:\n\n"
+            "dramatic storyteller voice. IMPORTANT: keep a normal, "
+            "brisk speaking tempo throughout — do NOT slow down, do "
+            "NOT stretch words, no long pauses. The drama comes from "
+            "tone, weight and emphasis on emotional words, and a "
+            "haunting delivery of the final question — not from speed:\n\n"
             + text
         )
     if tts_contents is not text:
@@ -249,6 +254,72 @@ def _gemini_tts(text: str, output_mp3: str, voice: str = None) -> bool:
                 os.remove(tmp_wav)
 
             if result.returncode == 0 and os.path.exists(output_mp3):
+                # Sprint 1.7 duration guard (2026-07-03) — the first
+                # TTS_STYLE=dramatic A/B produced 236s of audio for a
+                # 106-word voiceover (0.45 wps vs Charon's normal ~2.2):
+                # the style directive slowed the speech rate 5×, blowing
+                # the Shorts duration budget beyond repair. Guard: if a
+                # style directive was active AND the audio runs >1.45×
+                # the expected duration (words ÷ 2.0 wps, generous floor
+                # 20s), reject this take and retry ONCE with plain text.
+                if tts_contents is not text:
+                    try:
+                        import json as _json_g
+                        _probe = subprocess.run(
+                            ["ffprobe", "-v", "quiet", "-print_format",
+                             "json", "-show_format", output_mp3],
+                            capture_output=True, text=True,
+                        )
+                        _dur = float(_json_g.loads(_probe.stdout)["format"]["duration"])
+                        _n_words = max(len(text.split()), 1)
+                        _budget = max(_n_words / 2.0 * 1.45, 20.0)
+                        if _dur > _budget:
+                            print(f"    [tts-style-guard] styled audio "
+                                  f"{_dur:.1f}s exceeds budget {_budget:.1f}s "
+                                  f"({_n_words}w) — style directive slowed "
+                                  f"speech; RETRYING with plain text")
+                            tts_contents = text
+                            os.remove(output_mp3)
+                            # Redo this same key with plain text
+                            response = client.models.generate_content(
+                                model=_GEMINI_MODEL,
+                                contents=text,
+                                config=types.GenerateContentConfig(
+                                    response_modalities=["AUDIO"],
+                                    speech_config=types.SpeechConfig(
+                                        voice_config=types.VoiceConfig(
+                                            prebuilt_voice_config=types.PrebuiltVoiceConfig(
+                                                voice_name=voice_name
+                                            )
+                                        )
+                                    ),
+                                ),
+                            )
+                            part = response.candidates[0].content.parts[0]
+                            audio_data = part.inline_data.data
+                            mime_type  = part.inline_data.mime_type or ""
+                            if "wav" in mime_type:
+                                with open(tmp_wav, "wb") as f:
+                                    f.write(audio_data)
+                            else:
+                                wav_bytes = _pcm_to_wav(audio_data, sample_rate=24000)
+                                with open(tmp_wav, "wb") as f:
+                                    f.write(wav_bytes)
+                            result = subprocess.run(
+                                ["ffmpeg", "-y", "-i", tmp_wav,
+                                 "-af", "loudnorm=I=-16:TP=-1.5:LRA=11",
+                                 "-ar", "48000", "-ab", "128k",
+                                 output_mp3],
+                                capture_output=True,
+                            )
+                            if os.path.exists(tmp_wav):
+                                os.remove(tmp_wav)
+                            if result.returncode != 0 or not os.path.exists(output_mp3):
+                                continue
+                            print(f"    [tts-style-guard] plain-text retake OK")
+                    except Exception as _ge:
+                        print(f"    [tts-style-guard] probe failed "
+                              f"(keeping take): {str(_ge)[:80]}")
                 print(f"    [Gemini TTS/{label}] OK (voice={voice_name})")
                 return True
 

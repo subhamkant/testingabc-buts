@@ -1630,13 +1630,23 @@ def _compress_voiceover(data: dict) -> dict:
     (never lose a render to compression)."""
     vo = data.get("voiceover", "") or ""
     words = vo.split()
-    if len(words) <= 115:
+    # Sprint 1.7 calibration (2026-07-02, from the first live local test):
+    # trigger raised 115 → 130. Compressing a 120-130w draft is pointless
+    # (it already passes the validator cap) and burned Flash calls on the
+    # first live run. Only drafts that would FAIL length get compressed.
+    if len(words) <= 130:
         return data
 
     anchors = [b.get("anchor_phrase", "") for b in data.get("broll", [])
                if b.get("anchor_phrase")]
     anchor_list = "\n".join(f"  {i+1}. {a}" for i, a in enumerate(anchors))
-    prompt = f"""Compress this Hindi voiceover from {len(words)} words to 95-110 words.
+    # Sprint 1.7: ask for 120-128 (not 95-110). First live test showed
+    # Gemini cuts ~30 words MORE than asked (asked 95-110, delivered
+    # 65-83 from 120-148w inputs — every attempt below the sanity band).
+    # Aiming high lands the actual output in the 95-125 sweet spot.
+    prompt = f"""Trim this Hindi voiceover from {len(words)} words down to 120-128 words.
+This is a LIGHT trim — remove only {len(words) - 124} words or so. DO NOT
+rewrite or summarize; cut redundant adjectives and repeated sentiments only.
 
 HARD RULES:
 1. Every one of these anchor phrases MUST appear VERBATIM (exact same
@@ -1645,8 +1655,8 @@ HARD RULES:
 2. Keep the OPENING action verb phrase (first 8 words' verb must survive).
 3. Keep the closing question (must still end with ?).
 4. Keep the लेकिन / परंतु subversion marker.
-5. Cut adjectives, redundant beats, repeated sentiments — NOT the anchors.
-6. Return ONLY the compressed Hindi paragraph. No preamble, no quotes,
+5. NEVER go below 100 words — a 60-80 word output is an instant reject.
+6. Return ONLY the trimmed Hindi paragraph. No preamble, no quotes,
    no markdown.
 
 VOICEOVER:
@@ -1659,9 +1669,11 @@ VOICEOVER:
         if raw.startswith("json"):
             raw = raw[4:].strip()
         new_words = raw.split()
-        # Sanity: reasonable length + all anchors present in order
-        if not (85 <= len(new_words) <= 120):
-            print(f"    [compress] rejected: {len(new_words)}w out of 85-120 "
+        # Sanity band 88-128 (Sprint 1.7: was 85-120; widened upward to
+        # match the new 120-128 ask, floor raised slightly — anything
+        # under 88 is an over-cut that guts the story).
+        if not (88 <= len(new_words) <= 128):
+            print(f"    [compress] rejected: {len(new_words)}w out of 88-128 "
                   f"sanity band — keeping original {len(words)}w")
             return data
         pos = 0
@@ -2453,9 +2465,11 @@ def generate_phase18_script(
                 if w < 75:
                     dynamic_prefix = (
                         f"YOUR LAST VOICEOVER WAS ONLY {w} WORDS (broll={b}). "
-                        f"You MUST write 75-170 words — aim for ~120. "
-                        f"At Charon's 2.2 wps that's ~55s narration — anything "
-                        f"shorter than 75 words = <34s = a quarter-finished Short. "
+                        f"You MUST write 100-128 words — DO NOT PANIC-SHORTEN. "
+                        f"A {w}-word draft is a quarter-finished Short, an "
+                        f"instant reject. Write the FULL story with all beats; "
+                        f"the pipeline trims gentle overshoot automatically, "
+                        f"so err LONG (120-140), never short. "
                     )
                 elif w > 130:
                     # Sprint 1.1 (2026-07-02): compressed text still over
