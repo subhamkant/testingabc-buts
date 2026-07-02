@@ -167,6 +167,32 @@ def _gemini_tts(text: str, output_mp3: str, voice: str = None) -> bool:
 
     voice_name = voice or _GEMINI_VOICE
 
+    # Sprint 1.6 / FIX E (2026-07-02, Operation 500K) — delivery-style
+    # directive. Gemini TTS accepts a natural-language style instruction
+    # prefixed to the content ("Say in X style: ..."). Without it, Charon
+    # reads flat. TTS_STYLE=dramatic enables a cinematic-storyteller
+    # directive; TTS_STYLE_PROMPT overrides with a custom instruction.
+    # DEFAULT OFF: if the model ever speaks the instruction aloud, the
+    # anchor char→time mapping breaks — so this A/Bs on a private render
+    # before any cron enablement.
+    tts_contents = text
+    _style = os.environ.get("TTS_STYLE", "").strip().lower()
+    _style_prompt = os.environ.get("TTS_STYLE_PROMPT", "").strip()
+    if _style_prompt:
+        tts_contents = f"{_style_prompt}\n\n{text}"
+    elif _style == "dramatic":
+        tts_contents = (
+            "Narrate the following Hindi story in a deep, gripping, "
+            "dramatic storyteller voice — slow measured pacing, weight "
+            "and gravity on emotional words, brief tense pauses at "
+            "dashes and ellipses, rising intensity toward the end, "
+            "the final question delivered as a haunting whisper:\n\n"
+            + text
+        )
+    if tts_contents is not text:
+        print(f"    [tts-style] delivery directive active "
+              f"(TTS_STYLE={_style or 'custom'})")
+
     try:
         from google import genai
         from google.genai import types
@@ -179,7 +205,7 @@ def _gemini_tts(text: str, output_mp3: str, voice: str = None) -> bool:
             client = genai.Client(api_key=api_key)
             response = client.models.generate_content(
                 model=_GEMINI_MODEL,
-                contents=text,
+                contents=tts_contents,
                 config=types.GenerateContentConfig(
                     response_modalities=["AUDIO"],
                     speech_config=types.SpeechConfig(

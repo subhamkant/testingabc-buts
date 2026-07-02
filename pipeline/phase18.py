@@ -309,6 +309,38 @@ _OPENER_ARCHETYPES_HOOK_ONLY = [
     a for a in _OPENER_ARCHETYPES_PHASE18 if a[0] in ("B", "C")
 ]
 
+# Sprint 1.6 / FIX A (2026-07-02) — concrete-realization markers + prepend
+# templates. The old design demanded the archetype DIRECTIVE text verbatim
+# in broll[0].image_prompt — so FLUX received an unrenderable MENU
+# ("sword tip mid-strike / glowing arrow / dice mid-roll") and rendered a
+# generic warrior (caught in the 2026-07-02 forensic, frame 1). New design:
+# the LLM (rule h) and the runtime prepend both produce a CONCRETE scene;
+# the validator checks for the archetype's realization MARKER instead.
+_ARCHETYPE_CONCRETE_MARKERS = {
+    "B": ("extreme macro close-up", "macro close-up", "extreme close-up of"),
+    "C": ("frozen mid", "caught mid", "mid-strike", "mid-gesture", "mid-swing"),
+}
+# Runtime prepend templates ({noun} filled from broll[0]'s anchor via the
+# subject-lock map; falls back to a generic-but-renderable subject).
+_ARCHETYPE_PREPEND_TEMPLATES = {
+    "B": ("Extreme macro close-up of {noun}, caught mid-action, "
+          "motion-blurred battlefield chaos behind, "),
+    "C": ("Action moment frozen mid-strike around {noun}, dust and "
+          "sparks suspended in the air, "),
+}
+
+
+def _concrete_noun_for_broll0(broll: list) -> str:
+    """Pick a renderable English noun for the hook prepend: the first
+    subject-lock-mapped noun found in broll[0]'s anchor_phrase, else a
+    safe default."""
+    if broll:
+        anchor = broll[0].get("anchor_phrase", "") or ""
+        for hi_noun, en_forms in _SUBJECT_LOCK_MAP.items():
+            if hi_noun in anchor:
+                return en_forms[0]
+    return "the hero's weapon"
+
 
 def phase18_enabled() -> bool:
     """Env flag gate. Default OFF until smoke-validated and a live render
@@ -510,11 +542,18 @@ def _check_subject_lock(anchor_phrase: str, image_prompt: str) -> bool:
     """For each Devanagari noun in the anchor that has a mapping, the
     image_prompt must contain at least one of its English physical-form
     equivalents. Pass-through when the anchor contains no mapped noun
-    (warn only, don't block — vocabulary mapping is conservative)."""
-    image_lower = image_prompt.lower()
+    (warn only, don't block — vocabulary mapping is conservative).
+
+    Sprint 1.6 / FIX C (2026-07-02): the mapped noun must now appear in
+    the FIRST 150 chars (the canvas region) — not buried at the tail.
+    The 2026-07-02 forensic showed audio saying 'कर्ण रथ चलाता है' while
+    frames showed a standing warrior: 'chariot' sat deep in the prompt
+    where FLUX's early-token weighting never reached it. If the audio
+    names a रथ, the CANVAS must BE the chariot."""
+    canvas_region = image_prompt[:150].lower()
     for hi_noun, en_forms in _SUBJECT_LOCK_MAP.items():
         if hi_noun in anchor_phrase:
-            if not any(form in image_lower for form in en_forms):
+            if not any(form in canvas_region for form in en_forms):
                 return False
     return True
 
@@ -681,11 +720,28 @@ _STORY_ENTITY_MAP = {
 }
 
 
+# Sprint 1.6 / FIX D (2026-07-02) — armor-word tripwire. The Phase 23.9
+# MAHABHARATA WARDROBE DOCTRINE is LLM-side guidance only; the 2026-07-02
+# force-render proved Gemini can ignore it (frames came back in full plate
+# with pauldrons) and nothing catches it. Validator now rejects armor
+# vocabulary in image_prompts. Negated usage ("NO breastplate", "zero
+# plate armor" — which the doctrine itself REQUIRES as a negative tail)
+# is stripped before checking so compliant prompts don't false-positive.
+_ARMOR_FORBIDDEN_RE = re.compile(
+    r"\b(plate armor|breastplate|pauldrons?|chain\s?mail|cuirass|"
+    r"full armor|metal armor|armou?red|body armor)\b", re.IGNORECASE)
+_ARMOR_NEGATION_RE = re.compile(
+    r"\b(?:no|zero|not|never|without)\b[^,.;]{0,45}", re.IGNORECASE)
+
+
 def _check_wardrobe_context_set(broll: list) -> tuple[bool, str]:
     """Phase 19 (2026-06-16). Every broll entry must declare a
     `wardrobe_context` ∈ {WAR, PALACE, DIVINE, FOREST, JOURNEY} so
     image_generator.py can inject the right clothing+lighting prefix.
-    Empty / invalid → reject."""
+    Empty / invalid → reject.
+
+    Sprint 1.6 / FIX D (2026-07-02): also rejects armor vocabulary in
+    image_prompts (positive usage only — negations are stripped first)."""
     for i, entry in enumerate(broll):
         ctx = (entry.get("wardrobe_context", "") or "").strip().upper()
         if not ctx:
@@ -694,6 +750,18 @@ def _check_wardrobe_context_set(broll: list) -> tuple[bool, str]:
             return False, (
                 f"broll[{i}] wardrobe_context='{ctx}' invalid "
                 f"(must be one of {sorted(_VALID_WARDROBE_CONTEXTS)})"
+            )
+        # FIX D: armor tripwire (strip negation phrases, then scan)
+        prompt = entry.get("image_prompt", "") or ""
+        cleaned = _ARMOR_NEGATION_RE.sub(" ", prompt)
+        hit = _ARMOR_FORBIDDEN_RE.search(cleaned)
+        if hit:
+            return False, (
+                f"broll[{i}] image_prompt uses FORBIDDEN armor vocabulary "
+                f"'{hit.group(1)}' — Vedic warriors are BARE-CHESTED with "
+                f"silk angavastram + gold ornaments on bare skin. Rewrite "
+                f"without armor words (negations like 'NO breastplate' "
+                f"are fine and encouraged)."
             )
     return True, ""
 
@@ -1206,6 +1274,25 @@ def _check_subject_diversity(broll: list) -> tuple[bool, str]:
             f"(Types: {types})"
         )
 
+    # Rule 4 (Sprint 1.6 / FIX B, 2026-07-02) — canvas convergence guard.
+    # The 2026-07-02 forensic showed 5 of 10 broll entries opening with
+    # the SAME canvas phrase ("Wide cinematic shot, dust-choked
+    # Kurukshetra battlefield, Karna ...") — textually distinct scenes
+    # that FLUX rendered as six near-identical warrior portraits. Three
+    # consecutive image_prompts sharing an identical 25-char opening =
+    # rejected; the LLM must vary the canvas LOCATION frame to frame.
+    openings = [(b.get("image_prompt", "") or "")[:25].lower() for b in broll]
+    for i in range(len(openings) - 2):
+        if openings[i] and openings[i] == openings[i+1] == openings[i+2]:
+            return False, (
+                f"broll[{i}..{i+2}] all open with the same canvas phrase "
+                f"({openings[i]!r}...). FLUX converges identical openings "
+                f"into identical frames. Vary the canvas LOCATION: "
+                f"battlefield → palace court → riverbank → macro object → "
+                f"army camp → forest. Max 3 battlefield-canvas frames per "
+                f"video, never adjacent-identical openings."
+            )
+
     return True, ""
 
 
@@ -1276,16 +1363,17 @@ def validate_phase18(data: dict, lang_label: str = "Hindi") -> tuple[bool, str, 
 
     names_ok = all(_check_character_names_single(b.get("image_prompt", "")) for b in br)
 
-    # Archetype check: broll[0].image_prompt must begin with the rotated
-    # archetype's first 35 chars. Substring match at offset 0; the LLM is
-    # expected to copy the directive verbatim as the first sentence.
-    # Phase 24 / Fix 1 (2026-06-28): rotation now over HOOK_ONLY archetypes
-    # (B + C only) for the 3-second swipe-stop ratio.
+    # Archetype check — Sprint 1.6 rewrite (2026-07-02): the old check
+    # demanded the directive text VERBATIM in broll[0], which meant FLUX
+    # received an unrenderable MENU ("sword tip / glowing arrow / dice").
+    # New check: broll[0] must open with a CONCRETE realization marker
+    # of the rotated archetype (B = macro close-up opener, C = frozen
+    # mid-action opener).
     archetype_idx = episode_n % len(_OPENER_ARCHETYPES_HOOK_ONLY)
-    archetype_text = _OPENER_ARCHETYPES_HOOK_ONLY[archetype_idx][1]
-    archetype_prefix = archetype_text[:35]
-    img0 = br[0].get("image_prompt", "") if br else ""
-    archetype_ok = bool(br) and archetype_prefix in img0[:200]
+    archetype_letter = _OPENER_ARCHETYPES_HOOK_ONLY[archetype_idx][0]
+    img0_low = (br[0].get("image_prompt", "") if br else "").lower()
+    _arch_markers = _ARCHETYPE_CONCRETE_MARKERS.get(archetype_letter, ())
+    archetype_ok = bool(br) and any(m in img0_low[:120] for m in _arch_markers)
 
     subject_lock_ok = all(
         _check_subject_lock(b.get("anchor_phrase", ""), b.get("image_prompt", ""))
@@ -1435,11 +1523,12 @@ def _enumerate_failing_gates(data: dict, lang_label: str = "Hindi") -> set:
     names_ok = all(_check_character_names_single(b.get("image_prompt", "")) for b in br)
 
     # Phase 24 / Fix 1: rotation over HOOK_ONLY archetypes (B + C).
+    # Sprint 1.6: concrete-marker check (mirrors validate_phase18).
     archetype_idx = episode_n % len(_OPENER_ARCHETYPES_HOOK_ONLY)
-    archetype_text = _OPENER_ARCHETYPES_HOOK_ONLY[archetype_idx][1]
-    archetype_prefix = archetype_text[:35]
-    img0 = br[0].get("image_prompt", "") if br else ""
-    archetype_ok = bool(br) and archetype_prefix in img0[:200]
+    archetype_letter = _OPENER_ARCHETYPES_HOOK_ONLY[archetype_idx][0]
+    img0_low = (br[0].get("image_prompt", "") if br else "").lower()
+    _arch_markers = _ARCHETYPE_CONCRETE_MARKERS.get(archetype_letter, ())
+    archetype_ok = bool(br) and any(m in img0_low[:120] for m in _arch_markers)
 
     subject_lock_ok = all(
         _check_subject_lock(b.get("anchor_phrase", ""), b.get("image_prompt", ""))
@@ -1495,16 +1584,16 @@ def _enumerate_failing_gates(data: dict, lang_label: str = "Hindi") -> set:
 _VIOLATION_REMINDERS = {
     "length":       "Your voiceover word count was out of range AFTER compression (final text must be 75-130 Hindi words; the compression pass targets 95-110 but could not safely trim your draft — usually because anchor phrases were too long or too densely packed to preserve). Write a TIGHTER draft this time: aim 100-120 words directly, keep anchor_phrases short (2-3 words), match the SHAPE of the concrete 96-word example — 8-word action-verb opener, 3-4 sensory beats, dialogue beat in quotes, लेकिन/परंतु midpoint, closing question echoing the opener noun. broll MUST be 8-10 entries.",
     "anchors":      "Your broll anchor_phrase entries failed validation. Each anchor_phrase MUST be 2-4 words appearing VERBATIM in the voiceover, in ASCENDING order by character position. Final anchor MUST land in the LAST 30% of the voiceover.",
-    "wardrobe_set": "Every broll entry MUST declare a wardrobe_context field, one of: WAR / PALACE / DIVINE / FOREST / JOURNEY. Pick the context that matches THAT specific broll moment (not the whole story): a dice-game palace scene is PALACE even in an Arjuna story; Yudhishthira walking to heaven's gate is JOURNEY, not WAR; Krishna in his cosmic form is DIVINE; Eklavya's forest ashram is FOREST.",
+    "wardrobe_set": "Every broll entry MUST declare a wardrobe_context field, one of: WAR / PALACE / DIVINE / FOREST / JOURNEY / AFTERMATH. Pick the context that matches THAT specific broll moment. ALSO: image_prompts MUST NOT use armor vocabulary (armored / plate armor / breastplate / pauldrons / chainmail / cuirass) in POSITIVE form — Vedic warriors are BARE-CHESTED with silk angavastram + gold ornaments on bare skin. Negations ('NO breastplate, NO plate armor') are fine and encouraged as the closing tail.",
     "story_entity": "Your voiceover names a story-critical entity (e.g. कुत्ता / धनुष / सुदर्शन / कुंडल / बच्चे) but NO broll image_prompt contains its English equivalent. AT LEAST ONE broll image_prompt MUST have the entity as a clearly identifiable foreground subject — e.g. anchor 'कुत्ता का साथ' → image_prompt 'a loyal stray dog walking close beside Yudhishthira, foreground subject'. The audience cannot feel the dog's presence if FLUX never renders one.",
     "verb_action":      "Your broll image_prompts described static portraits where the voiceover described ACTIONS. When the anchor_phrase contains an action verb (उठाई / गिरा / डूबता / काटा / etc.), the image_prompt MUST contain the English equivalent (raising / fell / sinking / cut / etc.) as the verb the image depicts. Example: anchor 'रथ का पहिया डूबता' → image_prompt 'extreme close-up of a wooden chariot wheel sinking into wet mud, mud splattered on the spokes' (NOT 'Karna's stressed face with chariot in background').",
-    "subject_diversity": "Your broll showed too many consecutive shots of the same type (3+ in a row), or used only 1 type across all entries. A real film editor CYCLES through 4 shot types: (A) CHARACTER ACTION (hero raising weapon, drawing arrow, falling) — uses action verbs in image_prompt; (B) REACTION (tear-streaked / wide-eyed / clenched-jaw close-up); (C) PROP / DETAIL (extreme close-up of an OBJECT — chariot wheel, sword tip, kundal, dice — character absent or backgrounded, image_prompt LEADS with the object); (D) ENVIRONMENT (wide vista — battlefield, sky, distant chariots — no facial close-up). Rotate types across broll entries. Two consecutive same-type entries are fine; three consecutive is rejected.",
+    "subject_diversity": "Your broll failed the film-edit diversity rules. Either (a) 3+ consecutive shots of the same TYPE, (b) only 1 type across all entries, (c) >65% REACTION+AMBIGUOUS, or (d) 3 consecutive image_prompts opening with the SAME canvas phrase (FLUX renders identical openings as identical frames). Cycle 4 shot types — ACTION / REACTION / PROP (leads with the OBJECT) / ENVIRONMENT (wide vista) — AND vary the canvas LOCATION frame to frame: battlefield → palace court → riverbank → macro object → army camp → forest. Max 3 battlefield-canvas frames. Never open 3 consecutive prompts with the same words.",
     "hook":         "Your voiceover's first 10 words did not pass the hook validator. Open INSIDE an emotional moment with a named character (अर्जुन/कर्ण/etc.) AND/OR a paradox marker (लेकिन/पर/फिर भी). NO documentary setups (\"यह कहानी है\", \"बहुत समय पहले\").",
     "shock_action": "Your voiceover's first 8 words must contain a present-tense action verb. NO setup. Examples: \"अर्जुन धनुष उठाता है\" (raising), \"द्रौपदी आँसू बहाती है\" (shedding), \"अश्वत्थामा तलवार चलाता है\" (wielding).",
     "loop_closure": "Your voiceover must END with a question mark (?). The final clause must be an ethically-charged question to the viewer: \"क्या यही धर्म था?\" / \"क्या वो सही थे?\" / \"किसने ज्यादा खोया?\".",
     "hook_title":   "Your hook_title failed validation. Must be 1-5 words, 100% Devanagari script, contain a named character OR paradox marker, no '?', no '!', no '...'.",
-    "archetype":    "Your broll[0].image_prompt must begin VERBATIM with the Scene-1 archetype directive provided in the prompt. Do not paraphrase; copy it as the first sentence of broll[0].image_prompt.",
-    "subject_lock": "Your broll image_prompts had subject bleed. For each entry, the anchor_phrase's primary noun (e.g. द्रौपदी, तलवार, बच्चे) MUST appear in the image_prompt's English equivalent (draupadi/queen/woman, sword/blade, children/sleeping).",
+    "archetype":    "Your broll[0].image_prompt did not REALIZE the Scene-1 archetype. DO NOT copy the directive text (it is a menu — FLUX cannot render a menu). If archetype B (PROP-LED ZOOM): START broll[0] with 'Extreme macro close-up of <the story's actual object>' (e.g. the chariot wheel, the dice, the bowstring). If archetype C (HARD ACTION): START with 'Action moment frozen mid-<gesture>' (mid-strike / mid-swing / mid-leap) staged with THIS story's subject.",
+    "subject_lock": "Your broll image_prompts had subject bleed OR buried the anchor's subject too deep. For each entry, the anchor_phrase's primary noun (e.g. रथ, तलवार, बच्चे) MUST appear as its English equivalent (chariot, sword, children) WITHIN THE FIRST 150 CHARACTERS of the image_prompt — the anchor's subject IS the canvas. Audio says 'रथ चलाता है' → the image OPENS with the chariot ('War chariot thundering across...'), not with the character.",
     "intensity":    "Your broll image_prompts were too sterile. EVERY image_prompt MUST contain at least one aggressive physical adjective: bloodied / shattered / trembling / rusted / tear-streaked / smoldering / clenched / scorched / wide-eyed / ash-covered / blood-soaked / dim. \"a sword\" is bad; \"a bloodied sword, dim shadow-heavy frame\" is good.",
     "rehook":       "Your voiceover's middle (30-60%) lacked a subversion marker. Insert लेकिन / परंतु / और तभी / उसी क्षण around the midpoint to break the viewer's predictive flow.",
     "char_names":   "Some broll image_prompts lacked a recognized character name. EVERY image_prompt must contain a named character (Arjuna, Karna, Bhishma, Draupadi, etc.) so the FLUX cascade's _inject_characters can append the visual descriptor block.",
@@ -1794,13 +1883,28 @@ BROLL RULES (HARD — violation = REJECT):
   (g) PALETTE — every image_prompt MUST embed the palette directive.
       {palette_line}
 
-  (h) PHASE 17.b OPENER ARCHETYPE for THIS render (episode {episode_n} %% 4 = {episode_n % 4}):
-      broll[0].image_prompt MUST BEGIN VERBATIM with this exact directive
-      as its FIRST sentence — do not paraphrase, copy as-is:
+  (h) OPENER ARCHETYPE for THIS render (Sprint 1.6 rewrite, 2026-07-02):
+      The archetype directive for broll[0] is:
       "{scene1_opener_directive}"
-      Then continue with the rest of broll[0]'s literal-physical prompt
-      (the subject from the voiceover's opening 8 words, intensity adjective,
-      palette, etc.).
+
+      DO NOT copy that directive text into the image_prompt — it is a
+      MENU of options, and FLUX cannot render a menu (the 2026-07-02
+      forensic caught a shipped frame whose prompt was literally
+      "sword tip mid-strike / glowing arrow / dice mid-roll").
+
+      Instead, REALIZE the archetype concretely: pick ONE option and
+      stage it with THIS story's actual subject from the voiceover's
+      opening 8 words.
+        • If the archetype is PROP-LED ZOOM (B): broll[0].image_prompt
+          MUST START with "Extreme macro close-up of <the story's
+          actual object>" — e.g. voiceover opens "कर्ण रथ चलाता है" →
+          "Extreme macro close-up of a war chariot's wheel churning
+          blood-soaked mud, reins snapping taut above, ..."
+        • If the archetype is HARD ACTION (C): broll[0].image_prompt
+          MUST START with "Action moment frozen mid-<gesture>" — e.g.
+          "Action moment frozen mid-strike, Karna's sword arm caught
+          at the top of its arc, dust suspended in the air, ..."
+      Then continue with intensity adjective, palette, etc.
 
   (i) NO HANDS IN FRAME — FLUX-schnell mangles fingers. End each image_prompt
       with "no hands in frame, no text, no letters, no watermarks, no signage,
@@ -1841,6 +1945,22 @@ BROLL RULES (HARD — violation = REJECT):
       directive in rule (h). Pick the type that matches that archetype:
       archetype A → ACTION (verb in image), B → PROP, C → ACTION,
       D → ENVIRONMENT.
+
+      CANVAS LOCATION VARIETY (Sprint 1.6, 2026-07-02) — shot TYPE
+      variety is not enough; the canvas LOCATION must also rotate.
+      HARD RULES (validator-enforced):
+        • Never open 3 consecutive image_prompts with the same canvas
+          phrase — vary the literal opening words.
+        • Max 3 battlefield-canvas frames per video. Rotate through:
+          palace court / riverbank / forest edge / army camp at night /
+          macro on an object / crowd of soldiers / chariot interior.
+        • THE ANCHOR IS THE CANVAS: if the anchor_phrase names an
+          object (रथ / धनुष / गदा / कुंडल / पासा), that object IS the
+          opening subject of the image_prompt — "War chariot thundering
+          across..." NOT "Karna, who is on a chariot...". The viewer
+          must SEE what the narration SAYS, frame by frame. Audio
+          'कर्ण रथ चलाता है' + frame of a standing warrior = failed
+          storytelling (the exact 2026-07-02 failure).
 
   (k) AUDIO-VISUAL VERB LOCK (Phase 20, 2026-06-17) — the image_prompt
       MUST physically depict the EXACT verb in the anchor_phrase, not
@@ -2594,13 +2714,21 @@ def generate_phase18_script(
     if data.get("broll"):
         _arch_idx = episode_n % len(_OPENER_ARCHETYPES_HOOK_ONLY)
         _arch_letter, _arch_text = _OPENER_ARCHETYPES_HOOK_ONLY[_arch_idx]
-        _arch_prefix_check = _arch_text[:35]
         _br0_prompt = data["broll"][0].get("image_prompt", "")
-        if _arch_prefix_check not in _br0_prompt[:200]:
-            # LLM forgot the directive — prepend it as a hard hook.
-            data["broll"][0]["image_prompt"] = f"{_arch_text}. {_br0_prompt}"
-            print(f"    [phase23.9-hook-prepend] broll[0] lacked archetype "
-                  f"{_arch_letter} prefix — auto-prepended for FLUX swipe-stop")
+        _markers = _ARCHETYPE_CONCRETE_MARKERS.get(_arch_letter, ())
+        if not any(m in _br0_prompt.lower()[:120] for m in _markers):
+            # Sprint 1.6 / FIX A: LLM didn't realize the archetype —
+            # prepend a CONCRETE template (never the directive menu text)
+            # built around broll[0]'s actual anchor subject.
+            _noun = _concrete_noun_for_broll0(data["broll"])
+            _tpl = _ARCHETYPE_PREPEND_TEMPLATES.get(_arch_letter,
+                                                    _ARCHETYPE_PREPEND_TEMPLATES["C"])
+            data["broll"][0]["image_prompt"] = (
+                _tpl.format(noun=_noun) + _br0_prompt
+            )
+            print(f"    [hook-prepend] broll[0] lacked archetype "
+                  f"{_arch_letter} realization — prepended concrete "
+                  f"{_arch_letter} opener around '{_noun}'")
 
     # Cliffhanger prepend to description (mirrors legacy line 4687)
     if next_episode_teaser:

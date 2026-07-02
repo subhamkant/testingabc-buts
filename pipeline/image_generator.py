@@ -2102,8 +2102,18 @@ def generate_images(scenes_or_script, single_shot: bool = False, series: str = "
             # injector. In WAR/FOREST/JOURNEY/AFTERMATH it picks the
             # ~120-char signature_lock (defeats multi-subject merge);
             # in PALACE/DIVINE it uses the full 250-char visual.
+            # Sprint 1.6 / FIX B (2026-07-02): ENVIRONMENT shots skip
+            # character injection entirely — wide vistas keep characters
+            # as small silhouettes; injecting a 300-char identity block
+            # made FLUX center the same warrior portrait in every "wide"
+            # frame (canvas-convergence bug, 2026-07-02 forensic: six
+            # near-identical warrior-with-flag frames).
             scene_wardrobe_ctx = scene.get("wardrobe_context", "") if series == "mahabharata" else ""
-            base_prompt = raw_prompt if series == "whatif" else _inject_characters(raw_prompt, scene_wardrobe_ctx)
+            _scene_shot_type = (scene.get("shot_type", "") or "").strip().upper()
+            if series == "whatif" or _scene_shot_type == "ENVIRONMENT":
+                base_prompt = raw_prompt
+            else:
+                base_prompt = _inject_characters(raw_prompt, scene_wardrobe_ctx)
             # Append the imperfection cue AFTER character injection so it
             # rides on top of the character's existing descriptors instead
             # of getting buried by them. Additive — does not replace any
@@ -2585,7 +2595,7 @@ async def generate_images_with_kaggle_primary(
             "master_seed": master_seed,
             "run_id": run_id,
         }
-        timeout_s = int(os.environ.get("KAGGLE_TIMEOUT_S", "2700"))
+        timeout_s = int(os.environ.get("KAGGLE_TIMEOUT_S", "5400"))
         poll_interval_s = int(os.environ.get("KAGGLE_POLL_INTERVAL_S", "60"))
         max_attempts = int(os.environ.get("KAGGLE_P100_RETRIES", "5"))
 
