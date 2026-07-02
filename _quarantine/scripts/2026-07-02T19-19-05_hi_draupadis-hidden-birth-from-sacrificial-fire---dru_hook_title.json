@@ -1,0 +1,118 @@
+{
+  "ts": "2026-07-02T19-19-05",
+  "language": "hi",
+  "score": 17,
+  "score_max": 25,
+  "violation": "hook_title",
+  "topic": "Draupadi's hidden birth from sacrificial fire — Drupada's secret sin, the daughter he weaponized to destroy Drona, the greatest curse of the Panchala line",
+  "title": "द्रुपद का सबसे बड़ा श्राप | Drupada's Biggest Curse",
+  "script": {
+    "voiceover": "द्रुपद का क्रोध अग्नि बनकर जलता है— द्रोणाचार्य के अपमान की ज्वाला, उसके दिल में धधकती। पुत्र की लालसा थी, एक ऐसा पुत्र जो उस गुरु का वध करे जिसने उसे निर्धन कहकर लौटा दिया था। यज्ञकुंड से धुआँ उठता है, मंत्र गूँजते हैं, और तभी एक भीषण ज्वाला से जन्मी वह... द्रौपदी। 'तुम मेरी प्रतिशोध की अग्नि हो,' शायद द्रुपद ने सोचा था। लेकिन इस जन्म ने उसे सिर्फ एक हथियार नहीं, बल्कि अपमान का ऐसा कड़वा घूँट पिलाया, जो कुरुक्षेत्र की भूमि पर रक्त बनकर बहा। असली विनाश अभी बाकी था... अगले भाग में, द्रौपदी के खुले केशों की प्रतिज्ञा क्या थी? क्या द्रुपद ने अपनी बेटी के भाग्य को जलाकर, पांचाल के लिए सबसे बड़ा श्राप नहीं रच दिया था?",
+    "broll": [
+      {
+        "image_prompt": "Extreme macro close-up of a royal silk dhoti, torn and mud-streaked, clutched in Drupada's white-knuckled, trembling hand, symbolizing his deep humiliation and burning rage, Drona's austere silhouette faintly visible in the blurred background, firelit crimson + saffron, warm Indian skin tone, contrasted, intense BUT faces clearly visible, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "द्रोणाचार्य के अपमान",
+        "mood": "Profound humiliation, searing anger",
+        "wardrobe_context": "PALACE",
+        "shot_type": "AMBIGUOUS"
+      },
+      {
+        "image_prompt": "Kneeling beneath the looming shadow of a grand palace archway, Drupada's face, hollow-eyed and etched with burning shame and vengeful resolve, his kohl-rimmed eyes gleaming with ambition, firelit crimson + saffron, regal red-and-gold sari, warm Indian skin tone, court grandeur, warm torchlight and oil-lamp, contrasted, intense BUT faces clearly visible, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "पुत्र की लालसा",
+        "mood": "Deep yearning, vengeful ambition",
+        "wardrobe_context": "PALACE",
+        "shot_type": "ACTION"
+      },
+      {
+        "image_prompt": "Looming over a tremendous sacrificial fire, Draupadi, luminous dark Indian skin glowing as she rises from the crimson-saffron flames, large expressive lotus eyes wide open, long untied black hair flowing around her, Drupada's back-of-head foreground, witnessing, firelit crimson + saffron, regal red-and-gold sari, warm Indian skin tone, court grandeur, warm torchlight and oil-lamp, contrasted, intense BUT faces clearly visible, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "ज्वाला से जन्मी",
+        "mood": "Mystical birth, fiery emergence",
+        "wardrobe_context": "DIVINE",
+        "shot_type": "AMBIGUOUS"
+      },
+      {
+        "image_prompt": "Gripping his ceremonial staff fiercely within the ornate Nagara-style palace chamber, Drupada's shadow-heavy face, eyes wide-eyed with a mix of triumph and cold resolve, looking down at the newborn Draupadi swaddled in silk, firelit crimson + saffron, regal red-and-gold sari, warm Indian skin tone, court grandeur, warm torchlight and oil-lamp, contrasted, intense BUT faces clearly visible, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "शायद द्रुपद ने",
+        "mood": "Cold calculation, weaponization",
+        "wardrobe_context": "PALACE",
+        "shot_type": "ACTION"
+      },
+      {
+        "image_prompt": "Recoiling in silent humiliation within the opulent royal court of Hastinapur, Draupadi's long untied black hair blowing in the wind, large expressive lotus eyes filled with pain and nascent rage, draped in a torn, regal red-and-gold silk sari, firelit crimson + saffron, regal red-and-gold sari, warm Indian skin tone, court grandeur, warm torchlight and oil-lamp, contrasted, intense BUT faces clearly visible, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "अपमान का ऐसा",
+        "mood": "Deep humiliation, simmering rage",
+        "wardrobe_context": "PALACE",
+        "shot_type": "AMBIGUOUS"
+      },
+      {
+        "image_prompt": "Extreme macro close-up of Draupadi's long untied black hair, wind-whipped and flowing around her face, a single tear-streaked eye visible, kohl-rimmed with fierce resolve, firelit crimson + saffron, regal red-and-gold sari, warm Indian skin tone, court grandeur, warm torchlight and oil-lamp, contrasted, intense BUT faces clearly visible, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "खुले केशों की",
+        "mood": "Resolute, foreshadowing vengeance",
+        "wardrobe_context": "PALACE",
+        "shot_type": "REACTION"
+      },
+      {
+        "image_prompt": "Weeping over his fate in an ornate Nagara-style palace chamber, Drupada's head bowed in deep sorrow, his shadow-heavy face etched with regret, a flicker of remorse in his hollow-eyed expression, the torchlight dim and fading around him, firelit crimson + saffron, regal red-and-gold sari, warm Indian skin tone, court grandeur, warm torchlight and oil-lamp, contrasted, intense BUT faces clearly visible, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "बेटी के भाग्य",
+        "mood": "Regret, somber reflection",
+        "wardrobe_context": "PALACE",
+        "shot_type": "REACTION"
+      },
+      {
+        "image_prompt": "Wide cinematic shot, battle-scarred plains of Kurukshetra at fading dusk, an abandoned Panchala banner torn and blood-soaked in the foreground, distant silhouettes of burning structures, lone diya flickering in the ash-covered debris, hinting at the tragic consequences of Drupada's choices, firelit crimson + saffron, regal red-and-gold sari, warm Indian skin tone, court grandeur, warm torchlight and oil-lamp, contrasted, intense BUT faces clearly visible, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "सबसे बड़ा श्राप",
+        "mood": "Desolate, tragic consequence",
+        "wardrobe_context": "AFTERMATH",
+        "shot_type": "AMBIGUOUS"
+      }
+    ],
+    "title": "द्रुपद का सबसे बड़ा श्राप | Drupada's Biggest Curse",
+    "hook_title": "द्रुपद का श्राप",
+    "description": "▶️ अगला भाग: Draupadi's secret vow about her hair\n\nद्रौपदी का जन्म एक पिता के प्रतिशोध की अग्नि था, पर वह खुद एक शाप बन गया। द्रुपद ने द्रोणाचार्य से अपमान का बदला लेने के लिए एक पुत्र की कामना की, लेकिन यज्ञ से जन्मी द्रौपदी उसका सबसे बड़ा शस्त्र बनी। पर क्या द्रौपदी सिर्फ एक हथियार थी, या उसके जन्म ने पांचाल के लिए एक ऐसा श्राप रचा जिसकी कीमत सबको चुकानी पड़ी? यह कहानी उस पिता के 'प्यार' और 'प्रतिशोध' की है जिसने अपनी बेटी को ही युद्ध की ज्वाला में धकेल दिया।\n\n#Shorts #Mahabharata #महाभारत #Krishna #HinduMythology\n#Hindu #BhagavadGita #भगवद_गीता #Krishna #कृष्ण #Arjuna #अर्जुन #Karna #कर्ण #Bhishma #भीष्म #Draupadi #द्रौपदी #Kurukshetra #कुरुक्षेत्र #AncientIndia #IndianMythology #Dharma #MythologyShorts #VedicWisdom #HinduDharma #IndianHistory #SpiritualShorts #PauranikKathayein #SanatanDharma #HindiShorts #trending",
+    "tags": [
+      "द्रौपदी जन्म",
+      "द्रुपद प्रतिशोध",
+      "महाभारत श्राप",
+      "Draupadi birth",
+      "Drupada revenge",
+      "Mahabharata curse",
+      "Drupada",
+      "द्रुपद",
+      "Draupadi",
+      "द्रौपदी",
+      "Drona",
+      "द्रोणाचार्य",
+      "Mahabharata",
+      "महाभारत",
+      "Shorts",
+      "Hindu mythology"
+    ],
+    "thumbnail_prompt": "Dramatic portrait of Draupadi emerging from intense crimson-saffron flames, luminous dark Indian skin, large expressive lotus eyes wide-eyed with pain and nascent rage, long untied black hair flowing around her, firelit crimson + saffron, regal red-and-gold sari, warm Indian skin tone, cinematic, vertical composition, intense BUT face clearly visible, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+    "quotable_line": "एक पिता का प्रतिशोध अपनी ही बेटी के भाग्य को जलाकर सबसे बड़ा पाप बन गया।",
+    "pinned_question": "❓ एक पिता का प्रतिशोध अपनी ही बेटी के भाग्य को जलाकर सबसे बड़ा पाप बन गया। क्या द्रुपद ने सही किया?",
+    "next_seed": "और यही अपमान द्रौपदी के खुले केशों की प्रतिज्ञा बन गया।",
+    "language": "hi",
+    "content_type": "story",
+    "topic": "Draupadi's hidden birth from sacrificial fire — Drupada's secret sin, the daughter he weaponized to destroy Drona, the greatest curse of the Panchala line",
+    "series": "mahabharata",
+    "episode_n": 42,
+    "arc_character_devanagari": "द्रौपदी",
+    "arc_character_english": "Draupadi — The Queen Who Lit the War",
+    "_phase18_strict_pass": false,
+    "_phase18_score": 17,
+    "_phase18_score_max": 25,
+    "_phase18_score_floor": 19,
+    "_phase18_violation": "hook_title",
+    "_phase18_failing_gates": [
+      "bookend",
+      "char_names",
+      "engagement",
+      "hook_title",
+      "monotony",
+      "subject_diversity",
+      "subject_lock",
+      "tha_tic"
+    ],
+    "_phase18_fatal_failures": []
+  }
+}
