@@ -236,10 +236,10 @@ _WARDROBE_CONTEXT_PREFIX = {
         "subject in simple natural-cotton valkala bark-cloth garments, "
         "hair tied in topknot, rudraksha bead mala around neck, barefoot, "
         "warm dappled-sunlight key-light on face, warm golden-bronze "
-        "Indian skin tone, NO crown, NO jewelry except rudraksha, "
+        "Indian skin tone, only rudraksha beads for adornment, "
     ),
     "JOURNEY": (
-        "subject in white-and-gold silk dhoti (NOT armor) with simple "
+        "subject in white-and-gold silk dhoti with simple "
         "wooden walking staff, companions visible alongside (brothers, "
         "queen Draupadi, loyal stray dog if story-relevant), warm "
         "key-light on faces transitioning to celestial golden glow, "
@@ -320,11 +320,15 @@ _HINDU_ICONOGRAPHY_BATTLEFIELD_ANCHOR = _HINDU_ICONOGRAPHY_BASE + (
     # + light ornaments. Reference: user's Karna/Arjuna images show
     # fine silk + draped angavastram + gold NECKLACES (not chest plates)
     # + carved bronze ARMLETS (not metal pauldrons).
+    # Phase 23.10 (2026-07-03): the old "zero plate armor, zero shoulder
+    # spikes, zero chest insignia" phrasing fed those exact nouns into the
+    # POSITIVE prompt — FLUX renders negated nouns (KcDbqwnRfK0 forensic:
+    # spiked crowns + pauldrons despite clean LLM prompts). Positive-only.
     "WARRIORS BARE-CHESTED wearing authentic fine silk angavastram "
     "draped over bare shoulders, heavy gold necklaces resting on bare "
     "skin, intricately carved bronze armlets on upper arms, gold "
-    "yajnopavita thread, zero plate armor, zero shoulder spikes, "
-    "zero chest insignia, "
+    "yajnopavita thread, torsos of bare skin and flowing silk textile "
+    "only, "
 )
 
 _HINDU_ICONOGRAPHY_PALACE_ANCHOR = _HINDU_ICONOGRAPHY_BASE + (
@@ -364,7 +368,7 @@ _HINDU_ICONOGRAPHY_FOREST_ANCHOR = _HINDU_ICONOGRAPHY_BASE + (
     # Phase 23.4: bare-chest doctrine for forest tribals / ascetics.
     "FIGURES BARE-CHESTED with simple natural cotton or bark-cloth "
     "lower garments only, rudraksha bead necklaces on bare skin, "
-    "no plate breastplate, no Western armor, "
+    "torsos of bare skin and rough natural cloth only, "
 )
 
 _HINDU_ICONOGRAPHY_JOURNEY_ANCHOR = _HINDU_ICONOGRAPHY_BASE + (
@@ -751,6 +755,11 @@ _NEGATIVE_PHASE23_8_ANTI_FANTASY = (
 _NEGATIVE_PHASE23_1_ANTI_WESTERN = _NEGATIVE_PHASE23_1_ANTI_WESTERN + _NEGATIVE_PHASE23_8_ANTI_FANTASY
 
 _NEGATIVE_DEFAULT = _NEGATIVE_DEFAULT + _NEGATIVE_PHASE23_1_ANTI_WESTERN
+# Phase 23.10 (2026-07-03): RESTRAINT scenes (imperfection cue) were missing
+# the entire anti-Western stack — Phase 23.1 only appended to DEFAULT, so
+# grief/desolation moods lost every armor negative. KcDbqwnRfK0 scene 2
+# (grief mood → restraint negative) shipped the worst armored frame.
+_NEGATIVE_RESTRAINT = _NEGATIVE_RESTRAINT + _NEGATIVE_PHASE23_1_ANTI_WESTERN
 
 # Backwards-compat alias — _NEGATIVE was the single global pre-2026-05-18.
 _NEGATIVE = _NEGATIVE_DEFAULT

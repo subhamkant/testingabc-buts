@@ -1,193 +1,163 @@
 {
   "_note": "Visual reference for Mahabharata characters. Injected into image prompts for consistency. Update descriptions as needed.",
-
   "Krishna": {
-    "visual": "Lord Krishna with vivid bright medium cobalt-blue divine skin (saturated true-blue, NOT dark indigo, NOT teal, NOT navy — luminous mid-tone blue like an azure or cornflower hue), youthful soft graceful divine face with large dark soulful lotus eyes, full slightly rose-pink lips, smooth refined features, long flowing wavy/curly jet-black hair cascading down to the chest on both sides, urdhva pundra tilak on the forehead (white U-shape with a vertical red center line), small gold ornament jewel above the third-eye between his brows, twin peacock feathers (morpankh) tucked at the top of his head — NOT a full crown, just the two feathers with a small gold clasp, gold drop earrings (kundal), multiple layered gold chain necklaces with jeweled pendants on the chest, vaijayanti mala (long flower garland of red, white, and green forest flowers) draped from neck reaching to the waist, gold armbands with blue jewels on the upper arms, slim youthful athletic teenage figure (lean, NOT a muscular warrior build, soft smooth chest, no heavy muscle definition), wearing pristine cream-white silk dhoti tied with a gold-edged sash at the waist (OR canonical yellow pitambara), holding divine flute (bansuri), serene contemplative enchanting expression with a faint loving smile",
-    "signature_lock": "vivid cobalt-blue divine Indian skin, dark wavy hair with twin peacock feathers tucked in NOT a full crown, BARE CHEST visible no shirt no armor no breastplate no plate, sacred gold yajnopavita thread across bare blue chest, layered gold-jewel chain necklaces on bare chest, gold armbands on upper arms, vaijayanti red-white-green flower garland on bare torso, yellow pitambara silk dhoti at waist only, simple dark wooden bansuri flute, slim teenage build, NO chest armor, NO breastplate, NO western fantasy",
+    "visual": "Lord Krishna with vivid bright medium cobalt-blue divine skin (saturated true-blue, NOT dark indigo, NOT teal, NOT navy — luminous mid-tone blue like an azure or cornflower hue), youthful soft graceful divine face with large dark soulful lotus eyes, full slightly rose-pink lips, smooth refined features, long flowing wavy/curly jet-black hair cascading down to the chest on both sides, urdhva pundra tilak on the forehead (white U-shape with a vertical red center line), small gold ornament jewel above the third-eye between his brows, twin peacock feathers (morpankh) tucked at the top of his head with a small gold clasp, gold drop earrings (kundal), multiple layered gold chain necklaces with jeweled pendants on the chest, vaijayanti mala (long flower garland of red, white, and green forest flowers) draped from neck reaching to the waist, gold armbands with blue jewels on the upper arms, slim youthful athletic teenage figure (lean, NOT a muscular warrior build, soft smooth chest, no heavy muscle definition), wearing pristine cream-white silk dhoti tied with a gold-edged sash at the waist (OR canonical yellow pitambara), holding divine flute (bansuri), serene contemplative enchanting expression with a faint loving smile",
+    "signature_lock": "vivid cobalt-blue divine Indian skin, dark wavy hair with twin peacock feathers tucked in at the hairline with a small gold clasp, BARE CHEST of smooth blue skin, sacred gold yajnopavita thread across bare blue chest, layered gold-jewel chain necklaces resting on bare chest, gold armbands on upper arms, vaijayanti red-white-green flower garland on bare torso, yellow pitambara silk dhoti at waist only, simple dark wooden bansuri flute, slim teenage build",
     "colors": "vivid bright medium cobalt-blue divine skin (not dark indigo, not teal), jet-black long flowing curly hair, cream-white or saffron-yellow silk dhoti, gold and blue-jeweled ornaments, vaijayanti red-white-green flower garland, peacock-green-and-blue morpankh feathers"
   },
-
   "Arjuna": {
     "_revised": "Phase 4 identity-anchor rewrite 2026-05-17. Phase 2/3 burden anchor added 2026-05-18 (calloused bow-hands). Phase 22 (2026-06-25) signature_lock added — crown demoted to PALACE only.",
-    "visual": "Arjuna — tall athletic warrior, broad shoulders, calloused bow-hands. wheatish golden-brown skin, dark wavy hair, late 20s-30s. ornate kshatriya armor, gold-trimmed breastplate, jeweled crown. carries divine bow Gandiva and quiver.",
-    "signature_lock": "wheatish golden-bronze Indian skin, dark wavy hair tied back in topknot, BARE-CHESTED warrior no breastplate no kavacha no plate no shirt no armor on torso, sacred gold yajnopavita thread crossing bare chest diagonally, ornate gold armbands on bare upper biceps, ornate gold-edged leather quiver slung across bare back, drawing colossal hand-carved Gandiva bow, cream silk dhoti at waist, NO chest armor, NO breastplate, NO western fantasy",
+    "visual": "Arjuna — tall athletic warrior, broad shoulders, calloused bow-hands. wheatish golden-brown skin, dark wavy hair, late 20s-30s. BARE-CHESTED with sacred gold yajnopavita thread, gold armbands, fine silk angavastram draped over one shoulder, jeweled gold mukut. carries divine bow Gandiva and quiver.",
+    "signature_lock": "wheatish golden-bronze Indian skin, dark wavy hair tied back in topknot, BARE-CHESTED warrior with smooth exposed torso of skin and muscle, sacred gold yajnopavita thread crossing bare chest diagonally, ornate gold armbands on bare upper biceps, ornate gold-edged leather quiver slung across bare back, drawing colossal hand-carved Gandiva bow, cream silk dhoti at waist",
     "colors": "wheatish golden-bronze skin, silver-gold armor, jeweled crown, dark wavy hair, glowing Gandiva bow"
   },
-
   "Draupadi": {
     "_revised": "Phase 22 (2026-06-25) signature_lock added — battlefield-leaning fingerprint omits ornament-piled hair tokens.",
     "visual": "Draupadi Panchali, exceptionally beautiful dark-complexioned queen with luminous dark skin, large expressive black lotus eyes, flowing black lustrous hair, wearing royal silk sari in crimson and gold, adorned with exquisite jewelry including necklace earrings bangles, regal dignified proud posture, fierce intelligent eyes that hold both grace and fire, the most beautiful woman of her era",
-    "signature_lock": "luminous dark Indian skin, large expressive lotus eyes, long untied black hair blowing wildly in the wind, flowing battle-stained crimson red silk sari, minimal traditional Indian jewelry, fierce proud posture, NO Western ballgown, NO tiara, NO fantasy princess dress",
+    "signature_lock": "luminous dark Indian skin, large expressive lotus eyes, long untied black hair blowing wildly in the wind, flowing battle-stained crimson red silk sari, minimal traditional Indian jewelry, fierce proud posture",
     "colors": "dark luminous skin, crimson-gold silk sari, gold ornaments, black flowing hair"
   },
-
   "Bhishma": {
     "_revised": "Phase 4 identity-anchor rewrite 2026-05-17. Phase 2/3 burden anchor added 2026-05-18. Phase 22 (2026-06-25) signature_lock added.",
-    "visual": "Bhishma — tall imposing elder warrior, burdened shoulders. silver-white beard to mid-chest, no mustache. weathered late-50s-to-60s face, haunted eyes carrying authority. saffron-bronze dhoti, brown leather chest plate, silver sun-emblem.",
-    "signature_lock": "weathered late-50s Indian face, long majestic silver-white beard flowing to mid-chest NO mustache, BARE-CHESTED elder warrior no breastplate no leather chest plate no plate no shirt no armor on torso, sacred gold yajnopavita thread crossing bare chest, simple gold armlets on bare upper arms, severe burdened posture, austere off-white silk dhoti at waist, NO chest armor, NO breastplate, NO medieval cloak, NO European helmet",
+    "visual": "Bhishma — tall imposing elder warrior, burdened shoulders. silver-white beard to mid-chest, clean-shaven upper lip. weathered late-50s-to-60s face, haunted eyes carrying authority. BARE-CHESTED with gold yajnopavita thread, saffron-bronze dhoti, silver sun-emblem pendant on the chest.",
+    "signature_lock": "weathered late-50s Indian face, long majestic silver-white beard flowing to mid-chest with clean-shaven upper lip, BARE-CHESTED elder warrior with weathered exposed torso, sacred gold yajnopavita thread crossing bare chest, simple gold armlets on bare upper arms, severe burdened posture, austere off-white silk dhoti at waist",
     "colors": "silver-white hair and beard, saffron-bronze dhoti, brown leather chest plate, silver sun-emblem, weathered noble complexion, burdened bearing"
   },
-
   "Karna": {
     "_revised": "Phase 4 identity-anchor rewrite 2026-05-17. Phase 2/3 burden anchor added 2026-05-18. Phase 22 (2026-06-25) signature_lock added — kundal + kavacha + golden-bronze radiance pinned as non-negotiable identifiers.",
-    "visual": "Karna — broad-shouldered warrior, strong muscular chest with weary stance, luminous golden-bronze radiant skin. natural divine armor (kavacha) fused to chest, golden earrings (kundala) — ALWAYS visible. late 20s-30s, haunted eyes.",
-    "signature_lock": "radiant golden-bronze Indian skin, broad-shouldered warrior build, BARE-CHESTED with luminous divine sun-kavacha glow emanating FROM WITHIN his bare skin kavacha embedded INTO chest skin NOT armor worn over it NOT a breastplate NOT a plate, golden radiance shining outward through bare skin, gold kundal earrings ALWAYS visible, battle-stained dark red silk dhoti at waist, weary haunted eyes, NO chest armor, NO breastplate, NO plate",
+    "visual": "Karna — broad-shouldered warrior, strong muscular bare chest with weary stance, luminous golden-bronze radiant skin. divine sun-glow (kavacha) fused into the skin of his chest, golden earrings (kundala) — ALWAYS visible. late 20s-30s, haunted eyes.",
+    "signature_lock": "radiant golden-bronze Indian skin, broad-shouldered warrior build, BARE-CHESTED with luminous divine sun-kavacha glow emanating from within his bare skin, golden radiance fused into the chest skin itself, shining outward like molten sunlight beneath the skin, gold kundal earrings ALWAYS visible, battle-stained dark red silk dhoti at waist, weary haunted eyes",
     "colors": "luminous golden-bronze radiant skin, divine golden kavacha glow, golden kundala earrings, red warrior attire, weary haunted bearing"
   },
-
   "Bhima": {
     "_revised": "Phase 23.2 (2026-06-28) — canonical signature_lock from user prompt library.",
-    "visual": "Bhima the mighty Pandava warrior son of Vayu, heavily muscular massive bull-strong warrior with huge powerful build, broad thick chest and thick arms, towering imposing frame, fierce dark moustache, intense fearless eyes, golden-brown radiant skin, wearing warrior's attire that strains against his powerful physique, wielding his legendary gada (heavy mace), expression of righteous fury and immense strength",
-    "signature_lock": "dark golden-bronze Indian skin, colossal heavily-muscled warrior, BARE-CHESTED no breastplate no kavacha no plate no shirt no armor on torso, thick chunky gold necklace resting on bare massive chest, ornate gold armbands on bare bulging biceps, rugged leather belt over thick red silk dhoti at waist, dual hands gripping massive battle-dented iron Gada mace, mud and sweat glistening on bare chest, fierce dark moustache, NO chest armor, NO breastplate, NO iron shoulder pads",
+    "visual": "Bhima the mighty Pandava warrior son of Vayu, heavily muscular massive bull-strong warrior with huge powerful build, broad thick bare chest and thick arms, towering imposing frame, fierce dark moustache, intense fearless eyes, golden-brown radiant skin, bare-chested with thick gold necklace and red silk dhoti straining against his powerful physique, wielding his legendary gada (heavy mace), expression of righteous fury and immense strength",
+    "signature_lock": "dark golden-bronze Indian skin, colossal heavily-muscled warrior, BARE-CHESTED with massive exposed torso, thick chunky gold necklace resting on bare massive chest, ornate gold armbands on bare bulging biceps, rugged leather belt over thick red silk dhoti at waist, dual hands gripping massive battle-dented iron Gada mace, mud and sweat glistening on bare chest, fierce dark moustache",
     "colors": "golden-brown radiant skin, warrior's attire, gleaming gada mace, massive muscular warrior form"
   },
-
   "Yudhishthira": {
     "_revised": "Phase 19 (2026-06-16) anti-Sauron rewrite. Phase 22 (2026-06-25) signature_lock added — crown demoted to PALACE only, battle-context strips mukut entirely.",
-    "visual": "Yudhishthira Dharmaraja the just king, warm golden-bronze Indian skin, salt-pepper beard, calm deep eyes, white-and-gold silk dhoti with red-gold angavastram (NO iron armor unless battlefield, NO European helmet), classical Indian mukut crown with peacock feather, tilak on forehead, gold kundal earrings, yajnopavita thread, gold scepter or walking staff",
-    "signature_lock": "warm golden-bronze Indian skin, salt-and-pepper short beard, deep sorrowful eyes, BARE-CHESTED no breastplate no kavacha no plate no shirt no armor on torso, sacred gold yajnopavita thread crossing bare chest, soft red-gold angavastram drape over one shoulder only leaving other side of chest bare, modest fine white-and-gold silk dhoti at waist, calm dignified posture, NO chest armor, NO breastplate, NO crown by default, NO weapons, NO steel chainmail",
+    "visual": "Yudhishthira Dharmaraja the just king, warm golden-bronze Indian skin, salt-pepper beard, calm deep eyes, white-and-gold silk dhoti with red-gold angavastram, classical Indian gold mukut with peacock feather, tilak on forehead, gold kundal earrings, yajnopavita thread, gold scepter or walking staff",
+    "signature_lock": "warm golden-bronze Indian skin, salt-and-pepper short beard, deep sorrowful eyes, BARE-CHESTED with dignified bearing, sacred gold yajnopavita thread crossing bare chest, soft red-gold angavastram drape over one shoulder only leaving other side of chest bare, modest fine white-and-gold silk dhoti at waist, calm dignified posture, empty hands folded in composure",
     "colors": "warm golden-bronze Indian skin, white-and-gold silk dhoti, gold mukut crown, ruby-and-gold jewelry"
   },
-
   "Eklavya": {
     "_added": "Phase 22 (2026-06-25) — was missing from JSON, needed for tribal-archer arc topics. Pinned signature_lock: bare-chested tribal forest archer, severed right thumb ALWAYS visible, NOT a crowned prince.",
-    "visual": "Eklavya — young tribal forest archer, bare-chested with natural cotton lower garment, dust-streaked skin, holding a hand-carved bow, missing right thumb (severed in guru-dakshina) ALWAYS visible, jungle backdrop, rudraksha bead necklace, NOT a crowned prince, NOT royal attire, weathered authentic forest dweller, no jewelry except rudraksha",
-    "signature_lock": "dark mud-streaked tribal Indian skin, bare-chested with natural bark-cloth and cotton lower garment, severed right thumb ALWAYS visible (sometimes dripping blood), rudraksha bead necklace, matted hair, intense devoted eyes, jungle forest archer, NO royal crown, NO gold armor, NO western ranger cloak",
+    "visual": "Eklavya — young tribal forest archer, bare-chested with natural cotton lower garment, dust-streaked skin, holding a hand-carved bow, missing right thumb (severed in guru-dakshina) ALWAYS visible, jungle backdrop, rudraksha bead necklace, weathered authentic forest dweller, only rudraksha beads for adornment",
+    "signature_lock": "dark mud-streaked tribal Indian skin, bare-chested with natural bark-cloth and cotton lower garment, severed right thumb ALWAYS visible (sometimes dripping blood), rudraksha bead necklace, matted hair, intense devoted eyes, jungle forest archer",
     "colors": "dust-streaked warm tan skin, simple cotton + rudraksha brown"
   },
-
   "Ashwatthama": {
     "_added": "Phase 22 (2026-06-25) — was missing from JSON, needed for cursed-warrior arc topics. Pinned signature_lock: mid-forehead embedded gem (the iconic curse mark) ALWAYS visible, curse-white prematurely-aged hair, blood smear.",
-    "visual": "Ashwatthama — son of Drona, mid-forehead gem embedded in skin ALWAYS visible (the iconic curse mark), curse-white prematurely-aged hair, blood smear on skin, warrior build, haunted feral eyes, dark warrior attire (battle-stained dhoti + leather straps, NOT royal silk), forehead gem casts faint light, NOT a clean royal warrior, weathered and cursed",
-    "signature_lock": "gaunt Indian face with haunted feral eyes, glowing ruby-like gem embedded deeply into the center of his forehead casting a faint red light down his face, prematurely curse-white hair, ash-smeared skin with a faint blood smear across his jaw, tattered dark cloth dhoti, weathered leather weapon straps, NO European crown, NO shining steel armor",
+    "visual": "Ashwatthama — son of Drona, mid-forehead gem embedded in skin ALWAYS visible (the iconic curse mark), curse-white prematurely-aged hair, blood smear on skin, warrior build, haunted feral eyes, battle-stained dark dhoti and weathered leather straps, forehead gem casts faint light, weathered and cursed",
+    "signature_lock": "gaunt Indian face with haunted feral eyes, glowing ruby-like gem embedded deeply into the center of his forehead casting a faint red light down his face, prematurely curse-white hair, ash-smeared skin with a faint blood smear across his jaw, tattered dark cloth dhoti, weathered leather weapon straps",
     "colors": "curse-white hair, blood-streaked skin, dark battle dhoti"
   },
-
   "Dharma dog": {
     "_added": "Phase 19 (2026-06-16) — Heaven's Gate story pivot; was rendering invisible because no descriptor existed.",
     "visual": "a lean medium-sized stray Indian street dog with short tan-and-white fur, alert dark loyal eyes, walking close beside Yudhishthira, foreground subject in lower-third of frame, clearly visible and in focus, slightly worn paws from travel",
     "colors": "tan-and-white short fur, dark loyal eyes"
   },
-
   "Garuda": {
     "_added": "Phase 19 (2026-06-16) — Vishnu's mount, story-critical in several arc topics.",
     "visual": "Lord Garuda divine eagle-man mount of Vishnu, golden feathered body with massive wings spread, sharp eagle face with hooked beak, human warrior torso, jeweled gold breast medallion, regal divine stance, NOT Western dragon, NOT Greek harpy",
     "colors": "golden feathers, jewel-toned wings, gold medallion"
   },
-
   "Nandi": {
     "_added": "Phase 19 (2026-06-16) — Shiva's mount, foreground prop in divine scenes.",
     "visual": "Nandi the divine white bull mount of Shiva, massive seated bull with pristine white hide, gold-leaf horns, garlanded with orange marigold flowers, large soulful eyes, sacred Hindu temple icon",
     "colors": "pristine white hide, gold horn-leaf, marigold garland"
   },
-
   "Sudarshana chakra": {
     "_added": "Phase 19 (2026-06-16) — Krishna's divine discus, story-critical entity.",
     "visual": "Krishna's Sudarshana chakra, golden 8-spoked divine discus weapon emitting luminous golden divine light, spinning energy ring, foreground prop in close detail, Hindu iconography",
     "colors": "luminous gold divine glow, spinning rays"
   },
-
   "Gandiva bow": {
     "_added": "Phase 19 (2026-06-16) — Arjuna's celestial bow.",
     "visual": "Arjuna's celestial Gandiva bow, polished dark wood with gold-and-pearl inlay along the curve, ornate string, divine glow at the handle, foreground prop or held by Arjuna",
     "colors": "dark wood + gold-pearl inlay + faint divine glow"
   },
-
   "Akshaya patra": {
     "_added": "Phase 19 (2026-06-16) — Draupadi's inexhaustible bowl, vanvas story.",
     "visual": "Draupadi's Akshaya Patra, ornate weathered bronze begging bowl with ancient Indian metalwork, faint divine glow at the rim, foreground prop in close detail",
     "colors": "weathered bronze, faint divine glow"
   },
-
   "Indra": {
     "_added": "Phase 19 (2026-06-16) — King of devas, Heaven's Gate story pivot.",
-    "visual": "Lord Indra king of devas, golden-skinned divine warrior with thousand-eye motif on robe, layered gold-and-pearl crown (mukut) with peacock-feather centerpiece, holding vajra thunderbolt weapon, seated on Airavata white elephant OR standing in golden celestial chariot, divine radiance, NO European helmet",
+    "visual": "Lord Indra king of devas, golden-skinned divine warrior with thousand-eye motif on robe, layered gold-and-pearl mukut with peacock-feather centerpiece, holding vajra thunderbolt weapon, seated on Airavata white elephant OR standing in golden celestial chariot, divine radiance",
     "colors": "golden divine skin, gold-and-pearl mukut, vajra weapon"
   },
-
   "Duryodhana": {
     "_revised": "Phase 23.2 (2026-06-28) — canonical signature_lock from user prompt library.",
-    "visual": "Duryodhana the Kaurava prince, tall powerfully built warrior with dark intense piercing eyes, proud arrogant set of the jaw, strong muscular frame, wearing dark royal armor in black and gold, imposing crown, expression of ambition and barely contained anger, commanding menacing presence, elaborate warrior ornaments",
-    "signature_lock": "warm golden-bronze Indian skin, massive arrogant prince, muscular broad-chested build, rich purple and gold silk dhoti, intricate golden kavacha breastplate, ornate royal mukut crown, gripping a heavy golden Gada mace on shoulder, sneering expression, NO European crown, NO plate armor, NO western fantasy",
+    "visual": "Duryodhana the Kaurava prince, tall powerfully built warrior with dark intense piercing eyes, proud arrogant set of the jaw, strong muscular frame, bare-chested with heavy layered gold haar necklaces and black-and-gold silk dhoti, imposing gold mukut, expression of ambition and barely contained anger, commanding menacing presence, elaborate gold ornaments",
+    "signature_lock": "warm golden-bronze Indian skin, massive arrogant prince, muscular broad-chested build, rich purple and gold silk dhoti, gold-embroidered royal silk angavastram across his muscular chest, heavy layered gold haar necklaces, ornate royal gold mukut, gripping a heavy golden Gada mace on shoulder, sneering expression",
     "colors": "dark black-gold armor, intense dark eyes, imposing muscular build"
   },
-
   "Drona": {
     "_revised": "Phase 23.2 (2026-06-28) — canonical signature_lock from user prompt library.",
-    "visual": "Dronacharya the master teacher, elderly sage-warrior with long white flowing beard and hair, sharp intelligent eyes that miss nothing, wearing sage's robes over warrior armor, holding bow with master precision, commanding guru's posture, expression of stern authority and deep knowledge, revered disciplined bearing",
-    "signature_lock": "weathered elderly Indian face, white hair tied in a sage's topknot, long white beard, simple white cotton dhoti, white angavastram across shoulder, sacred yajnopavita thread across his bare chest, austere stern but deadly posture, pointing an intricate wooden bow, NO wizard robes, NO western wizard staff, NO plate armor",
+    "visual": "Dronacharya the master teacher, elderly sage-warrior with long white flowing beard and hair, sharp intelligent eyes that miss nothing, wearing simple white sage's cotton robes with rudraksha beads, holding bow with master precision, commanding guru's posture, expression of stern authority and deep knowledge, revered disciplined bearing",
+    "signature_lock": "weathered elderly Indian face, white hair tied in a sage's topknot, long white beard, simple white cotton dhoti, white angavastram across shoulder, sacred yajnopavita thread across his bare chest, austere stern but deadly posture, pointing an intricate wooden bow",
     "colors": "white sage's robes, silver-white hair and beard, austere distinguished look"
   },
-
   "Dronacharya": {
     "_added": "Phase 23.2 (2026-06-28) — alias for Drona so the LLM's full-name image_prompts match.",
-    "visual": "Dronacharya the master teacher, elderly sage-warrior with long white flowing beard and hair, sharp intelligent eyes that miss nothing, wearing sage's robes over warrior armor, holding bow with master precision, commanding guru's posture, expression of stern authority and deep knowledge, revered disciplined bearing",
-    "signature_lock": "weathered elderly Indian face, white hair tied in a sage's topknot, long white beard, simple white cotton dhoti, white angavastram across shoulder, sacred yajnopavita thread across his bare chest, austere stern but deadly posture, pointing an intricate wooden bow, NO wizard robes, NO western wizard staff, NO plate armor",
+    "visual": "Dronacharya the master teacher, elderly sage-warrior with long white flowing beard and hair, sharp intelligent eyes that miss nothing, wearing simple white sage's cotton robes with rudraksha beads, holding bow with master precision, commanding guru's posture, expression of stern authority and deep knowledge, revered disciplined bearing",
+    "signature_lock": "weathered elderly Indian face, white hair tied in a sage's topknot, long white beard, simple white cotton dhoti, white angavastram across shoulder, sacred yajnopavita thread across his bare chest, austere stern but deadly posture, pointing an intricate wooden bow",
     "colors": "white sage's robes, silver-white hair and beard, austere distinguished look"
   },
-
   "Shakuni": {
     "_revised": "Phase 23.2 (2026-06-28) — canonical signature_lock from user prompt library.",
     "visual": "Shakuni the cunning minister of Hastinapura, thin wiry frame with calculating eyes that gleam with scheming intelligence, slightly hunched conspiratorial posture, dark robes with subtle patterns, always slightly smiling as if he knows a secret, sharp angular features, dice in hand or nearby, sinister yet charming presence",
-    "signature_lock": "lean cunning uncle, sharp angular Indian features, grey-streaked beard, calculating gleaming eyes, slightly hunched posture, dark green and black silk dhoti, gold chains, leaning heavily on a carved wooden cane, tossing two bone dice with a sly wicked smile, NO medieval jester, NO western rogue cloak, NO witch doctor",
+    "signature_lock": "lean cunning uncle, sharp angular Indian features, grey-streaked beard, calculating gleaming eyes, slightly hunched posture, dark green and black silk dhoti, gold chains, leaning heavily on a carved wooden cane, tossing two bone dice with a sly wicked smile",
     "colors": "dark robes, calculating gleaming eyes, thin angular sinister features"
   },
-
   "Dushasana": {
     "_added": "Phase 23.2 (2026-06-28) — canonical signature_lock from user prompt library.",
-    "visual": "Dushasana the brutish Kaurava prince, wild-eyed aggressive warrior with muscular brutish build, dark golden-brown skin, wild untamed long hair, full beard, dark red silk dhoti with heavy gold armbands, baring teeth in violent fury, hand outstretched mid-grab, NOT a polished royal — brutal and wild",
-    "signature_lock": "wild-eyed aggressive Indian warrior, dark golden-brown skin, wild untamed long hair, muscular brutish build, dark red silk dhoti, heavy gold armbands on bare arms, chest heaving with rage, bared teeth, NO viking fur, NO gladiator leather straps, NO spartan helmet",
+    "visual": "Dushasana the brutish Kaurava prince, wild-eyed aggressive warrior with muscular brutish build, dark golden-brown skin, wild untamed long hair, full beard, dark red silk dhoti with heavy gold armbands, baring teeth in violent fury, hand outstretched mid-grab, brutal wild unpolished bearing",
+    "signature_lock": "wild-eyed aggressive Indian warrior, dark golden-brown skin, wild untamed long hair, muscular brutish build, dark red silk dhoti, heavy gold armbands on bare arms, chest heaving with rage, bared teeth",
     "colors": "dark golden-brown skin, dark red silk, heavy gold armbands"
   },
-
   "Kunti": {
     "_revised": "Phase 23.2 (2026-06-28) — canonical signature_lock from user prompt library.",
     "visual": "Queen Kunti the noble mother of Pandavas, dignified graceful middle-aged queen, serene sorrowful eyes carrying the weight of great sacrifice, wearing white widow's sari bordered with gold, dignified motherly posture, gentle strong hands, expression of deep devotion and quiet strength, regal bearing despite hardships",
-    "signature_lock": "weary but graceful older Indian woman, pale golden Indian skin, sorrowful dignified eyes, silver-streaked dark hair, simple unadorned white silk sari, devoid of heavy royal jewelry, radiating quiet strength, holding a simple earthen pot, NO fantasy witch, NO western peasant dress",
+    "signature_lock": "weary but graceful older Indian woman, pale golden Indian skin, sorrowful dignified eyes, silver-streaked dark hair, simple unadorned white silk sari with minimal adornment, radiating quiet strength, holding a simple earthen pot",
     "colors": "white-gold sari, serene dignified face, silver-streaked dark hair"
   },
-
   "Gandhari": {
     "_added": "Phase 23.2 (2026-06-28) — canonical signature_lock from user prompt library.",
     "visual": "Gandhari the devoted Kuru matriarch and mother of the Kauravas, dignified older Indian woman with rigid austere posture, wearing heavy pale silk sari, her eyes permanently covered by a tightly bound silk blindfold (voluntary sacrifice — she chose blindness to share her blind husband Dhritarashtra's fate), austere but deeply regal motherly bearing",
-    "signature_lock": "dignified older Indian woman, weathered noble Indian face, heavy pale silk sari with traditional draping, eyes permanently covered by a tightly bound silk blindfold (voluntary sacrifice), austere rigid posture standing beside a golden throne, NO peasant rags, NO medieval blindfold, NO European royalty",
+    "signature_lock": "dignified older Indian woman, weathered noble Indian face, heavy pale silk sari with traditional draping, eyes permanently covered by a tightly bound silk blindfold (voluntary sacrifice), austere rigid posture standing beside a golden throne",
     "colors": "pale silk sari, silk blindfold, austere noble bearing"
   },
-
   "Nakula": {
     "_added": "Phase 23.2 (2026-06-28) — canonical signature_lock from user prompt library.",
-    "visual": "Nakula the fourth Pandava brother, exceedingly handsome youthful warrior with flawless facial features and golden-bronze skin, master horseman, calm gentle demeanor, blue and gold silk dhoti, light golden armor, graceful athletic build",
-    "signature_lock": "exceedingly handsome young Indian prince, striking flawless facial features, golden-bronze Indian skin, pristine blue and gold silk dhoti, light golden Vedic kavacha, graceful athletic build, gentle expression as he calms a restless warhorse, NO medieval knight, NO leather riding boots, NO western fantasy",
+    "visual": "Nakula the fourth Pandava brother, exceedingly handsome youthful warrior with flawless facial features and golden-bronze skin, master horseman, calm gentle demeanor, blue and gold silk dhoti, fine gold-bordered blue silk angavastram, graceful athletic build",
+    "signature_lock": "exceedingly handsome young Indian prince, striking flawless facial features, golden-bronze Indian skin, pristine blue and gold silk dhoti, fine gold-bordered silk angavastram across chest, graceful athletic build, gentle expression as he calms a restless warhorse",
     "colors": "golden-bronze skin, blue and gold silk dhoti, light golden armor"
   },
-
   "Sahadeva": {
     "_added": "Phase 23.2 (2026-06-28) — canonical signature_lock from user prompt library.",
     "visual": "Sahadeva the youngest Pandava brother, quiet intellectual prince with calm analytical eyes, golden-bronze skin, scholar of the stars and astrology, emerald green and gold silk dhoti, modest sword at waist, contemplative scholarly bearing",
-    "signature_lock": "quiet intellectual Indian prince, calm analytical eyes, golden-bronze Indian skin, emerald green and gold silk dhoti, modest sword at his waist, leaning over palm-leaf astronomical manuscripts, contemplative scholarly bearing, NO wizard robes, NO European scholar robes, NO fantasy scrolls",
+    "signature_lock": "quiet intellectual Indian prince, calm analytical eyes, golden-bronze Indian skin, emerald green and gold silk dhoti, modest sword at his waist, leaning over palm-leaf astronomical manuscripts, contemplative scholarly bearing",
     "colors": "golden-bronze skin, emerald green and gold silk dhoti, contemplative bearing"
   },
-
   "Dhritarashtra": {
-    "visual": "Dhritarashtra the blind king of Hastinapura, elderly king with closed sightless eyes, strong square face showing suffering and inner conflict, wearing royal robes and crown, hands often outstretched feeling his way or clasped in anguish, blind eyes showing white, conflicted grief-stricken expression, once-powerful frame now aged",
+    "visual": "Dhritarashtra the blind king of Hastinapura, elderly king with closed sightless eyes, strong square face showing suffering and inner conflict, wearing royal silk robes and jeweled gold mukut, hands often outstretched feeling his way or clasped in anguish, blind eyes showing white, conflicted grief-stricken expression, once-powerful frame now aged",
     "colors": "royal gold robes, blind white eyes, aged powerful build, tragic bearing"
   },
-
   "Abhimanyu": {
-    "visual": "Abhimanyu the brave young warrior son of Arjuna, youthful and strikingly handsome with radiant golden complexion like his father Arjuna, bright fearless eyes, energetic athletic young warrior's build, wearing gleaming golden armor, wielding sword and bow with youthful valor, expression of fearless courage and warrior pride",
+    "visual": "Abhimanyu the brave young warrior son of Arjuna, youthful and strikingly handsome with radiant golden complexion like his father Arjuna, bright fearless eyes, energetic athletic young warrior's build, bare-chested with gleaming gold yajnopavita thread and gold armbands, wielding sword and bow with youthful valor, expression of fearless courage and warrior pride",
     "colors": "golden radiant skin like Arjuna, gleaming armor, youthful bright eyes"
   },
-
   "Hanuman": {
     "visual": "Lord Hanuman with the body of a powerfully muscular human warrior (tan brown skin, chiseled chest and biceps) BUT the face and head of a monkey/ape — pronounced monkey muzzle, simian flat nose, monkey-like brow ridge, fur-covered monkey face in reddish-brown, NOT a human face. Long monkey tail clearly visible curving behind him. Wearing yellow silk dhoti with red sash around the waist, gold ornaments and armbands, holding his legendary heavy golden gada (mace) propped against his shoulder or raised. Devotional fierce expression, divine golden aura. Iconography: humanoid body of a warrior with a literal monkey head, like a vanara from the Ramayana.",
     "colors": "tan-brown human body, reddish-brown monkey face fur, yellow dhoti, red sash, golden gada mace, divine golden aura"
   },
-
   "Vidura": {
     "visual": "Vidura the wise minister and half-brother of Dhritarashtra, middle-aged sage-statesman with kind honest eyes, calm wise face, simple but dignified minister's robes, thoughtful scholarly posture, holding scrolls or speaking with earnest honest expression, face radiating integrity and wisdom without ostentation",
     "colors": "simple white-grey robes, kind honest face, scholarly dignified bearing"
   },
-
   "Barbarik": {
     "visual": "Barbarik the mightiest warrior grandson of Bhima, young warrior with three divine arrows glowing in his quiver, powerful build, fierce yet serene expression, wearing unique warrior attire with divine bow, eyes that see all three phases of the battle simultaneously, otherworldly divine power emanating from his form",
     "colors": "warrior attire, three glowing divine arrows, powerful divine aura"
