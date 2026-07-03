@@ -650,9 +650,15 @@ async def run_pipeline(language: str = "en", test_mode: bool = False, test_uploa
                 # Phase 11 retention refactor 2026-06-02: pass hook_title so
                 # the subtitle pass also overlays the t=0 title card + the
                 # hook-anchor SFX (both gated internally).
+                # Sprint 3.2a (2026-07-04): persistent top question banner —
+                # the Hindi title half (every 30M+ niche winner burns one
+                # in). run_pipeline() IS the Mahabharata path — the Krishna
+                # and WhatIf functions don't pass a banner, so other series
+                # flow through unchanged (pipeline-isolation rule).
                 apply_subtitles(
                     video_path, audio_path, language,
                     hook_title=script.get("hook_title", ""),
+                    question_banner=script.get("title", "").split("|")[0].strip(),
                 )
             except Exception as sub_err:
                 print(f"    Subtitles failed (non-fatal): {sub_err}")

@@ -124,6 +124,87 @@ def _render_title_card_png(hook_title: str, out_path: str) -> dict | None:
     }
 
 
+# ── Question banner (Sprint 3.2a, 2026-07-04) ────────────────────────────────
+# Benchmark forensic 2026-07-03: every 30M+ Hindi-mythology Short (Factoreal,
+# Alone Insaan, The 7c) burns a persistent yellow question/title strip into
+# the TOP of every frame. Attention that drifts mid-video lands on the strip,
+# re-reads the open question, and stays for the resolution. Banner text is
+# the Hindi half of the video title (already ≤28 chars via title DNA gates).
+# Env-gated QUESTION_BANNER (default ON); revert per the measurement-loop
+# rule if channel-median AVD% drops >10 points across 3 videos.
+QUESTION_BANNER_FONT_SIZE  = 54
+QUESTION_BANNER_TEXT_RGBA  = (24, 14, 4, 255)     # near-black on yellow
+QUESTION_BANNER_BG_RGBA    = (255, 214, 0, 255)   # benchmark yellow strip
+QUESTION_BANNER_Y_FROM_TOP = 96                   # below Shorts top edge
+QUESTION_BANNER_PAD_Y      = 16
+QUESTION_BANNER_MAX_TEXT_W = 1000                 # inside the 1080 strip
+# NOTE: the banner's `end` MUST be the real video duration, never a huge
+# sentinel. _burn_chunk feeds each card as `-loop 1 -t <end-start>` — a
+# looped PNG input that OUTLIVES the main video keeps the encode running
+# until the PNG ends (caught locally 2026-07-04: a 6s clip encoded 50+MB
+# before being killed). The t=0-2.5s title card never trips this because
+# its window is shorter than any video.
+
+
+def _probe_duration_s(path: str) -> float | None:
+    """ffprobe container duration in seconds, or None on failure."""
+    try:
+        out = subprocess.run(
+            ["ffprobe", "-v", "error", "-show_entries", "format=duration",
+             "-of", "csv=p=0", path],
+            capture_output=True, text=True, timeout=30)
+        return float(out.stdout.strip())
+    except Exception:
+        return None
+
+
+def _render_question_banner_png(banner_text: str, out_path: str,
+                                end_s: float) -> dict | None:
+    """Render `banner_text` as a full-width opaque yellow strip with dark
+    Devanagari text, for a persistent t=0→end top overlay. Returns a card
+    dict compatible with _build_overlay_filter, or None on failure."""
+    if not banner_text or not banner_text.strip():
+        return None
+    if not os.path.exists(FONT_PATH):
+        print(f"    [banner] font missing at {FONT_PATH} — skipping banner")
+        return None
+    try:
+        from PIL import Image
+        from pipeline.text_renderer import render_text_card
+        txt = render_text_card(
+            banner_text.strip(),
+            font_path=FONT_PATH,
+            font_size=QUESTION_BANNER_FONT_SIZE,
+            fill=QUESTION_BANNER_TEXT_RGBA,
+            outline=QUESTION_BANNER_TEXT_RGBA,
+            outline_px=1,                    # slight weight, no halo
+            shadow=(0, 0, 0, 0),
+            shadow_offset=(0, 0),
+        )
+        if txt.width > QUESTION_BANNER_MAX_TEXT_W:
+            ratio = QUESTION_BANNER_MAX_TEXT_W / txt.width
+            txt = txt.resize(
+                (QUESTION_BANNER_MAX_TEXT_W, max(int(txt.height * ratio), 1)),
+                Image.LANCZOS)
+        strip_h = txt.height + 2 * QUESTION_BANNER_PAD_Y
+        strip = Image.new("RGBA", (1080, strip_h), QUESTION_BANNER_BG_RGBA)
+        strip.paste(txt, ((1080 - txt.width) // 2, QUESTION_BANNER_PAD_Y), txt)
+    except Exception as e:
+        print(f"    [banner] render failed: {e}")
+        return None
+    os.makedirs(os.path.dirname(out_path) or ".", exist_ok=True)
+    strip.save(out_path, "PNG")
+    return {
+        "path":   out_path,
+        "start":  0.0,
+        "end":    end_s,
+        "w":      strip.width,
+        "h":      strip.height,
+        "y_expr": f"{QUESTION_BANNER_Y_FROM_TOP}",
+        "_no_fade": True,
+    }
+
+
 # ── Groq Whisper ──────────────────────────────────────────────────────────────
 
 def _groq_transcribe_words(audio_path: str, language: str) -> list:
@@ -639,7 +720,7 @@ _DEFAULT_HOOK_ANCHOR_SFX = os.path.join(
 
 
 def apply_subtitles(video_path: str, audio_path: str, language: str = "hi",
-                    hook_title: str = "") -> bool:
+                    hook_title: str = "", question_banner: str = "") -> bool:
     """
     End-to-end: transcribe audio → group into cards → render PNGs →
     overlay onto video. Returns True if subtitles were applied.
@@ -701,6 +782,26 @@ def apply_subtitles(video_path: str, audio_path: str, language: str = "hi",
             rendered = [title_card] + rendered
         else:
             print(f"    [title-card] could not render '{hook_title[:40]}' — proceeding without")
+
+    # Sprint 3.2a: persistent top question banner (benchmark-derived).
+    if question_banner and os.environ.get(
+            "QUESTION_BANNER", "1").strip().lower() not in ("0", "false", "no"):
+        vid_dur = _probe_duration_s(video_path)
+        if vid_dur is None:
+            print("    [banner] could not probe video duration — skipping "
+                  "banner (an unbounded looped-PNG input would run the "
+                  "encode past the video's end)")
+        else:
+            banner_path = os.path.join(cards_dir, "question_banner.png")
+            banner = _render_question_banner_png(question_banner, banner_path,
+                                                 end_s=vid_dur)
+            if banner is not None:
+                print(f"    [banner] '{question_banner}' burned as persistent "
+                      f"top strip ({banner['w']}×{banner['h']}) at "
+                      f"y={QUESTION_BANNER_Y_FROM_TOP}, t=0 to {vid_dur:.2f}s")
+                rendered = [banner] + rendered
+            else:
+                print(f"    [banner] could not render '{question_banner[:40]}' — proceeding without")
 
     # Hook-anchor SFX (env-tunable, gracefully degrades if missing).
     hook_anchor_path = os.environ.get(
