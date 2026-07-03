@@ -148,6 +148,14 @@ runs:
         # "public" for cron. Uploader reads directly; main.py gates
         # topic-logging + engagement on public-only.
         YT_PRIVACY: ${{ inputs.yt-privacy }}
+        # Sprint 3.2a (2026-07-04) — re-enable the Step 4b subtitle burn,
+        # OFF since 2026-05-14. Every 30M+ niche winner carries burned-in
+        # text; this brings the persistent question banner + t=0 title
+        # card + charged-word cards into shipped videos. The subtitle
+        # engine was rebuilt since the May decision (HarfBuzz cards,
+        # Phase 11, chunked overlay passes). Costs ~4-5 min per render —
+        # fits the 29-min job budget (recent full runs: 12-14 min).
+        BURN_SUBTITLES: "true"
       run: ${{ inputs.pipeline-cmd }} 2>&1 | tee pipeline_output.txt
 
     - name: Persist unsaved assembled video to checkpoint (cancellation race)
