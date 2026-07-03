@@ -2901,6 +2901,16 @@ def assemble_video_continuous_audio(
             if shaveable_sum > 0:
                 ratio = slack / shaveable_sum
                 durations = [d * (1 - ratio) for d in durations[:-1]] + [durations[-1]]
+        elif slack < 0:
+            # Deficit — the first anchor's head-gap (scene 0 starts at t=0
+            # but its duration is only credited from ts[0]) leaves the video
+            # SHORTER than the narration; the -shortest mux then clips the
+            # tail. KcDbqwnRfK0 (2026-07-03): 1.1s of the closing question
+            # lost. Pad the aftermath closer to restore the invariant
+            # sum(durations) == audio + xfade budget.
+            durations[-1] += -slack
+            print(f"    [duration-reconcile] padded closer +{-slack:.2f}s "
+                  f"so video length matches narration ({audio_duration:.2f}s)")
 
         # Phase 24 / Fix 4 (2026-06-28) — climax pacing acceleration.
         # Compress the climax wedge (final 30% before the aftermath closer)
@@ -3097,6 +3107,13 @@ def assemble_from_video_clips_continuous_audio(
             if shaveable_sum > 0:
                 ratio = slack / shaveable_sum
                 durations = [d * (1 - ratio) for d in durations[:-1]] + [durations[-1]]
+        elif slack < 0:
+            # Deficit guard — see the silent-image path above (KcDbqwnRfK0:
+            # first-anchor head-gap left the video 1.1s shorter than the
+            # narration, clipping the closing question at the mux).
+            durations[-1] += -slack
+            print(f"    [duration-reconcile] padded closer +{-slack:.2f}s "
+                  f"so video length matches narration ({audio_duration:.2f}s)")
         # Phase 24 / Fix 4 (2026-06-28) — climax pacing acceleration.
         # Same logic as the silent-image Phase 18 path above.
         durations = _accelerate_climax(durations)
