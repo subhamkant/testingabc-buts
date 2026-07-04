@@ -2,6 +2,7 @@ import asyncio
 import requests
 import os
 import re
+import shutil
 import time
 import json
 import base64
@@ -1839,6 +1840,141 @@ def generate_image_bytes(prompt: str, seed: int, width: int, height: int,
     raise RuntimeError(f"all image providers failed; last={last_err}")
 
 
+def _kaggle_hero_frames(scenes: list, series: str) -> dict:
+    """Sprint 2.2 (2026-07-04) — Operation 500K visual tier jump.
+
+    Route the HERO frames (hook broll[0], climax broll[-2], aftermath
+    broll[-1]) through the Kaggle FLUX kernel with IP-Adapter locked to
+    the protagonist's approved master anchor (assets/character_anchors/).
+    Same recognizable face every video = the fandom identity the 30M+
+    serial-clip channels get for free from TV actors.
+
+    Returns {scene_idx: local_jpg_path} on success, {} on ANY failure —
+    the fallback is ATOMIC (plan-review fix 2026-07-02): either all
+    requested hero slots come from Kaggle or none do, so a mid-batch
+    failure can never ship a half-Kaggle/half-schnell face mix.
+
+    Gates (all must hold, otherwise {} without side effects):
+      - env KAGGLE_HERO_FRAMES == "true"   (default OFF until smoke-tested)
+      - series == "mahabharata"
+      - a single protagonist resolves AND has an anchor file
+    Timeouts: KAGGLE_WARMUP_TIMEOUT (default 600s, plan-review fix — cold
+    kernels need 5-8 min before the first image) + 120s per frame.
+    ENVIRONMENT slots are excluded (no face to lock)."""
+    if os.environ.get("KAGGLE_HERO_FRAMES", "false").strip().lower() != "true":
+        return {}
+    if series != "mahabharata" or len(scenes) < 4:
+        return {}
+    try:
+        # Protagonist = majority _primary_character vote across prompts.
+        from collections import Counter
+        votes = Counter(
+            h for h in (_primary_character(s.get("image_prompt", ""))
+                        for s in scenes) if h)
+        if not votes:
+            print("    [kaggle-hero] no protagonist resolved — schnell cascade")
+            return {}
+        hero = votes.most_common(1)[0][0]
+        anchor_path = os.path.join("assets", "character_anchors",
+                                   f"{hero.lower()}_anchor.png")
+        if not os.path.exists(anchor_path):
+            print(f"    [kaggle-hero] no anchor for '{hero}' — schnell cascade")
+            return {}
+
+        # Hero slots: hook / climax / aftermath, skipping ENVIRONMENT
+        # (wide vistas have no face for the adapter to lock).
+        n = len(scenes)
+        slots = []
+        for idx in (0, n - 2, n - 1):
+            st = (scenes[idx].get("shot_type") or "").strip().upper()
+            if st != "ENVIRONMENT" and idx not in slots:
+                slots.append(idx)
+        if not slots:
+            print("    [kaggle-hero] all hero slots are ENVIRONMENT — schnell cascade")
+            return {}
+
+        # Anchor → compact base64 JPEG (rides inside current_run.json;
+        # no Kaggle Dataset indexing delay, no repo-visibility dependency).
+        import base64
+        from io import BytesIO
+        from PIL import Image
+        img = Image.open(anchor_path).convert("RGB")
+        img.thumbnail((768, 768), Image.LANCZOS)
+        buf = BytesIO()
+        img.save(buf, "JPEG", quality=88)
+        anchor_b64 = base64.b64encode(buf.getvalue()).decode("ascii")
+
+        # Per-slot prompts: same architectural assembly as the schnell loop
+        # (directive → injected scene text → iconography anchor).
+        angle_label, directive = _SHOT_COMPOSITIONS[0]
+        kscenes = []
+        for idx in slots:
+            sc = scenes[idx]
+            ctx = sc.get("wardrobe_context", "")
+            base = _inject_characters(sc.get("image_prompt", ""), ctx)
+            prompt = (f"{angle_label}{directive}" + base + " "
+                      + _pick_iconography_anchor(ctx))[:1990]
+            st = (sc.get("shot_type") or "AMBIGUOUS").strip().upper()
+            w, h = _resolution_for_shot_type(st)
+            kscenes.append({
+                "idx":    idx,
+                "prompt": prompt,
+                "w":      w,
+                "h":      h,
+                "seed":   _char_stable_seed(hero, idx),
+            })
+
+        run_config = {
+            "run_id":          "hero_frames",
+            "hero_mode":       True,
+            "anchor_b64":      anchor_b64,
+            "ip_scale":        float(os.environ.get("KAGGLE_IP_SCALE", "0.6")),
+            "scenes":          kscenes,
+            "requires_motion": [],
+            "master_seed":     42,
+        }
+
+        import asyncio
+        from pathlib import Path
+        from pipeline.kaggle_client import (
+            push_kernel_with_run_config, poll_kernel, download_output,
+        )
+        kernel_dir = Path("kaggle_notebooks") / "cinematic-i2v-batch"
+        kernel_ref = "subhamkant11/cinematic-i2v-batch"
+        warmup = int(os.environ.get("KAGGLE_WARMUP_TIMEOUT", "600"))
+        budget = warmup + 120 * len(kscenes)
+        print(f"    [kaggle-hero] hero='{hero}' slots={slots} "
+              f"budget={budget}s — pushing ONE batched kernel call...")
+
+        async def _run():
+            await push_kernel_with_run_config(kernel_dir, run_config)
+            status = await poll_kernel(kernel_ref, poll_interval_s=45,
+                                       timeout_s=budget)
+            if status.get("status") != "complete":
+                raise RuntimeError(f"kernel status={status.get('status')}")
+            out_dir = Path(_TEMP_ROOT) / "kaggle_hero"
+            return await download_output(kernel_ref, out_dir)
+
+        files = asyncio.run(_run())
+        by_idx = {}
+        for f in files:
+            name = os.path.basename(str(f))
+            if name.startswith("hero_") and name.endswith(".jpg"):
+                by_idx[int(name[5:7])] = str(f)
+        # ATOMIC: every requested slot must be present, else discard all.
+        if set(by_idx.keys()) != set(slots):
+            print(f"    [kaggle-hero] incomplete batch {sorted(by_idx)} vs "
+                  f"{slots} — ATOMIC fallback to schnell cascade")
+            return {}
+        print(f"    [kaggle-hero] {len(by_idx)} hero frames locked to "
+              f"{hero}'s anchor ✓")
+        return by_idx
+    except Exception as e:
+        print(f"    [kaggle-hero] {str(e)[:140]} — ATOMIC fallback to "
+              f"schnell cascade")
+        return {}
+
+
 def generate_images(scenes_or_script, single_shot: bool = False, series: str = "mahabharata", visual_style: str = "", ck=None, mode: str = "longform", style_anchor: str | None = None) -> list:
     """
     Generates portrait (768x1344) images per scene.
@@ -1887,6 +2023,7 @@ def generate_images(scenes_or_script, single_shot: bool = False, series: str = "
                     "mood":             entry.get("mood", ""),
                     "narration":        entry.get("anchor_phrase", ""),
                     "wardrobe_context": entry.get("wardrobe_context", ""),  # Phase 19
+                    "shot_type":        entry.get("shot_type", ""),         # Sprint 2.2
                 }
                 for entry in scenes_or_script["broll"]
             ]
@@ -1927,6 +2064,13 @@ def generate_images(scenes_or_script, single_shot: bool = False, series: str = "
         except Exception as _e:
             print(f"    [resume] Could not load partial manifest: {_e} — regenerating from scratch")
             partial = {}
+
+    # ── Sprint 2.2: Kaggle IP-Adapter hero frames (hook/climax/aftermath).
+    # ONE batched kernel call BEFORE the schnell loop (hero frames first —
+    # plan-review fix: Kaggle latency must not push the job past the 29-min
+    # cap mid-cascade). {} on any failure → every slot below falls through
+    # to the normal cascade unchanged.
+    kaggle_hero = _kaggle_hero_frames(scenes, series)
 
     for i, scene in enumerate(scenes):
         # ── Resume path ───────────────────────────────────────────────
@@ -2187,8 +2331,24 @@ def generate_images(scenes_or_script, single_shot: bool = False, series: str = "
             else:
                 img_w, img_h = 768, 1344  # backwards-compat for non-mahabharata
 
-            success = False
+            # Sprint 2.2 — hero slot already rendered by the Kaggle
+            # IP-Adapter batch: copy it in and skip the cascade. Only
+            # shot 0 (production runs single_shot=True); multi-shot runs
+            # still cascade shots 1+ normally.
+            if j == 0 and i in kaggle_hero:
+                shutil.copy2(kaggle_hero[i], output_path)
+                shot_paths.append(output_path)
+                print(f"    [OK] Scene {i+1} shot {j+1}/{len(scene_compositions)} "
+                      f"via kaggle-ipadapter (anchor-locked)")
+                if ck is None:
+                    continue
+                # fall through to per-scene checkpointing below
+                success = True
+            else:
+                success = False
             for attempt in range(3):
+                if success:
+                    break
                 try:
                     img_bytes, provider = generate_image_bytes(
                         prompt, seed=seed, width=img_w, height=img_h, mood=mood,

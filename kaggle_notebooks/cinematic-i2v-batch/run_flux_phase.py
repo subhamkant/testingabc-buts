@@ -66,6 +66,40 @@ def main():
     )
     pipe.to("cuda")
 
+    # Sprint 2.2 (2026-07-04) — hero_mode: lock the video's hero frames to
+    # the channel's APPROVED master anchor (assets/character_anchors/) via
+    # IP-Adapter. The anchor image rides in current_run.json as base64 —
+    # no Kaggle Dataset round-trip (30s-3min indexing delay) and no
+    # dependency on repo visibility. Each scene entry is self-contained:
+    # {idx, prompt, w, h, seed}. Outputs: /kaggle/working/hero_<idx>.jpg.
+    if cfg.get("hero_mode", False):
+        import base64
+        from io import BytesIO
+        from PIL import Image
+        anchor_pil = Image.open(
+            BytesIO(base64.b64decode(cfg["anchor_b64"]))).convert("RGB")
+        ip_scale = float(cfg.get("ip_scale", 0.6))
+        pipe.set_ip_adapter_scale(ip_scale)
+        print(f"hero_mode: {len(cfg['scenes'])} frames, ip_scale={ip_scale}, "
+              f"anchor={anchor_pil.size}")
+        for sc in cfg["scenes"]:
+            generator = torch.Generator(device="cuda").manual_seed(int(sc["seed"]))
+            print(f"Generating hero frame idx={sc['idx']}...")
+            image = pipe(
+                prompt=sc["prompt"],
+                height=int(sc.get("h", 1344)),
+                width=int(sc.get("w", 768)),
+                ip_adapter_image=anchor_pil,
+                guidance_scale=0.0,
+                num_inference_steps=8,
+                generator=generator
+            ).images[0]
+            image.save(f"/kaggle/working/hero_{int(sc['idx']):02d}.jpg")
+        del pipe
+        gc.collect()
+        torch.cuda.empty_cache()
+        return
+
     # Sprint 2.1 (2026-07-03) — anchor_mode: generate INDEPENDENT master-
     # anchor portraits, one per character. The normal flow below locks every
     # shot after the first to the first face via IP-Adapter 0.6 — correct
