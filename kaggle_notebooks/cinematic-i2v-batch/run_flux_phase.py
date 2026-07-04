@@ -64,13 +64,13 @@ def main():
     # shards 1/3' (RAM kill). NF4-quantize the transformer (~6.5GB) and
     # 8-bit the T5 (~5GB): total fits a T4 with headroom. Compute dtype is
     # float16 — T4 (sm_75) has no native bfloat16.
-    try:
-        import bitsandbytes  # noqa: F401
-    except ImportError:
-        import subprocess as _sp
-        print("Installing bitsandbytes...")
-        _sp.run([sys.executable, "-m", "pip", "install", "-q",
-                 "bitsandbytes"], check=True)
+    # Unconditional UPGRADE — the Kaggle image ships an old bitsandbytes
+    # that imports fine but fails diffusers' quantizer validation
+    # ("requires the latest version", caught 2026-07-04). ~20s.
+    import subprocess as _sp
+    print("Upgrading bitsandbytes...")
+    _sp.run([sys.executable, "-m", "pip", "install", "-q", "-U",
+             "bitsandbytes"], check=True)
 
     from diffusers import FluxTransformer2DModel
     from diffusers import BitsAndBytesConfig as DiffusersBnb
