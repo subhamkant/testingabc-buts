@@ -140,7 +140,8 @@ _CHARACTER_PALETTE = {
     # Bhishma still moonlit, Ashwatthama still fevered) but the dark-fantasy
     # vocabulary is gone.
     "कर्ण": {
-        "palette":  "warm sunset amber + bronze, golden divine glow on kavach armor, "
+        "palette":  "warm sunset amber + bronze, golden divine glow radiating "
+                    "from within bare chest skin (the kavacha), "
                     "saffron-and-crimson palette, faces clearly lit",
         "lighting": "harsh golden-hour edge-light, embers in foreground, "
                     "faces visible and warm",
@@ -184,7 +185,7 @@ _CHARACTER_PALETTE = {
         "palette":  "blood-red + smoke-grey accents on warm bronze skin, fevered, "
                     "cursed but face clearly visible, NOT silhouette",
         "lighting": "flickering firelight with key-light on face, hard shadows "
-                    "on armor but face exposed, hellish edge",
+                    "across bare shoulders but face exposed, hellish edge",
     },
 }
 
@@ -212,25 +213,28 @@ _WARDROBE_CONTEXT_PREFIX = {
         # replace polished-mukut glamour. Phase 19's mukut+kundal+
         # gold-leaf reading was over-curated; forensic showed winners
         # ran ash + torn-dhoti + blood-smear, not mukut + gold-leaf.
-        "authentic Vedic-era warrior wearing kavach (engraved chest-plate "
-        "with sun or moon motif, NEVER European plate armor, NEVER skull "
-        "emblem, NEVER spiked helmet), torn dhoti edges, ash-streaked "
-        "face, dust-streaked tilak, blood smear on forearm, frayed "
-        "angavastram cape, broken arrow shaft fragment visible, "
-        "weathered straps, warm golden-bronze Indian skin tone, "
+        # Phase 23.10b (2026-07-04): the old text demanded "kavach
+        # (engraved chest-plate...)" and stacked NEVER-negations — FLUX
+        # renders the nouns. Dormant since Phase 23 dropped this prefix,
+        # scrubbed anyway so a re-wire can't resurrect the armor demand.
+        "authentic Vedic-era BARE-CHESTED fighter, torn dhoti edges, "
+        "ash-streaked face, dust-streaked tilak, blood smear on forearm, "
+        "frayed angavastram cape over bare shoulder, broken arrow shaft "
+        "fragment visible, weathered leather straps on bare skin, "
+        "warm golden-bronze Indian skin tone, "
     ),
     "PALACE": (
         "royal subject in pristine white-and-gold silk dhoti with red "
-        "angavastram, classical Indian mukut crown (NEVER European helmet), "
+        "angavastram, classical Indian gold mukut, "
         "tilak on forehead, layered gold necklaces and kundal earrings, "
-        "warm oil-lamp glow on warm golden-bronze Indian skin, NO armor, "
-        "NO weapons unless ceremonial, "
+        "warm oil-lamp glow on warm golden-bronze Indian skin, "
+        "silk and gold ornament only, empty ceremonial hands, "
     ),
     "DIVINE": (
         "subject glowing with ethereal halo of divine charm, wearing "
         "pristine white silk dhoti edged in gold with diaphanous shawl, "
         "celestial mukut, glowing golden-bronze skin, divine golden "
-        "light on the face, NO armor, NO darkness, NO shadows, "
+        "light on the face, luminous airy radiance filling the frame, "
     ),
     "FOREST": (
         "subject in simple natural-cotton valkala bark-cloth garments, "
@@ -355,7 +359,7 @@ _HINDU_ICONOGRAPHY_AFTERMATH_ANCHOR = _HINDU_ICONOGRAPHY_BASE + (
     "horizon ember), prone body partially visible at the edge of frame, "
     # Phase 23.4: bare-chest doctrine for warrior silhouettes.
     "WARRIORS BARE-CHESTED with ornate gold ornaments on bare skin, "
-    "no plate breastplate, no Western chest armor, "
+    "torsos of bare skin, gold and silk textile only, "
 )
 
 # Phase 23: NEW. FOREST + JOURNEY share the battlefield-leaning default
@@ -863,9 +867,14 @@ _SHOT_COMPOSITIONS = [
         # tiny indistinct dot reads as landscape photography, not myth.
         "wide cinematic landscape. camera pulled FAR BACK. wide focal length. "
         "atmospheric depth and scale. landscape dominant. "
+        # Phase 23.10b (2026-07-04): "armor" sat in the FIRST tokens of
+        # every single-shot render (this directive leads the prompt) —
+        # schnell obeys early tokens above all else. BFT1ix75d0s shipped
+        # 6/8 plate-armor frames from clean scripts because of this word.
         "if a character is present: FULL BODY visible, READABLE SILHOUETTE "
-        "on a phone screen (recognizable shape — armor, posture, weapon — "
-        "NOT a tiny indistinct dot), occupying roughly 1/4 to 1/3 of frame "
+        "on a phone screen (recognizable shape — bare torso, silk drape, "
+        "posture, weapon — NOT a tiny indistinct dot), occupying roughly "
+        "1/4 to 1/3 of frame "
         "height. subject grounded in the environment. ENVIRONMENT DOMINANT — "
         "show the SETTING explicitly (battlefield, palace court, forest, "
         "sky, terrain). subject may be partially obscured by terrain, "
