@@ -1289,6 +1289,20 @@ def _inject_characters(prompt: str, wardrobe_context: str = "") -> str:
                 data.get("signature_lock", "")
                 or data.get("visual", "")[:60]
             )
+            # Phase 26.2 (2026-07-05): context-conditional alternate locks.
+            # Characters with two canonical states (Ashwatthama pre/post
+            # curse) swap locks when the scene text signals the alternate
+            # era — otherwise the default lock's tokens fight the scene
+            # (a "towering muscled warrior" lock beat "tattered rags +
+            # forehead wound" scene text in testing).
+            for alt in data.get("alt_locks", []):
+                try:
+                    if alt.get("when") and re.search(
+                            alt["when"], prompt, re.IGNORECASE):
+                        lock = alt.get("lock") or lock
+                        break
+                except re.error:
+                    continue
             if lock:
                 injected.append((name, lock, is_principal))
     if injected:

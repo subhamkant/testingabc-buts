@@ -49,10 +49,16 @@
     "colors": "dust-streaked warm tan skin, simple cotton + rudraksha brown"
   },
   "Ashwatthama": {
-    "_added": "Phase 22 (2026-06-25) — was missing from JSON, needed for cursed-warrior arc topics. Pinned signature_lock: mid-forehead embedded gem (the iconic curse mark) ALWAYS visible, curse-white prematurely-aged hair, blood smear.",
-    "visual": "Ashwatthama — son of Drona, mid-forehead gem embedded in skin ALWAYS visible (the iconic curse mark), curse-white prematurely-aged hair, blood smear on skin, warrior build, haunted feral eyes, battle-stained dark dhoti and weathered leather straps, forehead gem casts faint light, weathered and cursed",
-    "signature_lock": "gaunt Indian face with haunted feral eyes, glowing ruby-like gem embedded deeply into the center of his forehead casting a faint red light down his face, prematurely curse-white hair, ash-smeared skin with a faint blood smear across his jaw, tattered dark cloth dhoti, weathered leather weapon straps",
-    "colors": "curse-white hair, blood-streaked skin, dark battle dhoti"
+    "_revised": "Phase 26 visual bible from user reference images + 4-scenario profile (2026-07-05). Lock = PRE-CURSE Rudra warrior (glowing Mani + dark bronze kavacha + ash tripundra) since WAR contexts dominate; post-curse wanderer scenes must describe the gouged bleeding forehead wound + rags in their own image_prompt text (scene tokens near the verb beat the lock tail). 'dark iron plate armor'/'steel band' translated to dark bronze kavacha / silver-bronze diadem (banned Western tokens).",
+    "visual": "Ashwatthama son of Drona in the Kuru court: towering muscular Brahmin-warrior in deep saffron and maroon silks with gold zari, the divine Mani gem embedded in the center of his forehead glowing softly beneath three horizontal white ash tripundra lines, dark hair in an ascetic topknot, alternating garlands of polished gold beads and dark rudraksha seeds on his chest, heavy gold armlets, stern intense volatile bearing, fiercely loyal general at Duryodhana's side",
+    "signature_lock": "Ashwatthama the Rudra-born avenger, towering muscular scholar-warrior frame, wild dark hair torn loose from its ascetic topknot, a radiant divine gem embedded in the center of his forehead blazing with protective light, three horizontal lines of sacred white ash across his brow, battle-scarred dark bronze kavacha armor rugged from relentless combat, rudraksha bead strings at his neck and wrists, deep maroon war silks, his bow vibrating with terrifying celestial astra energy, volatile apocalyptic wrath, lion's-tail banner behind him",
+    "alt_locks": [
+      {
+        "when": "curse|cursed|immortal|wander|rags|kali yuga|wound",
+        "lock": "Ashwatthama the cursed immortal wanderer, gaunt haggard face with agonized haunted sunken eyes, a gaping raw bleeding hollow wound in the center of his forehead dripping dark blood, matted filthy tangled dark hair, dirt-caked skin covered in sores and old scars, tattered dirty rags wrapped at his waist, weathered emaciated yet still towering frame, stumbling alone through desolate wasteland, a tragic broken shadow of a once-mighty warrior"
+      }
+    ],
+    "colors": "blazing forehead Mani gem (pre-curse) or gaping bleeding forehead wound (post-curse), white ash tripundra lines, battle-scarred dark bronze kavacha, saffron-maroon silks, rudraksha and gold garlands, wild dark hair"
   },
   "Dharma dog": {
     "_added": "Phase 19 (2026-06-16) — Heaven's Gate story pivot; was rendering invisible because no descriptor existed.",
