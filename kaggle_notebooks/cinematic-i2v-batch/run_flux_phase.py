@@ -161,18 +161,31 @@ def main():
         pipe.set_ip_adapter_scale(ip_scale)
         print(f"hero_mode: {len(cfg['scenes'])} frames, ip_scale={ip_scale}, "
               f"anchor={anchor_pil.size}")
+        import time as _time
+        n_steps = int(cfg.get("num_steps", 8))
         for sc in cfg["scenes"]:
             generator = torch.Generator(device="cuda").manual_seed(int(sc["seed"]))
-            print(f"Generating hero frame idx={sc['idx']}...")
+            print(f"Generating hero frame idx={sc['idx']} "
+                  f"({sc.get('w')}x{sc.get('h')}, {n_steps} steps)...",
+                  flush=True)
+            _t0 = _time.time()
+
+            def _step_cb(p, i, t, kw):
+                print(f"  step {i+1}/{n_steps} at {_time.time()-_t0:.1f}s",
+                      flush=True)
+                return kw
+
             image = pipe(
                 prompt=sc["prompt"],
                 height=int(sc.get("h", 1344)),
                 width=int(sc.get("w", 768)),
                 ip_adapter_image=anchor_pil,
                 guidance_scale=0.0,
-                num_inference_steps=8,
-                generator=generator
+                num_inference_steps=n_steps,
+                generator=generator,
+                callback_on_step_end=_step_cb,
             ).images[0]
+            print(f"  frame done in {_time.time()-_t0:.1f}s", flush=True)
             image.save(f"/kaggle/working/hero_{int(sc['idx']):02d}.jpg")
         del pipe
         gc.collect()
