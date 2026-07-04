@@ -59,6 +59,56 @@
             "stage2_dedup"
           ],
           "llm_quality_tier": "fast"
+        },
+        {
+          "topic": "Karna's Hidden Rejection Fuelled His Loyalty",
+          "source": "auto_expansion_v21",
+          "added_at": "2026-07-04T16:26:39.175832+00:00",
+          "validated_passes": [
+            "semantic_gate",
+            "stage2_dedup"
+          ],
+          "llm_quality_tier": "fast"
+        },
+        {
+          "topic": "Karna's Greatest Sin Was His Unwavering Loyalty",
+          "source": "auto_expansion_v21",
+          "added_at": "2026-07-04T16:26:39.175925+00:00",
+          "validated_passes": [
+            "semantic_gate",
+            "stage2_dedup"
+          ],
+          "llm_quality_tier": "fast"
+        },
+        {
+          "topic": "Karna's Untold Fear of Rejection Defined Him",
+          "source": "auto_expansion_v21",
+          "added_at": "2026-07-04T16:26:39.175990+00:00",
+          "validated_passes": [
+            "semantic_gate",
+            "stage2_dedup"
+          ],
+          "llm_quality_tier": "fast"
+        },
+        {
+          "topic": "Karna's Fatal Loyalty Led to His Greatest Mistake",
+          "source": "auto_expansion_v21",
+          "added_at": "2026-07-04T16:26:39.176061+00:00",
+          "validated_passes": [
+            "semantic_gate",
+            "stage2_dedup"
+          ],
+          "llm_quality_tier": "fast"
+        },
+        {
+          "topic": "Karna's Secret Jealousy Betrayed His Own Loyalty",
+          "source": "auto_expansion_v21",
+          "added_at": "2026-07-04T16:26:39.176125+00:00",
+          "validated_passes": [
+            "semantic_gate",
+            "stage2_dedup"
+          ],
+          "llm_quality_tier": "fast"
         }
       ]
     },
