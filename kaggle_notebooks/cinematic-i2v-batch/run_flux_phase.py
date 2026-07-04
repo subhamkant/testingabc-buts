@@ -57,22 +57,67 @@ def main():
     hf_login(token=hf_token, add_to_git_credential=False)
     print(f"HuggingFace authenticated (HF_TOKEN length={len(hf_token)})")
 
-    print("Loading FLUX-schnell + IP-Adapter...")
-    pipe = FluxPipeline.from_pretrained("black-forest-labs/FLUX.1-schnell", torch_dtype=torch.float16)
+    # ── Memory-fit load (2026-07-04) ─────────────────────────────────────
+    # FLUX-schnell's 12B transformer is ~24GB in fp16 — it fits NEITHER a
+    # T4's 16GB VRAM nor Kaggle's ~30GB system RAM alongside T5-XXL. The
+    # first-ever run to get past the HF 401 died at 'Loading checkpoint
+    # shards 1/3' (RAM kill). NF4-quantize the transformer (~6.5GB) and
+    # 8-bit the T5 (~5GB): total fits a T4 with headroom. Compute dtype is
+    # float16 — T4 (sm_75) has no native bfloat16.
+    try:
+        import bitsandbytes  # noqa: F401
+    except ImportError:
+        import subprocess as _sp
+        print("Installing bitsandbytes...")
+        _sp.run([sys.executable, "-m", "pip", "install", "-q",
+                 "bitsandbytes"], check=True)
+
+    from diffusers import FluxTransformer2DModel
+    from diffusers import BitsAndBytesConfig as DiffusersBnb
+    from transformers import T5EncoderModel
+    from transformers import BitsAndBytesConfig as TransformersBnb
+
+    MODEL = "black-forest-labs/FLUX.1-schnell"
+    print("Loading FLUX-schnell transformer (NF4)...")
+    transformer = FluxTransformer2DModel.from_pretrained(
+        MODEL, subfolder="transformer",
+        quantization_config=DiffusersBnb(
+            load_in_4bit=True, bnb_4bit_quant_type="nf4",
+            bnb_4bit_compute_dtype=torch.float16),
+        torch_dtype=torch.float16)
+    print("Loading T5-XXL text encoder (8-bit)...")
+    text_encoder_2 = T5EncoderModel.from_pretrained(
+        MODEL, subfolder="text_encoder_2",
+        quantization_config=TransformersBnb(load_in_8bit=True))
+    print("Assembling pipeline...")
+    pipe = FluxPipeline.from_pretrained(
+        MODEL, transformer=transformer, text_encoder_2=text_encoder_2,
+        torch_dtype=torch.float16)
 
     # Load XLabs IP-Adapter weights from the attached Kaggle Dataset.
     # The dataset `subhamkant11/xlabs-flux-ip-adapter` is referenced via
     # kernel-metadata.json's `dataset_sources` and mounts read-only under
-    # /kaggle/input/. This replaces the previous runtime `huggingface-cli
-    # download` call which timed out at the Papermill 12h ceiling on
-    # 2026-06-14 — auth-gated downloads hang indefinitely in non-interactive
-    # notebooks.
-    pipe.load_ip_adapter(
-        "/kaggle/input/xlabs-flux-ip-adapter",
-        subfolder="",
-        weight_name="ip_adapter.safetensors"
-    )
-    pipe.to("cuda")
+    # /kaggle/input/. NOTE (2026-07-04): this call has never executed in
+    # production (every prior run died at the HF 401) — if the checkpoint
+    # lacks a bundled CLIP image encoder, retry with the standard one.
+    try:
+        pipe.load_ip_adapter(
+            "/kaggle/input/xlabs-flux-ip-adapter",
+            subfolder="",
+            weight_name="ip_adapter.safetensors"
+        )
+    except Exception as _ip_err:
+        print(f"IP-Adapter load failed ({_ip_err}); retrying with explicit "
+              f"CLIP image encoder...")
+        pipe.load_ip_adapter(
+            "/kaggle/input/xlabs-flux-ip-adapter",
+            subfolder="",
+            weight_name="ip_adapter.safetensors",
+            image_encoder_pretrained_model_name_or_path="openai/clip-vit-large-patch14"
+        )
+    # Quantized modules pin themselves to the GPU; offload the rest on
+    # demand instead of a blanket .to('cuda').
+    pipe.enable_model_cpu_offload()
 
     # Sprint 2.2 (2026-07-04) — hero_mode: lock the video's hero frames to
     # the channel's APPROVED master anchor (assets/character_anchors/) via
