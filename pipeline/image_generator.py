@@ -1247,39 +1247,67 @@ def _inject_characters(prompt: str, wardrobe_context: str = "") -> str:
     showed that the verbose CHARACTER DETAILS — <125 chars> paragraph
     appended at the END of the prompt was still character-anatomy-heavy
     enough to push FLUX into portrait composition. New format wraps each
-    signature_lock in [Name: lock] brackets and keeps total injection
-    ≤80 chars per character. In PALACE/DIVINE we still allow the full
-    visual fingerprint because court scenes legitimately benefit from
-    ornament detail.
+    signature_lock in [Name: lock] brackets. In PALACE/DIVINE we still
+    allow the full visual fingerprint because court scenes legitimately
+    benefit from ornament detail.
+    Phase 26 (2026-07-04): locks PREPEND instead of append. The character
+    bibles grew to ~500 chars each and the tail position put them past
+    both the _build_full_prompt truncation point and FLUX-schnell's ~256
+    T5-token window — identity tokens (face, kavacha, diadem) never
+    reached the model. Order is now: [locks] + scene text; the caller
+    still prepends the composition directive, so framing tokens keep
+    first position and the Phase 23 portrait-bias fix is preserved.
+    Multi-character scenes clause-trim each lock to ~220 chars so two
+    bibles can't crowd the action verb out of the token window.
     """
     if not _CHARACTERS:
         return prompt
     ctx = (wardrobe_context or "").strip().upper()
     use_full_fingerprint = ctx in ("PALACE", "DIVINE")
 
-    injected = []
+    injected = []   # (name, text, is_principal) — principals have a signature_lock
     prompt_lower = prompt.lower()
     for name, data in _CHARACTERS.items():
         if name.lower() in prompt_lower:
+            is_principal = bool(data.get("signature_lock"))
             if use_full_fingerprint:
-                visual = data.get("visual", "")[:250]
+                # Phase 26: cap lifted 250→400 — the court bibles carry
+                # their identity tokens (face, Kirita, silks) across the
+                # first ~350 chars and the prepend position keeps them
+                # inside the T5 window regardless.
+                visual = data.get("visual", "")[:400]
                 if visual:
-                    injected.append(visual)
+                    injected.append((name, visual, is_principal))
             else:
-                # Phase 23: tight bracketed [Name: lock] format — each
-                # entry ~50-70 chars including the brackets, vs the prior
-                # 100-150 char per-character paragraph.
+                # Phase 23: tight bracketed [Name: lock] format.
                 lock = (
                     data.get("signature_lock", "")
                     or data.get("visual", "")[:60]
                 )
                 if lock:
-                    injected.append(f"[{name}: {lock}]")
+                    injected.append((name, lock, is_principal))
     if injected:
+        # Phase 26: only PRINCIPAL characters (those with a signature_lock)
+        # compete for token budget — prop/mount entries (Gandiva bow, Dharma
+        # dog, ...) carry short visual[:60] snippets and must not force the
+        # solo hero's full bible down to the 220-char shared-frame trim.
+        n_principals = sum(1 for _, _, p in injected if p)
+        def _fit(text, is_principal):
+            if is_principal and n_principals > 1:
+                return _clause_trim(text, 220)
+            return text
         if use_full_fingerprint:
-            return prompt + ". CHARACTER DETAILS — " + "; ".join(injected)
-        # Phase 23: bracket-list format for non-court contexts.
-        return prompt + " " + " ".join(injected)
+            fingerprints = "; ".join(
+                _fit(text, p) for _, text, p in injected
+            )
+            return "CHARACTER DETAILS — " + fingerprints + ". " + prompt
+        # Phase 26: identity locks lead, scene action follows. Solo scenes
+        # carry the full bible lock; shared frames trim each lock so the
+        # action verb stays inside the T5 window.
+        brackets = " ".join(
+            f"[{name}: {_fit(text, p)}]" for name, text, p in injected
+        )
+        return brackets + " " + prompt
     return prompt
 
 
@@ -1373,30 +1401,54 @@ def update_characters(script_data: dict) -> list:
 # 2026-05-18 fix: scene 2+ renders were getting 400 "Length of '/prompt'
 # must be <= 2048" because Phase 1 composition directives + Phase 4
 # character anchors + style suffix pushed combined prompt to 2147-2731
-# chars. Truncation strategy preserves the HIGH-VALUE anchors (mood,
-# style_suffix) in full and trims only from the END of the variable
-# `prompt` portion (composition directive + scene content + character
-# injection) at the nearest clean sentence boundary.
+# chars.
+#
+# Phase 26 (2026-07-04) truncation-priority FLIP. The old strategy kept
+# the full ~1050-char style_suffix and cut the variable prompt down to
+# ~925 chars — but _inject_characters appends [Name: signature_lock] and
+# the iconography anchor at the prompt TAIL, so character bibles and the
+# Phase 25 scene anchors were being silently amputated on every character
+# scene (verified: "clean-jawed" lock token absent from the final CF
+# payload). FLUX-schnell's T5 encoder only reads ~256 tokens (~1000 chars)
+# anyway, so a full-length tail suffix is mostly dead weight when the
+# scene content is long. New priority: the variable prompt (composition +
+# scene action + character locks + anchor) survives in full; the
+# style_suffix is trimmed to whatever budget remains, floored at its
+# opening clause block (photoreal + divine-glow + eye anchors) so the
+# dead-eye / anti-cartoon fixes always ride along.
 _CF_PROMPT_MAX_CHARS = 2000
+_STYLE_SUFFIX_FLOOR_CHARS = 400
+
+
+def _clause_trim(text: str, cap: int) -> str:
+    """Trim text to <= cap chars at the last clean clause boundary."""
+    if len(text) <= cap:
+        return text
+    cut = text[:cap]
+    for sep in (". ", ", "):
+        idx = cut.rfind(sep)
+        if idx > cap * 0.6:
+            cut = cut[:idx]
+            break
+    return cut.rstrip(" ,.")
 
 
 def _build_full_prompt(prompt: str, mood: str = "", style_suffix: str = STYLE_SUFFIX) -> str:
     mood_prefix = f"{mood}, " if mood else ""
-    # Fixed components that always survive: mood_prefix + style_suffix.
-    fixed_cost = len(mood_prefix) + len(", ") + len(style_suffix)
-    available_for_prompt = _CF_PROMPT_MAX_CHARS - fixed_cost - 5  # 5-char safety
+    budget = _CF_PROMPT_MAX_CHARS - 5  # 5-char safety
+    suffix_floor = _clause_trim(style_suffix, _STYLE_SUFFIX_FLOOR_CHARS)
 
-    if len(prompt) > available_for_prompt:
-        # Truncate the variable prompt portion at the last clean sentence/
-        # clause boundary (". " or ", ") within the available budget, so we
-        # don't cut mid-word. Keep at least 60% to preserve scene content.
-        cap = prompt[:available_for_prompt]
-        for sep in (". ", ", "):
-            idx = cap.rfind(sep)
-            if idx > available_for_prompt * 0.6:
-                cap = cap[:idx]
-                break
-        prompt = cap.rstrip(' ,.')
+    # 1) The variable prompt gets first claim on the budget (early tokens
+    #    dominate distilled FLUX), leaving room for at least the suffix floor.
+    max_prompt = budget - len(mood_prefix) - len(", ") - len(suffix_floor)
+    if len(prompt) > max_prompt:
+        prompt = _clause_trim(prompt, max_prompt)
+
+    # 2) The style suffix gets whatever remains, never less than the floor.
+    remaining = budget - len(mood_prefix) - len(", ") - len(prompt)
+    if len(style_suffix) > remaining:
+        style_suffix = suffix_floor if remaining <= len(suffix_floor) \
+            else _clause_trim(style_suffix, remaining)
 
     return f"{mood_prefix}{prompt}, {style_suffix}"
 
@@ -1630,9 +1682,9 @@ def _gen_cloudflare(prompt: str, seed: int, width: int, height: int,
     # anchor sizes when this fires.
     prompt, negative, _clamp_diag = _clamp_for_cf(prompt, negative)
     if _clamp_diag["p_trim"] or _clamp_diag["n_trim"]:
-        print(f"    [cf-clamp] prompt={_clamp_diag['p_orig']}→{len(prompt)} "
+        print(f"    [cf-clamp] prompt={_clamp_diag['p_orig']}->{len(prompt)} "
               f"(trimmed {_clamp_diag['p_trim']}), "
-              f"negative={_clamp_diag['n_orig']}→{len(negative)} "
+              f"negative={_clamp_diag['n_orig']}->{len(negative)} "
               f"(trimmed {_clamp_diag['n_trim']})")
 
     body = {
