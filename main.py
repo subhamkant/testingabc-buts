@@ -115,15 +115,14 @@ def _phase22_quarantine_if_needed(script: dict, language: str) -> None:
     score_max  = script.get("_phase18_score_max", 25)
     violation  = script.get("_phase18_violation", "unknown") or "unknown"
     topic_raw  = script.get("topic", "no-topic") or "no-topic"
-    topic_slug = (
-        topic_raw
-            .lower()
-            .replace("'", "")
-            .replace("—", "-")
-            [:50]
-            .replace(" ", "-")
-            .replace("/", "-")
-    )
+    # Windows-safe slug (2026-07-04): a topic containing ':' produced a
+    # quarantine filename NTFS cannot store — every git pull/rebase on a
+    # Windows clone failed at checkout. Whitelist [a-z0-9-] outright.
+    import re as _re_q
+    topic_slug = _re_q.sub(
+        r"-{2,}", "-",
+        _re_q.sub(r"[^a-z0-9-]", "-", topic_raw.lower()[:60])
+    ).strip("-")[:50]
     ts = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H-%M-%S")
     quarantine_dir = "_quarantine/scripts"
     os.makedirs(quarantine_dir, exist_ok=True)
