@@ -18,10 +18,10 @@
     "colors": "dark luminous skin, crimson-gold silk sari, gold ornaments, black flowing hair"
   },
   "Bhishma": {
-    "_revised": "Phase 4 identity-anchor rewrite 2026-05-17. Phase 2/3 burden anchor added 2026-05-18. Phase 22 (2026-06-25) signature_lock added.",
-    "visual": "Bhishma — tall imposing elder warrior, burdened shoulders. silver-white beard to mid-chest, clean-shaven upper lip. weathered late-50s-to-60s face, haunted eyes carrying authority. BARE-CHESTED with gold yajnopavita thread, saffron-bronze dhoti, silver sun-emblem pendant on the chest.",
-    "signature_lock": "grand commander Bhishma, weathered late-50s face with long majestic silver-white beard, gleaming engraved silver-and-gold kavacha armor, an ornate breastplate with lotus motifs, white royal silk angavastram, jeweled gold mukut, severe burdened bearing, divine gravitas",
-    "colors": "silver-white hair and beard, saffron-bronze dhoti, brown leather chest plate, silver sun-emblem, weathered noble complexion, burdened bearing"
+    "_revised": "Phase 26 visual bible from user reference images + 3-scenario profile (2026-07-04). Identity color = SILVER/WHITE (vs Karna's sun-gold): silver kavacha, ivory silks, white steeds. 'plate armor'/'war helm' from the profile deliberately translated to kavacha/diadem vocabulary — banned Western tokens trip _ARMOR_FORBIDDEN_RE and render knights.",
+    "visual": "Bhishma Pitamah in the Kuru royal court: towering elder statesman in heavy ivory-white royal silks with intricate silver and gold zari borders, broad silver-and-gold ceremonial coronet over flowing silver-white hair, thick groomed majestic white beard, heavy gold kundal earrings, broad engraved gold armbands on powerful biceps, white sandalwood mark across his broad forehead, stern deeply observant gaze, monumental patriarchal authority",
+    "signature_lock": "Bhishma Pitamah the grand patriarch supreme commander, flowing majestic silver-white hair and thick groomed white beard, ivory-white silk dhoti and snow-white angavastram streaming in the wind, ancient yet powerfully muscled towering frame, gleaming engraved silver kavacha armor with Kuru crest motifs blazing like a snow-capped mountain, ornate silver-and-gold war diadem, broad engraved gold angada armbands, drawing a massive divine longbow amid a storm of arrows, golden palm-tree banner and pure white war steeds behind him, glacial unstoppable lion-like presence",
+    "colors": "silver-white hair and majestic white beard, blazing silver kavacha, ivory-white silks with silver-gold zari, gold kundalas and armbands, pure white steeds"
   },
   "Karna": {
     "_revised": "Phase 4 identity-anchor rewrite 2026-05-17. Phase 2/3 burden anchor added 2026-05-18. Phase 22 (2026-06-25) signature_lock added — kundal + kavacha + golden-bronze radiance pinned as non-negotiable identifiers.",
