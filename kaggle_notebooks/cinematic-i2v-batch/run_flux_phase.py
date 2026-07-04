@@ -100,13 +100,28 @@ def main():
             bnb_4bit_compute_dtype=torch.float16))
     gc.collect()
     torch.cuda.empty_cache()
-    print("Loading FLUX-schnell transformer (NF4)...")
-    transformer = FluxTransformer2DModel.from_pretrained(
-        MODEL, subfolder="transformer",
-        quantization_config=DiffusersBnb(
-            load_in_4bit=True, bnb_4bit_quant_type="nf4",
-            bnb_4bit_compute_dtype=torch.float16),
-        torch_dtype=torch.float16)
+    # Transformer precision by GPU count (2026-07-04): Kaggle allocates
+    # T4 x2 — 31GB combined. bnb NF4 matmuls are pathologically slow on
+    # sm_75 (a single 512x896 4-step frame ran >1h before being killed),
+    # so on dual GPUs shard the transformer in FULL fp16 across both
+    # (~12GB each via accelerate device_map) and keep only the one-shot
+    # T5 encode quantized. NF4 transformer remains the single-GPU
+    # fallback — functional, but production timeouts will catch it.
+    n_gpu = torch.cuda.device_count()
+    if n_gpu >= 2:
+        print(f"Loading FLUX-schnell transformer (fp16, sharded across "
+              f"{n_gpu} GPUs)...")
+        transformer = FluxTransformer2DModel.from_pretrained(
+            MODEL, subfolder="transformer",
+            torch_dtype=torch.float16, device_map="auto")
+    else:
+        print("Loading FLUX-schnell transformer (NF4, single GPU)...")
+        transformer = FluxTransformer2DModel.from_pretrained(
+            MODEL, subfolder="transformer",
+            quantization_config=DiffusersBnb(
+                load_in_4bit=True, bnb_4bit_quant_type="nf4",
+                bnb_4bit_compute_dtype=torch.float16),
+            torch_dtype=torch.float16)
     print("Assembling pipeline...")
     pipe = FluxPipeline.from_pretrained(
         MODEL, transformer=transformer, text_encoder_2=text_encoder_2,
