@@ -298,14 +298,24 @@ def _inject_wardrobe_context(wardrobe_context: str) -> str:
 # The old 500+ view winners (L1ZPCZJLDe0) had multi-character layered
 # compositions with readable architecture; their prompts didn't carry
 # "skin pores" cinematography baggage.
+# 2026-07-04 quality pass (8ZxlSnlHUpY frame review): the old "NOT
+# painting, NOT comic book, NOT illustration, NOT 2D art" chain fed
+# those exact style tokens into the positive prompt (the same negation
+# trap as 23.10) — plasticky half-painted skin on every face. Rewritten
+# positive-only, plus an explicit Indian-subcontinent architecture lock
+# (one frame drifted to a Chinese pagoda + queue hairstyle) and a
+# phone-readability light floor (two frames crushed to black).
 _HINDU_ICONOGRAPHY_BASE = (
     "Hyper-photorealistic live-action epic film still, 8K resolution, "
-    "wide cinematic composition with deep focus across foreground / "
-    "mid-ground / background, everything in sharp focus, environment "
-    "readable and richly detailed, gritty naturalistic cinematic lighting, "
-    "NOT painting, NOT comic book, NOT illustration, NOT 2D art, "
+    "shot on 35mm cinema camera, natural skin texture with visible "
+    "pores and fine imperfections, wide cinematic composition with deep "
+    "focus across foreground / mid-ground / background, everything in "
+    "sharp focus, environment readable and richly detailed, gritty "
+    "naturalistic cinematic lighting with a clear key light on the main "
+    "subject — subject fully readable on a small phone screen, "
     "Baahubali / B.R. Chopra Mahabharat 1988 live-action reference, "
-    "authentic Hindu Vedic civilization, "
+    "authentic Hindu Vedic civilization of the ancient Indian "
+    "subcontinent, carved Nagara stone architecture and Indian terrain, "
 )
 
 # Phase 23: scene-descriptor anchors (NOT character-anatomy). The wardrobe
@@ -428,12 +438,17 @@ def _pick_iconography_anchor(wardrobe_context: str) -> str:
 # / PROP shots get 16:9 (1344x768) — these benefit from horizontal sweep.
 # REACTION close-ups stay 9:16 (768x1344) — facial emotion is a vertical
 # composition. AMBIGUOUS defaults to vertical (safe fallback).
+# 2026-07-04 quality pass: 768x1344 sources stretched to the 1080x1920
+# output were visibly soft, and wide shots (cropped for the vertical
+# frame during Ken Burns) were worse — effective sub-500px source per
+# visible region. Generate at native output scale instead (multiples of
+# 16 for FLUX). ~2x pixels per CF call: a few extra seconds per image.
 _RESOLUTION_BY_SHOT_TYPE = {
-    "ENVIRONMENT": (1344, 768),
-    "ACTION":      (1344, 768),
-    "PROP":        (1344, 768),
-    "REACTION":    (768, 1344),
-    "AMBIGUOUS":   (768, 1344),
+    "ENVIRONMENT": (1920, 1088),
+    "ACTION":      (1920, 1088),
+    "PROP":        (1920, 1088),
+    "REACTION":    (1088, 1920),
+    "AMBIGUOUS":   (1088, 1920),
 }
 
 
@@ -2362,7 +2377,12 @@ def generate_images(scenes_or_script, single_shot: bool = False, series: str = "
             # face. Falls back to scene-position seed when no known character
             # is mentioned (WhatIf scenes, environment-only shots).
             hero = "" if series == "whatif" else _primary_character(raw_prompt)
-            seed = _char_stable_seed(hero, j) if hero else (i * 137 + j * 31)
+            # 2026-07-04: + i*101 — the pure per-character seed made every
+            # scene of the same hero near-IDENTICAL (8ZxlSnlHUpY frames
+            # 2≈6 and 4≈11≈13 were the same image). Composition now varies
+            # per scene; FACE consistency is carried by the anchor-scored
+            # best-of-N selection on hero scenes, not by seed reuse.
+            seed = (_char_stable_seed(hero, j) + i * 101) if hero else (i * 137 + j * 31)
 
             # Phase 23 (2026-06-28): dynamic aspect ratio + conditional
             # anti-bokeh negative. Wide shots (ENVIRONMENT/ACTION/PROP)
