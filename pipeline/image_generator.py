@@ -1266,26 +1266,31 @@ def _inject_characters(prompt: str, wardrobe_context: str = "") -> str:
     use_full_fingerprint = ctx in ("PALACE", "DIVINE")
 
     injected = []   # (name, text, is_principal) — principals have a signature_lock
-    prompt_lower = prompt.lower()
+    # Phase 26.1 (2026-07-05): WORD-BOUNDARY match, not substring. The old
+    # `name.lower() in prompt_lower` scan meant "Bhima" matched inside
+    # "Abhimanyu" (every Abhimanyu scene got Bhima's colossal-moustache lock
+    # injected first and rendered a middle-aged heavyweight), "Indra" matched
+    # inside "Indraprastha", and "Drona" inside "Dronacharya".
     for name, data in _CHARACTERS.items():
-        if name.lower() in prompt_lower:
-            is_principal = bool(data.get("signature_lock"))
-            if use_full_fingerprint:
-                # Phase 26: cap lifted 250→400 — the court bibles carry
-                # their identity tokens (face, Kirita, silks) across the
-                # first ~350 chars and the prepend position keeps them
-                # inside the T5 window regardless.
-                visual = data.get("visual", "")[:400]
-                if visual:
-                    injected.append((name, visual, is_principal))
-            else:
-                # Phase 23: tight bracketed [Name: lock] format.
-                lock = (
-                    data.get("signature_lock", "")
-                    or data.get("visual", "")[:60]
-                )
-                if lock:
-                    injected.append((name, lock, is_principal))
+        if not re.search(rf"\b{re.escape(name)}\b", prompt, re.IGNORECASE):
+            continue
+        is_principal = bool(data.get("signature_lock"))
+        if use_full_fingerprint:
+            # Phase 26: cap lifted 250→400 — the court bibles carry
+            # their identity tokens (face, Kirita, silks) across the
+            # first ~350 chars and the prepend position keeps them
+            # inside the T5 window regardless.
+            visual = data.get("visual", "")[:400]
+            if visual:
+                injected.append((name, visual, is_principal))
+        else:
+            # Phase 23: tight bracketed [Name: lock] format.
+            lock = (
+                data.get("signature_lock", "")
+                or data.get("visual", "")[:60]
+            )
+            if lock:
+                injected.append((name, lock, is_principal))
     if injected:
         # Phase 26: only PRINCIPAL characters (those with a signature_lock)
         # compete for token budget — prop/mount entries (Gandiva bow, Dharma
