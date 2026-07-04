@@ -1933,27 +1933,45 @@ def _kaggle_hero_frames(scenes: list, series: str) -> dict:
             "requires_motion": [],
             "master_seed":     42,
         }
+        # CLI pushes reset the kernel's Secrets attachment (2026-07-04
+        # diagnosis) — ride the read-scoped HF token in the private
+        # kernel's run config so gated FLUX weights can download.
+        if os.environ.get("HF_TOKEN"):
+            run_config["hf_token"] = os.environ["HF_TOKEN"]
 
         import asyncio
         from pathlib import Path
         from pipeline.kaggle_client import (
             push_kernel_with_run_config, poll_kernel, download_output,
+            is_p100_failure,
         )
         kernel_dir = Path("kaggle_notebooks") / "cinematic-i2v-batch"
         kernel_ref = "subhamkant11/cinematic-i2v-batch"
         warmup = int(os.environ.get("KAGGLE_WARMUP_TIMEOUT", "600"))
         budget = warmup + 120 * len(kscenes)
+        max_attempts = int(os.environ.get("KAGGLE_P100_RETRIES", "3"))
         print(f"    [kaggle-hero] hero='{hero}' slots={slots} "
               f"budget={budget}s — pushing ONE batched kernel call...")
 
         async def _run():
-            await push_kernel_with_run_config(kernel_dir, run_config)
-            status = await poll_kernel(kernel_ref, poll_interval_s=45,
-                                       timeout_s=budget)
-            if status.get("status") != "complete":
-                raise RuntimeError(f"kernel status={status.get('status')}")
-            out_dir = Path(_TEMP_ROOT) / "kaggle_hero"
-            return await download_output(kernel_ref, out_dir)
+            # Kaggle free tier randomly allocates T4 or P100; P100 (sm_60)
+            # fast-fails in CELL 1 (~60s of quota). Retry the push for T4
+            # luck, same policy as the curiosity Kaggle path.
+            for attempt in range(1, max_attempts + 1):
+                await push_kernel_with_run_config(kernel_dir, run_config)
+                status = await poll_kernel(kernel_ref, poll_interval_s=45,
+                                           timeout_s=budget)
+                if status.get("status") == "complete":
+                    out_dir = Path(_TEMP_ROOT) / "kaggle_hero"
+                    return await download_output(kernel_ref, out_dir)
+                if (attempt < max_attempts
+                        and await is_p100_failure(kernel_ref)):
+                    print(f"    [kaggle-hero] attempt {attempt}: P100 "
+                          f"allocated — retrying for T4 luck...")
+                    continue
+                raise RuntimeError(f"kernel status={status.get('status')} "
+                                   f"(attempt {attempt}/{max_attempts})")
+            raise RuntimeError("unreachable")
 
         files = asyncio.run(_run())
         by_idx = {}

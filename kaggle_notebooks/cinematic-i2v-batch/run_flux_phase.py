@@ -6,14 +6,20 @@ import gc
 from diffusers import FluxPipeline
 
 
-def _resolve_hf_token() -> str | None:
+def _resolve_hf_token(cfg: dict | None = None) -> str | None:
     """Find HF_TOKEN from (a) Kaggle Secrets (UserSecretsClient — works inside
-    Kaggle kernels) or (b) os.environ['HF_TOKEN'] (works in local debug runs).
-    Returns None if neither is available.
+    Kaggle kernels), (b) cfg['hf_token'] passed via current_run.json, or
+    (c) os.environ['HF_TOKEN'] (local debug runs). Returns None if none.
 
     black-forest-labs/FLUX.1-schnell is a GATED HuggingFace repo as of
     2026-06-28 — anonymous download returns 401. The kernel must authenticate
-    before calling FluxPipeline.from_pretrained()."""
+    before calling FluxPipeline.from_pretrained().
+
+    (b) exists because CLI kernel pushes silently RESET the notebook's
+    Add-ons -> Secrets attachment (diagnosed 2026-07-04: three straight
+    'empty-log' kernel errors were this fast-fail). The kernel is private,
+    the token is read-scoped, and Secrets remain the preferred source —
+    the cfg fallback only engages when the attachment has been dropped."""
     try:
         from kaggle_secrets import UserSecretsClient
         token = UserSecretsClient().get_secret("HF_TOKEN")
@@ -22,6 +28,8 @@ def _resolve_hf_token() -> str | None:
     except Exception:
         # Either not running in Kaggle env OR the secret isn't attached
         pass
+    if cfg and cfg.get("hf_token"):
+        return cfg["hf_token"]
     return os.environ.get("HF_TOKEN")
 
 
@@ -38,7 +46,7 @@ def main():
     # phase silently crashes (the !python invocation in the notebook cell
     # exits non-zero but Kaggle reports the cell as COMPLETE — a separate
     # bug now fixed in the notebook's subprocess wrapper).
-    hf_token = _resolve_hf_token()
+    hf_token = _resolve_hf_token(cfg)
     if not hf_token:
         print("FATAL: no HF_TOKEN found. black-forest-labs/FLUX.1-schnell is "
               "a gated repo and the kernel cannot download it anonymously. "
