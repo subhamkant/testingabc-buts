@@ -313,6 +313,8 @@ _HINDU_ICONOGRAPHY_BASE = (
     "sharp focus, environment readable and richly detailed, gritty "
     "naturalistic cinematic lighting with a clear key light on the main "
     "subject — subject fully readable on a small phone screen, "
+    "cinematic volumetric rim lighting, intricate micro-engravings on "
+    "antique Vedic gold jewelry catching the light, "
     "Baahubali / B.R. Chopra Mahabharat 1988 live-action reference, "
     "authentic Hindu Vedic civilization of the ancient Indian "
     "subcontinent, carved Nagara stone architecture and Indian terrain, "
@@ -339,11 +341,16 @@ _HINDU_ICONOGRAPHY_BATTLEFIELD_ANCHOR = _HINDU_ICONOGRAPHY_BASE + (
     # spikes, zero chest insignia" phrasing fed those exact nouns into the
     # POSITIVE prompt — FLUX renders negated nouns (KcDbqwnRfK0 forensic:
     # spiked crowns + pauldrons despite clean LLM prompts). Positive-only.
-    "WARRIORS BARE-CHESTED wearing authentic fine silk angavastram "
-    "draped over bare shoulders, heavy gold necklaces resting on bare "
-    "skin, intricately carved bronze armlets on upper arms, gold "
-    "yajnopavita thread, torsos of bare skin and flowing silk textile "
-    "only, storm-dark sky pierced by dramatic golden light shafts, "
+# Phase 25 A2 (2026-07-04): Divine Vedic Warrior — heroes wear
+    # intricately ENGRAVED VEDIC GOLD KAVACHA (Netflix Kurukshetra /
+    # Sanatan Legends canon), not plain cloth. Western steel stays in
+    # the negative stack.
+    "DIVINE ROYAL WARRIORS in gleaming engraved golden kavacha armor "
+    "with sun and peacock motifs, gold kundal earrings catching the "
+    "light, royal silk angavastram in crimson and peacock blue, "
+    "intricate gold armbands, radiant divine golden aura (tejas), "
+    "majestic Indian mythological grandeur, "
+    "storm-dark sky pierced by dramatic golden light shafts, "
 )
 
 # Benchmark prompt pack (2026-07-04) — palette codes lifted from the
@@ -438,17 +445,18 @@ def _pick_iconography_anchor(wardrobe_context: str) -> str:
 # / PROP shots get 16:9 (1344x768) — these benefit from horizontal sweep.
 # REACTION close-ups stay 9:16 (768x1344) — facial emotion is a vertical
 # composition. AMBIGUOUS defaults to vertical (safe fallback).
-# 2026-07-04 quality pass: 768x1344 sources stretched to the 1080x1920
-# output were visibly soft, and wide shots (cropped for the vertical
-# frame during Ken Burns) were worse — effective sub-500px source per
-# visible region. Generate at native output scale instead (multiples of
-# 16 for FLUX). ~2x pixels per CF call: a few extra seconds per image.
+# Phase 25 A1 (2026-07-04): 896x1600 = 1.43MP — the schnell coherence
+# sweet spot. The earlier native-res attempt (1088x1920 = 2.1MP) pushed
+# schnell past its ~1MP structural training range: elongated torsos,
+# smeared mid-ground figures, duplicated anatomy (user forensic on the
+# unlisted lKTS5-leBng). 1.43MP keeps proportions correct while giving
+# +36% detail over the original 768x1344.
 _RESOLUTION_BY_SHOT_TYPE = {
-    "ENVIRONMENT": (1920, 1088),
-    "ACTION":      (1920, 1088),
-    "PROP":        (1920, 1088),
-    "REACTION":    (1088, 1920),
-    "AMBIGUOUS":   (1088, 1920),
+    "ENVIRONMENT": (1600, 896),
+    "ACTION":      (1600, 896),
+    "PROP":        (1600, 896),
+    "REACTION":    (896, 1600),
+    "AMBIGUOUS":   (896, 1600),
 }
 
 
@@ -741,11 +749,16 @@ _NEGATIVE_PHASE23_1_ANTI_WESTERN = (
 # show Mahabharata warriors BARE-CHESTED with ornate gold ornaments on bare
 # skin (Karna sun-kavacha glowing FROM chest, Arjuna gold yajnopavita +
 # arm bands + ornate quiver). These tokens close the gap.
+# Phase 25 (2026-07-04): Divine Vedic Warrior doctrine — ENGRAVED GOLD
+# KAVACHA is now the mandatory hero look (Netflix Kurukshetra / Sanatan
+# Legends reference). This block previously banned ALL chest armor
+# including gold/kavacha forms; it now bans only the WESTERN/steel
+# variants so the negative stack stops fighting the desired look on
+# providers that honor negatives.
 _NEGATIVE_PHASE23_4_ANTI_PLATE = (
-    ",breastplate,chest plate,decorative breastplate,ornamental breastplate,"
-    "cuirass,body armor,full plate armor,gold breastplate,bronze breastplate,"
-    "armored chest,armored torso,covered torso,torso armor,metal chest guard,"
-    "kavacha breastplate,ornate breastplate,shirted warrior,tunic warrior"
+    ",steel breastplate,iron breastplate,medieval chest plate,"
+    "steel cuirass,full plate armor,riveted body armor,"
+    "metal chest guard,shirted warrior,tunic warrior"
 )
 _NEGATIVE_PHASE23_1_ANTI_WESTERN = _NEGATIVE_PHASE23_1_ANTI_WESTERN + _NEGATIVE_PHASE23_4_ANTI_PLATE
 
@@ -2297,6 +2310,28 @@ def generate_images(scenes_or_script, single_shot: bool = False, series: str = "
                 ] + list(compositions[1:])
                 print(f"    [hook] scene 0 shot 0 → {intensity} (mood='{mood[:40]}')")
             # else: scene_compositions stays as the full standard list
+
+        # Phase 25 A2b (2026-07-04): shot-type-appropriate directive in
+        # single-shot mode. Production previously prefixed the wide
+        # ENVIRONMENT directive to EVERY scene — REACTION close-ups were
+        # being told "camera pulled FAR BACK / AVOID facial closeup",
+        # fighting their own intent (user forensic: ghost-figure duds).
+        if single_shot and series == "mahabharata" and i != 0:
+            _st_route = (scene.get("shot_type") or "").strip().upper()
+            if _st_route == "REACTION":
+                scene_compositions = [_SHOT_COMPOSITIONS[2]]
+            elif _st_route in ("ACTION", "AMBIGUOUS"):
+                scene_compositions = [_SHOT_COMPOSITIONS[1]]
+            elif _st_route == "PROP":
+                scene_compositions = [(
+                    "MACRO DETAIL SHOT, ",
+                    "extreme close-up macro detail, intricate "
+                    "micro-engravings on antique Vedic gold catching the "
+                    "light, glistening texture, hyper-detailed surfaces, "
+                    "shallow depth of field, cinematic volumetric rim "
+                    "lighting. ",
+                )]
+            # ENVIRONMENT keeps the wide establishing directive.
 
         # Benchmark prompt pack (2026-07-04) — CLIMAX = ICONIC TABLEAU.
         # Every 30M+ reference winner is built around ONE named canonical

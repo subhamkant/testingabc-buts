@@ -727,9 +727,13 @@ _STORY_ENTITY_MAP = {
 # vocabulary in image_prompts. Negated usage ("NO breastplate", "zero
 # plate armor" — which the doctrine itself REQUIRES as a negative tail)
 # is stripped before checking so compliant prompts don't false-positive.
+# Phase 25 (2026-07-04): doctrine flipped to Divine Vedic Warrior —
+# engraved gold kavacha is now MANDATORY vocabulary, so the tripwire
+# narrows to explicit WESTERN-armor markers only.
 _ARMOR_FORBIDDEN_RE = re.compile(
-    r"\b(plate armor|breastplate|pauldrons?|chain\s?mail|cuirass|"
-    r"full armor|metal armor|armou?red|body armor)\b", re.IGNORECASE)
+    r"\b(plate armor|plate mail|pauldrons?|chain\s?mail|cuirass|"
+    r"gauntlets?|steel armor|iron armor|gothic|knight|medieval)\b",
+    re.IGNORECASE)
 _ARMOR_NEGATION_RE = re.compile(
     r"\b(?:no|zero|not|never|without)\b[^,.;]{0,45}", re.IGNORECASE)
 
@@ -1584,7 +1588,7 @@ def _enumerate_failing_gates(data: dict, lang_label: str = "Hindi") -> set:
 _VIOLATION_REMINDERS = {
     "length":       "Your voiceover word count was out of range AFTER compression (final text must be 75-130 Hindi words; the compression pass targets 95-110 but could not safely trim your draft — usually because anchor phrases were too long or too densely packed to preserve). Write a TIGHTER draft this time: aim 100-120 words directly, keep anchor_phrases short (2-3 words), match the SHAPE of the concrete 96-word example — 8-word action-verb opener, 3-4 sensory beats, dialogue beat in quotes, लेकिन/परंतु midpoint, closing question echoing the opener noun. broll MUST be 8-10 entries.",
     "anchors":      "Your broll anchor_phrase entries failed validation. Each anchor_phrase MUST be 2-4 words appearing VERBATIM in the voiceover, in ASCENDING order by character position. Final anchor MUST land in the LAST 30% of the voiceover.",
-    "wardrobe_set": "Every broll entry MUST declare a wardrobe_context field, one of: WAR / PALACE / DIVINE / FOREST / JOURNEY / AFTERMATH. Pick the context that matches THAT specific broll moment. ALSO: image_prompts MUST NOT use armor vocabulary (armored / plate armor / breastplate / pauldrons / chainmail / cuirass) in POSITIVE form — Vedic warriors are BARE-CHESTED with silk angavastram + gold ornaments on bare skin. Negations ('NO breastplate, NO plate armor') are fine and encouraged as the closing tail.",
+    "wardrobe_set": "Every broll entry MUST declare a wardrobe_context field, one of: WAR / PALACE / DIVINE / FOREST / JOURNEY / AFTERMATH. Pick the context that matches THAT specific broll moment. ALSO: image_prompts MUST NOT use WESTERN armor vocabulary (plate armor / plate mail / pauldrons / chainmail / cuirass / gothic / knight / medieval) — Vedic warriors wear intricately ENGRAVED VEDIC GOLD KAVACHA with sun/peacock motifs, gold kundal earrings, royal silk angavastram, radiating divine golden tejas.",
     "story_entity": "Your voiceover names a story-critical entity (e.g. कुत्ता / धनुष / सुदर्शन / कुंडल / बच्चे) but NO broll image_prompt contains its English equivalent. AT LEAST ONE broll image_prompt MUST have the entity as a clearly identifiable foreground subject — e.g. anchor 'कुत्ता का साथ' → image_prompt 'a loyal stray dog walking close beside Yudhishthira, foreground subject'. The audience cannot feel the dog's presence if FLUX never renders one.",
     "verb_action":      "Your broll image_prompts described static portraits where the voiceover described ACTIONS. When the anchor_phrase contains an action verb (उठाई / गिरा / डूबता / काटा / etc.), the image_prompt MUST contain the English equivalent (raising / fell / sinking / cut / etc.) as the verb the image depicts. Example: anchor 'रथ का पहिया डूबता' → image_prompt 'extreme close-up of a wooden chariot wheel sinking into wet mud, mud splattered on the spokes' (NOT 'Karna's stressed face with chariot in background').",
     "subject_diversity": "Your broll failed the film-edit diversity rules. Either (a) 3+ consecutive shots of the same TYPE, (b) only 1 type across all entries, (c) >65% REACTION+AMBIGUOUS, or (d) 3 consecutive image_prompts opening with the SAME canvas phrase (FLUX renders identical openings as identical frames). Cycle 4 shot types — ACTION / REACTION / PROP (leads with the OBJECT) / ENVIRONMENT (wide vista) — AND vary the canvas LOCATION frame to frame: battlefield → palace court → riverbank → macro object → army camp → forest. Max 3 battlefield-canvas frames. Never open 3 consecutive prompts with the same words.",
@@ -2090,54 +2094,54 @@ BROLL RULES (HARD — violation = REJECT):
          back the Gandiva bow with white-knuckled fingers, radiant
          golden-bronze Indian skin, luminous divine golden kavacha
          armor fused to bare chest, intricate gold kundal earrings,
-         battle-stained dark red silk dhoti, NO leather pauldrons"
+         battle-stained crimson silk dhoti, divine golden aura"
 
-      MAHABHARATA WARDROBE DOCTRINE (Phase 23.4 → 23.9, 2026-06-28) —
-      Vedic kshatriya warriors fight BARE-CHESTED with only yajnopavita
-      thread + gold armbands + gold necklaces ON BARE SKIN. The
-      "kavacha" for Karna/Duryodhana is a divine GLOW emanating from
-      WITHIN the bare chest skin, NOT a Western plate-mail breastplate
-      worn over a shirt.
+      MAHABHARATA WARDROBE DOCTRINE (Phase 25 "Divine Vedic Warrior",
+      2026-07-04 — supersedes the Phase 23.4-23.9 bare-chest mandate) —
+      Vedic kshatriya heroes are DIVINE ROYAL WARRIORS: they wear
+      intricately ENGRAVED VEDIC GOLD KAVACHA (Indian-style golden
+      chest kavacha with sun / peacock / lotus motifs, jewel-set,
+      radiant), gold kundal earrings, silk angavastram in royal colors,
+      and glow with divine tejas. Reference: Netflix Kurukshetra's
+      Suryaputra Karn, Sanatan Legends AI. What remains ABSOLUTELY
+      BANNED is WESTERN armor: medieval plate mail, gothic knights,
+      steel pauldrons, chainmail, Roman cuirass.
 
-      *** PHASE 23.9 HARD RULE (2026-06-28) — image_prompt VOCABULARY: ***
+      *** PHASE 25 HARD RULE — image_prompt VOCABULARY: ***
 
-      FORBIDDEN WORDS in your image_prompts (your rendered output's
-      OUTPUT will be REJECTED by FLUX's negative prompt if any of these
-      appear — and the gate validator may quarantine the script):
-        armor / armored / breastplate / plate / chestplate / chest plate
-        / cuirass / pauldrons / shoulder pads / gauntlets / chainmail /
-        chain mail / helm / helmet (unless preceded by "Indian classical
-        mukut") / armored warrior / armored commander / heavy steel /
-        steel plates / metal plates / segmented plates
-
-      REQUIRED in EVERY warrior-character image_prompt: at least ONE of
-      these literal phrases must appear verbatim, ideally near the
-      character description:
-        "bare-chested" / "bare chest visible" / "bare muscular chest"
+      FORBIDDEN WORDS in your image_prompts (Western-armor markers —
+      the gate validator quarantines scripts containing them):
+        plate armor / plate mail / chainmail / chain mail / cuirass /
+        pauldrons / gauntlets / steel armor / iron armor / gothic /
+        knight / medieval / heavy steel / metal plates / segmented
+        plates / visor
 
       REQUIRED-TYPE TOKENS (use 2+ in every warrior image_prompt):
-        "silk angavastram" / "silk dhoti" / "gold yajnopavita thread" /
-        "carved bronze armlets" / "heavy gold necklace on bare skin" /
-        "rudraksha mala" / "saffron silk drape"
+        "engraved Vedic gold kavacha" / "golden kavacha with sun motif"
+        / "gold kundal earrings" / "royal silk angavastram" /
+        "intricate gold armbands" / "divine golden aura (tejas)" /
+        "jeweled gold mukut" / "silk dhoti in royal colors"
 
-      Replace "armor" with "ornate gold ornaments". Replace "armored
-      warrior" with "bare-chested warrior with gold yajnopavita".
-      Replace "breastplate" with "bare chest" or (for Karna only)
-      "luminous sun-kavacha glow embedded into bare chest skin".
-      Replace "shoulder pads / pauldrons" with "bare shoulders draped
-      with silk angavastram" or "carved bronze armlets". Replace
-      "helmet" with "Indian classical mukut" (PALACE/DIVINE only —
-      WAR/FOREST/JOURNEY scenes the warrior wears NO crown).
+      Character-specific grandeur:
+        Karna  -> "Surya-putra radiating warm golden solar aura, engraved
+                   gold kavacha with sun motif fused to his bronze skin,
+                   divine gold kundal earrings, crimson silk"
+        Arjuna -> "royal Pandava archer, ornate engraved Vedic gold
+                   chest kavacha, peacock-blue royal silk drape, divine
+                   glowing Gandiva bow"
 
-      WHY: FLUX defaults to Roman/medieval plate armor when given the
-      word "warrior" without an explicit "bare chest" anchor. Phase 23.7
-      anti-Western negatives caught the WORST cases (no overt RPG spikes
-      / Christian crosses) but FLUX still found "armored commander"
-      pattern paths via the LLM-emitted base_prompt itself. By
-      FORBIDDING the LLM from emitting the word "armor" entirely, and
-      REQUIRING the literal "bare-chested" anchor, we starve FLUX of
-      the Western tokens it wants to use. This is the LLM-emission-
-      level fix that closes the Phase 23.7/23.8 gap.
+      Replace "armor" (generic) with "engraved Vedic gold kavacha".
+      Replace "helmet" with "jeweled gold mukut". Micro-texture is
+      MANDATORY on close shots: "intricate micro-engravings on antique
+      Vedic gold catching the light, glistening sweat droplets,
+      hyper-detailed skin pores, cinematic volumetric rim lighting".
+
+      WHY: FLUX defaults to Roman/medieval plate when given bare
+      "warrior" tokens. Naming the SPECIFIC Indic form ("engraved Vedic
+      gold kavacha with sun motif") routes it to the correct visual
+      family — regal, divine, unmistakably Indian — while the Western
+      markers stay banned at both the vocabulary gate and the negative
+      stack.
 
       Reference images from the channel owner: Karna with sun-medallion
       kavacha glowing FROM bare chest skin (no armor over it); Arjuna
