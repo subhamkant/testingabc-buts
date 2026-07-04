@@ -762,10 +762,11 @@ def _check_wardrobe_context_set(broll: list) -> tuple[bool, str]:
         if hit:
             return False, (
                 f"broll[{i}] image_prompt uses FORBIDDEN armor vocabulary "
-                f"'{hit.group(1)}' — Vedic warriors are BARE-CHESTED with "
-                f"silk angavastram + gold ornaments on bare skin. Rewrite "
-                f"without armor words (negations like 'NO breastplate' "
-                f"are fine and encouraged)."
+                f"'{hit.group(1)}' — warriors wear engraved GOLDEN KAVACHA "
+                f"(Vedic gold armor), never Western plate/mail. Rewrite "
+                f"using 'engraved golden kavacha' vocabulary. NEVER write "
+                f"negations like 'NO breastplate' — the image model renders "
+                f"any noun it reads, even negated ones."
             )
     return True, ""
 
@@ -2143,81 +2144,81 @@ BROLL RULES (HARD — violation = REJECT):
       markers stay banned at both the vocabulary gate and the negative
       stack.
 
-      Reference images from the channel owner: Karna with sun-medallion
-      kavacha glowing FROM bare chest skin (no armor over it); Arjuna
-      bare-chested with gold yajnopavita + ornate gold arm bands +
-      ornate gold-edged quiver across bare back (NO chest plate); Bhima
-      bare-chested with thick gold necklace on bare chest.
+      Reference images from the channel owner (Phase 26 character
+      bibles, 2026-07-05): every major warrior wears ENGRAVED GOLDEN
+      KAVACHA on the battlefield — Karna's kavacha carries a blazing
+      sun emblem, Arjuna's is embossed gold, Bhishma's is silver,
+      Duryodhana's is mirror-polished gold. Krishna and Draupadi are
+      the exceptions: Krishna is the unarmored charioteer in pitambara
+      silk; Draupadi wears a plain deep-red sari.
 
-      PALACE / DIVINE contexts are the only exceptions (court silk
-      robes / celestial diaphanous shawls cover the chest legitimately).
-      In those contexts you may write "silk court robes" or "celestial
-      silk drape" but still NOT "armor" or "breastplate".
+      PALACE / DIVINE contexts: describe royal silk robes, zari
+      borders, and jewels — save the kavacha language for battlefield
+      scenes.
+
+      NEVER write negated nouns ("NO breastplate", "beardless",
+      "unarmed") — the image model renders any noun it reads, even
+      negated ones. Assert only what IS present.
 
       CANONICAL CHARACTER SIGNATURES (use these EXACT phrases):
 
-      Krishna: "vivid cobalt-blue divine Indian skin, BARE CHEST
-        visible, gold yajnopavita thread across bare chest, layered
-        gold-jewel chain necklaces on bare chest, dark wavy hair with
-        twin peacock feathers NOT a full crown, yellow pitambara silk
-        dhoti at waist only, holding bansuri flute, youthful build,
-        NO breastplate"
+      Krishna: "luminous monsoon-cloud blue divine skin, serene knowing
+        smile, dark curls with a single peacock feather, golden-yellow
+        pitambara silk bound by a crimson sash, layered gold necklaces,
+        divine charioteer holding the reins"
 
-      Karna: "radiant golden-bronze Indian skin, broad-shouldered
-        warrior, BARE-CHESTED with luminous divine sun-kavacha glow
-        emanating FROM WITHIN bare chest skin (kavacha embedded INTO
-        chest skin, NOT armor worn over it, NOT a breastplate),
-        intricate gold kundal earrings ALWAYS visible, battle-stained
-        dark red silk dhoti at waist, NO chest armor"
+      Karna: "radiant golden-bronze skin, wild shoulder-length dark
+        curls, engraved golden kavacha with a blazing sun emblem at the
+        center of his chest, gold kundal earrings, crimson sash over
+        steel-blue silk dhoti, flame-like solar aura"
 
-      Arjuna: "wheatish golden-bronze Indian skin, dark wavy hair tied
-        back, BARE-CHESTED warrior (NO breastplate, NO kavacha, NO
-        plate, NO shirt on torso), sacred gold yajnopavita thread
-        crossing bare chest diagonally, ornate gold armbands on bare
-        upper biceps, ornate gold-edged leather quiver slung across
-        bare back, drawing colossal Gandiva bow, cream silk dhoti at
-        waist, NO chest armor"
+      Arjuna: "youthful handsome clean-jawed face with a neat dark
+        mustache, jeweled golden Kirita diadem, embossed golden kavacha
+        chest armor, indigo-and-white silk dhoti with gold borders,
+        twin quivers, drawing the glowing Gandiva bow"
 
-      Bhishma: "weathered late-50s Indian face, long majestic silver-
-        white beard flowing to mid-chest NO mustache, BARE-CHESTED
-        elder warrior (NO breastplate, NO leather chest plate, NO
-        plate, NO shirt), sacred gold yajnopavita thread crossing
-        bare chest, simple gold armlets on bare upper arms, austere
-        off-white silk dhoti at waist, NO chest armor"
+      Bhishma: "flowing majestic silver-white hair and thick groomed
+        white beard, gleaming engraved silver kavacha, ivory-white
+        silks, silver-and-gold war diadem, towering ancient yet
+        powerfully muscled frame"
 
-      Draupadi: "luminous dark Indian skin, large expressive lotus
-        eyes, long untied black hair blowing in the wind, flowing
-        battle-stained crimson red silk sari, fierce proud posture"
+      Draupadi: "radiant fair wheatish-gold complexion with luminous
+        glowing skin, large kohl-lined lotus eyes, long untied black
+        hair flowing loose, deep-red silk sari, red kumkum mark,
+        fierce proud bearing"
 
       Eklavya: "dark mud-streaked tribal Indian skin, bare-chested
         with natural bark-cloth lower garment, severed right thumb
         ALWAYS visible (sometimes dripping blood), rudraksha bead
         necklace, intense devoted eyes"
 
-      Ashwatthama: "gaunt Indian face, haunted feral eyes, glowing
-        ruby-like gem embedded into the center of his forehead casting
-        a faint red light down his face, prematurely curse-white hair,
-        ash-smeared blood-streaked skin, tattered dark cloth dhoti"
+      Ashwatthama: "towering scholar-warrior, wild dark hair torn loose
+        from its ascetic topknot, a radiant divine gem blazing in the
+        center of his forehead, three white ash tripundra lines on his
+        brow, battle-scarred dark bronze kavacha, rudraksha strings"
+        — POST-CURSE wanderer scenes instead: "gaping raw bleeding
+        wound in the center of his forehead, matted filthy hair,
+        tattered dirty rags, agonized haunted eyes"
 
-      Bhima: "dark golden-bronze Indian skin, colossal heavily-muscled
-        warrior, BARE-CHESTED (NO breastplate, NO kavacha, NO plate,
-        NO shirt on torso), thick chunky gold necklace on bare massive
-        chest, ornate gold armbands on bare bulging biceps, rugged
-        leather belt over thick red silk dhoti at waist, gripping
-        massive battle-dented iron Gada mace, fierce dark moustache"
+      Bhima: "colossal heavily-muscled build, fierce dark moustache,
+        gleaming golden kavacha straining across his massive chest,
+        thick gold armbands, deep red silk dhoti, massive battle-dented
+        iron Gada mace"
 
-      Yudhishthira: "warm golden-bronze Indian skin, salt-and-pepper
-        short beard, deep sorrowful eyes, BARE-CHESTED (NO breastplate,
-        NO kavacha, NO plate, NO shirt on torso), sacred gold
-        yajnopavita thread crossing bare chest, soft red-gold
-        angavastram drape over ONE shoulder only (leaving other side
-        of chest bare), modest white-and-gold silk dhoti at waist,
-        NO chest armor, NO crown by default"
+      Yudhishthira: "warm golden-bronze skin, salt-and-pepper beard,
+        calm sorrowful dignity, refined gleaming golden kavacha over
+        white-and-gold royal silk, jeweled gold mukut with peacock
+        feather"
 
-      Duryodhana: "warm golden-bronze Indian skin, massive arrogant
-        prince, muscular broad-chested build, rich purple and gold
-        silk dhoti, intricate golden kavacha, ornate royal mukut crown,
-        gripping a heavy golden Gada mace on shoulder"
+      Duryodhana: "colossal mountain-like physique, thick black beard,
+        proud cruel entitled sneer, mirror-polished golden kavacha,
+        jeweled gold war-crown with a crimson plume crest, blood-red
+        and black silks, colossal spiked golden Gada mace on shoulder"
+
+      Abhimanyu: "sixteen-year-old boy warrior, smooth soft boyish
+        face, slim lithe teenage build, thick dark curls under a light
+        golden diadem, form-fitting gleaming golden kavacha, crimson
+        silk dhoti, masterwork bow"
 
       Shakuni: "sharp angular Indian features, grey-streaked beard,
         calculating gleaming eyes, slightly hunched posture, dark
