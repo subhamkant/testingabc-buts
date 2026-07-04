@@ -133,9 +133,17 @@ def main():
             weight_name="ip_adapter.safetensors",
             image_encoder_pretrained_model_name_or_path="openai/clip-vit-large-patch14"
         )
-    # Quantized modules pin themselves to the GPU; offload the rest on
-    # demand instead of a blanket .to('cuda').
-    pipe.enable_model_cpu_offload()
+    # Quantized modules pin themselves to the GPU and CANNOT be moved
+    # (bnb 4-bit forbids .to()/offload hooks — suspected silent death of
+    # smoke v8 right after 'Generating hero frame idx=0'). Move ONLY the
+    # small unquantized parts explicitly: VAE ~0.2GB, CLIP ~0.3GB, and
+    # the IP-Adapter image encoder ~0.6GB. Total ~10.5GB on a 15.6GB T4.
+    pipe.vae.to("cuda")
+    pipe.text_encoder.to("cuda")
+    if getattr(pipe, "image_encoder", None) is not None:
+        pipe.image_encoder.to("cuda")
+    print("Pipeline placed: quantized transformer+T5 pinned, "
+          "vae/clip/image-encoder moved to cuda")
 
     # Sprint 2.2 (2026-07-04) — hero_mode: lock the video's hero frames to
     # the channel's APPROVED master anchor (assets/character_anchors/) via
@@ -245,4 +253,13 @@ def main():
     torch.cuda.empty_cache()
 
 if __name__ == "__main__":
-    main()
+    # Print any failure to STDOUT — Kaggle's log stream truncates stderr
+    # under heavy progress-bar noise, which made smoke v8's death after
+    # 'Generating hero frame idx=0' completely silent.
+    try:
+        main()
+    except BaseException:
+        import traceback
+        print("RUN_FLUX_PHASE FAILED:\n" + traceback.format_exc(),
+              flush=True)
+        sys.exit(1)
