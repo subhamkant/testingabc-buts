@@ -86,6 +86,20 @@ def main():
     from transformers import BitsAndBytesConfig as TransformersBnb
 
     MODEL = "black-forest-labs/FLUX.1-schnell"
+    # ORDER MATTERS (2026-07-04, third OOM iteration): transformers' new
+    # core_model_loading materializes checkpoint tensors on the GPU in
+    # fp16 BEFORE bnb quantizes them — T5-XXL's transient spike (~9GB)
+    # needs an EMPTY GPU. The diffusers NF4 loader is transient-friendly
+    # (it fit the 24GB transformer into 14.6GB fine). So: spiky T5 first,
+    # well-behaved transformer second.
+    print("Loading T5-XXL text encoder (NF4, empty GPU)...")
+    text_encoder_2 = T5EncoderModel.from_pretrained(
+        MODEL, subfolder="text_encoder_2",
+        quantization_config=TransformersBnb(
+            load_in_4bit=True, bnb_4bit_quant_type="nf4",
+            bnb_4bit_compute_dtype=torch.float16))
+    gc.collect()
+    torch.cuda.empty_cache()
     print("Loading FLUX-schnell transformer (NF4)...")
     transformer = FluxTransformer2DModel.from_pretrained(
         MODEL, subfolder="transformer",
@@ -93,15 +107,6 @@ def main():
             load_in_4bit=True, bnb_4bit_quant_type="nf4",
             bnb_4bit_compute_dtype=torch.float16),
         torch_dtype=torch.float16)
-    # T5 in NF4 too — 8-bit OOM'd the T4: NF4 transformer (~6.5GB) plus
-    # T5-8bit load transients pushed past 14.31GB allocated. NF4 T5 is
-    # ~2.7GB with smaller per-tensor materialization peaks.
-    print("Loading T5-XXL text encoder (NF4)...")
-    text_encoder_2 = T5EncoderModel.from_pretrained(
-        MODEL, subfolder="text_encoder_2",
-        quantization_config=TransformersBnb(
-            load_in_4bit=True, bnb_4bit_quant_type="nf4",
-            bnb_4bit_compute_dtype=torch.float16))
     print("Assembling pipeline...")
     pipe = FluxPipeline.from_pretrained(
         MODEL, transformer=transformer, text_encoder_2=text_encoder_2,
