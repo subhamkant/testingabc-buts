@@ -1,0 +1,115 @@
+{
+  "ts": "2026-07-04T12-22-31",
+  "language": "hi",
+  "score": 18,
+  "score_max": 25,
+  "violation": "archetype",
+  "topic": "Karna's Untold Regret Haunted Loyalty",
+  "title": "कर्ण की सबसे बड़ी गलती | Karna's Biggest Mistake",
+  "script": {
+    "voiceover": "कर्ण अपने धनुष की प्रत्यंचा कसता है, युद्धभूमि का हर कंपन उसके अंदर गूँजता है। एक बेटा जिसे माँ ने त्यागा। उसकी वफ़ादारी सिर्फ़ एक आदमी के लिए थी, जिसने उसे सम्मान दिया। लेकिन जब कुंती सामने आई, आँसू लिए, और बोलीं “तू मेरा पुत्र है”, तब एक पल के लिए पूरा संसार थम गया। उस पल की टीस, उसकी आत्मा में गहरा घाव बन गई। पाण्डवों के खिलाफ़ लड़ने की प्रतिज्ञा, दुर्योधन का विश्वास... क्या था सही, क्या गलत, यह सवाल उसके दिल को चीरता रहा। कृष्ण ने भी कहा, “धर्म तेरे साथ है, कर्ण,” पर उसने अपना रास्ता चुन लिया। उस निर्णय के बाद... कर्ण की आत्मा कभी शांत नहीं हुई। क्या उसकी वफ़ादारी, खुद उसी के लिए सबसे बड़ा श्राप थी?",
+    "broll": [
+      {
+        "image_prompt": "Action moment frozen mid-tension, Karna drawing back the Gandiva bowstring with white-knuckled fingers, his radiant golden-bronze Indian skin glowing with the luminous divine sun-kavacha emanating FROM WITHIN bare chest skin (kavacha embedded INTO chest skin, NOT armor worn over it), intricate gold kundal earrings visible, battle-stained dark red silk dhoti, harsh golden-hour edge-light on a sun-baked Kurukshetra battlefield with distant marching armies, saffron-and-crimson palette, warm sunset amber + bronze, faces clearly lit, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text.",
+        "anchor_phrase": "धनुष की प्रत्यंचा कसता",
+        "mood": "tense, resolute, internal conflict",
+        "wardrobe_context": "WAR",
+        "shot_type": "ACTION"
+      },
+      {
+        "image_prompt": "Tight close-up of Karna's tear-streaked face, hollow-eyed with deep sorrow and lingering pain, radiant golden-bronze Indian skin, bare-chested with luminous divine sun-kavacha glow embedded into bare chest skin, intricate gold kundal earrings visible, saffron-and-crimson palette, warm sunset amber + bronze, harsh golden-hour edge-light, faces visible and warm, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text.",
+        "anchor_phrase": "माँ ने त्यागा",
+        "mood": "sorrowful, rejected, pensive",
+        "wardrobe_context": "WAR",
+        "shot_type": "REACTION"
+      },
+      {
+        "image_prompt": "[POWER-LOOM] Wide cinematic shot of a dim, dust-choked tent in the army camp at night, Kunti, a weary but graceful older Indian woman with sorrowful dignified eyes, silver-streaked dark hair, simple unadorned white silk sari, kneels before a stunned Karna, radiant golden-bronze Indian skin, bare-chested with luminous divine sun-kavacha glow emanating FROM WITHIN bare chest skin (kavacha embedded INTO chest skin), intricate gold kundal earrings, battle-stained dark red silk dhoti, Kunti's face tear-streaked, saffron-and-crimson palette, warm sunset amber + bronze, golden divine glow, faces clearly lit, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text.",
+        "anchor_phrase": "कुंती सामने आई",
+        "mood": "revelation, shock, grief",
+        "wardrobe_context": "WAR",
+        "shot_type": "REACTION"
+      },
+      {
+        "image_prompt": "Close-up of Karna's clenched jaw and trembling lips, his eyes wide-eyed with internal struggle, radiant golden-bronze Indian skin, bare-chested with luminous divine sun-kavacha glow, intricate gold kundal earrings, sweat-drenched skin, saffron-and-crimson palette, warm sunset amber + bronze, harsh golden-hour edge-light, embers in foreground, faces visible and warm, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text.",
+        "anchor_phrase": "दिल को चीरता",
+        "mood": "anguish, torn, desperate",
+        "wardrobe_context": "WAR",
+        "shot_type": "REACTION"
+      },
+      {
+        "image_prompt": "[CONFRONTATION-WIDE] Sweeping panoramic shot, riverbank at dawn, vivid cobalt-blue divine Indian skin Krishna, bare chest visible, gold yajnopavita thread across bare chest, layered gold-jewel chain necklaces on bare chest, dark wavy hair with twin peacock feathers, yellow pitambara silk dhoti at waist only, holding bansuri flute, youthful build, gently addressing Karna, radiant golden-bronze Indian skin, broad-shouldered warrior, bare-chested with luminous divine sun-kavacha glow emanating FROM WITHIN bare chest skin, intricate gold kundal earrings, battle-stained dark red silk dhoti at waist, both figures in a golden-hour glow, saffron-and-crimson palette, warm sunset amber + bronze, faces clearly lit, harsh golden-hour edge-light, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text.",
+        "anchor_phrase": "कृष्ण ने भी कहा",
+        "mood": "divine guidance, solemn, fateful",
+        "wardrobe_context": "JOURNEY",
+        "shot_type": "AMBIGUOUS"
+      },
+      {
+        "image_prompt": "Karna walking away from the riverbank, his back to the viewer, broad-shouldered silhouette against the rising sun, radiant golden-bronze Indian skin, bare-chested with luminous divine sun-kavacha glow, intricate gold kundal earrings, battle-stained dark red silk dhoti, a resolute but haunted posture, saffron-and-crimson palette, warm sunset amber + bronze, golden divine glow, faces visible and warm, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text.",
+        "anchor_phrase": "रास्ता चुन लिया",
+        "mood": "chosen fate, lone, resolute sadness",
+        "wardrobe_context": "JOURNEY",
+        "shot_type": "AMBIGUOUS"
+      },
+      {
+        "image_prompt": "[WITNESS-FROM-BEHIND] Sweeping shot of Karna walking away from the smoldering ruins of Kurukshetra battlefield at fading dusk, ash-covered ground, several prone bodies of fallen soldiers in the foreground (faces withheld), his form bathed in a dim, harsh golden-hour edge-light, his radiant golden-bronze Indian skin, bare-chested with luminous divine sun-kavacha glow, intricate gold kundal earrings, battle-stained dark red silk dhoti, a resolute but haunted posture, saffron-and-crimson palette, warm sunset amber + bronze, faces visible and warm, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text.",
+        "anchor_phrase": "आत्मा कभी शांत",
+        "mood": "haunted, regretful, desolation",
+        "wardrobe_context": "WAR",
+        "shot_type": "AMBIGUOUS"
+      },
+      {
+        "image_prompt": "Wide cinematic shot of an abandoned, dust-choked battlefield at fading dusk, a single broken chariot wheel half-buried in the blood-soaked mud, distant silhouettes of lone carrion birds against a smoldering orange sky, embers in foreground, saffron-and-crimson palette, warm sunset amber + bronze, faces visible and warm, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text.",
+        "anchor_phrase": "सबसे बड़ा श्राप",
+        "mood": "lingering desolation, tragic, haunting",
+        "wardrobe_context": "AFTERMATH",
+        "shot_type": "ENVIRONMENT"
+      }
+    ],
+    "title": "कर्ण की सबसे बड़ी गलती | Karna's Biggest Mistake",
+    "hook_title": "कर्ण की एक गलती",
+    "description": "▶️ अगला भाग: Karna's Greatest Mistake Was Rejection\n\nएक माँ के त्याग से जन्मी वफ़ादारी, एक योद्धा के हृदय में गहरा घाव बन गई। कर्ण की सबसे बड़ी गलती क्या थी?\n\n#Shorts #Mahabharata #महाभारत #Krishna #HinduMythology\n\nमहाभारत का नायक कर्ण, जिसने जीवन भर सम्मान की तलाश में अपनी वास्तविक पहचान को त्याग दिया। कुंती के आँसुओं और कृष्ण के सत्य के बीच, उसने दुर्योधन के प्रति अपनी वफ़ादारी चुनी। यह चुनाव उसके लिए एक मीठा ज़हर बन गया, जिसने उसे महान बनाया पर भीतर से तोड़ दिया। उसकी वफ़ादारी ही उसका सबसे बड़ा श्राप बन गई, जिसकी टीस उसकी आत्मा में हमेशा गूँजती रही।\n\n#Shorts #Mahabharata #महाभारत #Hindu #BhagavadGita #भगवद_गीता #Krishna #कृष्ण #Arjuna #अर्जुन #Karna #कर्ण #Bhishma #भीष्म #Draupadi #द्रौपदी #Kurukshetra #कुरुक्षेत्र #AncientIndia #IndianMythology #Dharma #MythologyShorts #VedicWisdom #HinduDharma #IndianHistory #SpiritualShorts #PauranikKathayein #SanatanDharma #HindiShorts #trending>",
+    "tags": [
+      "Karna",
+      "कर्ण",
+      "loyalty",
+      "rejection",
+      "regret",
+      "Mahabharata",
+      "महाभारत",
+      "Shorts",
+      "Hindu mythology",
+      "Karna's mistake",
+      "Kunti",
+      "कुंती",
+      "Krishna",
+      "कृष्ण"
+    ],
+    "thumbnail_prompt": "Dramatic cinematic portrait of Karna, tear-streaked face with a haunted, sorrowful expression, radiant golden-bronze Indian skin, luminous divine sun-kavacha glow emanating FROM WITHIN bare chest skin, intricate gold kundal earrings, background split between battlefield chaos and Kunti's tearful face, warm sunset amber + bronze, saffron-and-crimson palette, harsh golden-hour edge-light.",
+    "quotable_line": "वफ़ादारी जब मजबूरी बने, तो वो सबसे बड़ा श्राप बन जाती है।",
+    "pinned_question": "❓ वफ़ादारी जब मजबूरी बने, तो वो सबसे बड़ा श्राप बन जाती है। क्या आप इससे सहमत हैं?",
+    "next_seed": "कर्ण का सबसे बड़ा पश्चाताप, जिसे उसने कभी स्वीकारा नहीं।",
+    "language": "hi",
+    "content_type": "story",
+    "topic": "Karna's Untold Regret Haunted Loyalty",
+    "series": "mahabharata",
+    "episode_n": 19,
+    "arc_character_devanagari": "कर्ण",
+    "arc_character_english": "Karna — The Forgotten Son",
+    "_phase18_strict_pass": false,
+    "_phase18_score": 18,
+    "_phase18_score_max": 25,
+    "_phase18_score_floor": 19,
+    "_phase18_violation": "archetype",
+    "_phase18_failing_gates": [
+      "archetype",
+      "bookend",
+      "char_names",
+      "engagement",
+      "intensity",
+      "rehook",
+      "subject_diversity"
+    ],
+    "_phase18_fatal_failures": []
+  }
+}
