@@ -333,20 +333,30 @@ _HINDU_ICONOGRAPHY_BATTLEFIELD_ANCHOR = _HINDU_ICONOGRAPHY_BASE + (
     "draped over bare shoulders, heavy gold necklaces resting on bare "
     "skin, intricately carved bronze armlets on upper arms, gold "
     "yajnopavita thread, torsos of bare skin and flowing silk textile "
-    "only, "
+    "only, storm-dark sky pierced by dramatic golden light shafts, "
 )
 
+# Benchmark prompt pack (2026-07-04) — palette codes lifted from the
+# 30-56M-view reference set (Netflix Kurukshetra + top clip channels):
+# PALACE = saturated jewel tones, DIVINE = full golden monochrome with
+# extreme scale contrast (the 258K zero-cut Viraat Roop composition),
+# WAR = storm-dark pierced by golden light shafts. Explicit palettes
+# stop FLUX washing scenes into muddy grey.
 _HINDU_ICONOGRAPHY_PALACE_ANCHOR = _HINDU_ICONOGRAPHY_BASE + (
     "ornate Nagara-style palace court with carved stone columns, polished "
     "marble floor with scattered marigold petals, arched windows admitting "
     "morning light, multiple courtiers and elders visible in mid-ground, "
-    "warm oil-lamp glow filling the chamber, "
+    "warm oil-lamp glow filling the chamber, rich saturated jewel-tone "
+    "palette — deep crimson, emerald, sapphire silk and glowing gold leaf, "
 )
 
 _HINDU_ICONOGRAPHY_DIVINE_ANCHOR = _HINDU_ICONOGRAPHY_BASE + (
     "ethereal divine realm with celestial light beams cutting through "
     "swirling mist, towering cosmic architecture, divine radiance filling "
-    "the frame, clouds parting to reveal cosmic vistas, "
+    "the frame, clouds parting to reveal cosmic vistas, EXTREME SCALE "
+    "CONTRAST — a tiny mortal figure dwarfed beneath a sky-filling divine "
+    "presence, kneeling in awe at the base of the frame, full golden "
+    "monochrome palette, molten gold light on every surface, "
 )
 
 # Phase 23: NEW. AFTERMATH gets its own anchor — the consequence beat
@@ -2273,6 +2283,25 @@ def generate_images(scenes_or_script, single_shot: bool = False, series: str = "
                 print(f"    [hook] scene 0 shot 0 → {intensity} (mood='{mood[:40]}')")
             # else: scene_compositions stays as the full standard list
 
+        # Benchmark prompt pack (2026-07-04) — CLIMAX = ICONIC TABLEAU.
+        # Every 30M+ reference winner is built around ONE named canonical
+        # moment staged at its peak (Sudarshan-vs-Bhishma, the half-lie,
+        # Viraat Roop) — never generic battle. The climax scene (broll[-2],
+        # right before the aftermath closer) gets tableau staging + divine
+        # glow in the LEADING tokens (the only real estate schnell fully
+        # honors — Phase 23.10b lesson). Mahabharata-only.
+        if (series == "mahabharata" and len(scenes) >= 4
+                and i == len(scenes) - 2):
+            scene_compositions = [(
+                "ICONIC TABLEAU, ",
+                "the single defining mythic moment of this story frozen at "
+                "its peak, staged like a legendary temple mural, divine "
+                "golden glow erupting around the central figures, dramatic "
+                "silhouettes against the light, every element charged with "
+                "consequence, ",
+            )] + list(scene_compositions[1:])
+            print(f"    [climax] scene {i} shot 0 → iconic tableau staging")
+
         for j, (angle_label, composition_directive) in enumerate(scene_compositions):
             output_path = f"{_TEMP_ROOT}/images/scene_{i:02d}_shot_{j:02d}.jpg"
             # Character injection is Mahabharata-specific (Krishna/Arjuna/etc.
@@ -2362,6 +2391,50 @@ def generate_images(scenes_or_script, single_shot: bool = False, series: str = "
                     continue
                 # fall through to per-scene checkpointing below
                 success = True
+            elif (j == 0 and series == "mahabharata" and len(scenes) >= 4
+                  and i in (0, len(scenes) - 2)
+                  and os.environ.get("FACE_SELECT", "true").strip().lower()
+                  not in ("0", "false", "no")):
+                # Best-of-N face-similarity selection (Sprint 2.2-lite,
+                # 2026-07-04). Hero scenes (hook + climax): generate N
+                # schnell candidates, keep the face closest to the
+                # character's approved master anchor. All-0.0 scores keep
+                # candidate 0 (the stable-seed baseline = pre-existing
+                # behavior); anchor/model failures fall through to the
+                # normal cascade untouched.
+                success = False
+                _hero_fs = _primary_character(raw_prompt)
+                from pipeline import face_selector as _fsel
+                _emb = (_fsel.get_anchor_embedding(_hero_fs)
+                        if _hero_fs else None)
+                if _emb is not None:
+                    _n = max(int(os.environ.get("FACE_SELECT_N", "3")), 2)
+                    _best, _best_score, _fs_scores = None, -1.0, []
+                    for _k in range(_n):
+                        try:
+                            _cand, _prov = generate_image_bytes(
+                                prompt, seed=seed + _k * 7919, width=img_w,
+                                height=img_h, mood=mood,
+                                style_suffix=style_suffix,
+                                negative_prompt=scene_negative)
+                        except Exception as _ce:
+                            print(f"    [face-select] candidate "
+                                  f"{_k+1}/{_n} failed: {str(_ce)[:60]}")
+                            continue
+                        _s = _fsel.score_candidate(_cand, _emb)
+                        _fs_scores.append(round(_s, 3))
+                        if _s > _best_score:
+                            _best, _best_score = _cand, _s
+                        time.sleep(3)
+                    if _best is not None:
+                        with open(output_path, "wb") as f:
+                            f.write(_best)
+                        shot_paths.append(output_path)
+                        print(f"    [face-select] scene {i+1} hero "
+                              f"'{_hero_fs}': scores={_fs_scores} → kept "
+                              f"{_best_score:.3f} (best-of-{_n})")
+                        success = True
+                # no anchor / all candidates failed → normal cascade below
             else:
                 success = False
             for attempt in range(3):
