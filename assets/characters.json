@@ -90,10 +90,10 @@
     "colors": "golden divine skin, gold-and-pearl mukut, vajra weapon"
   },
   "Duryodhana": {
-    "_revised": "Phase 23.2 (2026-06-28) — canonical signature_lock from user prompt library.",
-    "visual": "Duryodhana the Kaurava prince, tall powerfully built warrior with dark intense piercing eyes, proud arrogant set of the jaw, strong muscular frame, bare-chested with heavy layered gold haar necklaces and black-and-gold silk dhoti, imposing gold mukut, expression of ambition and barely contained anger, commanding menacing presence, elaborate gold ornaments",
-    "signature_lock": "imperial Duryodhana, dark gleaming golden kavacha armor with serpent motifs over rich purple-and-gold royal silk, heavy layered gold haar necklaces, imposing jeweled gold mukut, golden Gada mace on shoulder, sneering majestic menace",
-    "colors": "dark black-gold armor, intense dark eyes, imposing muscular build"
+    "_revised": "Phase 26 visual bible from user reference images + 3-scenario profile (2026-07-05). 'gold-and-iron plate armor'/'golden helmet with plumes' from profile translated to kavacha/war-crown vocabulary (banned Western tokens; user's own reference 1 shows the Roman-centurion failure mode). Differentiation from Bhima (the other gada-wielder): Duryodhana = full black beard + SPIKED golden gada + blood-red/black silks + arrogant sneer; Bhima = moustache only + iron gada.",
+    "visual": "Duryodhana the Yuvaraja in ostentatious court splendor: colossal muscled frame draped in blood-red and deep purple silks heavily woven with gold zari, massive jewel-encrusted golden diadem heavy on his brow, multi-layered gold collars and pearl strings cascading down his broad chest, thick gem-studded golden armbands squeezing his biceps, thick black beard, sharp challenging entitled gaze, arrogant chest-out dominance",
+    "signature_lock": "Duryodhana the tyrant crown prince, colossal mountain-like muscled physique with broad chest and thick arms, thick black beard and a proud cruel entitled sneer, incredibly thick gleaming engraved golden kavacha armor polished to a mirror shine over blood-red and black royal silks, towering jeweled gold war-crown with a crimson plume crest, extremely thick gem-studded gold angada armbands, resting a colossal spiked golden Gada mace on his shoulder with terrifying ease, golden hooded-serpent banner behind him, juggernaut tyrant presence",
+    "colors": "gleaming mirror-polished gold kavacha, blood-red and black silks, jeweled gold war-crown with crimson plume, spiked golden gada, hooded-serpent banner, thick black beard"
   },
   "Drona": {
     "_revised": "Phase 23.2 (2026-06-28) — canonical signature_lock from user prompt library.",
