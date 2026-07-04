@@ -1,0 +1,120 @@
+{
+  "ts": "2026-07-04T12-49-50",
+  "language": "hi",
+  "score": 17,
+  "score_max": 25,
+  "violation": "length",
+  "topic": "Bhishma's Untold Sin of Silence",
+  "title": "भीष्म की छुपी शर्म | Bhishma's Hidden Shame",
+  "script": {
+    "voiceover": "भीष्म सभा में मौन बैठ जाता है — उसकी आँखों में तूफान, पर होंठ सिले हुए। भरी सभा में जब द्रौपदी का अपमान होता है, उसके चीर हरण की पीड़ा कुरुवंश की आत्मा को छलनी कर रही थी। गंगापुत्र की अटल प्रतिज्ञा, उसे विवश करती है... लेकिन क्या धर्म की रक्षा के लिए अधर्म को देखना ही सबसे बड़ा अधर्म नहीं था? उसकी आत्मा भीतर ही भीतर जल रही थी, हर एक चीख एक घाव बन रही थी। 'तुम कुछ क्यों नहीं कहते, तात?' यह प्रश्न उसके कानों में बार-बार गूँजता है। वह अपने ही मौन के कारागार में कैद था, एक प्रतिज्ञा का कैदी। रक्त के आँसू बहाकर भी वह कुछ कह न सका। उस आँसू के बाद... कुरुक्षेत्र की मिट्टी कभी सूखी नहीं... क्या उसका मौन ही हस्तिनापुर के विनाश का मौन बीज नहीं था?",
+    "broll": [
+      {
+        "image_prompt": "Extreme macro close-up of the hero's weapon, caught mid-action, motion-blurred battlefield chaos behind, Casting long, trembling shadows, a lone oil lamp (diya) flickering faintly on a polished marble floor, cool moonlit silver-blue, restrained noble tones, faces clearly lit, cold pre-dawn moonlight, no deep shadows, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "मौन बैठ जाता है",
+        "mood": "quiet despair, fading hope",
+        "wardrobe_context": "PALACE",
+        "shot_type": "AMBIGUOUS"
+      },
+      {
+        "image_prompt": "Gripping his emotions, Bhishma's weather-beaten face, a tight close-up, his majestic silver-white beard framing a grim, wide-eyed expression, kohl-rimmed eyes reflecting a suppressed internal storm, cool moonlit silver-blue, restrained noble tones, white-and-silver silk dhoti, faces clearly lit, cold pre-dawn moonlight, no deep shadows, Bhishma, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "आँखों में तूफान",
+        "mood": "internal torment, silent suffering",
+        "wardrobe_context": "PALACE",
+        "shot_type": "ACTION"
+      },
+      {
+        "image_prompt": "[CONFRONTATION-WIDE] Recoiling dramatically, Draupadi, her long untied black hair blowing wildly around her tear-streaked face, fierce proud posture, flowing battle-stained crimson red silk sari, stands in a sweeping panoramic palace court with carved stone columns, Duryodhana stands to the right with a smug, arrogant expression, cool moonlit silver-blue, restrained noble tones, faces clearly lit, cold pre-dawn moonlight, no deep shadows, Draupadi, Duryodhana, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "द्रौपदी का अपमान",
+        "mood": "public humiliation, silent rage",
+        "wardrobe_context": "PALACE",
+        "shot_type": "REACTION"
+      },
+      {
+        "image_prompt": "Tearing and unraveling dramatically, a long, flowing crimson red silk sari, extreme close-up shot, being pulled taut, its fabric stretched to its breaking point, cool moonlit silver-blue, restrained noble tones, faces clearly lit, cold pre-dawn moonlight, no deep shadows, no character faces in frame, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "चीर हरण की पीड़ा",
+        "mood": "violation, helpless struggle",
+        "wardrobe_context": "PALACE",
+        "shot_type": "ACTION"
+      },
+      {
+        "image_prompt": "[WITNESS-FROM-BEHIND] Standing rigidly, Bhishma, weathered late-50s Indian face, long majestic silver-white beard, BARE-CHESTED elder warrior, sacred gold yajnopavita thread crossing bare chest, simple gold armlets on bare upper arms, austere off-white silk dhoti at waist, NO chest armor, his back to the viewer, watching Draupadi, tear-streaked and defiant, being dragged across the grand palace court by Dushasana, cool moonlit silver-blue, restrained noble tones, faces clearly lit, cold pre-dawn moonlight, no deep shadows, Bhishma, Draupadi, Dushasana, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "अटल प्रतिज्ञा",
+        "mood": "silent anguish, forced inaction",
+        "wardrobe_context": "PALACE",
+        "shot_type": "REACTION"
+      },
+      {
+        "image_prompt": "Glowing with subtle embers, Bhishma's bare muscular chest, close-up shot, the gold yajnopavita thread visible, embers appear to burn just beneath the skin, a visual representation of his soul consumed by guilt, cool moonlit silver-blue, restrained noble tones, white-and-silver silk dhoti, faces clearly lit, cold pre-dawn moonlight, no deep shadows, Bhishma, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "आत्मा भीतर ही भीतर जल",
+        "mood": "internal burning, spiritual anguish",
+        "wardrobe_context": "PALACE",
+        "shot_type": "AMBIGUOUS"
+      },
+      {
+        "image_prompt": "[WITNESS-FROM-BEHIND] Looming silently, Bhishma's back-of-head in foreground, long silver-white hair, his vision fixed on a distraught Draupadi mid-ground, her tear-streaked face looking pleadingly towards the assembled elders, Duryodhana and Shakuni smirking in the background, in a grand palace court, cool moonlit silver-blue, restrained noble tones, faces clearly lit, cold pre-dawn moonlight, no deep shadows, Bhishma, Draupadi, Duryodhana, Shakuni, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "क्यों नहीं कहते, तात?",
+        "mood": "agonizing dilemma, silent plea",
+        "wardrobe_context": "PALACE",
+        "shot_type": "REACTION"
+      },
+      {
+        "image_prompt": "Bound by invisible chains in an ornate palace chamber, Bhishma, weathered late-50s Indian face, long majestic silver-white beard, BARE-CHESTED elder warrior, his eyes closed in sorrow, symbolic heavy gold shackles around his wrists (no hands visible), cool moonlit silver-blue, restrained noble tones, faces clearly lit, cold pre-dawn moonlight, no deep shadows, Bhishma, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "मौन के कारागार में कैद",
+        "mood": "spiritual imprisonment, regret",
+        "wardrobe_context": "PALACE",
+        "shot_type": "AMBIGUOUS"
+      },
+      {
+        "image_prompt": "Walking away into the fading dusk light, Bhishma's silhouette against an abandoned, desolate throne room, a lone diya flickering faintly on a broken marble pedestal, cool moonlit silver-blue, restrained noble tones, no deep shadows, Bhishma, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "मौन बीज नहीं था",
+        "mood": "profound loss, lingering guilt",
+        "wardrobe_context": "AFTERMATH",
+        "shot_type": "ENVIRONMENT"
+      }
+    ],
+    "title": "भीष्म की छुपी शर्म | Bhishma's Hidden Shame",
+    "hook_title": "भीष्म का मौन पाप",
+    "description": "▶️ अगला भाग: Bhishma's Greatest Hidden Regret of Loyalty\n\nभीष्म की अटल प्रतिज्ञा उनकी सबसे बड़ी भूल बन गई, जिसने कुरुवंश को भीतर से खोखला कर दिया।\n\n#Shorts #Mahabharata #महाभारत #Krishna #HinduMythology\n\nमहाभारत में भीष्म की प्रतिज्ञा उन्हें आजीवन अटल रहने को विवश करती है, पर इसी मौन के पीछे छिपा था उनका सबसे गहरा दुख और अपराधबोध। द्रौपदी के चीर हरण जैसी भीषण घटनाओं के साक्षी बनकर भी, वे कुछ कह न सके, उनकी आत्मा भीतर ही भीतर जलती रही। इस मौसी ने सिर्फ उन्हें ही नहीं, बल्कि पूरे हस्तिनापुर के भाग्य को अंधकारमय कर दिया। क्या उनकी निष्ठा वास्तव में धर्म की रक्षा थी, या एक ऐसी जंजीर जिसने उन्हें विनाश का मूक दर्शक बना दिया?\n\n#Shorts #Mahabharata #महाभारत #Hindu #BhagavadGita #भगवद_गीता #Krishna #कृष्ण #Arjuna #अर्जुन #Karna #कर्ण #Bhishma #भीष्म #Draupadi #द्रौपदी #Kurukshetra #कुरुक्षेत्र #AncientIndia #IndianMythology #Dharma #MythologyShorts #VedicWisdom #HinduDharma #IndianHistory #SpiritualShorts #PauranikKathayein #SanatanDharma #HindiShorts #trending}",
+    "tags": [
+      "Bhishma's silence",
+      "Mahabharata ethics",
+      "internal conflict",
+      "Bhishma",
+      "भीष्म",
+      "Mahabharata",
+      "महाभारत",
+      "Shorts",
+      "Hindu mythology",
+      "Draupadi disrobing",
+      "दामिनी चीर हरण"
+    ],
+    "thumbnail_prompt": "Dramatic cinematic portrait of Bhishma, weathered late-50s Indian face, long majestic silver-white beard flowing, eyes wide with deep suppressed anguish and internal turmoil, a faint reflection of Draupadi's tear-streaked face in his kohl-rimmed eye, cool moonlit silver-blue palette, noble tones, high contrast, portrait composition, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+    "quotable_line": "मौन भी कभी-कभी सबसे बड़ा धोखा होता है।",
+    "pinned_question": "❓ मौन भी कभी-कभी सबसे बड़ा धोखा होता है। क्या आपको लगता है कि भीष्म का मौन ही सबसे बड़ा अधर्म था?",
+    "next_seed": "और इसी मौन ने उसकी वफ़ादारी पर गहरा दाग लगाया।",
+    "language": "hi",
+    "content_type": "story",
+    "topic": "Bhishma's Untold Sin of Silence",
+    "series": "mahabharata",
+    "episode_n": 28,
+    "arc_character_devanagari": "भीष्म",
+    "arc_character_english": "Bhishma — The Vow That Doomed a Dynasty",
+    "_phase18_strict_pass": false,
+    "_phase18_score": 17,
+    "_phase18_score_max": 25,
+    "_phase18_score_floor": 19,
+    "_phase18_violation": "length",
+    "_phase18_failing_gates": [
+      "archetype",
+      "char_names",
+      "intensity",
+      "length",
+      "repetition",
+      "shock_action",
+      "subject_diversity",
+      "tha_tic"
+    ],
+    "_phase18_fatal_failures": []
+  }
+}
