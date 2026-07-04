@@ -1,6 +1,17 @@
 import json
 import os
+import subprocess
 import sys
+
+# bitsandbytes MUST be upgraded BEFORE diffusers is imported — diffusers
+# caches the bitsandbytes version in its import_utils at import time, so
+# an in-main() upgrade is invisible to its NF4 validator (caught
+# 2026-07-04: 'requires the latest version' persisted across an upgrade
+# that ran after `from diffusers import ...`).
+print("Upgrading bitsandbytes (pre-import)...")
+subprocess.run([sys.executable, "-m", "pip", "install", "-q", "-U",
+                "bitsandbytes"], check=True)
+
 import torch
 import gc
 from diffusers import FluxPipeline
@@ -64,14 +75,7 @@ def main():
     # shards 1/3' (RAM kill). NF4-quantize the transformer (~6.5GB) and
     # 8-bit the T5 (~5GB): total fits a T4 with headroom. Compute dtype is
     # float16 — T4 (sm_75) has no native bfloat16.
-    # Unconditional UPGRADE — the Kaggle image ships an old bitsandbytes
-    # that imports fine but fails diffusers' quantizer validation
-    # ("requires the latest version", caught 2026-07-04). ~20s.
-    import subprocess as _sp
-    print("Upgrading bitsandbytes...")
-    _sp.run([sys.executable, "-m", "pip", "install", "-q", "-U",
-             "bitsandbytes"], check=True)
-
+    # (bitsandbytes upgraded at module top, pre-diffusers-import.)
     from diffusers import FluxTransformer2DModel
     from diffusers import BitsAndBytesConfig as DiffusersBnb
     from transformers import T5EncoderModel
