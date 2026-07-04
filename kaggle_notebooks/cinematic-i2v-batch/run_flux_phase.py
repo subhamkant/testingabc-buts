@@ -12,6 +12,10 @@ print("Upgrading bitsandbytes (pre-import)...")
 subprocess.run([sys.executable, "-m", "pip", "install", "-q", "-U",
                 "bitsandbytes"], check=True)
 
+# Reduce fragmentation headroom loss on the 14.6GiB T4 (OOM'd at 80MiB
+# with 76MiB reserved-unallocated, 2026-07-04).
+os.environ.setdefault("PYTORCH_CUDA_ALLOC_CONF", "expandable_segments:True")
+
 import torch
 import gc
 from diffusers import FluxPipeline
@@ -89,10 +93,15 @@ def main():
             load_in_4bit=True, bnb_4bit_quant_type="nf4",
             bnb_4bit_compute_dtype=torch.float16),
         torch_dtype=torch.float16)
-    print("Loading T5-XXL text encoder (8-bit)...")
+    # T5 in NF4 too — 8-bit OOM'd the T4: NF4 transformer (~6.5GB) plus
+    # T5-8bit load transients pushed past 14.31GB allocated. NF4 T5 is
+    # ~2.7GB with smaller per-tensor materialization peaks.
+    print("Loading T5-XXL text encoder (NF4)...")
     text_encoder_2 = T5EncoderModel.from_pretrained(
         MODEL, subfolder="text_encoder_2",
-        quantization_config=TransformersBnb(load_in_8bit=True))
+        quantization_config=TransformersBnb(
+            load_in_4bit=True, bnb_4bit_quant_type="nf4",
+            bnb_4bit_compute_dtype=torch.float16))
     print("Assembling pipeline...")
     pipe = FluxPipeline.from_pretrained(
         MODEL, transformer=transformer, text_encoder_2=text_encoder_2,
