@@ -2167,10 +2167,12 @@ BROLL RULES (HARD — violation = REJECT):
         pitambara silk bound by a crimson sash, layered gold necklaces,
         divine charioteer holding the reins"
 
-      Karna: "radiant golden-bronze skin, wild shoulder-length dark
-        curls, engraved golden kavacha with a blazing sun emblem at the
-        center of his chest, gold kundal earrings, crimson sash over
-        steel-blue silk dhoti, flame-like solar aura"
+      Karna: "towering mighty physique with broad powerful shoulders
+        and sculpted muscular arms, radiant golden-bronze skin, long
+        flowing dark curly mane streaming in the wind, engraved golden
+        kavacha with a blazing sun emblem at the center of his chest,
+        layered gold necklaces, gold kundal earrings, flowing crimson
+        cape and sash over steel-blue silk dhoti, flame-like solar aura"
 
       Arjuna: "youthful handsome clean-jawed face with a neat dark
         mustache, jeweled golden Kirita diadem, embossed golden kavacha
