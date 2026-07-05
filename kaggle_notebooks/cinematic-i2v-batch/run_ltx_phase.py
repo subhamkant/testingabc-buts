@@ -79,8 +79,17 @@ def main():
         return
 
     master_seed = cfg.get("master_seed", 42)
-    num_frames = int(cfg.get("ltx_num_frames", 121))    # 121 = ~5s @ 24fps
+    # LTX coherence + motion (2026-07-05, tuned over 3 runs). Must be 8*k+1.
+    #  - 97f + guidance-default + aggressive camera prompt  -> collapsed after ~f55
+    #  - 57f + guidance 3.0 + "camera holds steady, subtle" -> coherent but ~frozen
+    #  - 65f + guidance 2.5 + ATMOSPHERIC-motion prompt     -> WINNER: sharp all
+    #    the way through with real dynamic motion (smoke/embers/flames/light).
+    # Prompt-style lesson: LTX animates atmospheric elements (smoke, embers,
+    # flame, shifting light) strongly, but barely responds to "hair blows in
+    # wind" on a tight portrait. Motion prompts should lead with atmosphere.
+    num_frames = int(cfg.get("ltx_num_frames", 65))     # 65 = ~2.7s @ 24fps
     num_steps = int(cfg.get("ltx_num_steps", 40))
+    guidance = float(cfg.get("ltx_guidance", 2.5))
 
     print("Loading LTX-Video (I2V, fp16, cpu-offload, vae-tiling)...",
           flush=True)
@@ -93,8 +102,8 @@ def main():
         generator = torch.Generator(device="cuda").manual_seed(seed)
         import time as _time
         _t0 = _time.time()
-        print(f"Rendering {out_path} ({num_frames}f, {num_steps} steps)...",
-              flush=True)
+        print(f"Rendering {out_path} ({num_frames}f, {num_steps} steps, "
+              f"guidance={guidance})...", flush=True)
         video_frames = pipe(
             prompt=motion_prompt,
             image=cond_image,
@@ -102,6 +111,7 @@ def main():
             height=768,
             num_frames=num_frames,
             num_inference_steps=num_steps,
+            guidance_scale=guidance,
             generator=generator,
             output_type="np",
         ).frames[0]
