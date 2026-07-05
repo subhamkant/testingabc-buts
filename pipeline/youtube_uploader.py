@@ -550,6 +550,29 @@ def upload_to_youtube(
         except Exception as cb_err:
             print(f"    [!] Checkpoint callback failed (non-fatal): {cb_err}")
 
+    # YouTube anti-spam: an API insert that REQUESTS public frequently lands
+    # `private` anyway (channel-verification behavior). A follow-up
+    # videos().update to public DOES stick — verified 2026-07-05: AXovStda6J0
+    # inserted public -> landed private (processing succeeded) -> update flipped
+    # it cleanly. Re-assert public here so cron uploads go live without a
+    # manual Studio flip. Idempotent + non-fatal.
+    if body["status"]["privacyStatus"] == "public":
+        try:
+            _st = youtube.videos().list(part="status", id=video_id).execute()
+            _cur = (_st["items"][0]["status"].get("privacyStatus")
+                    if _st.get("items") else None)
+            if _cur != "public":
+                youtube.videos().update(part="status", body={
+                    "id": video_id,
+                    "status": {"privacyStatus": "public",
+                               "selfDeclaredMadeForKids": False},
+                }).execute()
+                print(f"    [privacy-enforce] insert landed '{_cur}' -> forced public")
+            else:
+                print("    [privacy-enforce] confirmed public")
+        except Exception as _pe:
+            print(f"    [privacy-enforce] non-fatal: {str(_pe)[:120]}")
+
     # Set custom thumbnail if available
     if thumbnail_path and os.path.exists(thumbnail_path):
         try:
