@@ -107,6 +107,14 @@ on:
         options:
           - "private"
           - "public"
+      force_second_upload:
+        description: "Bypass the one-public-video-per-day guard. Set 'true' to publish a second video on a day one was already uploaded (e.g. after a manual Studio publish). Default 'false' keeps the guard."
+        required: false
+        default: "false"
+        type: choice
+        options:
+          - "false"
+          - "true"
 
 # ════════════════════════════════════════════════════════════════════════════
 # WORKFLOW STRUCTURE
@@ -230,6 +238,7 @@ jobs:
           # Sprint 0.1: cron passes no inputs → empty → action default 'public'.
           # Manual dispatch defaults to 'private' (test isolation).
           yt-privacy: ${{ inputs.yt_privacy || 'public' }}
+          force-second-upload: ${{ inputs.force_second_upload || 'false' }}
 
   generate-and-upload-retry-1:
     needs: generate-and-upload
@@ -297,6 +306,7 @@ jobs:
           # Sprint 0.1: cron passes no inputs → empty → action default 'public'.
           # Manual dispatch defaults to 'private' (test isolation).
           yt-privacy: ${{ inputs.yt_privacy || 'public' }}
+          force-second-upload: ${{ inputs.force_second_upload || 'false' }}
 
   generate-and-upload-retry-2:
     needs: generate-and-upload-retry-1
@@ -362,6 +372,7 @@ jobs:
           # Sprint 0.1: cron passes no inputs → empty → action default 'public'.
           # Manual dispatch defaults to 'private' (test isolation).
           yt-privacy: ${{ inputs.yt_privacy || 'public' }}
+          force-second-upload: ${{ inputs.force_second_upload || 'false' }}
 
   generate-and-upload-retry-3:
     needs: generate-and-upload-retry-2
@@ -427,6 +438,7 @@ jobs:
           # Sprint 0.1: cron passes no inputs → empty → action default 'public'.
           # Manual dispatch defaults to 'private' (test isolation).
           yt-privacy: ${{ inputs.yt_privacy || 'public' }}
+          force-second-upload: ${{ inputs.force_second_upload || 'false' }}
 
   # ════════════════════════════════════════════════════════════════════════
   # WhatIf English phase (4 attempts) — runs on 04:00 UTC cron
@@ -482,6 +494,7 @@ jobs:
           # Sprint 0.1: cron passes no inputs → empty → action default 'public'.
           # Manual dispatch defaults to 'private' (test isolation).
           yt-privacy: ${{ inputs.yt_privacy || 'public' }}
+          force-second-upload: ${{ inputs.force_second_upload || 'false' }}
 
   whatif-english-retry-1:
     needs: whatif-english
@@ -534,6 +547,7 @@ jobs:
           # Sprint 0.1: cron passes no inputs → empty → action default 'public'.
           # Manual dispatch defaults to 'private' (test isolation).
           yt-privacy: ${{ inputs.yt_privacy || 'public' }}
+          force-second-upload: ${{ inputs.force_second_upload || 'false' }}
 
   whatif-english-retry-2:
     needs: whatif-english-retry-1
@@ -586,6 +600,7 @@ jobs:
           # Sprint 0.1: cron passes no inputs → empty → action default 'public'.
           # Manual dispatch defaults to 'private' (test isolation).
           yt-privacy: ${{ inputs.yt_privacy || 'public' }}
+          force-second-upload: ${{ inputs.force_second_upload || 'false' }}
 
   whatif-english-retry-3:
     needs: whatif-english-retry-2
@@ -638,6 +653,7 @@ jobs:
           # Sprint 0.1: cron passes no inputs → empty → action default 'public'.
           # Manual dispatch defaults to 'private' (test isolation).
           yt-privacy: ${{ inputs.yt_privacy || 'public' }}
+          force-second-upload: ${{ inputs.force_second_upload || 'false' }}
 
   # ════════════════════════════════════════════════════════════════════════
   # WhatIf Hindi phase (4 attempts) — depends on ANY EN attempt succeeding
@@ -705,6 +721,7 @@ jobs:
           # Sprint 0.1: cron passes no inputs → empty → action default 'public'.
           # Manual dispatch defaults to 'private' (test isolation).
           yt-privacy: ${{ inputs.yt_privacy || 'public' }}
+          force-second-upload: ${{ inputs.force_second_upload || 'false' }}
 
   whatif-hindi-retry-1:
     needs: whatif-hindi
@@ -757,6 +774,7 @@ jobs:
           # Sprint 0.1: cron passes no inputs → empty → action default 'public'.
           # Manual dispatch defaults to 'private' (test isolation).
           yt-privacy: ${{ inputs.yt_privacy || 'public' }}
+          force-second-upload: ${{ inputs.force_second_upload || 'false' }}
 
   whatif-hindi-retry-2:
     needs: whatif-hindi-retry-1
@@ -809,6 +827,7 @@ jobs:
           # Sprint 0.1: cron passes no inputs → empty → action default 'public'.
           # Manual dispatch defaults to 'private' (test isolation).
           yt-privacy: ${{ inputs.yt_privacy || 'public' }}
+          force-second-upload: ${{ inputs.force_second_upload || 'false' }}
 
   whatif-hindi-retry-3:
     needs: whatif-hindi-retry-2
@@ -861,3 +880,4 @@ jobs:
           # Sprint 0.1: cron passes no inputs → empty → action default 'public'.
           # Manual dispatch defaults to 'private' (test isolation).
           yt-privacy: ${{ inputs.yt_privacy || 'public' }}
+          force-second-upload: ${{ inputs.force_second_upload || 'false' }}
