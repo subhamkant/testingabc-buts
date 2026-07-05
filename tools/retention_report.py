@@ -27,6 +27,11 @@ import pickle
 import sys
 from datetime import date, timedelta
 
+# Windows consoles default to cp1252 — Devanagari titles and unicode
+# arrows in the report would crash every print. Force UTF-8.
+if sys.stdout.encoding and sys.stdout.encoding.lower() not in ("utf-8", "utf8"):
+    sys.stdout.reconfigure(encoding="utf-8")
+
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from googleapiclient.discovery import build  # noqa: E402
