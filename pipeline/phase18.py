@@ -2162,10 +2162,11 @@ BROLL RULES (HARD — violation = REJECT):
 
       CANONICAL CHARACTER SIGNATURES (use these EXACT phrases):
 
-      Krishna: "luminous monsoon-cloud blue divine skin, serene knowing
-        smile, dark curls with a single peacock feather, golden-yellow
-        pitambara silk bound by a crimson sash, layered gold necklaces,
-        divine charioteer holding the reins"
+      Krishna: "graceful powerful athletic divine form with broad
+        shoulders, luminous monsoon-cloud blue divine skin, serene
+        knowing smile, dark curls with a single peacock feather,
+        golden-yellow pitambara silk bound by a crimson sash, layered
+        gold necklaces, divine charioteer holding the reins"
 
       Karna: "towering mighty physique with broad powerful shoulders
         and sculpted muscular arms, radiant golden-bronze skin, long
@@ -2174,15 +2175,17 @@ BROLL RULES (HARD — violation = REJECT):
         layered gold necklaces, gold kundal earrings, flowing crimson
         cape and sash over steel-blue silk dhoti, flame-like solar aura"
 
-      Arjuna: "youthful handsome clean-jawed face with a neat dark
-        mustache, jeweled golden Kirita diadem, embossed golden kavacha
-        chest armor, indigo-and-white silk dhoti with gold borders,
-        twin quivers, drawing the glowing Gandiva bow"
+      Arjuna: "powerfully built athletic archer's physique with broad
+        shoulders and chiseled muscular arms, youthful handsome
+        clean-jawed face with a neat dark mustache, jeweled golden
+        Kirita diadem, embossed golden kavacha chest armor,
+        indigo-and-white silk dhoti with gold borders, twin quivers,
+        drawing the glowing Gandiva bow"
 
-      Bhishma: "flowing majestic silver-white hair and thick groomed
-        white beard, gleaming engraved silver kavacha, ivory-white
-        silks, silver-and-gold war diadem, towering ancient yet
-        powerfully muscled frame"
+      Bhishma: "colossal towering powerfully muscled frame with
+        mountainous shoulders, flowing majestic silver-white hair and
+        thick groomed white beard, gleaming engraved silver kavacha,
+        ivory-white silks, silver-and-gold war diadem"
 
       Draupadi: "radiant fair wheatish-gold complexion with luminous
         glowing skin, large kohl-lined lotus eyes, long untied black
@@ -2194,7 +2197,8 @@ BROLL RULES (HARD — violation = REJECT):
         ALWAYS visible (sometimes dripping blood), rudraksha bead
         necklace, intense devoted eyes"
 
-      Ashwatthama: "towering scholar-warrior, wild dark hair torn loose
+      Ashwatthama: "towering broad-shouldered muscular scholar-warrior,
+        wild dark hair torn loose
         from its ascetic topknot, a radiant divine gem blazing in the
         center of his forehead, three white ash tripundra lines on his
         brow, battle-scarred dark bronze kavacha, rudraksha strings"
@@ -2202,12 +2206,15 @@ BROLL RULES (HARD — violation = REJECT):
         wound in the center of his forehead, matted filthy hair,
         tattered dirty rags, agonized haunted eyes"
 
-      Bhima: "colossal heavily-muscled build, fierce dark moustache,
+      Bhima: "colossal mountain-of-a-warrior build, the strongest man
+        alive, massive barrel chest and tree-trunk arms, fierce dark
+        moustache,
         gleaming golden kavacha straining across his massive chest,
         thick gold armbands, deep red silk dhoti, massive battle-dented
         iron Gada mace"
 
-      Yudhishthira: "warm golden-bronze skin, salt-and-pepper beard,
+      Yudhishthira: "tall powerfully built regal warrior's frame with
+        broad shoulders, warm golden-bronze skin, salt-and-pepper beard,
         calm sorrowful dignity, refined gleaming golden kavacha over
         white-and-gold royal silk, jeweled gold mukut with peacock
         feather"
@@ -2217,10 +2224,11 @@ BROLL RULES (HARD — violation = REJECT):
         jeweled gold war-crown with a crimson plume crest, blood-red
         and black silks, colossal spiked golden Gada mace on shoulder"
 
-      Abhimanyu: "sixteen-year-old boy warrior, smooth soft boyish
-        face, slim lithe teenage build, thick dark curls under a light
-        golden diadem, form-fitting gleaming golden kavacha, crimson
-        silk dhoti, masterwork bow"
+      Abhimanyu: "sixteen-year-old boy warrior, strong lithe athletic
+        young build with broad young shoulders, smooth soft boyish
+        face, thick dark curls under a light golden diadem,
+        form-fitting gleaming golden kavacha, crimson silk dhoti,
+        masterwork bow"
 
       Shakuni: "sharp angular Indian features, grey-streaked beard,
         calculating gleaming eyes, slightly hunched posture, dark
