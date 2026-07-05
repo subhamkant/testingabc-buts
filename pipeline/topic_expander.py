@@ -144,6 +144,17 @@ real / hidden / untold / secret / greatest / final / fatal
 sin / mistake / pride / truth / betrayal / sacrifice / curse / regret / \
 vow / loyalty / jealousy / fear
 4. Trait inversion (the character's celebrated virtue reframed as a flaw)
+5. CONCRETE CANONICAL INCIDENT — the MOST IMPORTANT rule. Every topic MUST \
+be anchored to ONE specific named event from the Mahabharata: a scene you \
+can point to in the epic (who is present, where it happens, what physically \
+happens). Spell out those concrete details after an em-dash.
+   GOOD: "Karna cutting the divine kavacha from his own flesh — Indra \
+disguised as a beggar brahmin at dawn, Surya's ignored dream warning"
+   BAD:  "Karna's Greatest Mistake Was Rejection"  (theme words with no \
+incident — REJECTED; the channel would retell the same generic story daily)
+Two topics about the same character MUST cover DIFFERENT incidents. Never \
+re-word the same incident or emotional theme into a second topic — the \
+channel ships one NEW story every day, and a theme permutation is a repeat.
 
 Each topic should be 80-150 chars, English, narrative-rich enough that the \
 script generator can build a 90-100 word voiceover from it.
@@ -188,7 +199,12 @@ def _generate_topics_for_character(
         text = re.sub(r"^```(?:\w+)?\s*", "", text)
         text = re.sub(r"\s*```\s*$", "", text)
     lines = [line.strip().lstrip("-*•0123456789. ").strip() for line in text.split("\n")]
-    lines = [l for l in lines if l and len(l) >= 30]   # filter blank + too-short lines
+    # Phase 27 (2026-07-05): raised 30 → 80. The 30-char floor let through
+    # incident-free theme permutations ("Karna's Greatest Mistake Was
+    # Rejection", 38 chars) — 16 of them polluted the pool and would have
+    # shipped near-identical stories on consecutive days. A topic that
+    # names a real incident with concrete details can't fit in 80 chars.
+    lines = [l for l in lines if l and len(l) >= 80]   # filter blank + incident-free lines
     return lines[:n]
 
 
