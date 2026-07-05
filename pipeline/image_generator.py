@@ -451,10 +451,17 @@ def _pick_iconography_anchor(wardrobe_context: str) -> str:
 # smeared mid-ground figures, duplicated anatomy (user forensic on the
 # unlisted lKTS5-leBng). 1.43MP keeps proportions correct while giving
 # +36% detail over the original 768x1344.
+# 2026-07-05: ALL shot types now PORTRAIT 896x1600. Wide 1600x896 images in a
+# 9:16 video forced a horizontal-pan/crop that showed a distorted vertical
+# slice — the user saw "stretched", elongated figures. A vertical Shorts
+# channel should generate vertical images: every frame fills 9:16 at correct
+# proportions with a gentle portrait Ken Burns zoom, no wide→tall mismatch.
+# 896x1600 = 1.43MP stays inside schnell's proportion-safe range (the 2.1MP
+# 1088x1920 attempt elongated torsos — see note above; do NOT raise this).
 _RESOLUTION_BY_SHOT_TYPE = {
-    "ENVIRONMENT": (1600, 896),
-    "ACTION":      (1600, 896),
-    "PROP":        (1600, 896),
+    "ENVIRONMENT": (896, 1600),
+    "ACTION":      (896, 1600),
+    "PROP":        (896, 1600),
     "REACTION":    (896, 1600),
     "AMBIGUOUS":   (896, 1600),
 }
