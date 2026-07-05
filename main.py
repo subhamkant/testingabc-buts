@@ -609,6 +609,12 @@ async def run_pipeline(language: str = "en", test_mode: bool = False, test_uploa
                 # generate_images can iterate broll entries when present.
                 # Falls back to legacy `scenes` list otherwise.
                 image_files = generate_images(script, series="mahabharata", ck=ck)
+                # 2026-07-05 — Real-ESRGAN 2x supersample (user: "more
+                # detailed images"). 896x1600 -> 1792x3200 synthesized
+                # detail, assembler downsamples to 1080x1920. Graceful:
+                # any failure keeps originals. UPSCALE_FRAMES=false disables.
+                from pipeline.upscaler import upscale_images
+                image_files = upscale_images(image_files, label="mahabharata")
                 if script.get("thumbnail_prompt"):
                     # Extract Hindi shock-phrase from title for thumbnail overlay.
                     # Title format from prompt: "<Hindi half> | <English half>"

@@ -100,6 +100,17 @@ runs:
         path: cache/${{ inputs.pipeline-run-id }}/
       continue-on-error: true
 
+    # 2026-07-05 — software Vulkan (llvmpipe) for the Real-ESRGAN frame
+    # upscaler (pipeline/upscaler.py). Non-fatal: if this fails, the
+    # upscaler's first-frame probe detects the missing device and the
+    # render proceeds with original frames. ~15s apt install.
+    - name: Vulkan runtime for frame upscaler (non-fatal)
+      shell: bash
+      run: |
+        sudo apt-get install -y -qq libvulkan1 mesa-vulkan-drivers 2>/dev/null || \
+          echo "[upscale] vulkan install failed — upscaler will self-disable"
+      continue-on-error: true
+
     - name: Run pipeline (resumes from cache if any)
       shell: bash
       env:
