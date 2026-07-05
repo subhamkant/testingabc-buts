@@ -75,15 +75,28 @@ def _frame_height(path: str) -> int:
         return 0
 
 
+def _flatten(items):
+    """Yield string paths from arbitrarily nested lists/tuples. The
+    Mahabharata Phase-23 multi-shot format returns [[shot, shot, shot], ...]
+    per scene (caught 2026-07-06: TypeError crashed the first proof render at
+    the upscale hook); WhatIf returns a flat list. Handle both."""
+    for it in items or []:
+        if isinstance(it, (list, tuple)):
+            yield from _flatten(it)
+        elif isinstance(it, (str, os.PathLike)) and it:
+            yield str(it)
+
+
 def upscale_images(image_paths: list, label: str = "") -> list:
     """Upscale each image 2x IN PLACE (original file overwritten with the
-    upscaled JPEG). Returns the same list of paths for drop-in use:
+    upscaled JPEG). Accepts flat or nested path lists; returns the input
+    structure unchanged (files are modified in place) for drop-in use:
         image_files = upscale_images(image_files)
     """
     if os.environ.get("UPSCALE_FRAMES", "true").strip().lower() in ("false", "0", "no"):
         return image_paths
-    todo = [p for p in image_paths
-            if p and os.path.exists(p)
+    todo = [p for p in _flatten(image_paths)
+            if os.path.exists(p)
             and _frame_height(p) < _ALREADY_UPSCALED_MIN_H]
     if not todo:
         return image_paths
