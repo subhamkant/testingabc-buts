@@ -530,9 +530,16 @@ async def run_pipeline(language: str = "en", test_mode: bool = False, test_uploa
             video_path = output_path
         else:
             # Try AI clips first, fall back to images
-            _ai_clips_available = any(
-                os.environ.get(k, "").strip()
-                for k in ("FAL_KEY", "REPLICATE_API_TOKEN", "HF_SPACE")
+            # 2026-07-05 (user decision): AI image-to-video clips (LTX / Wan /
+            # fal / Replicate) did not meet the quality bar — motion was soft
+            # and inconsistent vs the reference. Every Short now uses
+            # well-described static images + Ken Burns ONLY. Clips stay fully
+            # OFF unless ENABLE_AI_CLIPS=true is explicitly set — kept as a
+            # reversible switch for when real (text-to-)video generation lands.
+            _ai_clips_available = (
+                os.environ.get("ENABLE_AI_CLIPS", "false").strip().lower() == "true"
+                and any(os.environ.get(k, "").strip()
+                        for k in ("FAL_KEY", "REPLICATE_API_TOKEN", "HF_SPACE"))
             )
 
             if _ai_clips_available:
@@ -905,9 +912,16 @@ async def run_krishna_speech(test_mode: bool = False, test_upload: bool = False)
             shutil.copy2(ck.path("video_pre_subs.mp4"), output_path)
             video_path = output_path
         else:
-            _ai_clips_available = any(
-                os.environ.get(k, "").strip()
-                for k in ("FAL_KEY", "REPLICATE_API_TOKEN", "HF_SPACE")
+            # 2026-07-05 (user decision): AI image-to-video clips (LTX / Wan /
+            # fal / Replicate) did not meet the quality bar — motion was soft
+            # and inconsistent vs the reference. Every Short now uses
+            # well-described static images + Ken Burns ONLY. Clips stay fully
+            # OFF unless ENABLE_AI_CLIPS=true is explicitly set — kept as a
+            # reversible switch for when real (text-to-)video generation lands.
+            _ai_clips_available = (
+                os.environ.get("ENABLE_AI_CLIPS", "false").strip().lower() == "true"
+                and any(os.environ.get(k, "").strip()
+                        for k in ("FAL_KEY", "REPLICATE_API_TOKEN", "HF_SPACE"))
             )
 
             if _ai_clips_available:
@@ -1200,9 +1214,16 @@ async def run_whatif_phase(language: str, test_mode: bool = False, test_upload: 
             print("[!] HI phase started without cached visuals. The EN phase must run first.")
             return
         else:
-            _ai_clips_available = any(
-                os.environ.get(k, "").strip()
-                for k in ("FAL_KEY", "REPLICATE_API_TOKEN", "HF_SPACE")
+            # 2026-07-05 (user decision): AI image-to-video clips (LTX / Wan /
+            # fal / Replicate) did not meet the quality bar — motion was soft
+            # and inconsistent vs the reference. Every Short now uses
+            # well-described static images + Ken Burns ONLY. Clips stay fully
+            # OFF unless ENABLE_AI_CLIPS=true is explicitly set — kept as a
+            # reversible switch for when real (text-to-)video generation lands.
+            _ai_clips_available = (
+                os.environ.get("ENABLE_AI_CLIPS", "false").strip().lower() == "true"
+                and any(os.environ.get(k, "").strip()
+                        for k in ("FAL_KEY", "REPLICATE_API_TOKEN", "HF_SPACE"))
             )
             if _ai_clips_available:
                 try:
