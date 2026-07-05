@@ -12,6 +12,11 @@ kaggle.json
 # pipeline/image_generator.py just before `kaggle kernels push`). Stays
 # local — uploads to Kaggle along with the notebook code, never to git.
 kaggle_notebooks/*/current_run.json
+# Auto-generated at push time by kaggle_client._build_inlined_notebook.
+# Contains the base64-INLINED HF_TOKEN + anchor image + run config — MUST
+# NOT be committed (secret leak). Regenerated on every push; source of
+# truth is run_flux_phase.py / run_ltx_phase.py.
+kaggle_notebooks/*/notebook.ipynb
 
 # Kaggle Dataset payloads (large binary weights staged for upload to Kaggle;
 # the metadata + README under kaggle_datasets/*/ IS tracked, just not the

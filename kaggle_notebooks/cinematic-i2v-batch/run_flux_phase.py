@@ -52,6 +52,15 @@ def main():
     with open('current_run.json') as f:
         cfg = json.load(f)
 
+    # skip_flux (2026-07-05): motion-only runs feed LTX a pre-made
+    # conditioning image (e.g. a CF-schnell still or an approved anchor)
+    # via hero_motion[].image_b64, so no FLUX model needs to load at all.
+    # Early-exit BEFORE any weight download to keep the phase fast + light.
+    if cfg.get("skip_flux", False):
+        print("FLUX phase SKIPPED (skip_flux=true) — LTX will use provided "
+              "conditioning image(s).")
+        return
+
     style_anchor = cfg.get("style_anchor", "")
     master_seed = cfg.get("master_seed", 42)
     scenes = cfg.get("scenes", [])
@@ -86,79 +95,89 @@ def main():
     from transformers import BitsAndBytesConfig as TransformersBnb
 
     MODEL = "black-forest-labs/FLUX.1-schnell"
+    # DTYPE (2026-07-05 fix): FLUX's native dtype is bfloat16 — the text
+    # encoders emit bf16 hidden states. The June code loaded the transformer
+    # as float16 (a T4 tensor-core optimization), which crashed the FIRST
+    # real generation with 'mat1 and mat2 must have the same dtype, but got
+    # BFloat16 and Half' (v45, 2026-07-05). bf16 everywhere matches FLUX
+    # reference and eliminates the mismatch. T4 (sm_75) runs bf16 on CUDA
+    # cores (no tensor-core accel) — a bit slower than fp16 but correct, and
+    # for an overnight batch the speed cost is irrelevant.
+    DT = torch.bfloat16
     # ORDER MATTERS (2026-07-04, third OOM iteration): transformers' new
-    # core_model_loading materializes checkpoint tensors on the GPU in
-    # fp16 BEFORE bnb quantizes them — T5-XXL's transient spike (~9GB)
-    # needs an EMPTY GPU. The diffusers NF4 loader is transient-friendly
-    # (it fit the 24GB transformer into 14.6GB fine). So: spiky T5 first,
-    # well-behaved transformer second.
-    print("Loading T5-XXL text encoder (NF4, empty GPU)...")
+    # core_model_loading materializes checkpoint tensors on the GPU BEFORE
+    # bnb quantizes them — T5-XXL's transient spike (~9GB) needs an EMPTY
+    # GPU. So: spiky T5 first, well-behaved transformer second.
+    print("Loading T5-XXL text encoder (NF4 bf16, empty GPU)...")
     text_encoder_2 = T5EncoderModel.from_pretrained(
         MODEL, subfolder="text_encoder_2",
         quantization_config=TransformersBnb(
             load_in_4bit=True, bnb_4bit_quant_type="nf4",
-            bnb_4bit_compute_dtype=torch.float16))
+            bnb_4bit_compute_dtype=DT))
     gc.collect()
     torch.cuda.empty_cache()
-    # Transformer precision by GPU count (2026-07-04): Kaggle allocates
-    # T4 x2 — 31GB combined. bnb NF4 matmuls are pathologically slow on
-    # sm_75 (a single 512x896 4-step frame ran >1h before being killed),
-    # so on dual GPUs shard the transformer in FULL fp16 across both
-    # (~12GB each via accelerate device_map) and keep only the one-shot
-    # T5 encode quantized. NF4 transformer remains the single-GPU
-    # fallback — functional, but production timeouts will catch it.
+    # Transformer precision by GPU count: Kaggle allocates T4 x2 — 31GB
+    # combined. Shard the transformer in full bf16 across both (~12GB each
+    # via accelerate device_map). NF4 transformer remains the single-GPU
+    # fallback — functional but slower; production timeouts catch it.
     n_gpu = torch.cuda.device_count()
     if n_gpu >= 2:
-        print(f"Loading FLUX-schnell transformer (fp16, sharded across "
+        print(f"Loading FLUX-schnell transformer (bf16, sharded across "
               f"{n_gpu} GPUs)...")
         transformer = FluxTransformer2DModel.from_pretrained(
             MODEL, subfolder="transformer",
-            torch_dtype=torch.float16, device_map="auto")
+            torch_dtype=DT, device_map="auto")
     else:
-        print("Loading FLUX-schnell transformer (NF4, single GPU)...")
+        print("Loading FLUX-schnell transformer (NF4 bf16, single GPU)...")
         transformer = FluxTransformer2DModel.from_pretrained(
             MODEL, subfolder="transformer",
             quantization_config=DiffusersBnb(
                 load_in_4bit=True, bnb_4bit_quant_type="nf4",
-                bnb_4bit_compute_dtype=torch.float16),
-            torch_dtype=torch.float16)
+                bnb_4bit_compute_dtype=DT),
+            torch_dtype=DT)
     print("Assembling pipeline...")
     pipe = FluxPipeline.from_pretrained(
         MODEL, transformer=transformer, text_encoder_2=text_encoder_2,
-        torch_dtype=torch.float16)
+        torch_dtype=DT)
 
-    # Load XLabs IP-Adapter weights from the attached Kaggle Dataset.
-    # The dataset `subhamkant11/xlabs-flux-ip-adapter` is referenced via
-    # kernel-metadata.json's `dataset_sources` and mounts read-only under
-    # /kaggle/input/. NOTE (2026-07-04): this call has never executed in
-    # production (every prior run died at the HF 401) — if the checkpoint
-    # lacks a bundled CLIP image encoder, retry with the standard one.
-    try:
-        pipe.load_ip_adapter(
-            "/kaggle/input/xlabs-flux-ip-adapter",
-            subfolder="",
-            weight_name="ip_adapter.safetensors"
-        )
-    except Exception as _ip_err:
-        print(f"IP-Adapter load failed ({_ip_err}); retrying with explicit "
-              f"CLIP image encoder...")
-        pipe.load_ip_adapter(
-            "/kaggle/input/xlabs-flux-ip-adapter",
-            subfolder="",
-            weight_name="ip_adapter.safetensors",
-            image_encoder_pretrained_model_name_or_path="openai/clip-vit-large-patch14"
-        )
+    # IP-Adapter face-lock is OPTIONAL (2026-07-05 fix). It is gated by
+    # cfg['use_ip_adapter'] (default True to preserve production intent) and
+    # ANY load failure degrades gracefully to seed+prompt consistency —
+    # NEVER the hanging fallback that stalled v43 for 3 hours.
+    #
+    # Root cause of the v43 hang: the XLabs FLUX IP-Adapter checkpoint has
+    # no bundled CLIP image encoder, so the first load_ip_adapter() failed;
+    # the old retry passed image_encoder_pretrained_model_name_or_path=
+    # "openai/clip-vit-large-patch14", which triggered an un-timeout'd HF
+    # download that hung indefinitely. That retry is DELETED. Face-lock is
+    # an enhancement, not a hard dependency — the character-lock prompt +
+    # per-character stable seed already give strong cross-video consistency.
+    ip_ready = False
+    if cfg.get("use_ip_adapter", True):
+        try:
+            pipe.load_ip_adapter(
+                "/kaggle/input/xlabs-flux-ip-adapter",
+                subfolder="",
+                weight_name="ip_adapter.safetensors",
+            )
+            ip_ready = True
+            print("IP-Adapter loaded OK (face-lock active)")
+        except Exception as _ip_err:
+            print(f"IP-Adapter load failed ({str(_ip_err)[:140]}); continuing "
+                  f"WITHOUT face-lock (seed+prompt consistency only)", flush=True)
+    else:
+        print("IP-Adapter disabled by config (use_ip_adapter=false)")
+
     # Quantized modules pin themselves to the GPU and CANNOT be moved
-    # (bnb 4-bit forbids .to()/offload hooks — suspected silent death of
-    # smoke v8 right after 'Generating hero frame idx=0'). Move ONLY the
-    # small unquantized parts explicitly: VAE ~0.2GB, CLIP ~0.3GB, and
-    # the IP-Adapter image encoder ~0.6GB. Total ~10.5GB on a 15.6GB T4.
+    # (bnb 4-bit forbids .to()/offload hooks). Move ONLY the small
+    # unquantized parts explicitly: VAE ~0.2GB, CLIP ~0.3GB, and (if the
+    # adapter loaded) its image encoder ~0.6GB. Total ~10.5GB on a 15.6GB T4.
     pipe.vae.to("cuda")
     pipe.text_encoder.to("cuda")
-    if getattr(pipe, "image_encoder", None) is not None:
+    if ip_ready and getattr(pipe, "image_encoder", None) is not None:
         pipe.image_encoder.to("cuda")
-    print("Pipeline placed: quantized transformer+T5 pinned, "
-          "vae/clip/image-encoder moved to cuda")
+    print(f"Pipeline placed (ip_ready={ip_ready}): quantized transformer+T5 "
+          f"pinned, vae/clip moved to cuda", flush=True)
 
     # Sprint 2.2 (2026-07-04) — hero_mode: lock the video's hero frames to
     # the channel's APPROVED master anchor (assets/character_anchors/) via
@@ -170,12 +189,17 @@ def main():
         import base64
         from io import BytesIO
         from PIL import Image
-        anchor_pil = Image.open(
-            BytesIO(base64.b64decode(cfg["anchor_b64"]))).convert("RGB")
-        ip_scale = float(cfg.get("ip_scale", 0.6))
-        pipe.set_ip_adapter_scale(ip_scale)
-        print(f"hero_mode: {len(cfg['scenes'])} frames, ip_scale={ip_scale}, "
-              f"anchor={anchor_pil.size}")
+        anchor_pil = None
+        if ip_ready:
+            anchor_pil = Image.open(
+                BytesIO(base64.b64decode(cfg["anchor_b64"]))).convert("RGB")
+            ip_scale = float(cfg.get("ip_scale", 0.6))
+            pipe.set_ip_adapter_scale(ip_scale)
+            print(f"hero_mode: {len(cfg['scenes'])} frames, FACE-LOCK ON "
+                  f"ip_scale={ip_scale}, anchor={anchor_pil.size}", flush=True)
+        else:
+            print(f"hero_mode: {len(cfg['scenes'])} frames, FACE-LOCK OFF "
+                  f"(seed+prompt only)", flush=True)
         import time as _time
         n_steps = int(cfg.get("num_steps", 8))
         for sc in cfg["scenes"]:
@@ -190,16 +214,18 @@ def main():
                       flush=True)
                 return kw
 
-            image = pipe(
+            gen_kwargs = dict(
                 prompt=sc["prompt"],
                 height=int(sc.get("h", 1344)),
                 width=int(sc.get("w", 768)),
-                ip_adapter_image=anchor_pil,
                 guidance_scale=0.0,
                 num_inference_steps=n_steps,
                 generator=generator,
                 callback_on_step_end=_step_cb,
-            ).images[0]
+            )
+            if ip_ready and anchor_pil is not None:
+                gen_kwargs["ip_adapter_image"] = anchor_pil
+            image = pipe(**gen_kwargs).images[0]
             print(f"  frame done in {_time.time()-_t0:.1f}s", flush=True)
             image.save(f"/kaggle/working/hero_{int(sc['idx']):02d}.jpg")
         del pipe

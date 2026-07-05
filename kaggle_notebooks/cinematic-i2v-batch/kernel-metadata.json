@@ -1,0 +1,14 @@
+{
+  "id": "subhamkant11/cinematic-i2v-batch",
+  "title": "Cinematic I2V Batch",
+  "code_file": "notebook.ipynb",
+  "language": "python",
+  "kernel_type": "notebook",
+  "is_private": true,
+  "enable_gpu": true,
+  "machine_shape": "NvidiaTeslaT4",
+  "enable_internet": true,
+  "dataset_sources": ["subhamkant11/xlabs-flux-ip-adapter"],
+  "competition_sources": [],
+  "kernel_sources": []
+}
