@@ -420,6 +420,28 @@ async def run_pipeline(language: str = "en", test_mode: bool = False, test_uploa
     print(f"  Mahabharata YouTube Bot  |  {lang_name}{mode_tag}")
     print(f"{'='*55}\n")
 
+    # Backup-tick early exit (2026-07-06). GitHub schedule events are
+    # best-effort: the 07-06 12:15 UTC tick was silently dropped (no run
+    # created) and 07-05's fired ~2h late. The 13:45/15:15 UTC backup crons
+    # re-fire the pipeline, and THIS check makes them free: if today's
+    # public video already exists (one YT API call), exit before burning
+    # any Gemini/CF render quota. Check fails OPEN — a YT API hiccup on a
+    # backup tick proceeds to render; the upload-guard still prevents a
+    # double publish at upload time.
+    if os.environ.get("BACKUP_TICK", "").strip().lower() == "true":
+        try:
+            from pipeline.youtube_uploader import published_public_today
+            _bt_vid = published_public_today()
+        except Exception as _bt_err:
+            _bt_vid = None
+            print(f"[backup-tick] check failed ({str(_bt_err)[:80]}) — proceeding")
+        if _bt_vid:
+            print(f"[backup-tick] today's public video already live "
+                  f"(https://youtube.com/watch?v={_bt_vid}) — exiting, nothing to do")
+            return
+        print("[backup-tick] NO public video today — primary tick was "
+              "dropped/failed, rendering now")
+
     # Per-run checkpoint cache. PIPELINE_RUN_ID env var lets the GHA workflow
     # share the same cache between the original run and an auto-retry job
     # (so the retry resumes from the last completed step instead of starting

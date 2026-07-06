@@ -48,6 +48,17 @@ on:
   schedule:
     # 12:15 UTC = 5:45 PM IST nominal → 6:00-6:05 PM IST publish landing.
     - cron: "15 12 * * *"
+    # BACKUP TICKS (2026-07-06). GitHub schedule events are best-effort:
+    # the 2026-07-06 12:15 tick was silently DROPPED (no run created;
+    # workflow active, GitHub status green) and the 07-05 tick fired 1h55m
+    # late — a dropped tick used to mean a silently skipped day, the exact
+    # cadence break Operation 500K exists to prevent. These backups fire
+    # at 7:15 PM / 8:45 PM IST; main.py's BACKUP_TICK early-exit checks
+    # whether today's public video already exists (one YT API call) and
+    # exits in ~seconds when the primary tick succeeded, so extra ticks
+    # cost no render quota on normal days.
+    - cron: "45 13 * * *"
+    - cron: "15 15 * * *"
   workflow_dispatch:
     inputs:
       target:
@@ -138,6 +149,13 @@ on:
 # <PIPELINE_RUN_ID> — with `overwrite: true`, so each attempt's partial state
 # overwrites the prior and the next attempt resumes from wherever the last
 # one left off.
+
+# BACKUP_TICK: 'true' only on the 13:45/15:15 UTC backup crons (not the
+# 12:15 primary, not the 04:00 WhatIf tick, not manual dispatches).
+# main.py reads this and exits in seconds when today's public video
+# already exists — backup ticks are free unless the primary was dropped.
+env:
+  BACKUP_TICK: ${{ github.event_name == 'schedule' && github.event.schedule != '15 12 * * *' && github.event.schedule != '0 4 * * *' }}
 
 jobs:
   # ════════════════════════════════════════════════════════════════════════
