@@ -2487,6 +2487,7 @@ def generate_phase18_script(
     MAX_ATTEMPTS = 8
     attempts: list = []   # each: {data, score, is_fatal_clean, violation, info, fatal_failures}
     last_violation = ""
+    last_dup_title = ""
     last_info: dict = {}
 
     for attempt in range(MAX_ATTEMPTS):
@@ -2501,6 +2502,14 @@ def generate_phase18_script(
             # range; quoting "you wrote 32 words" + "we need 75-115" anchors
             # the next attempt around the right magnitude.
             dynamic_prefix = ""
+            if last_violation == "duplicate_title" and last_dup_title:
+                dynamic_prefix = (
+                    f'YOUR LAST TITLE WAS "{last_dup_title}" — this EXACT '
+                    f"title is already a published video on the channel. "
+                    f"You are FORBIDDEN from producing it or any variant "
+                    f"of either half of it again. Pick a DIFFERENT charged "
+                    f"noun AND a DIFFERENT subversion adjective. "
+                )
             if last_violation == "length":
                 w = last_info.get("word_count", 0)
                 b = last_info.get("broll_count", 0)
@@ -2618,6 +2627,7 @@ def generate_phase18_script(
             print(f"    [phase18-gen] DUPLICATE TITLE vs published video — "
                   f"discarding candidate: {_cand_title[:60]}")
             last_violation = "duplicate_title"
+            last_dup_title = _cand_title
             continue
 
         ok, violation, info = validate_phase18(data)
