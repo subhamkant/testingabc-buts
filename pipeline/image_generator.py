@@ -2630,6 +2630,44 @@ def generate_images(scenes_or_script, single_shot: bool = False, series: str = "
                       f"({'last-good frame' if _last_good_path else 'outro asset'}) "
                       f"— queued for rescue pass")
             else:
+                # Anatomy QC gate (2026-07-07). x_XuuiIB-2I shipped an Arjuna
+                # bow-draw frame with THREE arms (user forensic) — schnell's
+                # signature failure in complex action poses, and negatives
+                # can't prevent it. Gemini-vision counts limbs (2/3-vote
+                # confirmation); a confirmed-bad frame regenerates ONCE with
+                # a shifted seed and keeps whichever passes. Fail-open: any
+                # QC infrastructure error keeps the original frame.
+                if (series == "mahabharata" and os.environ.get(
+                        "ANATOMY_QC", "true").strip().lower() == "true"):
+                    try:
+                        from pipeline.anatomy_qc import check_anatomy_confirmed
+                        _ok_qc, _why_qc = check_anatomy_confirmed(output_path)
+                        if not _ok_qc:
+                            print(f"    [anatomy-qc] scene {i+1} shot {j+1} "
+                                  f"FLAGGED ({_why_qc[:70]}) — regenerating once")
+                            try:
+                                _rb, _rprov = generate_image_bytes(
+                                    prompt, seed=seed + 7919, width=img_w,
+                                    height=img_h, mood=mood,
+                                    style_suffix=style_suffix,
+                                    negative_prompt=scene_negative)
+                                _cand = output_path + ".qc.jpg"
+                                with open(_cand, "wb") as f:
+                                    f.write(_rb)
+                                _ok2, _why2 = check_anatomy_confirmed(_cand)
+                                if _ok2:
+                                    os.replace(_cand, output_path)
+                                    print(f"    [anatomy-qc] retry PASSED "
+                                          f"via {_rprov}")
+                                else:
+                                    os.remove(_cand)
+                                    print(f"    [anatomy-qc] retry also "
+                                          f"flagged — keeping original")
+                            except Exception as _rqe:
+                                print(f"    [anatomy-qc] retry failed "
+                                      f"({str(_rqe)[:60]}) — keeping original")
+                    except Exception as _qce:
+                        print(f"    [anatomy-qc] check skipped: {str(_qce)[:60]}")
                 _last_good_path = output_path
 
             # Inter-shot cooldown — give CF's per-IP rate limit time to relax
