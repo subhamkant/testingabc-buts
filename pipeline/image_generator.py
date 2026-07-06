@@ -2206,6 +2206,16 @@ def generate_images(scenes_or_script, single_shot: bool = False, series: str = "
     # to the normal cascade unchanged.
     kaggle_hero = _kaggle_hero_frames(scenes, series)
 
+    # Placeholder-rescue tracking (2026-07-06). UE1jlCAHPpw forensic: CF
+    # quota exhausted mid-run, HF rate-limited at the tail → the LAST 5
+    # shots all fell to the outro-asset placeholder → 17s of static brand
+    # card while narration continued. Two-part fix: (a) placeholders now
+    # reuse the last successful frame (visually invisible) instead of the
+    # brand card; (b) a rescue pass at the end retries failures once after
+    # a cooldown — tail failures are usually transient 429 bursts.
+    _last_good_path = None
+    _rescue_list = []
+
     for i, scene in enumerate(scenes):
         # ── Resume path ───────────────────────────────────────────────
         if i in partial:
@@ -2593,9 +2603,20 @@ def generate_images(scenes_or_script, single_shot: bool = False, series: str = "
                 time.sleep(wait)
 
             if not success:
-                _create_placeholder(output_path, i * 3 + j, series=series)
+                _create_placeholder(output_path, i * 3 + j, series=series,
+                                    last_good=_last_good_path)
                 shot_paths.append(output_path)
-                print(f"    [~] Placeholder (outro-asset fallback) for scene {i+1} shot {j+1}")
+                _rescue_list.append({
+                    "i": i, "j": j, "prompt": prompt, "seed": seed,
+                    "w": img_w, "h": img_h, "mood": mood,
+                    "style_suffix": style_suffix,
+                    "negative": scene_negative,
+                })
+                print(f"    [~] Placeholder for scene {i+1} shot {j+1} "
+                      f"({'last-good frame' if _last_good_path else 'outro asset'}) "
+                      f"— queued for rescue pass")
+            else:
+                _last_good_path = output_path
 
             # Inter-shot cooldown — give CF's per-IP rate limit time to relax
             # before the next shot's CF call. Bumped from 1s → 5s (2026-05-17)
@@ -2632,6 +2653,41 @@ def generate_images(scenes_or_script, single_shot: bool = False, series: str = "
 
         scene_groups.append(shot_paths)
         print(f"    [OK] Scene {i+1}/{len(scenes)} complete — {len(shot_paths)} shots")
+
+    # ── Rescue pass (2026-07-06) ──────────────────────────────────────
+    # Retry every placeholder shot ONCE after a cooldown. Tail-of-run
+    # failures are usually transient provider 429 bursts that clear in
+    # ~a minute (UE1jlCAHPpw forensic). Writes go to the AUTHORITATIVE
+    # path in scene_groups (the checkpoint cache copy when ck is active),
+    # so both the video and any retry-resume see the rescued frame.
+    if _rescue_list and os.environ.get("RESCUE_PASS", "true").strip().lower() != "false":
+        cool = float(os.environ.get("RESCUE_COOLDOWN_S", "60"))
+        print(f"    [rescue] {len(_rescue_list)} placeholder shot(s) — "
+              f"retrying once after {cool:.0f}s cooldown...")
+        time.sleep(cool)
+        rescued = 0
+        for r in _rescue_list:
+            try:
+                target = scene_groups[r["i"]][r["j"]]
+            except (IndexError, KeyError):
+                continue
+            try:
+                img_bytes, provider = generate_image_bytes(
+                    r["prompt"], seed=r["seed"] + 101, width=r["w"],
+                    height=r["h"], mood=r["mood"],
+                    style_suffix=r["style_suffix"],
+                    negative_prompt=r["negative"],
+                )
+                with open(target, "wb") as f:
+                    f.write(img_bytes)
+                rescued += 1
+                print(f"    [rescue] scene {r['i']+1} shot {r['j']+1} "
+                      f"recovered via {provider}")
+                time.sleep(5)
+            except Exception as e:
+                print(f"    [rescue] scene {r['i']+1} shot {r['j']+1} "
+                      f"still failing: {str(e)[:80]}")
+        print(f"    [rescue] {rescued}/{len(_rescue_list)} placeholder(s) recovered")
 
     return scene_groups
 
@@ -2816,22 +2872,31 @@ _OUTRO_FALLBACK_BY_SERIES = {
 }
 
 
-def _create_placeholder(output_path: str, index: int, series: str = "mahabharata"):
+def _create_placeholder(output_path: str, index: int, series: str = "mahabharata",
+                        last_good: str | None = None):
     """
     Fallback image used when ALL providers (HF + 3 CF accounts + Pollinations)
-    fail for a given scene. Reuses the series' hand-picked outro asset so
-    the viewer sees ACTUAL imagery instead of a solid color tile.
+    fail for a given scene.
 
-    2026-05-14 production check (Krishna "Uddhava" video) shipped 5 scenes
-    of near-black solid-color tiles when Pollinations 429-stormed during a
-    retry — the "video" was effectively just audio over a black screen.
-    Reusing the outro asset means worst case = an "outro tableau loop"
-    that's visibly mythological even if it's the same image repeated.
-
-    Falls back to the old solid-color tile if the asset is missing on disk.
+    Preference order (2026-07-06 rework after UE1jlCAHPpw shipped 17s of
+    static brand card — 5 tail shots all failed to the outro asset while
+    narration continued):
+      1. `last_good` — the most recent successfully generated frame. A held
+         narrative image is invisible to viewers (reads as a lingering shot);
+         a brand card mid-story is not.
+      2. The series outro asset (2026-05-14 behavior) — still beats the
+         solid-color tile that shipped on the Krishna "Uddhava" video.
+      3. Solid-color tile (last resort).
     """
     import subprocess
     import shutil
+
+    if last_good and os.path.exists(last_good):
+        try:
+            shutil.copy2(last_good, output_path)
+            return
+        except Exception:
+            pass  # fall through to outro asset
 
     asset = _OUTRO_FALLBACK_BY_SERIES.get(series, "")
     if asset and os.path.exists(asset):
