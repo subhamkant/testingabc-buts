@@ -169,6 +169,7 @@ def signature_of(text: str) -> tuple:
 # ── Runtime API pre-check ───────────────────────────────────────────────────
 
 _RUNTIME_SIGNATURES_CACHE = None   # process-lifetime cache
+_RUNTIME_TITLES_CACHE = None       # raw published titles (same fetch)
 
 
 def fetch_recent_title_signatures(
@@ -224,12 +225,16 @@ def fetch_recent_title_signatures(
             return _RUNTIME_SIGNATURES_CACHE
 
         sigs = []
+        titles = []
         for i in range(0, len(ids), 50):
             chunk = ids[i:i + 50]
             r = yt.videos().list(part="snippet", id=",".join(chunk)).execute()
             for it in r["items"]:
                 title = it["snippet"]["title"]
+                titles.append(title)
                 sigs.append(signature_of(title))
+        global _RUNTIME_TITLES_CACHE
+        _RUNTIME_TITLES_CACHE = titles
 
         _RUNTIME_SIGNATURES_CACHE = sigs
         print(f"    [runtime-dedup] loaded {len(sigs)} published-title signatures from channel")
@@ -277,7 +282,37 @@ def topic_overlaps_published(topic_text: str, published_signatures: list) -> boo
     return False
 
 
+def _norm_title(s: str) -> str:
+    """Normalize for duplicate comparison: lowercase, keep only word
+    chars + Devanagari. 'द्रौपदी का सबसे बड़ा श्राप ' == 'द्रौपदी का सबसे बड़ा श्राप'."""
+    return re.sub(r"[^\wऀ-ॿ]+", "", (s or "").lower())
+
+
+def title_is_published(title: str) -> bool:
+    """True if `title` (or either half around '|') matches a published
+    channel title. 2026-07-06: two DIFFERENT Draupadi topics generated
+    the IDENTICAL title 'द्रौपदी का सबसे बड़ा श्राप | Draupadi's Biggest
+    Curse' — topic dedup can't see titles, so this is the missing gate.
+    Fail-safe: returns False when the title cache is empty/unavailable
+    (renders never blocked by an API hiccup)."""
+    fetch_recent_title_signatures()   # populates both caches
+    pub = _RUNTIME_TITLES_CACHE or []
+    if not title or not pub:
+        return False
+    cand = {_norm_title(title)}
+    cand.update(_norm_title(h) for h in title.split("|"))
+    cand.discard("")
+    for p_title in pub:
+        seen = {_norm_title(p_title)}
+        seen.update(_norm_title(h) for h in p_title.split("|"))
+        seen.discard("")
+        if cand & seen:
+            return True
+    return False
+
+
 def reset_runtime_cache() -> None:
     """Clear the process-lifetime cache. Used by tests."""
-    global _RUNTIME_SIGNATURES_CACHE
+    global _RUNTIME_SIGNATURES_CACHE, _RUNTIME_TITLES_CACHE
     _RUNTIME_SIGNATURES_CACHE = None
+    _RUNTIME_TITLES_CACHE = None

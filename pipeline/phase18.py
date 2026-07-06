@@ -1611,6 +1611,7 @@ _VIOLATION_REMINDERS = {
     "verb_per_frame":         "Your broll image_prompts were noun-poses (standing/looking/holding), not action verbs. ≥5/8 image_prompts MUST start (within the first 80 chars) with an action verb from: drawing back / sinking / severing / kneeling beneath / looming over / leaning into / dragging away from / charging / falling / gripping / snarling / recoiling / fleeing / walking away from / hurled / slashing / weeping over / striking / piercing / collapsing / lunging / wielding. FORBIDDEN openers: standing / looking / gazing / holding / sitting / watching. Final broll[-1].image_prompt MUST contain one of: silhouette / abandoned / walking away / withheld / lone diya / prone body / fading dusk.",
     "anti_merge_composition": "An image_prompt named ≥2 characters in the same frame but did NOT lead with a composition tag. Required: start two-character image_prompts with one of [OVER-SHOULDER] / [POWER-LOOM] / [CONFRONTATION-WIDE] / [WITNESS-FROM-BEHIND] / [THE-FALLEN] in literal square brackets, then continue with verb + intensity + wardrobe. Without this, FLUX merges the two subjects (3 arms, fused faces, shared torso).",
     "aftermath_closer":       "The final broll entry (broll[-1]) must declare wardrobe_context: 'AFTERMATH' (literal string in JSON). AFTERMATH = lone silhouette / face-withheld / abandoned weapon / prone body / lone diya / fading dusk. This is the consequence-as-closer beat ALL 4 channel winners used. Set BOTH the JSON wardrobe_context field AND the matching tokens inside broll[-1].image_prompt.",
+    "duplicate_title":        "Your title EXACTLY matches a video already published on this channel. Generate a COMPLETELY DIFFERENT title: change BOTH the charged noun AND the subversion adjective (e.g. श्राप -> प्रतिज्ञा/धोखा/गलती, सबसे बड़ा -> छुपा/आखिरी/असली) so the title reads as a NEW story, while still passing the Title DNA gate.",
     "title_dna":              "Your title failed the Title DNA gate. (1) NO mood/regret/wound/caste/religion/sin/truth/fate nouns. (2) NO silent/internal/abstract/quiet/deep/inner adjectives. (3) MUST contain ≥1 tribal-relational noun: Sacrifice/Vow/Friendship/Pride/Loyalty/Mistake/Betrayal/Curse/Promise/Doubt/Loss/Fear/Shame (or Devanagari equivalents बलिदान/प्रतिज्ञा/वचन/दोस्ती/अभिमान/घमंड/हार/डर/वफ़ादारी/गलती/धोखा/श्राप/शर्म). (4) Title MUST assert the OPPOSITE of the character's canonical virtue (Karna's loyalty → Karna's Biggest Mistake; Arjuna's skill → Arjuna's Greatest Doubt; Bhishma's vow → Bhishma's Greatest Betrayal). Examples that PASS: 'कर्ण की सबसे बड़ी गलती | Karna\\'s Biggest Mistake', 'अर्जुन का असली डर | Arjuna\\'s Real Fear', 'भीष्म का छुपा वचन | Bhishma\\'s Hidden Vow'. Examples that REJECT: 'Karna\\'s Silent Regret' (mood noun), 'Eklavya\\'s Caste Truth' (caste noun), 'Arjuna\\'s Deep Wound' (mood + soft adj).",
 }
 
@@ -2586,6 +2587,21 @@ def generate_phase18_script(
         # Gemini free-writes long; this trims to 95-110w preserving anchors.
         # Validation below always sees the FINAL text (plan-review fix).
         data = _compress_voiceover(data)
+
+        # Title-uniqueness HARD gate (2026-07-06). Topic dedup can't see
+        # titles: two different Draupadi topics both generated
+        # 'द्रौपदी का सबसे बड़ा श्राप' (user caught it; only the one-per-day
+        # upload-guard stopped a visible duplicate). A candidate whose
+        # title matches a published channel title is DISCARDED before
+        # validation — it can never enter attempts nor the fatal-clean
+        # rescue. last_violation feeds the corrective message on retry.
+        from pipeline.topic_signatures import title_is_published
+        _cand_title = data.get("title", "")
+        if _cand_title and title_is_published(_cand_title):
+            print(f"    [phase18-gen] DUPLICATE TITLE vs published video — "
+                  f"discarding candidate: {_cand_title[:60]}")
+            last_violation = "duplicate_title"
+            continue
 
         ok, violation, info = validate_phase18(data)
         score = info.get("score", 0)
