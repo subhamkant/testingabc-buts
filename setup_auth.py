@@ -1,21 +1,25 @@
 """
 🔑  One-Time YouTube OAuth Setup
 =================================
-Run this ONCE on your local machine before deploying to GitHub Actions.
+Run this ONCE per channel on your local machine.
 It will open a browser window for you to log in with your YouTube account.
 
-This codebase manages TWO channels via separate OAuth tokens:
-  • Vyasa AI (Mahabharata / Krishna / WhatIf) → token.pickle
-  • Anti-Hype Analyzer (Hindi explainer)      → token_explainer.pickle
+This codebase manages THREE channels via separate OAuth tokens:
+  • Vyasa AI       (Mahabharata / Krishna / WhatIf) → token.pickle
+  • Kant Decodes   (Hindi cinematic curiosity)      → token_explainer.pickle
+                    (was Hindi anti-hype, pivoted to curiosity 2026-05-31 —
+                    same channel, same token, new editorial DNA)
+  • Five Second World (English cinematic curiosity) → token_curiosity.pickle
+                    (NEW — created 2026-05-31 for global English audience)
 
-Both share the same client_secrets.json. During the consent flow you pick
-which YouTube channel (Brand Account) the token is for — Google will show
-a channel picker after Google login.
+All three share the same client_secrets.json. During the consent flow you
+pick which YouTube channel (Brand Account) the token is for — Google will
+show a channel picker after Google login.
 
 Usage:
-  python setup_auth.py                       # writes token.pickle      (Vyasa)
-  python setup_auth.py --channel vyasa       # same as above
-  python setup_auth.py --channel explainer   # writes token_explainer.pickle
+  python setup_auth.py --channel vyasa       # writes token.pickle           (Vyasa)
+  python setup_auth.py --channel explainer   # writes token_explainer.pickle (Kant Decodes)
+  python setup_auth.py --channel curiosity   # writes token_curiosity.pickle (Five Second World)
 
 After login each command creates:
   - <token_path>             (used by the bot)
@@ -24,6 +28,7 @@ After login each command creates:
 GitHub Secret names per channel:
   vyasa     → YOUTUBE_TOKEN_B64
   explainer → YOUTUBE_TOKEN_EXPLAINER_B64
+  curiosity → YOUTUBE_TOKEN_CURIOSITY_B64
 
 Setup steps:
   1. pip install -r requirements.txt
@@ -64,7 +69,13 @@ SCOPES = [
 _CHANNELS = {
     # short name → (token file, GitHub Secret name)
     "vyasa":     ("token.pickle",           "YOUTUBE_TOKEN_B64"),
+    # 'explainer' WAS the Kant Decodes anti-hype channel. The channel is now
+    # PIVOTED to Hindi cinematic curiosity (Kant Decodes brand). Same YouTube
+    # channel, same token file — only the upload content changes.
     "explainer": ("token_explainer.pickle", "YOUTUBE_TOKEN_EXPLAINER_B64"),
+    # NEW (2026-05-31): Five Second World — English cinematic curiosity for
+    # global audience. Receives EN Shorts + EN long-form from curiosity drivers.
+    "curiosity": ("token_curiosity.pickle", "YOUTUBE_TOKEN_CURIOSITY_B64"),
 }
 
 
