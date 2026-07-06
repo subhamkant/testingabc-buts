@@ -65,6 +65,10 @@ inputs:
   cloudflare-account-id-2:       { required: false, default: "" }
   cloudflare-api-token-3:        { required: false, default: "" }
   cloudflare-account-id-3:       { required: false, default: "" }
+  cloudflare-api-token-4:        { required: false, default: "" }
+  cloudflare-account-id-4:       { required: false, default: "" }
+  cloudflare-api-token-5:        { required: false, default: "" }
+  cloudflare-account-id-5:       { required: false, default: "" }
   elevenlabs-api-key:            { required: true }
   elevenlabs-api-key-fallback:   { required: true }
   elevenlabs-voice-id:           { required: true }
@@ -138,6 +142,10 @@ runs:
         CLOUDFLARE_ACCOUNT_ID_2:       ${{ inputs.cloudflare-account-id-2 }}
         CLOUDFLARE_API_TOKEN_3:        ${{ inputs.cloudflare-api-token-3 }}
         CLOUDFLARE_ACCOUNT_ID_3:       ${{ inputs.cloudflare-account-id-3 }}
+        CLOUDFLARE_API_TOKEN_4:        ${{ inputs.cloudflare-api-token-4 }}
+        CLOUDFLARE_ACCOUNT_ID_4:       ${{ inputs.cloudflare-account-id-4 }}
+        CLOUDFLARE_API_TOKEN_5:        ${{ inputs.cloudflare-api-token-5 }}
+        CLOUDFLARE_ACCOUNT_ID_5:       ${{ inputs.cloudflare-account-id-5 }}
         ELEVENLABS_API_KEY:            ${{ inputs.elevenlabs-api-key }}
         ELEVENLABS_API_KEY_FALLBACK:   ${{ inputs.elevenlabs-api-key-fallback }}
         ELEVENLABS_VOICE_ID:           ${{ inputs.elevenlabs-voice-id }}

@@ -1785,6 +1785,20 @@ def _gen_cloudflare(prompt: str, seed: int, width: int, height: int,
 
 def _gen_pollinations(prompt: str, seed: int, width: int, height: int,
                       negative: str = _NEGATIVE_DEFAULT) -> bytes:
+    # URL-length clamp (2026-07-06). Pollinations is a GET API — the full
+    # 4554-char negative stack made the URL exceed the server limit and
+    # EVERY call 414'd (status=414 bytes=915), killing the last-resort
+    # fallback exactly when CF+HF were exhausted (user-reported outage).
+    # Prompt gets priority; the negative is clause-trimmed into whatever
+    # room remains under a conservative 3500-char URL budget.
+    _URL_BUDGET = 3500
+    prompt = _clause_trim(prompt, 2200)
+    _fixed = len("https://image.pollinations.ai/prompt/?width=9999&height=9999"
+                 "&seed=999999999&model=flux-realism&nologo=true&enhance=true"
+                 "&negative=")
+    _neg_room = max(_URL_BUDGET - _fixed - len(quote(prompt)), 200)
+    while len(quote(negative)) > _neg_room and len(negative) > 100:
+        negative = _clause_trim(negative, max(int(len(negative) * 0.8), 100))
     encoded  = quote(prompt)
     negative = quote(negative)
     # model=flux: bare FLUX-schnell, no postprocessing filter applied.
