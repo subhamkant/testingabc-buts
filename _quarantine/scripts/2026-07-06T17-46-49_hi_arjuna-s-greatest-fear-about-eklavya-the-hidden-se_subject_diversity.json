@@ -1,0 +1,126 @@
+{
+  "ts": "2026-07-06T17-46-49",
+  "language": "hi",
+  "score": 18,
+  "score_max": 25,
+  "violation": "subject_diversity",
+  "topic": "Arjuna's greatest fear about Eklavya — the hidden seven-arrow truth in the dog's mouth, the secret archer who exposed Drona's biggest lie",
+  "title": "अर्जुन का घातक अभिमान | Arjuna's Fatal Pride",
+  "script": {
+    "voiceover": "अर्जुन काँप उठता है जब वो जंगल में उस कुत्ते को सात बाणों से चुप देखता है। उसके दिल में एक तीखा डर बैठ जाता है, उसकी आँखों के सामने द्रोण का वो वादा घूमता है: \"तुमसे बड़ा कोई धनुर्धर नहीं होगा।\" इस अकेले दृश्य ने उसकी पूरी दुनिया हिला दी थी; उसका गर्व टूट रहा था। लेकिन यह सिर्फ धनुष विद्या का डर नहीं था, यह गुरु के उस झूठ का पर्दाफाश था। द्रोण का धोखा अर्जुन के मन में एक गहरा घाव छोड़ गया। और जो एकलव्य ने अगले पल में किया... आज भी कांप उठाता है। क्या गुरु का वचन किसी के असली सामर्थ्य को दबाने का एक तरीका बन सकता है, या यह अर्जुन के अंदर का सबसे बड़ा डर था?",
+    "broll": [
+      {
+        "image_prompt": "Extreme macro close-up of a stray dog's muzzle, seven finely crafted arrows piercing the air around its mouth without injury, glistening with fresh morning dew, dense forest backdrop with dappled golden sunlight filtering through banyan canopy, Eklavya's dark mud-streaked tribal skin, bare-chested with natural bark-cloth lower garment, severed right thumb ALWAYS visible, rudraksha bead necklace, intense devoted eyes, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text.",
+        "anchor_phrase": "कुत्ते को सात बाणों",
+        "mood": "shocking revelation, tense discovery",
+        "wardrobe_context": "FOREST",
+        "shot_type": "ACTION"
+      },
+      {
+        "image_prompt": "Sweeping shot of a quiet forest clearing, Arjuna's tear-streaked face contorted in an expression of profound fear and disbelief, wide-eyed, clutching his glowing Gandiva bow with white-knuckled fingers, shafts of golden light piercing through the dense foliage, forest greens and earth-browns palette, royal Pandava archer, ornate embossed golden kavacha chest armor, indigo-and-white silk dhoti with gold borders, jeweled golden Kirita diadem, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text.",
+        "anchor_phrase": "दिल में एक तीखा डर",
+        "mood": "internal panic, deep fear",
+        "wardrobe_context": "FOREST",
+        "shot_type": "ACTION"
+      },
+      {
+        "image_prompt": "[POWER-LOOM] Forest ashram setting, Eklavya kneeling beneath a majestic banyan tree, crafting a clay idol of Dronacharya with intense devotion, while Dronacharya stands towering over him in a vision, stern and distant, simple white cotton dhoti, white angavastram, sacred yajnopavita thread across bare chest, weathered elderly Indian face, white hair tied in a sage's topknot, long white beard, forest greens and earth-browns palette, dappled golden sunlight, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text.",
+        "anchor_phrase": "द्रोण का वो वादा",
+        "mood": "false promise, devoted craft",
+        "wardrobe_context": "FOREST",
+        "shot_type": "ACTION"
+      },
+      {
+        "image_prompt": "Macro close-up of Arjuna's glowing Gandiva bow, intricately carved gold-and-pearl inlay, string drawn taut, a quiver full of finely feathered arrows in the background, showing his mastery, with the dense forest subtly out of focus behind, shafts of golden light piercing through the dense foliage, forest greens and earth-browns palette, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text.",
+        "anchor_phrase": "पूरी दुनिया हिला दी",
+        "mood": "supreme skill, shaken foundation",
+        "wardrobe_context": "FOREST",
+        "shot_type": "PROP"
+      },
+      {
+        "image_prompt": "[CONFRONTATION-WIDE] Dense jungle clearing with intertwining vines, Eklavya stands left-foreground side-profile, his face a mask of silent dignified defiance, severed right thumb visibly bleeding, tribal bow clutched in his hand, while Dronacharya recoils right mid-ground, his face etched with complex shame and regret, simple white cotton dhoti, white angavastram, sacred yajnopavita thread across bare chest, weathered elderly Indian face, shafts of golden light, forest greens and earth-browns palette, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text.",
+        "anchor_phrase": "गुरु के उस झूठ",
+        "mood": "exposed deceit, silent sacrifice",
+        "wardrobe_context": "FOREST",
+        "shot_type": "AMBIGUOUS"
+      },
+      {
+        "image_prompt": "Close-up of Arjuna's face, jaw clenched, eyes hollow-eyed and distant, a single tear streaking down his cheek, representing the deep wound of betrayal and fear, dim shadow-heavy frame, dappled golden sunlight, forest greens and earth-browns palette, royal Pandava archer, youthful handsome clean-jawed face with a neat dark mustache, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text.",
+        "anchor_phrase": "गहरा घाव छोड़ गया",
+        "mood": "internal wound, betrayal's sting",
+        "wardrobe_context": "FOREST",
+        "shot_type": "REACTION"
+      },
+      {
+        "image_prompt": "[WITNESS-FROM-BEHIND] Lush green forest path, Eklavya walks away from the camera, his back to the viewer, tribal Indian attire and the subtle glow of his inner resolve, moving towards a distant, shimmering village light, a silent promise in his stance, dappled golden sunlight through banyan canopy, forest greens and earth-browns palette, dark mud-streaked tribal Indian skin, bare-chested with natural bark-cloth lower garment, severed right thumb prominently visible, rudraksha bead necklace, intense devoted eyes, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text.",
+        "anchor_phrase": "एकलव्य ने अगले पल",
+        "mood": "resolute departure, new path",
+        "wardrobe_context": "FOREST",
+        "shot_type": "AMBIGUOUS"
+      },
+      {
+        "image_prompt": "Crushing shadows consume a dark forest clearing, Arjuna, a burdened silhouette in the distance, his figure small, recoiling from the empty space where Eklavya once stood, the air thick with unspoken regret and the weight of Drona's deception, shafts of fading dusk light, forest greens and earth-browns palette, royal Pandava archer, ornate embossed golden kavacha chest armor, indigo-and-white silk dhoti with gold borders, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text.",
+        "anchor_phrase": "असली सामर्थ्य को दबाने",
+        "mood": "heavy regret, lost potential",
+        "wardrobe_context": "FOREST",
+        "shot_type": "ENVIRONMENT"
+      },
+      {
+        "image_prompt": "A lone Arjuna walks away from his abandoned glowing Gandiva bow in a desolate, fading dusk forest, his figure silhouetted against the last rays of golden sunlight, the overwhelming fear of losing his supremacy and identity etched onto his profile, forest greens and earth-browns palette, royal Pandava archer, ornate embossed golden kavacha chest armor, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text.",
+        "anchor_phrase": "सबसे बड़ा डर",
+        "mood": "deep solitude, enduring fear",
+        "wardrobe_context": "AFTERMATH",
+        "shot_type": "ENVIRONMENT"
+      }
+    ],
+    "title": "अर्जुन का घातक अभिमान | Arjuna's Fatal Pride",
+    "hook_title": "अर्जुन का घातक अभिमान",
+    "description": "▶️ अगला भाग: Eklavya's untold legacy as Nishadha king\n\nएक कुत्ते ने कैसे अर्जुन के सारे घमंड को चूर कर दिया? महाभारत के अर्जुन, अपनी धनुर्विद्या पर अटल विश्वास रखते थे, लेकिन एक साधारण से कुत्ते के मुँह में सात बाण देखकर उनका पूरा संसार हिल गया। यह सिर्फ एक धनुर्धर की श्रेष्ठता का सवाल नहीं था, बल्कि गुरु द्रोण के उस वादे का पर्दाफाश था जो उन्होंने अर्जुन को दिया था। एकलव्य की निस्वार्थ भक्ति और द्रोण का स्वार्थ भरा छल, दोनों ने मिलकर अर्जुन के मन में एक ऐसा डर बो दिया जो उन्हें जीवन भर सताता रहा। यह कहानी उस क्षण की है जब एक कुत्ते के मुँह में फँसे तीर ने न सिर्फ एक बड़े झूठ को उजागर किया, बल्कि अर्जुन के अंदर के सबसे बड़े डर को भी सामने ले आया। क्या किसी की प्रतिभा को दबाना ही गुरु-शिष्य परंपरा का असली अर्थ था, या यह सिर्फ अपने प्रिय छात्र को बचाने की द्रोण की एक चाल थी?\n\n#Shorts #Mahabharata #महाभारत #Hindu #BhagavadGita #भगवद_गीता #Krishna #कृष्ण #Arjuna #अर्जुन #Karna #कर्ण #Bhishma #भीष्म #Draupadi #द्रौपदी #Kurukshetra #कुरुक्षेत्र #AncientIndia #IndianMythology #Dharma #MythologyShorts #VedicWisdom #HinduDharma #IndianHistory #SpiritualShorts #PauranikKathayein #SanatanDharma #HindiShorts #trending",
+    "tags": [
+      "Eklavya",
+      "Arjuna",
+      "Drona",
+      "एकलव्य",
+      "अर्जुन",
+      "द्रोण",
+      "Mahabharata",
+      "महाभारत",
+      "Shorts",
+      "Hindu mythology",
+      "गुरुदक्षिणा",
+      "Arjuna'sFear",
+      "EklavyaStory",
+      "DronacharyaLie",
+      "HiddenTruth",
+      "AncientArcher"
+    ],
+    "thumbnail_prompt": "Dramatic Mahabharata thumbnail — vibrant colours, cinematic, portrait composition, Arjuna's tear-streaked face, wide-eyed in horror, reflection of a dog with seven arrows in its mouth in his kohl-rimmed eyes, dense forest backdrop with dappled golden sunlight, no hands in frame",
+    "quotable_line": "जब गुरु का वचन ही शिष्य के लिए सबसे बड़ा धोखा बन जाए।",
+    "pinned_question": "❓ जब गुरु का वचन ही शिष्य के लिए सबसे बड़ा धोखा बन जाए। क्या द्रोण का यह निर्णय सही था?",
+    "next_seed": "और इसी अन्याय ने एकलव्य को एक महान राजा बनाया।",
+    "language": "hi",
+    "content_type": "story",
+    "topic": "Arjuna's greatest fear about Eklavya — the hidden seven-arrow truth in the dog's mouth, the secret archer who exposed Drona's biggest lie",
+    "series": "mahabharata",
+    "episode_n": 64,
+    "arc_character_devanagari": "एकलव्य",
+    "arc_character_english": "Eklavya — The Devotion That Cost a Thumb",
+    "_phase18_strict_pass": false,
+    "_phase18_score": 18,
+    "_phase18_score_max": 25,
+    "_phase18_score_floor": 19,
+    "_phase18_violation": "subject_diversity",
+    "_phase18_failing_gates": [
+      "anti_merge_composition",
+      "char_names",
+      "engagement",
+      "intensity",
+      "monotony",
+      "subject_diversity",
+      "tha_tic"
+    ],
+    "_phase18_fatal_failures": [
+      "anti_merge_composition"
+    ]
+  }
+}
