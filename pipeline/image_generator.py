@@ -68,7 +68,7 @@ STYLE_SUFFIX_MORTAL = (
     # Posture + lighting — the literal halo effect.
     "regal posture, high-end epic fantasy film styling, "
     "golden hour rim lighting creating an ethereal halo on hair and shoulders, "
-    "85mm portrait, crisp detail on jewelry and fabric, "
+    "85mm portrait, crisp intricate detail on jewelry, engraved metal and fabric weave, richly textured ornate surfaces, "
     # Face-exposure anchor — added 2026-05-14 after FLUX over-interpreted
     # "oil-lamp" cues and rendered Karna near-black. Canonical Karna is
     # golden-bronze (Surya's son), not silhouette-dark.

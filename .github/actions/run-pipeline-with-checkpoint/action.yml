@@ -111,7 +111,10 @@ runs:
     - name: Vulkan runtime for frame upscaler (non-fatal)
       shell: bash
       run: |
-        sudo apt-get install -y -qq libvulkan1 mesa-vulkan-drivers 2>/dev/null || \
+        # apt-get update FIRST (2026-07-06) — the install was failing on the
+        # runner's stale package lists, so the upscaler silently self-disabled
+        # and no shipped video has had the 2x detail supersample yet.
+        (sudo apt-get update -qq && sudo apt-get install -y -qq libvulkan1 mesa-vulkan-drivers) || \
           echo "[upscale] vulkan install failed — upscaler will self-disable"
       continue-on-error: true
 

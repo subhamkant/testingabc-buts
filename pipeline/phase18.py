@@ -2172,6 +2172,23 @@ BROLL RULES (HARD — violation = REJECT):
       Vyasa — austere but immaculate white robes, never ragged) and
       Eklavya's approved tribal-prince look.
 
+      DENSE-DETAIL RULE (2026-07-06, channel owner: "images still
+      lack details"): every image_prompt must be MATERIALLY dense,
+      not just emotionally dense. Each prompt MUST name:
+        (a) at least TWO concrete environment elements (carved
+            sandstone pillars, hanging oil lamps, silk banners, war
+            drums, marigold garlands, brass urns, chariot wheels,
+            temple friezes, smoke braziers, scattered arrows...)
+        (b) at least TWO material/texture words (engraved, embossed,
+            gem-studded, zari-woven, hammered gold, polished bronze,
+            weathered stone, glistening, dust-caked...)
+        (c) ONE atmospheric light phrase (shafts of golden light,
+            drifting dust motes, oil-lamp glow, ember-lit haze...).
+      A prompt like "Karna stands sadly on the battlefield" is
+      REJECTED-quality; "Karna stands amid splintered chariot wheels
+      and torn silk banners, embers drifting through shafts of dusk
+      light glinting off his engraved kavacha" is the bar.
+
       CANONICAL CHARACTER SIGNATURES (use these EXACT phrases):
 
       Krishna: "graceful powerful athletic divine form with broad
