@@ -2160,6 +2160,17 @@ BROLL RULES (HARD — violation = REJECT):
       "unarmed") — the image model renders any noun it reads, even
       negated ones. Assert only what IS present.
 
+      ROYAL-BEARING RULE (2026-07-06, channel owner directive): every
+      named Mahabharata character is a king, prince, royal relative,
+      general, or god — there are NO commoners among principals. Even
+      in grief, injury, exile, defeat, or curse they KEEP visible royal
+      signals: gold ornaments (armlets, necklaces, kundals), rich silk
+      garments (torn or ash-dusted but unmistakably royal), and regal
+      posture. NEVER describe a principal in plain cloth wraps, beggar
+      rags, or common villager clothing. Only exceptions: sages (Drona,
+      Vyasa — austere but immaculate white robes, never ragged) and
+      Eklavya's approved tribal-prince look.
+
       CANONICAL CHARACTER SIGNATURES (use these EXACT phrases):
 
       Krishna: "graceful powerful athletic divine form with broad
@@ -2197,14 +2208,18 @@ BROLL RULES (HARD — violation = REJECT):
         ALWAYS visible (sometimes dripping blood), rudraksha bead
         necklace, intense devoted eyes"
 
-      Ashwatthama: "towering broad-shouldered muscular scholar-warrior,
-        wild dark hair torn loose
-        from its ascetic topknot, a radiant divine gem blazing in the
-        center of his forehead, three white ash tripundra lines on his
-        brow, battle-scarred dark bronze kavacha, rudraksha strings"
-        — POST-CURSE wanderer scenes instead: "gaping raw bleeding
-        wound in the center of his forehead, matted filthy hair,
-        tattered dirty rags, agonized haunted eyes"
+      Ashwatthama: "towering powerfully muscled frame with broad
+        shoulders, skin dusted ash-pale with sacred vibhuti, long wild
+        dark mane streaming from a high warrior topknot, the divine Mani
+        gem in the center of his forehead blazing with searing
+        crimson-white light, three white ash tripundra lines, layered
+        gold necklaces over rudraksha strings, battle-scarred dark
+        bronze kavacha, crimson-and-black war dhoti"
+        — POST-CURSE wanderer scenes instead: "a fallen warrior-prince,
+        raw bleeding wound in the center of his forehead, wind-blown
+        grey-streaked hair, torn but regal deep-maroon and gold robes,
+        tarnished gold armlets, clutching his ancient ornate bow,
+        tragic fallen majesty" (NEVER beggar rags or plain cloth)
 
       Bhima: "colossal mountain-of-a-warrior build, the strongest man
         alive, massive barrel chest and tree-trunk arms, fierce dark
