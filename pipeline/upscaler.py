@@ -120,6 +120,12 @@ def upscale_images(image_paths: list, label: str = "") -> list:
             )
             ok = (r.returncode == 0 and os.path.exists(out_png)
                   and os.path.getsize(out_png) > 0)
+            if not ok and i == 0:
+                # Surface WHY the probe failed (GHA has failed the
+                # probe on every run; stderr was swallowed until now).
+                _err = (r.stderr or b'').decode(errors='replace')[-400:]
+                print(f"    [upscale] probe rc={r.returncode} "
+                      f"stderr: {_err.strip()[:300]}", flush=True)
         except subprocess.TimeoutExpired:
             ok = False
             print(f"    [upscale] frame {i+1}/{len(todo)} exceeded "

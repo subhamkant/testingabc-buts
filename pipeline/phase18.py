@@ -2161,6 +2161,11 @@ BROLL RULES (HARD — violation = REJECT):
       "unarmed") — the image model renders any noun it reads, even
       negated ones. Assert only what IS present.
 
+      MODESTY RULE (ABSOLUTE): female characters are ALWAYS fully
+      and modestly covered — sari over a fitted blouse, chest,
+      midriff and shoulders covered. Write "modestly draped". Never
+      emphasize bare skin, drape slippage, or a bare shoulder.
+
       ROYAL-BEARING RULE: every principal is royalty or divine — never
       a commoner. Even wounded/exiled/cursed they keep gold ornaments,
       rich silks (torn but clearly royal) and regal posture. No plain

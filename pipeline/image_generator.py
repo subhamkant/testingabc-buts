@@ -537,6 +537,12 @@ def _resolve_style_suffix(series: str, visual_style: str) -> str:
 # analysis flagged as the most-recurring visible quality regressions
 # (heavy color wash, plastic skin, CGI-game-character vibe).
 _NEGATIVE_DEFAULT = (
+    # ── Modesty block (2026-07-07, ABSOLUTE top priority). A shipped
+    # Draupadi frame rendered with an exposed breast (user pulled the
+    # video). There were ZERO nudity terms in the negative stack — every
+    # "breast" hit in this file was breastPLATE armor vocabulary. ──
+    "nudity,nude,topless,exposed breast,bare breast,nipple,areola,"
+    "see-through fabric,sheer fabric,cleavage,bare torso on women,"
     # ── Eye-detail failure mode (TOP priority — 2026-05-14 Karna-arc local
     # test shipped 7/10 frames with dead-eye / black-void pupils. Distilled
     # FLUX-schnell loses eye micro-detail; front-loaded negatives push it
@@ -972,18 +978,41 @@ _CATEGORY_PREFIX_BY_SERIES = {
         "ui":       "low-fi screen capture from an investigative documentary OR a photographed-off-monitor shot of a news terminal, slight moire or screen glare, looks filmed off a real screen, no logos, no readable proper-noun text, ",
     },
     "curiosity": {
-        # Anti-text guard appears EARLY (front-loaded — FLUX down-weights late tokens)
-        # AND at the end. Specifically lists "no fictional brand names" because
-        # FLUX-schnell hallucinated a fictional "VIPER" logo on spacecraft in the
-        # v2 Short 1 render — generic "no text, no logos" wasn't strong enough.
-        "hero":              "premium cinematic photograph (absolutely no readable text, no fictional brand names, no painted logos, no numbers visible), single dramatic subject, volumetric lighting, atmospheric depth, motion blur on action elements, color graded teal-and-orange or cool moonlight, 35mm film aesthetic, no text, no logos, no signs, ",
-        "environment":       "vast cinematic landscape (absolutely no readable text, no fictional brand names, no painted logos, no signs visible), scale-emphasizing wide angle, dramatic sky or cosmic backdrop, dust or particles in air, golden-hour or moonlight, NASA / National Geographic photography style, no humans, no text, no logos, ",
-        "motion":            "cinematic photograph of motion mid-action (absolutely no readable text, no fictional brand names, no painted logos on any machinery or vehicles) — collapsing or flowing or expanding or disintegrating — slight motion blur, dramatic lighting, dynamic composition, no text, no logos, no signs, ",
-        "tension":           "tight cinematic close-up of an object (absolutely no readable text, no fictional brand names, no painted logos, no readable numbers) implying threat or change, shallow depth of field, harsh side-lighting, single light source, intentionally ominous framing, no people, no text, no logos, ",
-        "aftermath":         "calm cinematic still (absolutely no readable text, no fictional brand names, no painted logos visible) — after-the-event quietness, soft natural light, single subject in a vast empty space, contemplative composition, no people, no text, no logos, ",
-        "human_consequence": "cinematic close-up of a single human in an emotional moment — eyes widening in slow-dawning realization, dilating pupils, a single tear tracing a cheek, parted lips mid-gasp, frozen face mid-thought, an open mouth in silent scream, lashes wet, jaw clenched in dread, brow furrowed in shock — face occupies the frame, shallow depth of field, intense single-source lighting, photoreal skin texture, dramatic emotional weight, NO hands or fingers visible in frame, no text, no logos, no readable numbers, ",
+        # v6 (2026-07-07) — compact shot-grammar prefixes. The v5 prefixes
+        # carried 200+ chars of duplicated "no text / no logos" negation which
+        # (a) pushed the scene SUBJECT past char 500-700 — the weak-attention
+        # tail of FLUX's text window (the exact amputation failure Phase 26
+        # fixed on the Mahabharata side: important tokens must come FIRST),
+        # and (b) violated the negation-poisoning rule — bans phrased in the
+        # positive prompt SUMMON the banned object ("no breastplate" renders
+        # a breastplate). Result was muddy, disorganized frames where the
+        # framing boilerplate out-attended the actual subject.
+        #
+        # Each prefix is now ≤150 chars of pure shot grammar (shot type +
+        # composition + focus discipline, positive-form only). The anti-text
+        # guard lives ONCE, compactly, at the very END of the assembled
+        # prompt (_CURIOSITY_TAIL_GUARD) where negations do least harm.
+        # human_consequence keeps its explicit no-hands ban — that specific
+        # ban is proven load-bearing (FLUX mangles fingers; see
+        # feedback_flux_hands_artifact) and outweighs the poisoning risk.
+        "hero":              "premium cinematic photograph, one dramatic subject centered and sharply focused, clean uncluttered composition, ",
+        "environment":       "vast cinematic landscape, wide angle emphasizing scale, single clear focal point, layered depth, ",
+        "motion":            "cinematic action photograph frozen mid-motion, strong directional energy, subject sharply separated from background, ",
+        "tension":           "tight cinematic close-up, shallow depth of field, single light source, ominous framing, one object dominating the frame, ",
+        "aftermath":         "calm cinematic still, single subject isolated in vast empty space, soft natural light, generous negative space, ",
+        "human_consequence": "cinematic close-up of a single human face filling the frame, raw emotion in the eyes, photoreal skin texture, shallow depth of field, NO hands or fingers in frame, ",
     },
 }
+
+# Single compact anti-text guard appended at the very END of every assembled
+# curiosity prompt. End position = weakest attention = least negation
+# poisoning while still nudging FLUX away from gibberish signage. The old
+# approach front-loaded three copies of this per prefix, which both poisoned
+# the render AND buried the subject. "unmarked surfaces" leads because it is
+# positive-form — it describes what SHOULD be there.
+_CURIOSITY_TAIL_GUARD = (
+    ", unmarked surfaces, no readable text, no logos, no watermarks"
+)
 
 # Backwards-compat alias for any callers still expecting flat _CATEGORY_PREFIX
 # (the explainer's pre-multi-series shape). New code should use
@@ -2289,15 +2318,30 @@ def generate_images(scenes_or_script, single_shot: bool = False, series: str = "
             default_cat_for_series = next(iter(series_categories))  # first key as fallback
             img_w, img_h = _resolution_for(series, mode)
             # v2.1 (2026-06-13) — style anchor injection, curiosity-only.
-            # Resolves the per-topic cinematography reference once per scene
-            # and concatenates it into every shot's prompt between the
-            # category framing and the subject. Mahabharata + explainer skip
-            # this entirely (anchor_fragment stays empty string).
-            anchor_fragment = ""
+            # v6  (2026-07-07) — ORDER FIX (Phase 26 lesson applied to the
+            # curiosity path): the subject now sits directly after the compact
+            # framing, inside FLUX's strong-attention window. The style anchor
+            # (pure grade/lens vocabulary — order-insensitive) moves BEHIND the
+            # subject, and the single anti-text guard goes last. Old order
+            # buried the subject at char 524-707 → muddy generic frames.
+            # Mahabharata + explainer skip all of this (anchor stays empty,
+            # explainer assembly is framing+subject exactly as before).
+            anchor_tail = ""
             if series == "curiosity":
                 _anchor = (style_anchor or _DEFAULT_STYLE_ANCHOR).strip().rstrip(",").strip()
                 if _anchor:
-                    anchor_fragment = _anchor + ", "
+                    anchor_tail = ", " + _anchor
+            # Concrete-intensity floor (per feedback_ai_pipeline_failsafes):
+            # FLUX defaults to sterile "museum" renders when a prompt has no
+            # intensity vocabulary. Advisory only — Pro authors the prompts,
+            # so we warn rather than mutate.
+            _INTENSITY_WORDS = (
+                "massive", "violent", "harsh", "extreme", "torrential", "raging",
+                "blinding", "crushing", "desperate", "furious", "scorching",
+                "freezing", "colossal", "shattered", "burning", "drowning",
+                "toxic", "brutal", "roaring", "collapsing", "exploding", "dark",
+                "glowing", "dramatic", "intense", "eerie", "stark", "dust",
+            )
             for shot_idx, shot in enumerate(track):
                 if not isinstance(shot, dict):
                     continue
@@ -2306,7 +2350,22 @@ def generate_images(scenes_or_script, single_shot: bool = False, series: str = "
                 if not subject:
                     continue
                 framing = series_categories.get(cat) or series_categories[default_cat_for_series]
-                full_prompt = framing + anchor_fragment + subject
+                if series == "curiosity":
+                    # SUBJECT-FIRST assembly: framing (≤150ch shot grammar) →
+                    # subject → anchor → tail guard. If the total overruns the
+                    # ~950-char strong-attention budget, trim the ANCHOR tail —
+                    # never the subject (mirror of _build_full_prompt's
+                    # prepend-locks/trim-suffix discipline).
+                    _sub = subject.rstrip(",").strip()
+                    budget_left = 950 - len(framing) - len(_sub) - len(_CURIOSITY_TAIL_GUARD)
+                    _tail = anchor_tail if len(anchor_tail) <= budget_left else anchor_tail[:max(budget_left, 0)].rsplit(",", 1)[0]
+                    full_prompt = framing + _sub + _tail + _CURIOSITY_TAIL_GUARD
+                    if not any(w in _sub.lower() for w in _INTENSITY_WORDS):
+                        print(f"    [warn] scene {i+1} shot {shot_idx+1} subject has no "
+                              f"concrete intensity adjective — FLUX may default to a "
+                              f"sterile museum render (see ai-pipeline-failsafes)")
+                else:
+                    full_prompt = framing + subject
                 # Seed: stable per (scene, shot, category) so re-runs reproduce
                 seed = i * 211 + shot_idx * 37 + (hash(cat) & 0xFFF)
                 output_path = f"{_TEMP_ROOT}/images/scene_{i:02d}_shot_{shot_idx:02d}.jpg"

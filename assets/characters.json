@@ -16,9 +16,10 @@
   },
   "Draupadi": {
     "_revised": "Phase 26 visual bible from user reference images + 3-scenario profile (2026-07-05). WAR = the vow era: unbound storm-cloud hair + somber plain red sari, ornaments positively claimed as 'simple glass bangles her only ornament' (writing 'no jewelry' would render jewelry). Court = Samragni: Chudamani + Mekhala + crimson-magenta zari.",
-    "visual": "Empress Draupadi the Samragni of Indraprastha: exceptionally beautiful with a radiant fair wheatish-gold complexion and luminous glowing skin, large kohl-lined lotus eyes, gem-encrusted golden Chudamani headpiece at her hair parting, deep crimson and magenta silk sari woven with gold zari, ornate ruby-and-pearl Mekhala golden waistband, elaborate pearl garlands and gem-set gold armbands, red kumkum mark on her forehead, long thick glossy black hair in a royal updo, erect proud deeply poised sovereign majesty",
-    "signature_lock": "Draupadi Krishnaa the fire-born queen, exceptionally beautiful with a radiant fair wheatish-gold complexion and luminous glowing skin, large fierce sorrowful kohl-lined lotus eyes, her long thick black hair flowing completely loose untamed and disheveled down her back like a dark storm cloud — the unbound hair of her terrible vow, somber deep-red plain silk sari draped with austere dignity, simple glass bangles her only ornament, red kumkum mark on her forehead, standing erect as the living moral fire of the war, vengeful burning vigilant gaze",
-    "colors": "radiant fair wheatish-gold luminous skin, unbound black storm-cloud hair, somber deep-red plain sari (war) or crimson-magenta gold zari silks (court), gold Chudamani headpiece, ruby-pearl Mekhala waistband, red kumkum"
+    "visual": "Empress Draupadi the Samragni of Indraprastha: exceptionally beautiful with a radiant fair wheatish-gold complexion and luminous glowing skin, large kohl-lined lotus eyes, gem-encrusted golden Chudamani headpiece at her hair parting, deep crimson and magenta silk sari woven with gold zari, ornate ruby-and-pearl Mekhala golden waistband, elaborate pearl garlands and gem-set gold armbands, red kumkum mark on her forehead, long thick glossy black hair in a royal updo, erect proud deeply poised sovereign majesty, modestly draped sari over a fitted blouse, torso and shoulders fully covered",
+    "signature_lock": "Draupadi Krishnaa the fire-born queen, exceptionally beautiful with a radiant fair wheatish-gold complexion and luminous glowing skin, large fierce sorrowful kohl-lined lotus eyes, her long thick black hair flowing completely loose untamed and disheveled down her back like a dark storm cloud — the unbound hair of her terrible vow, somber deep-red plain silk sari modestly draped over a fitted deep-red blouse, her torso, chest and shoulders fully covered with austere dignity, simple glass bangles her only ornament, red kumkum mark on her forehead, standing erect as the living moral fire of the war, vengeful burning vigilant gaze",
+    "colors": "radiant fair wheatish-gold luminous skin, unbound black storm-cloud hair, somber deep-red plain sari (war) or crimson-magenta gold zari silks (court), gold Chudamani headpiece, ruby-pearl Mekhala waistband, red kumkum",
+    "_modesty": "2026-07-07: positive full-coverage assertions added after a shipped Draupadi frame rendered with exposed chest (schnell drifts on one-shoulder drape; negatives alone don't hold)."
   },
   "Bhishma": {
     "_revised": "Phase 26 visual bible from user reference images + 3-scenario profile (2026-07-04). Identity color = SILVER/WHITE (vs Karna's sun-gold): silver kavacha, ivory silks, white steeds. 'plate armor'/'war helm' from the profile deliberately translated to kavacha/diadem vocabulary — banned Western tokens trip _ARMOR_FORBIDDEN_RE and render knights.",
@@ -135,14 +136,16 @@
   "Kunti": {
     "_revised": "Phase 23.2 (2026-06-28) — canonical signature_lock from user prompt library.",
     "visual": "Queen Kunti the noble mother of Pandavas, dignified graceful middle-aged queen, serene sorrowful eyes carrying the weight of great sacrifice, wearing white widow's sari bordered with gold, dignified motherly posture, gentle strong hands, expression of deep devotion and quiet strength, regal bearing despite hardships",
-    "signature_lock": "weary but graceful older Indian woman, pale golden Indian skin, sorrowful dignified eyes, silver-streaked dark hair, simple unadorned white silk sari with minimal adornment, radiating quiet strength, holding a simple earthen pot",
-    "colors": "white-gold sari, serene dignified face, silver-streaked dark hair"
+    "signature_lock": "weary but graceful older Indian woman, pale golden Indian skin, sorrowful dignified eyes, silver-streaked dark hair, simple unadorned white silk sari modestly draped over a fitted blouse, fully covered with minimal adornment, radiating quiet strength, holding a simple earthen pot",
+    "colors": "white-gold sari, serene dignified face, silver-streaked dark hair",
+    "_modesty": "2026-07-07: positive full-coverage assertions added after a shipped Draupadi frame rendered with exposed chest (schnell drifts on one-shoulder drape; negatives alone don't hold)."
   },
   "Gandhari": {
     "_added": "Phase 23.2 (2026-06-28) — canonical signature_lock from user prompt library.",
     "visual": "Gandhari the devoted Kuru matriarch and mother of the Kauravas, dignified older Indian woman with rigid austere posture, wearing heavy pale silk sari, her eyes permanently covered by a tightly bound silk blindfold (voluntary sacrifice — she chose blindness to share her blind husband Dhritarashtra's fate), austere but deeply regal motherly bearing",
-    "signature_lock": "dignified older Indian woman, weathered noble Indian face, heavy pale silk sari with traditional draping, eyes permanently covered by a tightly bound silk blindfold (voluntary sacrifice), austere rigid posture standing beside a golden throne",
-    "colors": "pale silk sari, silk blindfold, austere noble bearing"
+    "signature_lock": "dignified older Indian woman, weathered noble Indian face, heavy pale silk sari modestly draped over a fitted blouse, fully covered with traditional dignity, eyes permanently covered by a tightly bound silk blindfold (voluntary sacrifice), austere rigid posture standing beside a golden throne",
+    "colors": "pale silk sari, silk blindfold, austere noble bearing",
+    "_modesty": "2026-07-07: positive full-coverage assertions added after a shipped Draupadi frame rendered with exposed chest (schnell drifts on one-shoulder drape; negatives alone don't hold)."
   },
   "Nakula": {
     "_added": "Phase 23.2 (2026-06-28) — canonical signature_lock from user prompt library.",
