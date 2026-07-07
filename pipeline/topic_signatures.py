@@ -282,6 +282,12 @@ def topic_overlaps_published(topic_text: str, published_signatures: list) -> boo
     return False
 
 
+def fetch_recent_titles() -> list:
+    """Raw published titles (same fetch/cache as the signatures)."""
+    fetch_recent_title_signatures()
+    return list(_RUNTIME_TITLES_CACHE or [])
+
+
 def _norm_title(s: str) -> str:
     """Normalize for duplicate comparison: lowercase, keep only word
     chars + Devanagari. 'द्रौपदी का सबसे बड़ा श्राप ' == 'द्रौपदी का सबसे बड़ा श्राप'."""

@@ -2490,7 +2490,29 @@ def generate_phase18_script(
     last_dup_title = ""
     last_info: dict = {}
 
-    for attempt in range(MAX_ATTEMPTS):
+    # Banned-titles block (2026-07-07). The title gate was discarding
+    # 2-3 candidates per run POST-generation ('कर्ण की सबसे बड़ी गलती'
+    # kept reconverging), starving the best-of-N pool → 4 quarantines
+    # in 5 renders at 17-18/25. Telling the LLM the recent published
+    # titles UP FRONT prevents the waste at the source.
+    try:
+        from pipeline.topic_signatures import fetch_recent_titles
+        _pub_titles = fetch_recent_titles()[:20]
+        if _pub_titles:
+            base_prompt += (
+                "\n\nBANNED TITLES — already published on this channel. "
+                "Your title must NOT match any of these, nor reuse either "
+                "half around the '|' of any of them:\n"
+                + "\n".join(f"  - {t}" for t in _pub_titles))
+    except Exception as _bt_e:
+        print(f"    [phase18-gen] banned-title block skipped: {str(_bt_e)[:60]}")
+
+    # Attempt refund: a duplicate-title discard doesn't consume one of
+    # the 8 scoring slots (cap +3 refunds so a stuck LLM can't loop).
+    _extra_attempts = 0
+    attempt = -1
+    while attempt + 1 < MAX_ATTEMPTS + _extra_attempts:
+        attempt += 1
         full_prompt = base_prompt
         if attempt > 0 and last_violation:
             base_reminder = _VIOLATION_REMINDERS.get(
@@ -2628,6 +2650,10 @@ def generate_phase18_script(
                   f"discarding candidate: {_cand_title[:60]}")
             last_violation = "duplicate_title"
             last_dup_title = _cand_title
+            if _extra_attempts < 3:
+                _extra_attempts += 1
+                print(f"    [phase18-gen] attempt refunded "
+                      f"({_extra_attempts}/3 refunds used)")
             continue
 
         ok, violation, info = validate_phase18(data)
