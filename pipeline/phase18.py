@@ -2161,33 +2161,18 @@ BROLL RULES (HARD — violation = REJECT):
       "unarmed") — the image model renders any noun it reads, even
       negated ones. Assert only what IS present.
 
-      ROYAL-BEARING RULE (2026-07-06, channel owner directive): every
-      named Mahabharata character is a king, prince, royal relative,
-      general, or god — there are NO commoners among principals. Even
-      in grief, injury, exile, defeat, or curse they KEEP visible royal
-      signals: gold ornaments (armlets, necklaces, kundals), rich silk
-      garments (torn or ash-dusted but unmistakably royal), and regal
-      posture. NEVER describe a principal in plain cloth wraps, beggar
-      rags, or common villager clothing. Only exceptions: sages (Drona,
-      Vyasa — austere but immaculate white robes, never ragged) and
-      Eklavya's approved tribal-prince look.
+      ROYAL-BEARING RULE: every principal is royalty or divine — never
+      a commoner. Even wounded/exiled/cursed they keep gold ornaments,
+      rich silks (torn but clearly royal) and regal posture. No plain
+      cloth wraps or beggar rags. Exceptions: sages in immaculate
+      austere white; Eklavya's tribal-prince look.
 
-      DENSE-DETAIL RULE (2026-07-06, channel owner: "images still
-      lack details"): every image_prompt must be MATERIALLY dense,
-      not just emotionally dense. Each prompt MUST name:
-        (a) at least TWO concrete environment elements (carved
-            sandstone pillars, hanging oil lamps, silk banners, war
-            drums, marigold garlands, brass urns, chariot wheels,
-            temple friezes, smoke braziers, scattered arrows...)
-        (b) at least TWO material/texture words (engraved, embossed,
-            gem-studded, zari-woven, hammered gold, polished bronze,
-            weathered stone, glistening, dust-caked...)
-        (c) ONE atmospheric light phrase (shafts of golden light,
-            drifting dust motes, oil-lamp glow, ember-lit haze...).
-      A prompt like "Karna stands sadly on the battlefield" is
-      REJECTED-quality; "Karna stands amid splintered chariot wheels
-      and torn silk banners, embers drifting through shafts of dusk
-      light glinting off his engraved kavacha" is the bar.
+      DENSE-DETAIL RULE: every image_prompt names >=2 concrete
+      environment props (chariot wheels, oil lamps, silk banners,
+      temple friezes...), >=2 material/texture words (engraved,
+      gem-studded, hammered gold, weathered stone...) and 1 light
+      phrase (embers drifting in shafts of dusk light...). "Karna
+      stands sadly on the battlefield" = rejected-quality.
 
       CANONICAL CHARACTER SIGNATURES (use these EXACT phrases):
 
@@ -2497,7 +2482,7 @@ def generate_phase18_script(
     # titles UP FRONT prevents the waste at the source.
     try:
         from pipeline.topic_signatures import fetch_recent_titles
-        _pub_titles = fetch_recent_titles()[:20]
+        _pub_titles = fetch_recent_titles()[:12]
         if _pub_titles:
             base_prompt += (
                 "\n\nBANNED TITLES — already published on this channel. "
