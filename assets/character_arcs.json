@@ -83,6 +83,58 @@
         "Draupadi's secret vow about her hair — the queen's untold revenge, never tied until washed in Dushasana's blood, the greatest curse she carried in silence",
         "Draupadi's hidden rage in forest exile — twelve years of secret humiliation she refused to forget, the queen's coldest vow waiting for the day of revenge",
         "Draupadi's untold grief after the war — the queen's greatest betrayal by victory, winning a kingdom of corpses, losing all five sons in one secret night"
+      ],
+      "_auto_added": [
+        {
+          "topic": "Draupadi's fatal abduction — the queen's desperate defiance against Jayadratha, her hidden rage at the Pandavas' absence, the greatest betrayal of her royal security.",
+          "source": "auto_expansion_v21",
+          "added_at": "2026-07-07T18:30:53.588086+00:00",
+          "validated_passes": [
+            "semantic_gate",
+            "stage2_dedup"
+          ],
+          "llm_quality_tier": "fast"
+        },
+        {
+          "topic": "Draupadi's untold humiliation in Virata — the queen's silent rage against Kichaka's advances, her secret plea to Bhima, the greatest mistake of her forced anonymity.",
+          "source": "auto_expansion_v21",
+          "added_at": "2026-07-07T18:30:53.588233+00:00",
+          "validated_passes": [
+            "semantic_gate",
+            "stage2_dedup"
+          ],
+          "llm_quality_tier": "fast"
+        },
+        {
+          "topic": "Draupadi's unforgiving truth about Ashwatthama — the queen's burning rage for her slain sons, her cold demand for his jewel, the greatest betrayal of her compassion.",
+          "source": "auto_expansion_v21",
+          "added_at": "2026-07-07T18:30:53.588375+00:00",
+          "validated_passes": [
+            "semantic_gate",
+            "stage2_dedup"
+          ],
+          "llm_quality_tier": "fast"
+        },
+        {
+          "topic": "Draupadi's hidden rage for dharma — the queen's fierce challenge to Yudhishthira's wager, her desperate questioning of the Kuru elders, the greatest betrayal of her autonomy.",
+          "source": "auto_expansion_v21",
+          "added_at": "2026-07-07T18:30:53.588530+00:00",
+          "validated_passes": [
+            "semantic_gate",
+            "stage2_dedup"
+          ],
+          "llm_quality_tier": "fast"
+        },
+        {
+          "topic": "Draupadi's bitter truth to Krishna — the queen's untold rage at her suffering, her desperate plea for divine vengeance, the greatest betrayal of her forgotten honor.",
+          "source": "auto_expansion_v21",
+          "added_at": "2026-07-07T18:30:53.588638+00:00",
+          "validated_passes": [
+            "semantic_gate",
+            "stage2_dedup"
+          ],
+          "llm_quality_tier": "fast"
+        }
       ]
     },
     {
