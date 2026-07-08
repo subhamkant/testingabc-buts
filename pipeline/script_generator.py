@@ -90,8 +90,15 @@ def _call_llm(prompt: str, quality: str = "fast") -> str:
     """
     groq_key = os.environ.get("GROQ_API_KEY", "").strip()
 
-    # ── Primary: Groq ────────────────────────────────────────────────────────
-    if groq_key:
+    # ── Primary: Groq (FAST calls only, 2026-07-08) ─────────────────────────
+    # quality="best" (phase18 scripts) goes STRAIGHT to Gemini: the Scout
+    # trial scored 15/25 with three FATAL gate failures (title_dna,
+    # verb_per_frame, anti_merge) on its first production run, while Gemini
+    # Flash authored every 19-21/25 ship — including all recent winners
+    # (llama-3.3-70b had been silently 413-dead for weeks, so Gemini was
+    # already the de-facto author). Groq/Scout stays primary for "fast"
+    # lightweight calls (topic expander, compression) where it performs well.
+    if groq_key and quality != "best":
         try:
             from groq import Groq
             client = Groq(api_key=groq_key)
