@@ -108,7 +108,16 @@ def upscale_images(image_paths: list, label: str = "") -> list:
     from PIL import Image
     t_all = time.time()
     done = 0
+    _total_budget = float(os.environ.get("UPSCALE_TOTAL_BUDGET_S", "360"))
     for i, p in enumerate(todo):
+        # Total-budget guard (2026-07-08): with the abspath fix the GHA
+        # llvmpipe upscale WORKS but is slow — run 28956188051 blew the
+        # 29-min job cap mid-pipeline. Cap the whole batch; frames already
+        # upscaled are kept, the rest ship at native res.
+        if time.time() - t_all > _total_budget:
+            print(f"    [upscale] total budget {_total_budget:.0f}s exhausted "
+                  f"after {done}/{len(todo)} frames — remaining kept native")
+            break
         out_png = p + ".up.png"
         t0 = time.time()
         try:

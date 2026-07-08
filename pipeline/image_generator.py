@@ -2702,29 +2702,60 @@ def generate_images(scenes_or_script, single_shot: bool = False, series: str = "
                         from pipeline.anatomy_qc import check_anatomy_confirmed
                         _ok_qc, _why_qc = check_anatomy_confirmed(output_path)
                         if not _ok_qc:
+                            # MODESTY flags escalate (2026-07-08): run
+                            # 28956188051 hit flag->retry-flag->KEEP ORIGINAL
+                            # with a bare-breast Draupadi frame — cancelled
+                            # seconds before upload. Cosmetic (extra-arm)
+                            # failures may keep the original; NUDITY may NOT:
+                            # 3 seed-shifted retries, then replace with the
+                            # last-good safe frame (or outro placeholder).
+                            _is_modesty = any(w in _why_qc.lower() for w in
+                                              ("nudity", "breast", "nipple",
+                                               "genital", "sheer"))
+                            _tries = 3 if _is_modesty else 1
                             print(f"    [anatomy-qc] scene {i+1} shot {j+1} "
-                                  f"FLAGGED ({_why_qc[:70]}) — regenerating once")
-                            try:
-                                _rb, _rprov = generate_image_bytes(
-                                    prompt, seed=seed + 7919, width=img_w,
-                                    height=img_h, mood=mood,
-                                    style_suffix=style_suffix,
-                                    negative_prompt=scene_negative)
-                                _cand = output_path + ".qc.jpg"
-                                with open(_cand, "wb") as f:
-                                    f.write(_rb)
-                                _ok2, _why2 = check_anatomy_confirmed(_cand)
-                                if _ok2:
-                                    os.replace(_cand, output_path)
-                                    print(f"    [anatomy-qc] retry PASSED "
-                                          f"via {_rprov}")
-                                else:
+                                  f"FLAGGED ({_why_qc[:70]}) — up to "
+                                  f"{_tries} retries")
+                            _rescued = False
+                            for _k in range(_tries):
+                                try:
+                                    _rb, _rprov = generate_image_bytes(
+                                        prompt, seed=seed + 7919 * (_k + 1),
+                                        width=img_w, height=img_h, mood=mood,
+                                        style_suffix=style_suffix,
+                                        negative_prompt=scene_negative)
+                                    _cand = output_path + ".qc.jpg"
+                                    with open(_cand, "wb") as f:
+                                        f.write(_rb)
+                                    _ok2, _why2 = check_anatomy_confirmed(_cand)
+                                    if _ok2:
+                                        os.replace(_cand, output_path)
+                                        print(f"    [anatomy-qc] retry "
+                                              f"{_k+1} PASSED via {_rprov}")
+                                        _rescued = True
+                                        break
                                     os.remove(_cand)
-                                    print(f"    [anatomy-qc] retry also "
-                                          f"flagged — keeping original")
-                            except Exception as _rqe:
-                                print(f"    [anatomy-qc] retry failed "
-                                      f"({str(_rqe)[:60]}) — keeping original")
+                                    print(f"    [anatomy-qc] retry {_k+1} "
+                                          f"also flagged ({_why2[:50]})")
+                                except Exception as _rqe:
+                                    print(f"    [anatomy-qc] retry {_k+1} "
+                                          f"errored ({str(_rqe)[:50]})")
+                            if not _rescued and _is_modesty:
+                                # NEVER ship the nudity frame.
+                                import shutil as _sh
+                                if _last_good_path and os.path.exists(_last_good_path):
+                                    _sh.copy2(_last_good_path, output_path)
+                                    print("    [anatomy-qc] MODESTY unresolved "
+                                          "— frame REPLACED with last-good "
+                                          "safe frame (never ships)")
+                                else:
+                                    _create_placeholder(output_path, i * 3 + j,
+                                                        series=series)
+                                    print("    [anatomy-qc] MODESTY unresolved "
+                                          "— frame replaced with outro asset")
+                            elif not _rescued:
+                                print("    [anatomy-qc] cosmetic flag "
+                                      "unresolved — keeping original")
                     except Exception as _qce:
                         print(f"    [anatomy-qc] check skipped: {str(_qce)[:60]}")
                 _last_good_path = output_path
