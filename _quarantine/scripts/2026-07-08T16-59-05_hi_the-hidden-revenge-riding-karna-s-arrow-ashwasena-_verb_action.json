@@ -1,0 +1,111 @@
+{
+  "ts": "2026-07-08T16-59-05",
+  "language": "hi",
+  "score": 18,
+  "score_max": 25,
+  "violation": "verb_action",
+  "topic": "The hidden revenge riding Karna's arrow — Ashwasena the serpent, whose mother Arjuna burned alive at Khandava, waiting years inside a quiver for one strike at his neck",
+  "title": "अर्जुन का छुपा डर | Arjuna's Hidden Fear",
+  "script": {
+    "voiceover": "कुरुक्षेत्र में कर्ण अर्जुन पर घातक बाण चलाता है — लक्ष्य अर्जुन का सिर, बदला खंडव वन का। बाण हवा चीरता हुआ आता है, लेकिन यह केवल कर्ण का पराक्रम नहीं। इसके भीतर है अश्वसेन नाग, जिसकी माँ को अर्जुन ने अग्नि में जला दिया था। सालों से बदले के लिए छटपटा रहा था, कर्ण के तरकश में छिपा। उस बाण की नोक पर सिर्फ़ विष नहीं, वर्षों का क्रोध। कृष्ण ने कर्ण को रोका, 'यह तेरा बाण नहीं,' लेकिन अश्वसेन ने अपनी दिशा बदल दी। क्या कभी समझा कि यह बाण उसके अपने ही अतीत का विषैला फल था जो लौटकर आया? क्या उस दिन, उसका भीतर का 'अजेय' योद्धा टूट गया जब उसके ही बाण का बदला उस पर आ पड़ा?",
+    "broll": [
+      {
+        "image_prompt": "Action moment frozen mid-release, Karna drawing back his mighty bow with white-knuckled fingers, a golden arrow leaving the bowstring in a blur, dust-choked battlefield in background with distant burning chariots, heroic gold + cobalt palette, high saturation, golden-bronze skin, vital divine charm, strong key-light, golden-hour, hero composition with rim-light halo, Karna towering mighty physique, golden-bronze skin, long flowing dark mane, engraved golden kavacha with blazing sun emblem on his chest, gold kundals, crimson cape over steel-blue dhoti, solar aura, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "घातक बाण चलाता है",
+        "mood": "intense combat action",
+        "wardrobe_context": "WAR",
+        "shot_type": "ENVIRONMENT"
+      },
+      {
+        "image_prompt": "Extreme macro close-up of a monstrous, venomous Ashwasena serpent, scales shimmering with dark green and gold, fangs bared, eyes glowing with ancient malice, coiled tightly around a golden arrow shaft, within a dimly lit, dripping cave system, flickering light reflecting off damp rock walls, heroic gold + cobalt palette, high saturation, vital divine charm, strong key-light, golden-hour, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "अश्वसेन नाग",
+        "mood": "menacing hidden threat",
+        "wardrobe_context": "FOREST",
+        "shot_type": "AMBIGUOUS"
+      },
+      {
+        "image_prompt": "[WITNESS-FROM-BEHIND] Panoramic wide shot of a raging inferno, the Khandava forest consumed by searing divine flames and suffocating smoke, distorted spectral forms of fleeing serpents writhing in the fiery embrace, a young Arjuna in the mid-ground, his back to the viewer, watching the destruction, with a calm Krishna beside him, their silhouettes illuminated by the intense golden-orange blaze, heroic gold + cobalt palette, high saturation, vital divine charm, strong key-light, golden-hour, Krishna graceful powerful divine form, luminous monsoon-cloud blue skin, dark curls with peacock feather, golden-yellow pitambara silk, crimson sash, layered gold necklaces, divine charioteer, Arjuna powerfully built athletic archer, clean-jawed with neat dark mustache, jeweled golden Kirita diadem, embossed golden kavacha, indigo-and-white silk dhoti, twin quivers, glowing Gandiva bow, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "अग्नि में जला दिया",
+        "mood": "destructive power, ancient fire",
+        "wardrobe_context": "DIVINE",
+        "shot_type": "ENVIRONMENT"
+      },
+      {
+        "image_prompt": "Close-up shot of an ancient, ornate leather quiver, intricate gold and ruby embellishments, with a serpent's eye (Ashwasena's) subtly glowing from within a shadowy interior, a single golden arrow tip poking out, resting against a weathered tent pole in a dimly lit army camp at night, heroic gold + cobalt palette, high saturation, vital divine charm, strong key-light, golden-hour, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "तरकश में छिपा",
+        "mood": "foreboding secret",
+        "wardrobe_context": "JOURNEY",
+        "shot_type": "AMBIGUOUS"
+      },
+      {
+        "image_prompt": "[CONFRONTATION-WIDE] Wide cinematic shot of the Kurukshetra battlefield, Arjuna recoiling slightly, his face wide-eyed with momentary confusion and dawning horror as a golden, venomous arrow streaks towards him, a stunned charioteer (Daruka) in the right mid-ground looking on in disbelief, debris flying around their feet, heroic gold + cobalt palette, high saturation, golden-bronze skin, vital divine charm, strong key-light, golden-hour, hero composition with rim-light halo, Arjuna powerfully built athletic archer, clean-jawed with neat dark mustache, jeweled golden Kirita diadem, embossed golden kavacha, indigo-and-white silk dhoti, twin quivers, glowing Gandiva bow, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "विष नहीं, वर्षों का क्रोध",
+        "mood": "sudden realization, danger",
+        "wardrobe_context": "WAR",
+        "shot_type": "REACTION"
+      },
+      {
+        "image_prompt": "[CONFRONTATION-WIDE] Sweeping shot of a war chariot in the midst of dust-choked battle, Krishna in the left foreground pulling back the reins with a fierce expression, his hand raised in halt towards Karna on the right mid-ground, who is about to release another arrow, heroic gold + cobalt palette, high saturation, golden-bronze skin, vital divine charm, strong key-light, golden-hour, Krishna graceful powerful divine form, luminous monsoon-cloud blue skin, dark curls with peacock feather, golden-yellow pitambara silk, crimson sash, layered gold necklaces, divine charioteer, Karna towering mighty physique, golden-bronze skin, long flowing dark mane, engraved golden kavacha with blazing sun emblem on his chest, gold kundals, crimson cape over steel-blue dhoti, solar aura, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "कृष्ण ने कर्ण को रोका",
+        "mood": "urgent intervention",
+        "wardrobe_context": "WAR",
+        "shot_type": "ACTION"
+      },
+      {
+        "image_prompt": "Dynamic wide shot of a golden arrow mid-flight, suddenly swerving and contorting in the air with a shimmering green-gold trail, Arjuna standing vigilant on a wind-whipped rocky outcrop, his silhouette stark against a smoke-filled, fading dusk sky, heroic gold + cobalt palette, high saturation, vital divine charm, strong key-light, golden-hour, Arjuna powerfully built athletic archer, clean-jawed with neat dark mustache, jeweled golden Kirita diadem, embossed golden kavacha, indigo-and-white silk dhoti, twin quivers, glowing Gandiva bow, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "अश्वसेन ने अपनी दिशा",
+        "mood": "supernatural manipulation, destiny",
+        "wardrobe_context": "JOURNEY",
+        "shot_type": "ENVIRONMENT"
+      },
+      {
+        "image_prompt": "Fading dusk over a desolate Kurukshetra battlefield, Arjuna collapsing to his knees, his head bowed, the glowing Gandiva bow falling from his grasp, shattered armor fragments around his feet, a lone diya flickering in the foreground, his silhouette etched against a sky streaked with the last vestiges of sunset, heroic gold + cobalt palette, high saturation, golden-bronze skin, vital divine charm, strong key-light, golden-hour, hero composition with rim-light halo, Arjuna powerfully built athletic archer, clean-jawed with neat dark mustache, jeweled golden Kirita diadem, embossed golden kavacha, indigo-and-white silk dhoti, twin quivers, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "बाण का बदला",
+        "mood": "reflective, melancholic, haunted",
+        "wardrobe_context": "AFTERMATH",
+        "shot_type": "ACTION"
+      }
+    ],
+    "title": "अर्जुन का छुपा डर | Arjuna's Hidden Fear",
+    "hook_title": "अर्जुन का छुपा डर",
+    "description": "▶️ अगला भाग: Arjuna's biggest humiliation\n\nएक बाण जो अर्जुन की जीत नहीं, उसके अतीत का बदला लेकर आया।\n\n#Shorts #Mahabharata #महाभारत #Krishna #HinduMythology\n\nकर्ण के तरकश में छिपा अश्वसेन नाग, जिसकी माँ को अर्जुन ने खंडव वन में जलाया था, अपने बदले की आग लेकर युद्ध में उतरा। यह कहानी दिखाती है कि कैसे हमारे अतीत के कर्म हमें बिना बताए, अनजाने में भी प्रभावित करते हैं। अर्जुन को अपने शौर्य पर अभिमान था, पर क्या वह अपने कर्मों के फल से भयभीत नहीं था? इस अनदेखे दुश्मन ने उसे कहाँ तक तोड़ा? यह सिर्फ युद्ध नहीं, कर्मों के न्याय की कहानी है।\n\n#Shorts #Mahabharata #महाभारत #Hindu #BhagavadGita #भगवद_गीता #Krishna #कृष्ण #Arjuna #अर्जुन #Karna #कर्ण #Bhishma #भीष्म #Draupadi #द्रौपदी #Kurukshetra #कुरुक्षेत्र #AncientIndia #IndianMythology #Dharma #MythologyShorts #VedicWisdom #HinduDharma #IndianHistory #SpiritualShorts #PauranikKathayein #SanatanDharma #HindiShorts #trending}",
+    "tags": [
+      "Arjuna",
+      "Karna",
+      "Ashwasena",
+      "अर्जुन",
+      "कर्ण",
+      "अश्वसेन",
+      "Mahabharata",
+      "महाभारत",
+      "Shorts",
+      "Hindu mythology"
+    ],
+    "thumbnail_prompt": "Dramatic Mahabharata thumbnail of Arjuna, wide-eyed with dawning horror, a golden arrow with subtle serpent scales streaking towards his face, Karna in background with a triumphant but confused expression, heroic gold + cobalt palette, high saturation, cinematic, portrait composition, strong key-light, golden-hour, no hands in frame",
+    "quotable_line": "गौरव के पीछे छिपा था कर्म का गहरा घाव।",
+    "pinned_question": "❓ गौरव के पीछे छिपा था कर्म का गहरा घाव। क्या यही अर्जुन का सबसे बड़ा डर था?",
+    "next_seed": "और यही अनसुना बदला भविष्य में उसे भी अपने पुत्र से मिलेगा।",
+    "language": "hi",
+    "content_type": "story",
+    "topic": "The hidden revenge riding Karna's arrow — Ashwasena the serpent, whose mother Arjuna burned alive at Khandava, waiting years inside a quiver for one strike at his neck",
+    "series": "mahabharata",
+    "episode_n": 39,
+    "arc_character_devanagari": "अर्जुन",
+    "arc_character_english": "Arjuna — The Reluctant Warrior",
+    "_phase18_strict_pass": false,
+    "_phase18_score": 18,
+    "_phase18_score_max": 25,
+    "_phase18_score_floor": 19,
+    "_phase18_violation": "verb_action",
+    "_phase18_failing_gates": [
+      "archetype",
+      "char_names",
+      "engagement",
+      "repetition",
+      "shock_action",
+      "subject_lock",
+      "verb_action"
+    ],
+    "_phase18_fatal_failures": []
+  }
+}
