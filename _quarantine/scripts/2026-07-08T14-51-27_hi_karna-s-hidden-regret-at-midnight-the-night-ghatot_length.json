@@ -1,0 +1,121 @@
+{
+  "ts": "2026-07-08T14-51-27",
+  "language": "hi",
+  "score": 18,
+  "score_max": 25,
+  "violation": "length",
+  "topic": "Karna's hidden regret at midnight — the night Ghatotkacha forced him to burn the one-shot Vasavi Shakti he had saved for years to kill Arjuna, winning the battle but sealing his own death",
+  "title": "कर्ण का घातक बलिदान | Karna's Fatal Sacrifice",
+  "script": {
+    "voiceover": "कर्ण रात के गहरे अंधेरे में जलती शक्ति को देखता है — वर्षों का इंतज़ार, अर्जुन को हराने का एकमात्र सपना, सब एक क्षण में राख। घटोत्कच का वध हुआ, युद्ध तो जीता गया, पर भीतर कुछ टूट गया। यह विजय नहीं, यह मेरी अपनी नियति का श्राप था, मेरा कवच अब उतर चुका था। दुर्योधन की जीत सुनिश्चित हुई, पर उसी क्षण मैंने अपनी मृत्यु को गले लगाया। क्या यही था मेरा नियति का स्वीकार, जिसे मैंने वफादारी का नाम दिया? उस क्षण, हर सांस के साथ, मैंने अपने ही हाथों अपनी किस्मत को जलाया। \"तुमने मुझे हमेशा अस्वीकारा, पर आज मैंने तुम्हें खुद ही ठुकरा दिया,\" एक आवाज़ उसके भीतर गूँजती है। इस रात के बाद... कुरुक्षेत्र की मिट्टी कभी सूखी नहीं... क्या यह वफादारी ही कर्ण का सबसे बड़ा आत्म-विनाश था?",
+    "broll": [
+      {
+        "image_prompt": "Action moment frozen mid-release, Karna's powerful hand launching the glowing Vasavi Shakti dart into the dark night sky, its path leaving a burning trail, embers in foreground, warm sunset amber + bronze, golden divine glow radiating from within his engraved golden kavacha with a blazing sun emblem, radiant golden-bronze skin, long flowing dark curly mane, flowing crimson cape and sash, flame-like solar aura, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text.",
+        "anchor_phrase": "जलती शक्ति को देखता",
+        "mood": "Intense desperate power release",
+        "wardrobe_context": "WAR",
+        "shot_type": "AMBIGUOUS"
+      },
+      {
+        "image_prompt": "[CONFRONTATION-WIDE] Falling through the night sky, colossal dark-skinned rakshasa warrior Ghatotkacha, his glowing red eyes wide-eyed in horror as a brilliant burning projectile pierces his chest, massive build collapsing, while Karna watches grim-faced from his chariot on the battlefield, the glow of the Vasavi Shakti reflecting in his eyes, warm sunset amber + bronze, saffron-and-crimson palette, faces clearly lit, harsh golden-hour edge-light, embers in foreground, faces visible and warm, Karna: towering mighty physique, radiant golden-bronze skin, engraved golden kavacha with a blazing sun emblem, flowing crimson cape and sash; Ghatotkacha: colossal, dark-skinned rakshasa warrior, glowing red eyes, wild untamed black hair, massive build, tribal armor, roaring in battle, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text.",
+        "anchor_phrase": "घटोत्कच का वध हुआ",
+        "mood": "Shocking final impact, grim resolve",
+        "wardrobe_context": "WAR",
+        "shot_type": "ACTION"
+      },
+      {
+        "image_prompt": "Extreme macro close-up of a shattered Vasavi Shakti dart, glowing embers drifting from its fragments, ash-covered ground beneath, once-brilliant energy now fading to dust, dark battlefield background, warm sunset amber + bronze, saffron-and-crimson palette, faces clearly lit, harsh golden-hour edge-light, embers in foreground, faces visible and warm, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text.",
+        "anchor_phrase": "एक क्षण में राख",
+        "mood": "Hollow victory aftermath",
+        "wardrobe_context": "WAR",
+        "shot_type": "AMBIGUOUS"
+      },
+      {
+        "image_prompt": "Recoiling in silent agony, Karna's tear-streaked face, hollow-eyed with profound regret, alone in the dimly lit private chamber of his war tent, an oil lamp flickering nearby, his engraved golden kavacha with sun motif just visible on his chest, warm sunset amber + bronze, saffron-and-crimson palette, faces clearly lit, harsh golden-hour edge-light, embers in foreground, faces visible and warm, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text.",
+        "anchor_phrase": "भीतर कुछ टूट गया",
+        "mood": "Deep internal sorrow",
+        "wardrobe_context": "WAR",
+        "shot_type": "REACTION"
+      },
+      {
+        "image_prompt": "[CONFRONTATION-WIDE] Leaning into the map-table, Duryodhana with a cruel entitled sneer, looking triumphantly at Karna, who is recoiling slightly, grim-faced, in a dimly lit war council tent at night, warm sunset amber + bronze, golden divine glow, saffron-and-crimson palette, faces clearly lit, harsh golden-hour edge-light, embers in foreground, faces visible and warm, Karna: towering mighty physique, radiant golden-bronze skin, engraved golden kavacha with a blazing sun emblem, flowing crimson cape and sash; Duryodhana: colossal mountain-like physique, thick black beard, mirror-polished golden kavacha, jeweled gold war-crown, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text.",
+        "anchor_phrase": "दुर्योधन की जीत सुनिश्चित",
+        "mood": "Bitter victory, ominous future",
+        "wardrobe_context": "WAR",
+        "shot_type": "AMBIGUOUS"
+      },
+      {
+        "image_prompt": "Kneeling beneath a vast, star-strewn night sky, Karna, his majestic form silhouetted against the horizon, head bowed in profound acceptance, the weight of his impending death crushing him, warm sunset amber + bronze, golden divine glow radiating from his engraved golden kavacha with a blazing sun emblem, radiant golden-bronze skin, long flowing dark curly mane, flowing crimson cape, saffron-and-crimson palette, harsh golden-hour edge-light, faces visible and warm, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text.",
+        "anchor_phrase": "अपनी मृत्यु को गले लगाया",
+        "mood": "Resigned acceptance, heavy fate",
+        "wardrobe_context": "WAR",
+        "shot_type": "ACTION"
+      },
+      {
+        "image_prompt": "[WITNESS-FROM-BEHIND] Kneeling alone in the dimly lit private chamber of his war tent, Karna, his silhouette sharply defined against a ghostly, shimmering vision of Kunti standing solemnly before him, her face filled with sorrowful dignity, warm sunset amber + bronze, golden divine glow, saffron-and-crimson palette, faces clearly lit, harsh golden-hour edge-light, embers in foreground, faces visible and warm, Karna: towering mighty physique, radiant golden-bronze skin, engraved golden kavacha with a blazing sun emblem, flowing crimson cape and sash; Kunti: weary but graceful older Indian woman, pale golden Indian skin, sorrowful dignified eyes, silver-streaked dark hair, simple unadorned white silk sari, holding a simple earthen pot, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text.",
+        "anchor_phrase": "तुमने मुझे हमेशा अस्वीकारा",
+        "mood": "Inner torment, isolated, regretful",
+        "wardrobe_context": "WAR",
+        "shot_type": "ACTION"
+      },
+      {
+        "image_prompt": "Wide cinematic shot of a desolate riverbank at pre-dawn, mist clinging to the water, distant smoke plumes rising from the direction of Kurukshetra, the ground stained with dark patches, a lone diya flickering on the sand, warm sunset amber + bronze, saffron-and-crimson palette, harsh golden-hour edge-light, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text.",
+        "anchor_phrase": "कुरुक्षेत्र की मिट्टी",
+        "mood": "Desolate, haunting aftermath",
+        "wardrobe_context": "WAR",
+        "shot_type": "ENVIRONMENT"
+      },
+      {
+        "image_prompt": "Walking away into the fading dusk, Karna's solitary silhouette against a vast, wounded sky, his regal form burdened by an unseen weight, the war camp behind him a blur of muted light, warm sunset amber + bronze, saffron-and-crimson palette, harsh golden-hour edge-light, embers in foreground, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text.",
+        "anchor_phrase": "आत्म-विनाश था",
+        "mood": "Profound desolation, isolated burden",
+        "wardrobe_context": "AFTERMATH",
+        "shot_type": "ENVIRONMENT"
+      }
+    ],
+    "title": "कर्ण का घातक बलिदान | Karna's Fatal Sacrifice",
+    "hook_title": "कर्ण की असली हार",
+    "description": "▶️ अगला भाग: Karna's secret vow that spared four Pandavas\n\nकर्ण ने वर्षों की प्रतिज्ञा तोड़ी, पर क्या यह जीत उसकी सबसे बड़ी हार साबित हुई?\n\n#Shorts #Mahabharata #महाभारत #Krishna #HinduMythology\n\nकर्ण का जीवन अस्वीकृति और वफादारी के बीच झूलता रहा। घटोत्कच के वध की रात, उसने अपना सबसे घातक अस्त्र, वासु शक्ति, जला दिया। यह विजय तो थी, पर इसके साथ ही उसने अर्जुन के खिलाफ अपनी आखिरी उम्मीद भी खो दी। भीतर ही भीतर, कर्ण जानता था कि उसने अपनी नियति को खुद ही आग लगा दी है। एक वफादारी जिसने उसे सम्मान दिलाया, पर साथ ही उसके अपने ही विनाश की नींव रखी। यह सिर्फ युद्ध का एक क्षण नहीं, यह उसके हृदय का वो कोना था जहाँ महत्वाकांक्षा और बलिदान का संघर्ष अपनी पराकाष्ठा पर था।\n\n#Shorts #Mahabharata #महाभारत #Hindu #BhagavadGita #भगवद_गीता #Krishna #कृष्ण #Arjuna #अर्जुन #Karna #कर्ण #Bhishma #भीष्म #Draupadi #द्रौपदी #Kurukshetra #कुरुक्षेत्र #AncientIndia #IndianMythology #Dharma #MythologyShorts #VedicWisdom #HinduDharma #IndianHistory #SpiritualShorts #PauranikKathayein #SanatanDharma #HindiShorts #trending>",
+    "tags": [
+      "Karna regret",
+      "Vasavi Shakti",
+      "Karna",
+      "कर्ण",
+      "Mahabharata",
+      "महाभारत",
+      "Shorts",
+      "Hindu mythology",
+      "Ghatotkacha",
+      "Kurukshetra war",
+      "Emotional truth",
+      "Loyalty",
+      "Self-destruction"
+    ],
+    "thumbnail_prompt": "Dramatic Mahabharata thumbnail — vibrant colours, cinematic, portrait composition, Karna, tear-streaked face, anguish, golden kavacha with sun motif glowing subtly, dark night background, distant battlefield fires reflecting in his eyes, warm sunset amber + bronze, saffron-and-crimson palette, faces clearly lit, harsh golden-hour edge-light, embers in foreground, faces visible and warm, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+    "quotable_line": "वफादारी ने उसे राजा बनाया, पर अंततः उसी ने उसे आत्म-विनाश की ओर धकेला।",
+    "pinned_question": "❓ वफादारी ने उसे राजा बनाया, पर अंततः उसी ने उसे आत्म-विनाश की ओर धकेला। क्या कर्ण का बलिदान सही था या उसकी सबसे बड़ी भूल?",
+    "next_seed": "और यही वचन चार पांडवों को जीवनदान देगा।",
+    "language": "hi",
+    "content_type": "story",
+    "topic": "Karna's hidden regret at midnight — the night Ghatotkacha forced him to burn the one-shot Vasavi Shakti he had saved for years to kill Arjuna, winning the battle but sealing his own death",
+    "series": "mahabharata",
+    "episode_n": 19,
+    "arc_character_devanagari": "कर्ण",
+    "arc_character_english": "Karna — The Forgotten Son",
+    "_phase18_strict_pass": false,
+    "_phase18_score": 18,
+    "_phase18_score_max": 25,
+    "_phase18_score_floor": 19,
+    "_phase18_violation": "length",
+    "_phase18_failing_gates": [
+      "anchors",
+      "archetype",
+      "char_names",
+      "engagement",
+      "length",
+      "tha_tic",
+      "verb_action"
+    ],
+    "_phase18_fatal_failures": []
+  }
+}

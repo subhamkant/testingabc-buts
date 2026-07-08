@@ -180,6 +180,48 @@
         "Ashwatthama's hidden wound — Krishna's greatest punishment, the secret gem torn from his forehead, the untold betrayal it sealed for eternity",
         "Ashwatthama's untold immortality — the hidden curse that still walks the earth, the secret warrior some say begs for oil in Indian forests at night",
         "Ashwatthama's greatest tragedy — the hidden truth of Mahabharata's secret cost, the man punished beyond death itself, the untold sin no era can erase"
+      ],
+      "_auto_added": [
+        {
+          "topic": "Ashwatthama's Untold Regret — Drona's funeral pyre, his unspoken apology to the flames",
+          "source": "auto_expansion_v21",
+          "added_at": "2026-07-08T14:42:47.495481+00:00",
+          "validated_passes": [
+            "semantic_gate",
+            "stage2_dedup"
+          ],
+          "llm_quality_tier": "fast"
+        },
+        {
+          "topic": "Ashwatthama's Fatal Pride — Refusing to surrender the Brahmastra, the heavenly voice's last warning",
+          "source": "auto_expansion_v21",
+          "added_at": "2026-07-08T14:42:47.495674+00:00",
+          "validated_passes": [
+            "semantic_gate",
+            "stage2_dedup"
+          ],
+          "llm_quality_tier": "fast"
+        },
+        {
+          "topic": "Ashwatthama's Greatest Sin — The secret meeting with Duryodhana's spirit, plotting revenge beyond death",
+          "source": "auto_expansion_v21",
+          "added_at": "2026-07-08T14:42:47.495780+00:00",
+          "validated_passes": [
+            "semantic_gate",
+            "stage2_dedup"
+          ],
+          "llm_quality_tier": "fast"
+        },
+        {
+          "topic": "Ashwatthama's Real Madness — Wandering the forest, begging for oil, the weight of his immortal curse",
+          "source": "auto_expansion_v21",
+          "added_at": "2026-07-08T14:42:47.495916+00:00",
+          "validated_passes": [
+            "semantic_gate",
+            "stage2_dedup"
+          ],
+          "llm_quality_tier": "fast"
+        }
       ]
     }
   ],
