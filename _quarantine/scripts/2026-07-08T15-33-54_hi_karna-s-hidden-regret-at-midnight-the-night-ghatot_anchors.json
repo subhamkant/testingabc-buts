@@ -1,0 +1,114 @@
+{
+  "ts": "2026-07-08T15-33-54",
+  "language": "hi",
+  "score": 15,
+  "score_max": 25,
+  "violation": "anchors",
+  "topic": "Karna's hidden regret at midnight — the night Ghatotkacha forced him to burn the one-shot Vasavi Shakti he had saved for years to kill Arjuna, winning the battle but sealing his own death",
+  "title": "कर्ण की सबसे बड़ी मजबूरी | Karna's Greatest Compulsion",
+  "script": {
+    "voiceover": "कर्ण रात के अंधेरे में वैष्णव शक्ति को जलाता है — एकमात्र शॉट जो अर्जुन को मार सकता था। उसकी उँगलियाँ जल्दी से जल्दी दबाव डाल रही हैं, पर वह रुक नहीं सकता। गhatotkacha को मारने का यही एक तरीका था, लेकिन इसने उसके दिल पर एक और घाव कर दिया। अब वह जीत गया है, लेकिन किस कीमत पर? उसकी जीत की घोषणा करने वाला कोई नहीं है, केवल उसकी हार की भविष्यवाणी करने वाले श्राप हैं। क्या यही धर्म था? और अब उसके पास क्या बचा है?",
+    "broll": [
+      {
+        "image_prompt": "Action moment frozen mid-strike around karna, dust and sparks suspended in the air, Wide cinematic shot, sun-baked Kurukshetra battlefield with broken chariot wheels and distant marching armies, Karna draws back the Gandiva bow with white-knuckled fingers, radiant golden-bronze Indian skin, luminous divine golden kavacha armor fused to bare chest skin, intricate gold kundal earrings, battle-stained crimson silk dhoti, divine golden aura",
+        "anchor_phrase": "कर्ण रात के अंधेरे",
+        "mood": "intense dramatic",
+        "wardrobe_context": "WAR",
+        "shot_type": "ENVIRONMENT"
+      },
+      {
+        "image_prompt": "Extreme macro close-up of Karna's hand releasing the Vasavi Shakti, finger tips glowing with divine energy, sparks flying off the arrow, dark night sky with stars shining bright",
+        "anchor_phrase": "वैष्णव शक्ति",
+        "mood": "dramatic intense",
+        "wardrobe_context": "WAR",
+        "shot_type": "ACTION"
+      },
+      {
+        "image_prompt": "Action moment frozen mid-strike, Ghatotkacha falling to the ground with a massive wound, Karna standing with his bow still drawn, sweat-drenched face, crimson cape flowing behind, Kurukshetra's smoldering embers in foreground",
+        "anchor_phrase": "गhatotkacha को मारना",
+        "mood": "violent intense",
+        "wardrobe_context": "WAR",
+        "shot_type": "ACTION"
+      },
+      {
+        "image_prompt": "Tight close-up shot of Karna's face, anguished expression, kohl-rimmed eyes, tears welling up, crimson-stained armor, burning embers of Vasavi Shakti in the background",
+        "anchor_phrase": "दिल पर एक और घाव",
+        "mood": "sad intense",
+        "wardrobe_context": "WAR",
+        "shot_type": "REACTION"
+      },
+      {
+        "image_prompt": "Wide shot of the desolate Kurukshetra battlefield at dusk, smoldering fires, scattered chariot wheels, Karna standing alone with his head bowed, defeated expression, distant mountains silhouetted against the fading light",
+        "anchor_phrase": "कोई नहीं है",
+        "mood": "lonely melancholic",
+        "wardrobe_context": "WAR",
+        "shot_type": "ENVIRONMENT"
+      },
+      {
+        "image_prompt": "Extreme macro close-up of an ancient crimson-red parchment with Krishna's curse inscribed, yellowed with age, crackling parchment, Karna's shadowy figure in the background, hood up, walking away",
+        "anchor_phrase": "श्राप हैं",
+        "mood": "ominous foreboding",
+        "wardrobe_context": "DIVINE",
+        "shot_type": "AMBIGUOUS"
+      },
+      {
+        "image_prompt": "Over-the-shoulder shot, Karna walking away from the battlefield, back to the camera, crimson cape flowing behind, Kurukshetra's burning landscape in the background",
+        "anchor_phrase": "अब उसके पास",
+        "mood": "resigned defeated",
+        "wardrobe_context": "WAR",
+        "shot_type": "ENVIRONMENT"
+      },
+      {
+        "image_prompt": "Silhouette shot of Karna standing alone on the desolate battlefield at dusk, burning fires in the background, distant mountains silhouetted against the fading light",
+        "anchor_phrase": "क्या यही धर्म",
+        "mood": "contemplative melancholic",
+        "wardrobe_context": "AFTERMATH",
+        "shot_type": "ENVIRONMENT"
+      }
+    ],
+    "title": "कर्ण की सबसे बड़ी मजबूरी | Karna's Greatest Compulsion",
+    "hook_title": "कर्ण का अंतिम पाप",
+    "description": "▶️ अगला भाग: Karna's secret vow that spared four Pandavas\n\nकर्ण ने गhatotkacha को मारने के लिए वैष्णव शक्ति का उपयोग किया, लेकिन इसके परिणामस्वरूप उसकी अपनी हार की भविष्यवाणी करने वाले श्राप लग गए। क्या यही धर्म था जिसने उसे इस स्थिति में ला खड़ा किया?",
+    "tags": [
+      "Mahabharata",
+      "महाभारत",
+      "Karna",
+      "कर्ण",
+      "Shorts",
+      "Hindu mythology"
+    ],
+    "thumbnail_prompt": "Karna standing alone on the desolate battlefield at dusk, burning fires in the background, distant mountains silhouetted against the fading light",
+    "quotable_line": "बलिदान की कीमत चुकानी पड़ती है",
+    "pinned_question": "❓ क्या कर्ण ने सही किया? क्या यही धर्म था?",
+    "next_seed": "और यही प्रतिज्ञा एक दिन हस्तिनापुर को तोड़ देगी",
+    "language": "hi",
+    "content_type": "story",
+    "topic": "Karna's hidden regret at midnight — the night Ghatotkacha forced him to burn the one-shot Vasavi Shakti he had saved for years to kill Arjuna, winning the battle but sealing his own death",
+    "series": "mahabharata",
+    "episode_n": 19,
+    "arc_character_devanagari": "कर्ण",
+    "arc_character_english": "Karna — The Forgotten Son",
+    "_phase18_strict_pass": false,
+    "_phase18_score": 15,
+    "_phase18_score_max": 25,
+    "_phase18_score_floor": 19,
+    "_phase18_violation": "anchors",
+    "_phase18_failing_gates": [
+      "anchors",
+      "anti_merge_composition",
+      "archetype",
+      "bookend",
+      "engagement",
+      "intensity",
+      "shock_action",
+      "tha_tic",
+      "title_dna",
+      "verb_per_frame"
+    ],
+    "_phase18_fatal_failures": [
+      "anti_merge_composition",
+      "title_dna",
+      "verb_per_frame"
+    ]
+  }
+}
