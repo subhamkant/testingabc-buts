@@ -113,7 +113,12 @@ def upscale_images(image_paths: list, label: str = "") -> list:
         t0 = time.time()
         try:
             r = subprocess.run(
-                [exe, "-i", p, "-o", out_png,
+                # abspath both sides (2026-07-08 fix): the pipeline passes
+                # RELATIVE temp/ paths and we run with cwd=binary-dir so the
+                # model folder resolves — the binary then couldn't find the
+                # input, silently wrote nothing, and exited rc=0. This was
+                # the entire "GHA probe fails" mystery (llvmpipe was fine).
+                [exe, "-i", os.path.abspath(p), "-o", os.path.abspath(out_png),
                  "-n", f"{_MODEL}-x{_SCALE}", "-s", str(_SCALE)],
                 capture_output=True, timeout=_PER_FRAME_TIMEOUT_S,
                 cwd=os.path.dirname(exe),
