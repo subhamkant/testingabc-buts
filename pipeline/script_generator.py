@@ -95,8 +95,14 @@ def _call_llm(prompt: str, quality: str = "fast") -> str:
         try:
             from groq import Groq
             client = Groq(api_key=groq_key)
+            # Model switch (2026-07-08): llama-3.3-70b's 12K-TPM free
+            # budget has been silently exceeded by the phase18 prompt for
+            # weeks (every call 413'd -> Gemini fallback did all writing).
+            # llama-4-scout has a 30K TPM budget: probed with the real
+            # 32K-char prompt -> accepted at 8.5K tokens, 2.5x headroom
+            # even with retry reminders. Groq primary is finally live again.
             resp = client.chat.completions.create(
-                model="llama-3.3-70b-versatile",
+                model="meta-llama/llama-4-scout-17b-16e-instruct",
                 messages=[{"role": "user", "content": prompt}],
                 temperature=0.9,
                 max_tokens=8192,

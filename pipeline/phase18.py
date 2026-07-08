@@ -1798,7 +1798,7 @@ OUTPUT 2 — `broll`: an array of EXACTLY 8-10 entries, each:
     "wardrobe_context": "<one of: WAR | PALACE | DIVINE | FOREST | JOURNEY>"
   }}
 
-WARDROBE_CONTEXT (Phase 19, 2026-06-16) — REQUIRED per entry. Pick the
+WARDROBE_CONTEXT  — REQUIRED per entry. Pick the
 context that matches THAT SPECIFIC broll moment, not the whole story.
 A Yudhishthira video can span PALACE (dice game), WAR (Kurukshetra),
 FOREST (vanvas), and JOURNEY (Mahaprasthanika to heaven's gate) in the
@@ -1858,7 +1858,7 @@ BROLL RULES (HARD — violation = REJECT):
         anchor "बच्चे सो रहे"             → image MUST contain "children" + "sleeping"
       No subject bleed (Arjuna image when narration is about Draupadi).
 
-  (d.2) STORY-CRITICAL ENTITY (Phase 19, 2026-06-16) — when the voiceover
+  (d.2) STORY-CRITICAL ENTITY  — when the voiceover
         names a non-human story element (animal companion / divine entity
         / named weapon / named object), AT LEAST ONE broll image_prompt
         MUST contain the English equivalent as a clearly identifiable
@@ -1878,7 +1878,7 @@ BROLL RULES (HARD — violation = REJECT):
         — the entire emotional pivot of that story — is exactly the
         failure mode this rule prevents.
 
-  (e) INTENSITY ADJECTIVE (Phase 18, FLUX-quality floor) — EVERY image_prompt
+  (e) INTENSITY ADJECTIVE  — EVERY image_prompt
       MUST contain at least ONE aggressive physical adjective from this list:
       bloodied / blood-soaked / blood-streaked / rusted / shattered / cracked
       / broken / torn / ash-covered / scorched / wounded / scarred / smoldering
@@ -1901,7 +1901,7 @@ BROLL RULES (HARD — violation = REJECT):
   (g) PALETTE — every image_prompt MUST embed the palette directive.
       {palette_line}
 
-  (h) OPENER ARCHETYPE for THIS render (Sprint 1.6 rewrite, 2026-07-02):
+  (h) OPENER ARCHETYPE for THIS render :
       The archetype directive for broll[0] is:
       "{scene1_opener_directive}"
 
@@ -1929,7 +1929,7 @@ BROLL RULES (HARD — violation = REJECT):
       no captions, no banners with writing, no overlay text" (the existing
       anti-text guard).
 
-  (j) SUBJECT DIVERSITY (Phase 20, 2026-06-17) — broll is NOT 8 portraits
+  (j) SUBJECT DIVERSITY  — broll is NOT 8 portraits
       of the same character. It is a FILM EDIT. Cycle these 4 shot types
       across your 8-10 entries. Two consecutive same-type entries are OK;
       three consecutive will be REJECTED. At least 2 of the 4 types must
@@ -1964,7 +1964,7 @@ BROLL RULES (HARD — violation = REJECT):
       archetype A → ACTION (verb in image), B → PROP, C → ACTION,
       D → ENVIRONMENT.
 
-      CANVAS LOCATION VARIETY (Sprint 1.6, 2026-07-02) — shot TYPE
+      CANVAS LOCATION VARIETY  — shot TYPE
       variety is not enough; the canvas LOCATION must also rotate.
       HARD RULES (validator-enforced):
         • Never open 3 consecutive image_prompts with the same canvas
@@ -1980,7 +1980,7 @@ BROLL RULES (HARD — violation = REJECT):
           'कर्ण रथ चलाता है' + frame of a standing warrior = failed
           storytelling (the exact 2026-07-02 failure).
 
-  (k) AUDIO-VISUAL VERB LOCK (Phase 20, 2026-06-17) — the image_prompt
+  (k) AUDIO-VISUAL VERB LOCK  — the image_prompt
       MUST physically depict the EXACT verb in the anchor_phrase, not
       just the noun. If anchor is "रथ का पहिया डूबता" (chariot wheel
       sinking), image_prompt MUST contain "sinking" (or "drowning",
@@ -1991,7 +1991,7 @@ BROLL RULES (HARD — violation = REJECT):
       appears; verb_action_lock now enforces the action is depicted.
       Render the VERB the audience HEARS, not a static portrait.
 
-  (l) VERB-PER-FRAME (Phase 22, 2026-06-25) — ≥5 of your 8-10 broll
+  (l) VERB-PER-FRAME  — ≥5 of your 8-10 broll
       image_prompts MUST start (within the first 80 chars) with an
       ACTION VERB from this list:
       drawing / drawing back / sinking / severing / kneeling beneath /
@@ -2024,14 +2024,7 @@ BROLL RULES (HARD — violation = REJECT):
       write beautiful aftermath image_prompts but mislabel the
       wardrobe_context as "WAR", triggering an infinite quarantine loop.
 
-      WHY: forensic on the channel's 500-655 view winners showed every
-      frame was a VERB (someone doing something to someone), not a
-      NOUN (a crowned warrior existing in a costume). Verb-density is
-      the single most predictive feature of view performance. AFTERMATH
-      wardrobe + image_prompt together produce the "consequence as
-      closer" beat that ALL 4 winners used.
-
-  (m) ANTI-MERGE COMPOSITION (Phase 22, 2026-06-25) — when image_prompt
+  (m) ANTI-MERGE COMPOSITION  — when image_prompt
       names ≥2 characters in the same frame, it MUST start with one of
       these tagged composition templates (literal string, in brackets):
 
@@ -2049,19 +2042,13 @@ BROLL RULES (HARD — violation = REJECT):
       Then continue with the rest of the image_prompt (verb, intensity,
       wardrobe, palette).
 
-      WHY: FLUX merges multi-character scenes (3 arms, fused faces,
-      shared torso) when both subjects are at the same scale with full
-      iconographic descriptors. Power-imbalance composition geometrically
-      separates the subjects so FLUX can't merge them. The 4 channel
-      winners ALL used this technique.
-
       For single-character scenes (1 named character + 0/N secondaries
       described purely structurally as "a kneeling brahmin disciple" /
       "a bound captive") AND macro-on-prop scenes (no characters): no
       composition tag required, but you may still use [POWER-LOOM] /
       [THE-FALLEN] if it fits.
 
-  (n) ARCHITECTURAL PROMPT FORMAT (Phase 23.2, 2026-06-28) — every
+  (n) ARCHITECTURAL PROMPT FORMAT  — every
       image_prompt MUST follow this exact 3-part structure:
 
       [CANVAS]  →  [ACTION]  →  [CHARACTER SIGNATURE]
@@ -2088,9 +2075,9 @@ BROLL RULES (HARD — violation = REJECT):
       word is "Karna," FLUX commits all its rendering budget to drawing
       Karna and the environment becomes a bokeh wall.
 
-      WRONG (Phase 22 X-LWlg1DW5s failure mode):
+      WRONG :
         "Karna draws back his bow at sunset, golden-bronze skin..."
-      RIGHT (Phase 23.2 architectural format):
+      RIGHT :
         "Wide cinematic shot, sun-baked Kurukshetra battlefield with
          broken chariot wheels and distant marching armies, Karna draws
          back the Gandiva bow with white-knuckled fingers, radiant
@@ -2124,13 +2111,7 @@ BROLL RULES (HARD — violation = REJECT):
         "intricate gold armbands" / "divine golden aura (tejas)" /
         "jeweled gold mukut" / "silk dhoti in royal colors"
 
-      Character-specific grandeur:
-        Karna  -> "Surya-putra radiating warm golden solar aura, engraved
-                   gold kavacha with sun motif fused to his bronze skin,
-                   divine gold kundal earrings, crimson silk"
-        Arjuna -> "royal Pandava archer, ornate engraved Vedic gold
-                   chest kavacha, peacock-blue royal silk drape, divine
-                   glowing Gandiva bow"
+      Character-specific grandeur: use the CANONICAL CHARACTER SIGNATURES below.
 
       Replace "armor" (generic) with "engraved Vedic gold kavacha".
       Replace "helmet" with "jeweled gold mukut". Micro-texture is
@@ -2138,15 +2119,7 @@ BROLL RULES (HARD — violation = REJECT):
       Vedic gold catching the light, glistening sweat droplets,
       hyper-detailed skin pores, cinematic volumetric rim lighting".
 
-      WHY: FLUX defaults to Roman/medieval plate when given bare
-      "warrior" tokens. Naming the SPECIFIC Indic form ("engraved Vedic
-      gold kavacha with sun motif") routes it to the correct visual
-      family — regal, divine, unmistakably Indian — while the Western
-      markers stay banned at both the vocabulary gate and the negative
-      stack.
-
-      Reference images from the channel owner (Phase 26 character
-      bibles, 2026-07-05): every major warrior wears ENGRAVED GOLDEN
+      Reference images from the channel owner : every major warrior wears ENGRAVED GOLDEN
       KAVACHA on the battlefield — Karna's kavacha carries a blazing
       sun emblem, Arjuna's is embossed gold, Bhishma's is silver,
       Duryodhana's is mirror-polished gold. Krishna and Draupadi are
@@ -2181,82 +2154,34 @@ BROLL RULES (HARD — violation = REJECT):
 
       CANONICAL CHARACTER SIGNATURES (use these EXACT phrases):
 
-      Krishna: "graceful powerful athletic divine form with broad
-        shoulders, luminous monsoon-cloud blue divine skin, serene
-        knowing smile, dark curls with a single peacock feather,
-        golden-yellow pitambara silk bound by a crimson sash, layered
-        gold necklaces, divine charioteer holding the reins"
+      Krishna: "graceful powerful divine form, luminous monsoon-cloud blue skin, dark curls with peacock feather, golden-yellow pitambara silk, crimson sash, layered gold necklaces, divine charioteer"
 
-      Karna: "towering mighty physique with broad powerful shoulders
-        and sculpted muscular arms, radiant golden-bronze skin, long
-        flowing dark curly mane streaming in the wind, engraved golden
-        kavacha with a blazing sun emblem at the center of his chest,
-        layered gold necklaces, gold kundal earrings, flowing crimson
-        cape and sash over steel-blue silk dhoti, flame-like solar aura"
+      Karna: "towering mighty physique, golden-bronze skin, long flowing dark mane, engraved golden kavacha with blazing sun emblem on his chest, gold kundals, crimson cape over steel-blue dhoti, solar aura"
 
-      Arjuna: "powerfully built athletic archer's physique with broad
-        shoulders and chiseled muscular arms, youthful handsome
-        clean-jawed face with a neat dark mustache, jeweled golden
-        Kirita diadem, embossed golden kavacha chest armor,
-        indigo-and-white silk dhoti with gold borders, twin quivers,
-        drawing the glowing Gandiva bow"
+      Arjuna: "powerfully built athletic archer, clean-jawed with neat dark mustache, jeweled golden Kirita diadem, embossed golden kavacha, indigo-and-white silk dhoti, twin quivers, glowing Gandiva bow"
 
-      Bhishma: "colossal towering powerfully muscled frame with
-        mountainous shoulders, flowing majestic silver-white hair and
-        thick groomed white beard, gleaming engraved silver kavacha,
-        ivory-white silks, silver-and-gold war diadem"
+      Bhishma: "colossal towering muscled frame, flowing silver-white hair and thick white beard, gleaming engraved silver kavacha, ivory-white silks, silver-and-gold war diadem"
 
-      Draupadi: "radiant fair wheatish-gold complexion with luminous
-        glowing skin, large kohl-lined lotus eyes, long untied black
-        hair flowing loose, deep-red silk sari, red kumkum mark,
-        fierce proud bearing"
+      Draupadi: "radiant fair wheatish-gold complexion, large kohl-lined lotus eyes, long untied black hair flowing loose, deep-red silk sari modestly draped over fitted blouse, red kumkum, fierce proud bearing"
 
-      Eklavya: "dark mud-streaked tribal Indian skin, bare-chested
-        with natural bark-cloth lower garment, severed right thumb
-        ALWAYS visible (sometimes dripping blood), rudraksha bead
-        necklace, intense devoted eyes"
+      Eklavya: "dark mud-streaked tribal skin, bare-chested with bark-cloth lower garment, severed right thumb ALWAYS visible, rudraksha beads, intense devoted eyes"
 
-      Ashwatthama: "towering powerfully muscled frame with broad
-        shoulders, skin dusted ash-pale with sacred vibhuti, long wild
-        dark mane streaming from a high warrior topknot, the divine Mani
-        gem in the center of his forehead blazing with searing
-        crimson-white light, three white ash tripundra lines, layered
-        gold necklaces over rudraksha strings, battle-scarred dark
-        bronze kavacha, crimson-and-black war dhoti"
+      Ashwatthama: "towering broad-shouldered muscular frame, ash-pale vibhuti-dusted skin, long wild mane from a warrior topknot, forehead Mani gem blazing crimson-white, white ash tripundra lines, gold over rudraksha, dark bronze kavacha, crimson-black dhoti"
         — POST-CURSE wanderer scenes instead: "a fallen warrior-prince,
         raw bleeding wound in the center of his forehead, wind-blown
         grey-streaked hair, torn but regal deep-maroon and gold robes,
         tarnished gold armlets, clutching his ancient ornate bow,
         tragic fallen majesty" (NEVER beggar rags or plain cloth)
 
-      Bhima: "colossal mountain-of-a-warrior build, the strongest man
-        alive, massive barrel chest and tree-trunk arms, fierce dark
-        moustache,
-        gleaming golden kavacha straining across his massive chest,
-        thick gold armbands, deep red silk dhoti, massive battle-dented
-        iron Gada mace"
+      Bhima: "colossal mountain-of-a-warrior, massive barrel chest and tree-trunk arms, fierce dark moustache, golden kavacha straining across his chest, deep red silk dhoti, massive iron Gada mace"
 
-      Yudhishthira: "tall powerfully built regal warrior's frame with
-        broad shoulders, warm golden-bronze skin, salt-and-pepper beard,
-        calm sorrowful dignity, refined gleaming golden kavacha over
-        white-and-gold royal silk, jeweled gold mukut with peacock
-        feather"
+      Yudhishthira: "tall powerfully built regal frame, warm golden-bronze skin, salt-and-pepper beard, refined golden kavacha over white-and-gold silk, jeweled gold mukut"
 
-      Duryodhana: "colossal mountain-like physique, thick black beard,
-        proud cruel entitled sneer, mirror-polished golden kavacha,
-        jeweled gold war-crown with a crimson plume crest, blood-red
-        and black silks, colossal spiked golden Gada mace on shoulder"
+      Duryodhana: "colossal mountain-like physique, thick black beard, proud cruel sneer, mirror-polished golden kavacha, jeweled gold war-crown with crimson plume, blood-red and black silks, colossal spiked golden Gada"
 
-      Abhimanyu: "sixteen-year-old boy warrior, strong lithe athletic
-        young build with broad young shoulders, smooth soft boyish
-        face, thick dark curls under a light golden diadem,
-        form-fitting gleaming golden kavacha, crimson silk dhoti,
-        masterwork bow"
+      Abhimanyu: "sixteen-year-old boy warrior, strong lithe athletic young build, smooth boyish face, thick dark curls under a light golden diadem, form-fitting golden kavacha, crimson silk dhoti, masterwork bow"
 
-      Shakuni: "sharp angular Indian features, grey-streaked beard,
-        calculating gleaming eyes, slightly hunched posture, dark
-        green and black silk dhoti, leaning heavily on a carved wooden
-        cane, tossing two bone dice with a sly wicked smile"
+      Shakuni: "sharp angular features, grey-streaked beard, calculating eyes, slightly hunched, dark green-black silks, carved cane, tossing bone dice with a sly smile"
 
       Drona / Dronacharya: "weathered elderly Indian face, white hair
         tied in a sage's topknot, long white beard, simple white cotton
@@ -2267,7 +2192,7 @@ BROLL RULES (HARD — violation = REJECT):
         skin, sorrowful dignified eyes, silver-streaked dark hair,
         simple unadorned white silk sari, holding a simple earthen pot"
 
-  (o) GROUP-SCENE MANDATE (Phase 23.1) — AT LEAST 3 of your 8-10
+  (o) GROUP-SCENE MANDATE  — AT LEAST 3 of your 8-10
       image_prompts must include 2+ named characters in the SAME canvas.
       Single-character image_prompts cap at 7 of 10. This is the
       narrative-density rule. The 500+ view winners ALL had multi-
@@ -2279,7 +2204,7 @@ BROLL RULES (HARD — violation = REJECT):
          Eklavya kneels before his clay idol of Drona while Arjuna
          watches from behind a banyan tree..."
 
-  (p) NON-HUMAN FOCUS RULE (Phase 23.2, 2026-06-28) — if the story beat
+  (p) NON-HUMAN FOCUS RULE  — if the story beat
       involves an animal (dog, horse, snake, eagle) OR a named object
       (severed thumb, dice, chariot wheel, kavacha, Gandiva bow,
       sudarshana chakra, akshaya patra, lone diya), the image_prompt
