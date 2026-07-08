@@ -649,7 +649,16 @@ def published_public_today() -> str | None:
                 continue
             pub_dt = datetime.fromisoformat(pub.replace("Z", "+00:00"))
             if pub_dt.astimezone(ist).date() == today_ist:
-                return v["id"]
+                # publishedAt-drift guard (2026-07-08): YouTube re-stamps
+                # publishedAt up to ~1h AFTER the real publish. A late-
+                # evening IST publish can drift past 18:30 UTC and land on
+                # the NEXT IST calendar day — TyL5T3aZKeA (published 23:24
+                # IST Jul 7) got stamped 00:25 IST Jul 8 and blocked the
+                # entire Jul-8 pipeline as "today's video". A genuine
+                # same-day publish is also RECENT, so require age < 18h.
+                age_h = (datetime.now(timezone.utc) - pub_dt).total_seconds() / 3600
+                if age_h < 18:
+                    return v["id"]
         return None
     except Exception as e:
         print(f"    [upload-guard] check failed (guard fails open): {str(e)[:100]}")
