@@ -697,6 +697,18 @@ async def run_pipeline(language: str = "en", test_mode: bool = False, test_uploa
             except Exception as sub_err:
                 print(f"    Subtitles failed (non-fatal): {sub_err}")
 
+            # Sprint 3.2 (built 2026-07-08) — subscribe identity end-band.
+            # Subs flat at 45 with AVD 75%: viewers finish and swipe away
+            # because nothing converts them. Burns thesis + "Subscribe करें
+            # - @VyasaKathas" over the final 3s. Default ON (END_BAND=false
+            # to disable). Applied BEFORE loop echo so the echo sits on top.
+            if os.environ.get("END_BAND", "true").strip().lower() == "true":
+                try:
+                    from pipeline.video_assembler import apply_end_band
+                    apply_end_band(video_path)
+                except Exception as band_err:
+                    print(f"    [end-band] non-fatal: {band_err}")
+
             # Sprint 1.5 (2026-07-02, Operation 500K) — visual loop-close.
             # Hook frame fades in over the final 0.4s → seamless rewatch
             # loop. A/B gated (default OFF); duration-preserving overlay.

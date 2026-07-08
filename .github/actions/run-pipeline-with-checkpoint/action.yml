@@ -184,6 +184,12 @@ runs:
         # Phase 11, chunked overlay passes). Costs ~4-5 min per render —
         # fits the 29-min job budget (recent full runs: 12-14 min).
         BURN_SUBTITLES: "true"
+        # Sprint 1.5 loop echo ON (2026-07-08, views/subs push): hook frame
+        # fades in over the final 0.4s → seamless rewatch loop, the
+        # strongest Shorts ranking signal. Decision rule: if channel-median
+        # AVD% drops >10 pts across 3 videos, flip back to "false".
+        LOOP_ECHO: "true"
+        # Sprint 3.2 subscribe end-band is default-ON in main.py (END_BAND).
       run: ${{ inputs.pipeline-cmd }} 2>&1 | tee pipeline_output.txt
 
     - name: Persist unsaved assembled video to checkpoint (cancellation race)

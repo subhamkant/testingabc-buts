@@ -3298,3 +3298,109 @@ def assemble_from_video_clips(
     _enforce_max_duration(output_path, processed_durations)
 
     return output_path
+
+
+def apply_end_band(video_path: str, band_s: float = 3.0) -> bool:
+    """Sprint 3.2 (built 2026-07-08, Operation 500K) — subscribe identity
+    end-band. Burns a channel-identity band over the FINAL `band_s` seconds:
+    the channel thesis line + an explicit subscribe CTA with the handle.
+
+    Why now: subs flat at 45 with AVD 75% — viewers watch to the end and
+    swipe away because NOTHING converts them (historical sub conversion
+    0.39%, no end-screen identity anywhere in the pipeline). Shorts can't
+    have clickable end-screens, so the burned-in band + handle is the only
+    subscribe surface available.
+
+    Duration-preserving overlay (no append); audio untouched. Gated by env
+    END_BAND at the call site (default ON). Any failure leaves the video
+    unchanged. Applied BEFORE apply_loop_echo so the hook-echo overlays it."""
+    if not os.path.exists(video_path):
+        return False
+    try:
+        from PIL import Image
+        from pipeline.text_renderer import render_text_card
+        from pipeline.subtitle_generator import FONT_PATH
+
+        probe = subprocess.run(
+            ["ffprobe", "-v", "quiet", "-print_format", "json",
+             "-show_format", video_path],
+            capture_output=True, text=True,
+        )
+        dur = float(json.loads(probe.stdout)["format"]["duration"])
+        t0 = max(dur - band_s, 0.0)
+
+        # ── Compose the band PNG (1080 x 240, dark translucent) ──────────
+        W, H = 1080, 240
+        band = Image.new("RGBA", (W, H), (10, 10, 14, 205))
+        line1 = render_text_card(
+            "हर हीरो ने किसी को खत्म किया",
+            FONT_PATH, 52, fill=(255, 255, 255, 255), outline_px=4)
+        # Line 2 is mixed-script: the Devanagari font has NO Latin glyphs
+        # ("@VyasaKathas" rendered as tofu boxes in the first local test),
+        # so compose it from two segments, each shaped with its own font.
+        latin_font = os.path.join("assets", "fonts", "NotoSans-Bold.ttf")
+        seg_dev = render_text_card(
+            "सब्सक्राइब करें", FONT_PATH, 62,
+            fill=(255, 230, 0, 255), outline_px=5)
+        seg_lat = render_text_card(
+            "@VyasaKathas", latin_font, 62,
+            fill=(255, 230, 0, 255), outline_px=5)
+        gap = 28
+        l2w = seg_dev.width + gap + seg_lat.width
+        l2h = max(seg_dev.height, seg_lat.height)
+        line2 = Image.new("RGBA", (l2w, l2h), (0, 0, 0, 0))
+        line2.alpha_composite(seg_dev, (0, (l2h - seg_dev.height) // 2))
+        line2.alpha_composite(seg_lat, (seg_dev.width + gap,
+                                        (l2h - seg_lat.height) // 2))
+        for img, cy in ((line1, 62), (line2, 158)):
+            if img.width > W - 60:
+                nh = int(img.height * (W - 60) / img.width)
+                img = img.resize((W - 60, nh), Image.LANCZOS)
+            band.alpha_composite(
+                img, ((W - img.width) // 2, cy - img.height // 2))
+        band_png = os.path.join("temp", "end_band.png")
+        os.makedirs("temp", exist_ok=True)
+        band.save(band_png)
+
+        # ── Overlay above the Shorts UI zone for the final band_s ────────
+        y = 1430   # clear of the bottom ~250px Shorts action/caption UI
+        out = video_path.replace(".mp4", "_endband.mp4")
+        # eof_action=REPEAT is load-bearing: the band is a single-frame PNG
+        # input that "ends" at t=0 — with eof_action=pass the overlay stream
+        # was over before the final seconds and nothing rendered (caught in
+        # local test). repeat keeps the frame alive; enable gates drawing.
+        vf = (f"[0:v][1:v]overlay=0:{y}:enable='gte(t,{t0:.3f})'"
+              f":eof_action=repeat[vout]")
+        r = subprocess.run([
+            "ffmpeg", "-y",
+            "-i", video_path,
+            "-i", band_png,
+            "-filter_complex", vf,
+            "-map", "[vout]", "-map", "0:a?",
+            "-c:v", "libx264", "-preset", "fast", "-crf", "20",
+            "-c:a", "copy",
+            "-movflags", "+faststart",
+            out,
+        ], capture_output=True)
+        if r.returncode != 0:
+            print(f"    [end-band] ffmpeg failed (non-fatal): "
+                  f"{r.stderr.decode(errors='replace')[-200:]}")
+            return False
+        probe2 = subprocess.run(
+            ["ffprobe", "-v", "quiet", "-print_format", "json",
+             "-show_format", out],
+            capture_output=True, text=True,
+        )
+        dur2 = float(json.loads(probe2.stdout)["format"]["duration"])
+        if abs(dur2 - dur) > 0.2:
+            print(f"    [end-band] duration drift {dur:.2f}s -> {dur2:.2f}s "
+                  f"— rejecting, keeping original")
+            os.remove(out)
+            return False
+        os.replace(out, video_path)
+        print(f"    [OK] Subscribe end-band burned over final {band_s:.1f}s "
+              f"(duration preserved {dur2:.2f}s)")
+        return True
+    except Exception as e:
+        print(f"    [end-band] non-fatal: {str(e)[:120]}")
+        return False
