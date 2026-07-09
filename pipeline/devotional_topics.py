@@ -64,8 +64,11 @@ DEVOTIONAL_TOPICS = [
 def is_devotional_day() -> bool:
     """Odd IST day-of-year = devotional register. Deterministic per day so
     same-day retries and checkpoint resumes agree."""
-    if os.environ.get("DEVOTIONAL_MIX", "on").strip().lower() in ("off", "false", "0"):
+    mode = os.environ.get("DEVOTIONAL_MIX", "on").strip().lower()
+    if mode in ("off", "false", "0"):
         return False
+    if mode == "force":          # testing knob: devotional regardless of day
+        return True
     return datetime.now(_IST).timetuple().tm_yday % 2 == 1
 
 

@@ -189,6 +189,11 @@ runs:
         # strongest Shorts ranking signal. Decision rule: if channel-median
         # AVD% drops >10 pts across 3 videos, flip back to "false".
         LOOP_ECHO: "true"
+        # 2026-07-10: fixed 6 PM IST go-live via YouTube scheduled publishing
+        # (morning render uploads private + publishAt; YouTube flips it live).
+        # Applies only to intended-public uploads; private test renders are
+        # unaffected. Clear this value to restore publish-immediately.
+        YT_PUBLISH_AT_IST: "18:00"
         # Sprint 3.2 subscribe end-band is default-ON in main.py (END_BAND).
       run: ${{ inputs.pipeline-cmd }} 2>&1 | tee pipeline_output.txt
 

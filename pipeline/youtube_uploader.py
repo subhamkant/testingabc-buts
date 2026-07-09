@@ -518,6 +518,34 @@ def upload_to_youtube(
         },
     }
 
+    # ── Scheduled publishing (2026-07-10, user directive) ────────────────
+    # Render in the morning (8 AM IST cron), go LIVE at a fixed evening
+    # slot: when YT_PUBLISH_AT_IST (e.g. "18:00") is set and the intent is
+    # public, upload as private + status.publishAt — YouTube itself flips
+    # the video public at exactly that IST time. Decouples publish timing
+    # from GitHub's unreliable cron delivery and gives an all-day Studio
+    # review window. If the render finishes past the slot (late retries),
+    # publish shortly after upload instead (publishAt must be future).
+    _publish_at_ist = os.environ.get("YT_PUBLISH_AT_IST", "").strip()
+    if _publish_at_ist and body["status"]["privacyStatus"] == "public":
+        try:
+            from datetime import datetime as _dt, timezone as _tz, timedelta as _td
+            _ist = _tz(_td(hours=5, minutes=30))
+            _hh, _mm = (int(x) for x in _publish_at_ist.split(":"))
+            _now = _dt.now(_ist)
+            _target = _now.replace(hour=_hh, minute=_mm, second=0, microsecond=0)
+            if _target <= _now + _td(minutes=2):
+                _target = _now + _td(minutes=5)
+                print(f"    [schedule] {_publish_at_ist} IST already passed — "
+                      f"publishing at {_target.strftime('%H:%M')} IST instead")
+            body["status"]["privacyStatus"] = "private"
+            body["status"]["publishAt"] = _target.astimezone(
+                _tz.utc).strftime("%Y-%m-%dT%H:%M:%S.0Z")
+            print(f"    [schedule] uploading private, goes LIVE at "
+                  f"{_target.strftime('%Y-%m-%d %H:%M IST')}")
+        except Exception as _sch_e:
+            print(f"    [schedule] parse failed ({_sch_e}) — uploading public now")
+
     media = MediaFileUpload(
         video_path,
         mimetype="video/mp4",
@@ -588,7 +616,10 @@ def upload_to_youtube(
     # thread + pinned comment are PUBLIC-ONLY. Private test renders must
     # not join public playlists or post bot comments — they're for Studio
     # review, not distribution.
-    _is_public = body["status"]["privacyStatus"] == "public"
+    # Scheduled uploads are private NOW but public at the slot — they get
+    # the full public treatment (playlist/story/topic flow). The pinned
+    # comment may 403 on a not-yet-public video; it is already non-fatal.
+    _is_public = (os.environ.get("YT_PRIVACY", "public") == "public")
     if _is_public:
         # Add to series playlist (non-fatal if scope insufficient)
         _add_to_playlist(youtube, video_id, series)
@@ -643,6 +674,14 @@ def published_public_today() -> str | None:
         today_ist = datetime.now(ist).date()
         for v in vids.get("items", []):
             if v["status"].get("privacyStatus") != "public":
+                # Scheduled-publish (2026-07-10): a private video with
+                # publishAt TODAY (IST) IS today's video — without this the
+                # backup ticks would render a second video every day.
+                _pa = v["status"].get("publishAt", "")
+                if _pa:
+                    _pa_dt = datetime.fromisoformat(_pa.replace("Z", "+00:00"))
+                    if _pa_dt.astimezone(ist).date() == today_ist:
+                        return v["id"]
                 continue
             pub = v["snippet"].get("publishedAt", "")
             if not pub:
