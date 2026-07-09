@@ -2709,9 +2709,15 @@ def generate_images(scenes_or_script, single_shot: bool = False, series: str = "
                             # failures may keep the original; NUDITY may NOT:
                             # 3 seed-shifted retries, then replace with the
                             # last-good safe frame (or outro placeholder).
+                            # Keep in sync with anatomy_qc._PROMPT point (6)
+                            # — a modesty reason treated as cosmetic would
+                            # KEEP the original frame on unresolved retries.
                             _is_modesty = any(w in _why_qc.lower() for w in
                                               ("nudity", "breast", "nipple",
-                                               "genital", "sheer"))
+                                               "genital", "sheer", "cleavage",
+                                               "midriff", "revealing",
+                                               "strapless", "bra-like",
+                                               "topless", "exposed"))
                             _tries = 3 if _is_modesty else 1
                             print(f"    [anatomy-qc] scene {i+1} shot {j+1} "
                                   f"FLAGGED ({_why_qc[:70]}) — up to "
