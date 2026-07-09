@@ -27,8 +27,14 @@ _GEMINI_TRANSIENT_MARKERS = (
 # subject, characteristic of Flash-tier model output on long-form Hindi).
 # Other call sites (outline pass, validators, etc.) use `quality="fast"`
 # to preserve quota — they don't need creative-prose grade.
-_GEMINI_MODELS_BEST = ("gemini-2.5-pro", "gemini-2.5-flash", "gemini-2.5-flash-lite")
-_GEMINI_MODELS_FAST = ("gemini-2.5-flash", "gemini-2.5-flash-lite")
+# 2026-07-10: Google RETIRED gemini-2.5-flash-lite (generateContent 404s
+# "no longer available" even though ListModels still shows it). The lite
+# tier now uses Google's rolling alias so a future retirement can't kill
+# the cascade's last resort again (currently resolves to
+# gemini-3.1-flash-lite — verified 200 OK). Bonus: the lite pool has its
+# own daily quota, so this tier genuinely rescues flash-exhausted days.
+_GEMINI_MODELS_BEST = ("gemini-2.5-pro", "gemini-2.5-flash", "gemini-flash-lite-latest")
+_GEMINI_MODELS_FAST = ("gemini-2.5-flash", "gemini-flash-lite-latest")
 
 # Process-wide cache of models confirmed unavailable on free tier (limit: 0).
 # Set on first encounter to skip ~5 wasted 429 attempts on every subsequent
