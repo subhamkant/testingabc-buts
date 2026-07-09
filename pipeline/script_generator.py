@@ -418,6 +418,23 @@ def _pick_next_arc_topic() -> tuple[str, int, str, str | None] | None:
     )
     from pipeline.topic_expander import expand_arcs_if_needed, arc_topic_pool
 
+    # Festival-window override (2026-07-09, competitive forensic): the
+    # niche's breakouts are festival-timed (Nishva fx: 14.6M-view Ganesh
+    # Chaturthi video ON the day). Sits above weighted rotation, below the
+    # manual scheduled_topics queue; ledger prevents double-fire per window.
+    try:
+        from pipeline.festival_calendar import festival_topic_for_today
+        from pipeline.topic_manager import _read_recent_topics
+        _fest = festival_topic_for_today(
+            _read_recent_topics("mahabharata", limit=100))
+        if _fest:
+            _fname, _ftopic = _fest
+            print(f"    [festival] {_fname} window active — overriding "
+                  f"rotation with festival topic")
+            return (_ftopic, 0, f"festival:{_fname}", None)
+    except Exception as _fe:
+        print(f"    [festival] check skipped: {str(_fe)[:60]}")
+
     arcs = _load_arcs()
     used = _load_used_topics()
     if not arcs:
