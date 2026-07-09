@@ -474,6 +474,20 @@ def _check_aftermath_closer(broll: list) -> tuple[bool, str]:
     return True, ""
 
 
+# Active emotional register for the CURRENT generation run ("dark" |
+# "devotional"). Set by generate_phase18_script from the picked arc_name;
+# read by _check_title_dna_gate so devotional titles validate against the
+# devotional whitelist (2026-07-09 user-approved register mix).
+_ACTIVE_REGISTER = "dark"
+
+_DEVOTIONAL_TITLE_NOUNS = (
+    "वचन", "रक्षा", "बलिदान", "चमत्कार", "लीला", "कृपा", "महिमा",
+    "दर्शन", "प्रतिज्ञा", "विजय", "जन्म", "भक्ति", "साथ", "प्रेम",
+    "promise", "protection", "miracle", "grace", "glory", "divine",
+    "devotion", "victory", "birth", "blessing", "darshan",
+)
+
+
 def _check_title_dna_gate(
     title: str,
     character_devanagari: str = "",
@@ -499,6 +513,14 @@ def _check_title_dna_gate(
     for adj in _TITLE_ADJ_BLACKLIST:
         if adj.lower() in title_lower:
             return False, f"title contains blacklisted soft-adjective '{adj}'", 0
+
+    # Devotional-register branch: bhakti titles ("जब कृष्ण ने रक्षा की")
+    # validate against the devotional noun whitelist instead of the
+    # tribal-conflict one. Blacklists above still apply. Falls through to
+    # the standard cascade when no devotional noun is present.
+    if _ACTIVE_REGISTER == "devotional":
+        if any(n.lower() in title_lower for n in _DEVOTIONAL_TITLE_NOUNS):
+            return True, "", 2
 
     if not any(n.lower() in title_lower for n in _TITLE_NOUN_WHITELIST):
         return False, (
@@ -2329,6 +2351,29 @@ def generate_phase18_script(
             topic = random.choice(STORY_TOPICS)
             print(f"    [phase18-fallback] random topic (all arcs exhausted)")
 
+    # ── Emotional register (2026-07-09, user-approved mix) ──────────────
+    global _ACTIVE_REGISTER
+    _ACTIVE_REGISTER = ("devotional" if (arc_name == "devotional"
+                        or str(arc_name).startswith("festival:")) else "dark")
+    if _ACTIVE_REGISTER == "devotional":
+        print("    [register] DEVOTIONAL-AWE day (bhakti-positive framing)")
+        emotional_fingerprint = ""   # dark character fingerprints don't apply
+        fingerprint_override = (
+            "EMOTIONAL REGISTER FOR THIS VIDEO — DEVOTIONAL AWE (overrides "
+            "the darker default): this is a BHAKTI story. Arc = crisis -> "
+            "divine intervention -> wonder/gratitude. The hook still opens "
+            "on the CRISIS at its sharpest moment, but the payoff is grace, "
+            "protection, or divine glory — warmth and goosebumps, not "
+            "despair. Voiceover tone: reverent, awed, rising. Title pattern: "
+            "deity/hero + a devotional noun (वचन / रक्षा / लीला / चमत्कार / "
+            "महिमा / दर्शन / विजय / कृपा), e.g. 'जब कृष्ण ने लाज बचाई | "
+            "Krishna's Divine Protection'. The aftermath closer shows PEACE "
+            "after grace (lone diya, folded hands silhouette, fading dusk "
+            "over a calm river) instead of grief."
+        )
+    else:
+        fingerprint_override = ""
+
     palette_directive = _character_palette_directive(arc_character_devanagari)
     if arc_character_devanagari:
         print(f"    [phase18-palette] {arc_character_devanagari} -> {palette_directive[:60]}...")
@@ -2355,7 +2400,7 @@ def generate_phase18_script(
         )
 
     # ── Fingerprint block ──
-    fingerprint_block = ""
+    fingerprint_block = fingerprint_override
     if emotional_fingerprint and arc_name:
         fingerprint_block = (
             "═══════════════════════════════════════════════════════════════\n"

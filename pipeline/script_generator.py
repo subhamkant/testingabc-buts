@@ -435,6 +435,21 @@ def _pick_next_arc_topic() -> tuple[str, int, str, str | None] | None:
     except Exception as _fe:
         print(f"    [festival] check skipped: {str(_fe)[:60]}")
 
+    # Devotional-register days (2026-07-09, user-approved 50/50 mix): odd
+    # IST days ship a bhakti-awe story. Same dedup as arcs (ledger + title
+    # signatures). Falls through to the dark rotation when pool exhausted.
+    try:
+        from pipeline.devotional_topics import devotional_topic_for_today
+        from pipeline.topic_manager import _read_recent_topics as _rrt
+        _dev = devotional_topic_for_today(_rrt("mahabharata", limit=200))
+        if _dev and not topic_overlaps_published(
+                _dev, fetch_recent_title_signatures()):
+            print("    [devotional] odd-IST-day register — devotional-awe "
+                  "topic selected")
+            return (_dev, 0, "devotional", None)
+    except Exception as _de:
+        print(f"    [devotional] check skipped: {str(_de)[:60]}")
+
     arcs = _load_arcs()
     used = _load_used_topics()
     if not arcs:
