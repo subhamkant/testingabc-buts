@@ -412,6 +412,27 @@ def _build_lang_script(dual_script: dict, language: str) -> dict:
 
 # ── Pipeline ──────────────────────────────────────────────────────────────────
 
+def _video_intact(path: str, min_s: float = 3.0) -> bool:
+    """ffprobe-based integrity check for checkpointed videos (2026-07-09).
+
+    The 29-min job timeout can SIGKILL the runner mid-checkpoint-save,
+    leaving a truncated mp4 (no moov atom) in the artifact. Run
+    29030030982: retry-1 blindly resumed the truncated video.mp4, the
+    end-band probe failed ('format'), the corrupt file was uploaded and
+    YouTube silently discarded it — the day's video (22/25) evaporated.
+    Every resume path must validate before trusting a cached video."""
+    import subprocess as _sp
+    import json as _json
+    try:
+        r = _sp.run(["ffprobe", "-v", "quiet", "-print_format", "json",
+                     "-show_format", path], capture_output=True, text=True,
+                    timeout=30)
+        dur = float(_json.loads(r.stdout)["format"]["duration"])
+        return dur >= min_s
+    except Exception:
+        return False
+
+
 async def run_pipeline(language: str = "en", test_mode: bool = False, test_upload: bool = False):
     lang_name = "Hindi" if language == "hi" else "English"
     mode_tag = " [TEST-UPLOAD - 1 scene]" if test_upload else (" [TEST - 1 scene]" if test_mode else "")
@@ -546,6 +567,13 @@ async def run_pipeline(language: str = "en", test_mode: bool = False, test_uploa
         output_path = _video_output_path(language)
         video_path = None
 
+        if ck.has("video_pre_subs.mp4") and not _video_intact(ck.path("video_pre_subs.mp4")):
+            print("\n    [integrity] checkpointed video_pre_subs.mp4 is truncated/corrupt "
+                  "(timeout mid-save) — discarding, rebuilding from images")
+            try:
+                os.remove(ck.path("video_pre_subs.mp4"))
+            except OSError:
+                pass
         if ck.has("video_pre_subs.mp4"):
             print("\nSteps 3+4 — [resume] assembled video loaded from checkpoint")
             shutil.copy2(ck.path("video_pre_subs.mp4"), output_path)
@@ -674,6 +702,13 @@ async def run_pipeline(language: str = "en", test_mode: bool = False, test_uploa
         # investigate the timing issue. Re-enable by setting
         # BURN_SUBTITLES=true in GHA secrets or .env.)
         _burn_subs = os.environ.get("BURN_SUBTITLES", "false").lower() in ("1", "true", "yes")
+        if ck.has("video.mp4") and not _video_intact(ck.path("video.mp4")):
+            print("    [integrity] checkpointed video.mp4 is truncated/corrupt — "
+                  "discarding (subtitle pass will re-run)")
+            try:
+                os.remove(ck.path("video.mp4"))
+            except OSError:
+                pass
         if ck.has("video.mp4"):
             print("\nStep 4b — [resume] subtitled video loaded from checkpoint")
             shutil.copy2(ck.path("video.mp4"), output_path)
@@ -784,6 +819,10 @@ async def run_pipeline(language: str = "en", test_mode: bool = False, test_uploa
                     # NEVER fail upload because of a thumbnail prepend issue
                     print(f"    [thumb-prepend] non-fatal failure, continuing without bake-in: {bake_err}")
             try:
+                if video_path and not _video_intact(video_path):
+                    raise RuntimeError(
+                        "final video failed integrity probe (truncated?) — "
+                        "refusing to upload a corrupt file")
                 print("\nStep 5 — Uploading to YouTube...")
                 # Checkpoint immediately when YouTube returns a video_id —
                 # protects against duplicate re-upload if a downstream step
