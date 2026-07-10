@@ -1,0 +1,124 @@
+{
+  "ts": "2026-07-10T08-21-10",
+  "language": "hi",
+  "score": 21,
+  "score_max": 25,
+  "violation": "shock_action",
+  "topic": "Krishna's endless cloth in the Kuru sabha — the moment Draupadi let go of her sari, raised both arms and called 'Govind', and the fabric became infinite, the surrender that summoned divine protection",
+  "title": "कृष्ण की असली रक्षा | Krishna's Real Protection",
+  "script": {
+    "voiceover": "द्रौपदी की लाज सरेआम लूटी जा रही है — दुःशासन बलपूर्वक उसकी साड़ी खींच रहा है, 'अब कोई नहीं बचाएगा!' कहकर उपहास कर रहा है। सभा में बैठे सभी ज्ञानी मौन हैं, पांचों पति सिर झुकाए हैं। उसकी आँखें आंसुओं से भरी हैं, हृदय फट रहा है, जब हर ओर से निराशा घेर लेती है और कोई सहारा नहीं दिखता। लेकिन उसी क्षण, जब उसने अपने सारे प्रयत्न छोड़ दिए, दोनों हाथ ऊपर उठाकर, उसने अंतिम पुकार लगाई, “गोविंद! मेरी रक्षा करो!” और तभी एक अचरज हुआ – साड़ी अनंत होती चली गई, दुःशासन के हाथ थक गए पर वस्त्र समाप्त न हुआ। ये केवल एक वस्त्र की रक्षा नहीं थी, ये अटूट विश्वास की महिमा थी। क्या इतनी बड़ी लाज केवल पूर्ण समर्पण से ही बचती है?",
+    "broll": [
+      {
+        "image_prompt": "Extreme macro close-up of a deep-red silk sari being violently pulled taut, fabric threads straining and tearing, rich jewel-toned palette, soft cinematic lighting, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "दुःशासन बलपूर्वक",
+        "mood": "intense violation despair",
+        "wardrobe_context": "PALACE",
+        "shot_type": "ACTION"
+      },
+      {
+        "image_prompt": "[CONFRONTATION-WIDE] Sweeping panoramic shot, ornate Nagara-style palace court with carved stone columns, Dushasana warrior snarling a cruel sneer, eyes gleaming with malicious triumph, wearing blood-red and black royal silks with gold jewelry, gesturing dismissively towards a collapsing Draupadi in the background, jewel-toned palette, soft cinematic lighting, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "अब कोई नहीं बचाएगा!",
+        "mood": "cruel aggression violation",
+        "wardrobe_context": "PALACE",
+        "shot_type": "ACTION"
+      },
+      {
+        "image_prompt": "Wide cinematic shot, vast Hastinapur palace court with carved stone pillars and rich tapestries, many seated royal figures including Bhishma (colossal towering muscled frame, flowing silver-white hair and thick white beard, ivory-white royal silks, silver-and-gold war diadem) and Dronacharya (weathered elderly Indian face, white hair, long white beard, simple white cotton dhoti, white angavastram), all with grim, hollow-eyed expressions, jewel-toned palette, soft cinematic lighting, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "सभा में बैठे",
+        "mood": "silent judgment helpless",
+        "wardrobe_context": "PALACE",
+        "shot_type": "REACTION"
+      },
+      {
+        "image_prompt": "[THE-FALLEN] Wide shot from behind the five Pandava brothers, backs hunched, heads bowed in deep shame, their rich but crumpled silks draped around them, jewel-toned palette, soft cinematic lighting, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "पांचों पति सिर झुकाए हैं",
+        "mood": "shame despair humiliation",
+        "wardrobe_context": "PALACE",
+        "shot_type": "ENVIRONMENT"
+      },
+      {
+        "image_prompt": "Draupadi's tear-streaked face, large kohl-lined lotus eyes wide-eyed in raw horror, long untied black hair flowing loose, deep-red silk sari modestly draped over fitted blouse, fierce proud bearing now utterly broken, jewel-toned palette, soft cinematic lighting, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "आँखें आंसुओं से भरी हैं",
+        "mood": "anguished fear broken",
+        "wardrobe_context": "PALACE",
+        "shot_type": "REACTION"
+      },
+      {
+        "image_prompt": "Draupadi, collapsing onto the polished marble palace floor, her body trembling with exhaustion, her fingers releasing their desperate grip on the deep-red silk sari, long untied black hair sweeping the ground, jewel-toned palette, soft cinematic lighting, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "सारे प्रयत्न छोड़ दिए",
+        "mood": "desperate surrender helpless",
+        "wardrobe_context": "PALACE",
+        "shot_type": "ACTION"
+      },
+      {
+        "image_prompt": "Draupadi, kneeling beneath a radiant golden celestial light, both arms raised upwards in fervent prayer, tear-streaked face uplifted towards the heavens, deep-red silk sari dramatically swirling around her, surrounded by a soft, glowing divine aura, jewel-toned palette, soft cinematic lighting, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "अंतिम पुकार लगाई",
+        "mood": "fervent devotion prayer",
+        "wardrobe_context": "DIVINE",
+        "shot_type": "ACTION"
+      },
+      {
+        "image_prompt": "Extreme macro close-up of endless folds of vibrant deep-red and gold silk sari fabric continuously emerging, glowing with an otherworldly light, obscuring Dushasana's outstretched hand in the background, jewel-toned palette, soft cinematic lighting, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "साड़ी अनंत होती चली गई",
+        "mood": "miraculous divine wonder",
+        "wardrobe_context": "DIVINE",
+        "shot_type": "AMBIGUOUS"
+      },
+      {
+        "image_prompt": "[CONFRONTATION-WIDE] Dushasana warrior, sweat-drenched and hollow-eyed, hands raw and bleeding from endlessly pulling the sari, collapsing onto the ornate palace floor in utter exhaustion, Duryodhana beside him wide-eyed in stunned disbelief and simmering fury, jewel-toned palette, soft cinematic lighting, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "दुःशासन के हाथ थक गए",
+        "mood": "exhaustion disbelief awe",
+        "wardrobe_context": "PALACE",
+        "shot_type": "ACTION"
+      },
+      {
+        "image_prompt": "Draupadi, silhouette against a fading dusk sky over a calm river, standing peacefully, hands folded in Namaste, a lone diya flickering softly in the foreground, surrounded by a serene, warm golden glow, jewel-toned palette, soft cinematic lighting, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "विश्वास की महिमा",
+        "mood": "peaceful gratitude serenity",
+        "wardrobe_context": "AFTERMATH",
+        "shot_type": "ENVIRONMENT"
+      }
+    ],
+    "title": "कृष्ण की असली रक्षा | Krishna's Real Protection",
+    "hook_title": "द्रौपदी की पुकार",
+    "description": "जब हर उम्मीद टूट गई, द्रौपदी की एक पुकार ने गोविंद को बुलाया। Draupadi's Vastraharan in the Kuru Sabha stands as a stark reminder of human cruelty and the failure of justice. Stripped of her dignity, abandoned by those sworn to protect her, Draupadi faced ultimate humiliation. But in her deepest despair, she found the purest form of strength: surrender. Her heartfelt cry to Lord Krishna, \"Govind!\", transcended the physical realm, manifesting an endless sari. This divine intervention wasn't just about saving her modesty; it was a profound testament to the power of unwavering faith and devotion. It exposed the emotional truth that true protection comes not from mortal power, but from absolute surrender to the divine.\n\n#Shorts #Mahabharata #महाभारत #Hindu #BhagavadGita #भगवद_गीता #Krishna #कृष्ण #Arjuna #अर्जुन #Karna #कर्ण #Bhishma #भीष्म #Draupadi #द्रौपदी #Kurukshetra #कुरुक्षेत्र #AncientIndia #IndianMythology #Dharma #MythologyShorts #VedicWisdom #HinduDharma #IndianHistory #SpiritualShorts #PauranikKathayein #SanatanDharma #HindiShorts #trending",
+    "tags": [
+      "Draupadi Vastraharan",
+      "Krishna Leela",
+      "Draupadi",
+      "द्रौपदी",
+      "Krishna",
+      "कृष्ण",
+      "Mahabharata",
+      "महाभारत",
+      "Shorts",
+      "Hindu mythology"
+    ],
+    "thumbnail_prompt": "Dramatic Mahabharata thumbnail, portrait composition, Draupadi kneeling with both arms raised towards a radiant, glowing Krishna figure in the background, endless red-and-gold sari fabric swirling around her, tear-streaked face showing both despair and fervent hope, dark silhouettes of the Kuru court in the shadows, vibrant jewel-toned palette, cinematic volumetric light rays.",
+    "quotable_line": "जब सब हार जाए, तभी असली समर्पण से लाज बचती है।",
+    "pinned_question": "❓ जब सब हार जाए, तभी असली समर्पण से लाज बचती है। क्या आप भी ऐसा मानते हैं?",
+    "next_seed": "और यही विश्वास धर्मयुद्ध की नींव रखेगा।",
+    "language": "hi",
+    "content_type": "story",
+    "topic": "Krishna's endless cloth in the Kuru sabha — the moment Draupadi let go of her sari, raised both arms and called 'Govind', and the fabric became infinite, the surrender that summoned divine protection",
+    "series": "mahabharata",
+    "episode_n": 0,
+    "arc_character_devanagari": "",
+    "arc_character_english": "devotional",
+    "_phase18_strict_pass": false,
+    "_phase18_score": 21,
+    "_phase18_score_max": 25,
+    "_phase18_score_floor": 19,
+    "_phase18_violation": "shock_action",
+    "_phase18_failing_gates": [
+      "anti_merge_composition",
+      "char_names",
+      "intensity",
+      "shock_action"
+    ],
+    "_phase18_fatal_failures": [
+      "anti_merge_composition"
+    ]
+  }
+}
