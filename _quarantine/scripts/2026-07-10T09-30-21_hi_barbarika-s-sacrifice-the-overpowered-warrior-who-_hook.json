@@ -1,0 +1,118 @@
+{
+  "ts": "2026-07-10T09-30-21",
+  "language": "hi",
+  "score": 18,
+  "score_max": 25,
+  "violation": "hook",
+  "topic": "Barbarika's sacrifice — the overpowered warrior who could end the Kurukshetra war with just three arrows, and Krishna's strategic demand for his head in charity",
+  "title": "बर्बरीक की घातक प्रतिज्ञा | Barbarika's Fatal Vow",
+  "script": {
+    "voiceover": "बर्बरीक रणभूमि में कदम रखता है — उसकी आँखों में युद्ध समाप्त करने की अदम्य शक्ति है, तीन तीरों से कुरुक्षेत्र खत्म करने का अटूट विश्वास। उसने प्रतिज्ञा ली थी कि वह हमेशा कमजोर पक्ष का साथ देगा, और इसी वचन ने उसे देवताओं के सामने खड़ा कर दिया। कृष्ण मुस्कुराते हुए आते हैं, उसके अद्भुत बाणों की परीक्षा लेते हैं, और अंत में कहते हैं, \"युद्ध जीतने के लिए तुम्हारा सिर दान में चाहिए।\" बर्बरीक का हृदय टूट जाता है, क्योंकि उसका सबसे बड़ा बल, उसकी प्रतिज्ञा, ही उसका सबसे बड़ा विनाश बन गई। लेकिन जिस क्षण वह अपना सिर अर्पित करता है, क्या वह केवल एक योद्धा का अंत था, या उस शक्ति का जिसने स्वयं अपनी महानता को निगल लिया?",
+    "broll": [
+      {
+        "image_prompt": "Extreme macro close-up of a single glowing arrow tip, intricate celestial patterns etched onto its surface, blurred silhouette of Barbarika drawing the bow in the background, jewel-toned palette, soft cinematic lighting, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "रणभूमि में कदम",
+        "mood": "mystical powerful anticipation",
+        "wardrobe_context": "WAR",
+        "shot_type": "AMBIGUOUS"
+      },
+      {
+        "image_prompt": "[CONFRONTATION-WIDE] Sweeping panoramic shot of an otherworldly plain at dawn, Barbarika warrior standing tall, youthful face filled with powerful resolve, holding a magnificent bow with three glowing arrows, facing a serene Krishna, graceful powerful divine form, luminous monsoon-cloud blue skin, jewel-toned palette, soft cinematic lighting, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "अदम्य शक्ति",
+        "mood": "powerful divine encounter",
+        "wardrobe_context": "DIVINE",
+        "shot_type": "AMBIGUOUS"
+      },
+      {
+        "image_prompt": "Sweeping panoramic shot, ancient forest clearing with dappled sunlight, Barbarika warrior standing with a pensive, furrowed brow, his deep-maroon dhoti subtly torn, simple golden armlets, clutching his bow loosely to his chest, jewel-toned palette, soft cinematic lighting, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "कमजोर पक्ष का साथ",
+        "mood": "introspective solemn resolve",
+        "wardrobe_context": "FOREST",
+        "shot_type": "ENVIRONMENT"
+      },
+      {
+        "image_prompt": "[CONFRONTATION-WIDE] Wide shot, dusty path at the edge of Kurukshetra, Krishna advancing with a serene, knowing smile, graceful powerful divine form, luminous monsoon-cloud blue skin, dark curls with peacock feather, golden-yellow pitambara silk, crimson sash, Barbarika warrior standing opposite him, a slight tension in his posture, jewel-toned palette, soft cinematic lighting, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "कृष्ण मुस्कुराते हुए आते",
+        "mood": "serene divine encounter",
+        "wardrobe_context": "DIVINE",
+        "shot_type": "ENVIRONMENT"
+      },
+      {
+        "image_prompt": "Macro close-up shot of three intricately etched divine arrows resting on a cracked stone altar, Krishna's hands (out of frame) hovering near them as if examining, a soft ethereal glow emanating from the arrowheads, jewel-toned palette, soft cinematic lighting, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "अद्भुत बाणों की परीक्षा",
+        "mood": "mystical divine examination",
+        "wardrobe_context": "DIVINE",
+        "shot_type": "AMBIGUOUS"
+      },
+      {
+        "image_prompt": "[POWER-LOOM] Wide cinematic shot, barren plains, Krishna towering over Barbarika, his expression calm but firm, graceful powerful divine form, luminous monsoon-cloud blue skin, golden-yellow pitambara silk, crimson sash, Barbarika kneeling beneath him, his face shadowed with dawning understanding, jewel-toned palette, soft cinematic lighting, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "सिर दान में चाहिए",
+        "mood": "stark divine demand",
+        "wardrobe_context": "DIVINE",
+        "shot_type": "ACTION"
+      },
+      {
+        "image_prompt": "Close-up of Barbarika's youthful face, tear-streaked eyes wide-eyed in anguish, forehead furrowed in deep pain, golden armlets glinting softly on his arm, ash-pale skin, jewel-toned palette, soft cinematic lighting, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "हृदय टूट जाता है",
+        "mood": "profound internal anguish",
+        "wardrobe_context": "WAR",
+        "shot_type": "REACTION"
+      },
+      {
+        "image_prompt": "Action moment frozen mid-sacrifice, Barbarika warrior kneeling, his head slightly bowed, a celestial discus glowing just above his neck, his form shimmering with a tragic divine aura, jewel-toned palette, soft cinematic lighting, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "सिर अर्पित करता है",
+        "mood": "solemn tragic sacrifice",
+        "wardrobe_context": "DIVINE",
+        "shot_type": "ACTION"
+      },
+      {
+        "image_prompt": "Wide cinematic shot of a lone diya flickering softly on a small, blood-streaked stone pedestal, casting long shadows, in the foreground, a severed head with closed eyes, still and peaceful, a subtle golden crown on it, watching the distant, fading dusk of a battlefield, jewel-toned palette, soft cinematic lighting, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "उस शक्ति का जिसने",
+        "mood": "profound somber reflection",
+        "wardrobe_context": "AFTERMATH",
+        "shot_type": "ENVIRONMENT"
+      }
+    ],
+    "title": "बर्बरीक की घातक प्रतिज्ञा | Barbarika's Fatal Vow",
+    "hook_title": "बर्बरीक का बलिदान",
+    "description": "जब अदम्य शक्ति ही सबसे बड़ा विनाश बनी — बर्बरीक की अनसुनी कहानी। Barbarika, grandson of Bhima, possessed unmatched power, able to end the Kurukshetra war with just three arrows. Bound by a vow to support the weaker side, he presented a dilemma for Krishna, who knew his participation would render the war meaningless. To ensure dharma's path and prevent a one-sided, swift end, Krishna strategically demanded Barbarika's head as charity, asking for the ultimate sacrifice. This act, though appearing cruel, averted an even greater imbalance, but at what internal cost to Barbarika, who had to destroy his own purpose?\n\n#Shorts #Mahabharata #महाभारत #Krishna #HinduMythology #Barbarika #बर्बरीक #Hindu #BhagavadGita #भगवद_गीता #कृष्ण #Kurukshetra #कुरुक्षेत्र #AncientIndia #IndianMythology #Dharma #MythologyShorts #VedicWisdom #HinduDharma #IndianHistory #SpiritualShorts #PauranikKathayein #SanatanDharma #HindiShorts #trending",
+    "tags": [
+      "Barbarika's sacrifice",
+      "Krishna's strategy",
+      "Barbarika",
+      "बर्बरीक",
+      "Krishna",
+      "कृष्ण",
+      "Mahabharata",
+      "महाभारत",
+      "Shorts",
+      "Hindu mythology"
+    ],
+    "thumbnail_prompt": "Dramatic portrait of Barbarika warrior, youthful and handsome, with tear-streaked eyes looking up at a serene Krishna, who stands illuminated by divine golden light, holding his hand out in a gesture of demand, a subtle glow around Barbarika's neck, jewel-toned palette, soft cinematic lighting, intricate details, cinematic volumetric rim lighting",
+    "quotable_line": "जब शक्ति ही सबसे बड़ी बलिदान की वजह बन जाए।",
+    "pinned_question": "❓ जब शक्ति ही सबसे बड़ी बलिदान की वजह बन जाए, तो क्या वह न्याय था या क्रूरता? अपनी राय दें।",
+    "next_seed": "यही बलिदान कुरुक्षेत्र के युद्ध का अंतिम परिणाम तय करेगा।",
+    "language": "hi",
+    "content_type": "story",
+    "topic": "Barbarika's sacrifice — the overpowered warrior who could end the Kurukshetra war with just three arrows, and Krishna's strategic demand for his head in charity",
+    "series": "mahabharata",
+    "episode_n": 0,
+    "arc_character_devanagari": "",
+    "arc_character_english": "",
+    "_phase18_strict_pass": false,
+    "_phase18_score": 18,
+    "_phase18_score_max": 25,
+    "_phase18_score_floor": 19,
+    "_phase18_violation": "hook",
+    "_phase18_failing_gates": [
+      "bookend",
+      "char_names",
+      "engagement",
+      "hook",
+      "hook_title",
+      "intensity",
+      "rehook"
+    ],
+    "_phase18_fatal_failures": []
+  }
+}
