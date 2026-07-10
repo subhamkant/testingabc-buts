@@ -1,0 +1,112 @@
+{
+  "ts": "2026-07-10T06-32-29",
+  "language": "hi",
+  "score": 21,
+  "score_max": 25,
+  "violation": "verb_per_frame",
+  "topic": "Krishna's endless cloth in the Kuru sabha — the moment Draupadi let go of her sari, raised both arms and called 'Govind', and the fabric became infinite, the surrender that summoned divine protection",
+  "title": "कृष्ण का चमत्कार | Krishna's Miracle",
+  "script": {
+    "voiceover": "सभा में द्रौपदी का वस्त्र खींचा जाता है — अपमान की अग्नि, जलती आँखें, हर सांस में दर्द। पाँच पतियों की चुप्पी, भीष्म का मौन, धर्मराज का लाचार सिर झुकाना। चारों ओर पुरुषों की क्रूर हंसी गूँज रही थी, उसका शरीर काँप रहा था, पर कोई बचाने वाला नहीं। जब हर उम्मीद टूट गई, और उसने अपने हाथों से साड़ी पकड़ना छोड़ दिया, 'गोविंद!' पुकारते हुए दोनों हाथ ऊपर उठा दिए, तभी एक चमत्कार हुआ। अनंत वस्त्र बढ़ता चला गया, लाज बच गई। आप ही बताइए, क्या यह सिर्फ एक वस्त्र की रक्षा थी या भक्ति की अविनाशी विजय?",
+    "broll": [
+      {
+        "image_prompt": "Extreme macro close-up of a deep-red silk sari being harshly pulled, fabric stretched taut and tearing slightly, with Draupadi's tear-streaked face blurred in the background, jewel-toned palette, soft cinematic lighting, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "वस्त्र खींचा जाता है",
+        "mood": "sharp pain, violation, stretched",
+        "wardrobe_context": "PALACE",
+        "shot_type": "ACTION"
+      },
+      {
+        "image_prompt": "Close-up portrait view of Draupadi's face, her wide-eyed, kohl-rimmed, tear-streaked eyes burning with defiance and despair, reflecting the cruel laughter of the sabha, radiant fair wheatish-gold complexion, large kohl-lined lotus eyes, long untied black hair flowing loose, deep-red silk sari modestly draped over fitted blouse, red kumkum, fierce proud bearing, jewel-toned palette, soft cinematic lighting, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "जलती आँखें",
+        "mood": "despair, defiance, anguish",
+        "wardrobe_context": "PALACE",
+        "shot_type": "REACTION"
+      },
+      {
+        "image_prompt": "[WITNESS-FROM-BEHIND] Sweeping panoramic shot of an ornate Nagara-style palace court with carved stone columns, Bhishma standing stoically with head bowed in shame, colossal towering muscled frame, flowing silver-white hair and thick white beard, gleaming engraved silver kavacha, ivory-white silks, silver-and-gold war diadem, Draupadi is a small figure in the distant mid-ground, jewel-toned palette, soft cinematic lighting, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "भीष्म का मौन",
+        "mood": "shame, helplessness, somber",
+        "wardrobe_context": "PALACE",
+        "shot_type": "ENVIRONMENT"
+      },
+      {
+        "image_prompt": "[WITNESS-FROM-BEHIND] Ornate Nagara-style palace court with intricate friezes, Draupadi's trembling body hunched with shoulders sagging in terror, deep-red silk sari modestly draped over fitted blouse, red kumkum, fiercely proud bearing, with Shakuni, sharp angular features, grey-streaked beard, calculating eyes, slightly hunched, dark green-black silks, carved cane, watching her from behind a pillar in the foreground, jewel-toned palette, soft cinematic lighting, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "शरीर काँप रहा था",
+        "mood": "terror, vulnerability, shiver",
+        "wardrobe_context": "PALACE",
+        "shot_type": "AMBIGUOUS"
+      },
+      {
+        "image_prompt": "Tight shot on Draupadi's mid-body, her hands falling away from her deep-red silk sari, releasing her grip in a gesture of ultimate surrender, her long untied black hair flowing loose around her tear-streaked face, deep-red silk sari modestly draped over fitted blouse, red kumkum, jewel-toned palette, soft cinematic lighting, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "साड़ी पकड़ना छोड़ दिया",
+        "mood": "surrender, desperation, release",
+        "wardrobe_context": "PALACE",
+        "shot_type": "ACTION"
+      },
+      {
+        "image_prompt": "Dramatic shot of Draupadi in the palace court, looking upwards with a wide-eyed, fervent call to the heavens, both arms raised high in prayer and desperate plea, radiant fair wheatish-gold complexion, large kohl-lined lotus eyes, long untied black hair flowing loose, deep-red silk sari modestly draped over fitted blouse, red kumkum, golden light beginning to emanate from above, jewel-toned palette, soft cinematic lighting, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "'गोविंद!' पुकारते हुए",
+        "mood": "fervent prayer, desperate plea, hope",
+        "wardrobe_context": "PALACE",
+        "shot_type": "REACTION"
+      },
+      {
+        "image_prompt": "[CONFRONTATION-WIDE] Sweeping view of the palace court, a deep-red silk sari fabric endlessly multiplying and cascading down like a river of cloth, completely obscuring Draupadi from the view of a stunned Duryodhana, colossal mountain-like physique, thick black beard, proud cruel sneer, mirror-polished golden kavacha, and Dushasana, both left-foreground side-profile, divine golden aura surrounding the fabric, jewel-toned palette, soft cinematic lighting, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "अनंत वस्त्र बढ़ता चला गया",
+        "mood": "divine miracle, awe, wonder",
+        "wardrobe_context": "PALACE",
+        "shot_type": "AMBIGUOUS"
+      },
+      {
+        "image_prompt": "Wide landscape shot of a calm river at fading dusk, a lone diya flickering peacefully on the water's surface, reflecting the soft glow of a distant temple, Krishna's silhouette standing serenely on the riverbank, graceful powerful divine form, luminous monsoon-cloud blue skin, dark curls with peacock feather, golden-yellow pitambara silk, crimson sash, layered gold necklaces, divine charioteer, jewel-toned palette, soft cinematic lighting, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "भक्ति की अविनाशी विजय",
+        "mood": "peace, divine grace, serenity",
+        "wardrobe_context": "AFTERMATH",
+        "shot_type": "AMBIGUOUS"
+      }
+    ],
+    "title": "कृष्ण का चमत्कार | Krishna's Miracle",
+    "hook_title": "द्रौपदी की पुकार",
+    "description": "एक पुकार ने हस्तिनापुर के सारे नियम तोड़ दिए।\n\nकुरुसभा में द्रौपदी का अपमान धर्म और मर्यादा की सारी सीमाएं तोड़ रहा था। पाँच पतियों की चुप्पी, भीष्म का मौन और सभी बड़े योद्धाओं की बेबसी उसे गहरे दर्द में डुबा रही थी। जब हर उम्मीद खत्म हो गई और उसने अपना आखिरी सहारा भी छोड़ दिया, तब द्रौपदी ने अपनी आत्मा से 'गोविंद' पुकारा। वह क्षण समर्पण का था, जब भौतिक सुरक्षा की आशा छोड़कर उसने स्वयं को पूर्णतः ईश्वर को समर्पित कर दिया। और तभी हुआ वह चमत्कार, जिसने न केवल उसके वस्त्र की रक्षा की, बल्कि धर्म की विजय का भी उद्घोष किया। यह सिर्फ एक साड़ी नहीं थी, यह भक्ति की अविनाशी शक्ति का प्रतीक थी।\n\n#Shorts #Mahabharata #महाभारत #Krishna #HinduMythology\n#Shorts #Mahabharata #महाभारत #Hindu #BhagavadGita #भगवद_गीता #Krishna #कृष्ण #Arjuna #अर्जुन #Karna #कर्ण #Bhishma #भीष्म #Draupadi #द्रौपदी #Kurukshetra #कुरुक्षेत्र #AncientIndia #IndianMythology #Dharma #MythologyShorts #VedicWisdom #HinduDharma #IndianHistory #SpiritualShorts #PauranikKathayein #SanatanDharma #HindiShorts #trending",
+    "tags": [
+      "Draupadi protection",
+      "Krishna miracle",
+      "Govind call",
+      "Draupadi",
+      "द्रौपदी",
+      "Krishna",
+      "कृष्ण",
+      "Mahabharata",
+      "महाभारत",
+      "Shorts",
+      "Hindu mythology"
+    ],
+    "thumbnail_prompt": "Dramatic Mahabharata thumbnail, Draupadi looking upwards with arms raised in fervent prayer, divine golden light emanating around her, deep-red silk sari flowing endlessly, stunned faces of Duryodhana and Dushasana in the background, jewel-toned palette, cinematic, portrait composition",
+    "quotable_line": "जब सब हार गए, तब विश्वास ने रक्षा की।",
+    "pinned_question": "❓ जब सब हार गए, तब विश्वास ने रक्षा की। क्या आपका विश्वास भी इतना अटल है?",
+    "next_seed": "और यही क्षण कुरुक्षेत्र युद्ध का बीज बोएगा।",
+    "language": "hi",
+    "content_type": "story",
+    "topic": "Krishna's endless cloth in the Kuru sabha — the moment Draupadi let go of her sari, raised both arms and called 'Govind', and the fabric became infinite, the surrender that summoned divine protection",
+    "series": "mahabharata",
+    "episode_n": 0,
+    "arc_character_devanagari": "",
+    "arc_character_english": "devotional",
+    "_phase18_strict_pass": false,
+    "_phase18_score": 21,
+    "_phase18_score_max": 25,
+    "_phase18_score_floor": 19,
+    "_phase18_violation": "verb_per_frame",
+    "_phase18_failing_gates": [
+      "anti_merge_composition",
+      "engagement",
+      "intensity",
+      "verb_per_frame"
+    ],
+    "_phase18_fatal_failures": [
+      "anti_merge_composition",
+      "verb_per_frame"
+    ]
+  }
+}
