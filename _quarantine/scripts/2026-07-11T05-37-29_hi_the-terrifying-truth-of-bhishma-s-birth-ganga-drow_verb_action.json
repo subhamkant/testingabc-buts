@@ -1,0 +1,122 @@
+{
+  "ts": "2026-07-11T05-37-29",
+  "language": "hi",
+  "score": 18,
+  "score_max": 25,
+  "violation": "verb_action",
+  "topic": "The terrifying truth of Bhishma's birth — Ganga drowning her seven newborn sons under a celestial curse, and the father whose plea saved the eighth child",
+  "title": "भीष्म का घातक वचन | Bhishma's Fatal Vow",
+  "script": {
+    "voiceover": "गंगा नदी अपने पुत्रों को शीतल जल में बहाती है, एक माँ का हृदय चीखता है पर वो विवश है। एक श्राप, एक दैवीय कर्तव्य, और राजा शंतनु की नम आँखें... वो देखते रहे अपने सात पुत्रों को जल समाधि लेते हुए, हर पल एक नया घाव। उन्होंने अपनी आत्मा को मरते देखा, पर मुख से एक शब्द नहीं निकला। लेकिन जब आठवां पुत्र आया, शंतनु का धैर्य टूट गया। उन्होंने गंगा से कहा, \"ये क्या करती हो तुम? मेरे पुत्र को छोड़ दो!\" गंगा ने अपना श्राप बताया, पर उस क्षण का मौन हस्तिनापुर को भविष्य की ओर खींच ले गया। और बहे आँसू... आज भी विनाश की नींव रख गए... क्या एक पिता का पुत्र मोह ही सबसे बड़ा अभिशाप बन गया था?",
+    "broll": [
+      {
+        "image_prompt": "Extreme macro close-up of river water, shimmering with cool moonlit silver-blue light, gently drawing away a tiny, pale newborn's foot, cold pre-dawn light, intricate micro-engravings on antique Vedic gold catching the light, glistening sweat droplets, hyper-detailed skin pores, cinematic volumetric rim lighting, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "शीतल जल में बहाती है",
+        "mood": "desperate, cold, melancholic",
+        "wardrobe_context": "DIVINE",
+        "shot_type": "AMBIGUOUS"
+      },
+      {
+        "image_prompt": "Close-up of divine Ganga's tear-streaked face, weeping over her lost sons, kohl-rimmed lotus eyes wide with anguish, long dark hair slightly wind-whipped, serene but sorrowful expression, modestly draped silver-blue silk sari, luminous celestial light from above, cool moonlit silver-blue, restrained noble tones, faces clearly lit, no deep shadows, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "हृदय चीखता है",
+        "mood": "anguished, divine, sorrowful",
+        "wardrobe_context": "DIVINE",
+        "shot_type": "REACTION"
+      },
+      {
+        "image_prompt": "[WITNESS-FROM-BEHIND] Wide shot of a desolate riverbank under a pale, cold moon, Raja Shantanu walking away from the river's edge, his back to the camera, head bowed in deep sorrow, his regal ivory-white silk dhoti and royal silk angavastram blending with the muted silver-blue tones, dim shadow-heavy frame, Ganga's silhouette in the distance, partially obscured by mist, cool moonlit silver-blue, restrained noble tones, faces clearly lit, no deep shadows, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "नम आँखें",
+        "mood": "desolate, sorrowful, resigned",
+        "wardrobe_context": "PALACE",
+        "shot_type": "AMBIGUOUS"
+      },
+      {
+        "image_prompt": "Aerial view of seven tiny, glowing infants, sinking into vast, cold, shimmering river water under a ghostly moon, their forms fading into silver-blue depths, solemn and ethereal, river mist swirling gently, cool moonlit silver-blue, restrained noble tones, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "सात पुत्रों को",
+        "mood": "eerie, mystical, tragic",
+        "wardrobe_context": "DIVINE",
+        "shot_type": "ENVIRONMENT"
+      },
+      {
+        "image_prompt": "Close-up of Raja Shantanu's face, recoiling in horror, mouth open in a silent scream of agony, his jeweled gold mukut tilted, sweat-drenched forehead, illuminated by harsh moonlit silver-blue light, wide-eyed in horror, cold pre-dawn moonlight, restrained noble tones, faces clearly lit, no deep shadows, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "धैर्य टूट गया",
+        "mood": "horrified, desperate, shattered",
+        "wardrobe_context": "PALACE",
+        "shot_type": "REACTION"
+      },
+      {
+        "image_prompt": "[CONFRONTATION-WIDE] Raja Shantanu (tall powerfully built regal frame, warm golden-bronze skin, jeweled gold mukut, royal silk angavastram in white-and-gold) left-foreground, desperate, palm raised in halt towards Ganga; divine Ganga (glowing, celestial light emanating, modestly draped white-and-gold silks, serene but sorrowful expression) right mid-ground, under cold moonlight, cool moonlit silver-blue, restrained noble tones, faces clearly lit, no deep shadows, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "पुत्र को छोड़",
+        "mood": "pleading, confrontational, desperate",
+        "wardrobe_context": "DIVINE",
+        "shot_type": "AMBIGUOUS"
+      },
+      {
+        "image_prompt": "[POWER-LOOM] Divine Ganga (glowing, white-and-gold silks, celestial light emanating, serene but sorrowful expression) towering over a kneeling Raja Shantanu (tall powerfully built regal frame, royal silk angavastram in white-and-gold, head bowed in submission), both illuminated by soft, cool divine light by the river's edge, cool moonlit silver-blue, restrained noble tones, faces clearly lit, no deep shadows, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "श्राप बताया",
+        "mood": "solemn, divine, explanatory",
+        "wardrobe_context": "DIVINE",
+        "shot_type": "ACTION"
+      },
+      {
+        "image_prompt": "Wide shot of a serene but haunting river, mist rising over its cool moonlit silver-blue surface, a small, solitary figure (Bhishma as a young boy, calm, stoic expression, simple white dhoti, nascent silver-blue glow) walking away from the river's distant edge, looking out at the water, fading pre-dawn light, cool moonlit silver-blue, restrained noble tones, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "क्षण का मौन",
+        "mood": "haunting, silent, prophetic",
+        "wardrobe_context": "JOURNEY",
+        "shot_type": "ENVIRONMENT"
+      },
+      {
+        "image_prompt": "Abandoned riverbank at fading dusk, a single weathered cradle half-submerged in the cold moonlit silver-blue water, a lone diya flickering on the muddy shore, silhouetted against a vast, silent, and ominous sky, cool moonlit silver-blue, restrained noble tones, no deep shadows, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "नींव रख गए",
+        "mood": "ominous, silent, haunting",
+        "wardrobe_context": "AFTERMATH",
+        "shot_type": "ENVIRONMENT"
+      }
+    ],
+    "title": "भीष्म का घातक वचन | Bhishma's Fatal Vow",
+    "hook_title": "भीष्म का वचन",
+    "description": "▶️ अगला भाग: Amba's revenge, Bhishma's biggest mistake\n\nजिस प्रतिज्ञा ने भीष्म को अमर किया, वही हस्तिनापुर के विनाश की नींव बनी।\n\nगंगा के हाथों अपने सात पुत्रों को खोने के बाद राजा शंतनु का धैर्य जवाब दे देता है। वह आठवें पुत्र को बचाने के लिए देवी गंगा से गुहार लगाते हैं। यह वह क्षण था जब हस्तिनापुर का भविष्य हमेशा के लिए बदल गया। यह वीडियो उस दर्द, उस चुप्पी और उस आत्म-विनाशकारी जन्म की कहानी कहता है, जिसकी नींव पर एक महान योद्धा, भीष्म, का जीवन खड़ा था। हर नायक की जीत में छुपी होती है एक गहरी आंतरिक हार।\n\n#Shorts #Mahabharata #महाभारत #Krishna #HinduMythology\n#Hindu #BhagavadGita #भगवद_गीता #Krishna #कृष्ण #Bhishma #भीष्म #Ganga #शंतनु #Kurukshetra #कुरुक्षेत्र #AncientIndia #IndianMythology #Dharma #MythologyShorts #VedicWisdom #HinduDharma #IndianHistory #SpiritualShorts #PauranikKathayein #SanatanDharma #HindiShorts #trending",
+    "tags": [
+      "Ganga River",
+      "Shantanu",
+      "Bhishma Birth",
+      "Celestial Curse",
+      "Devavrata",
+      "गंगा नदी",
+      "शंतनु",
+      "देवव्रत",
+      "Bhishma",
+      "भीष्म",
+      "Mahabharata",
+      "महाभारत",
+      "Shorts",
+      "Hindu mythology"
+    ],
+    "thumbnail_prompt": "Dramatic cinematic portrait of Raja Shantanu, tear-streaked face, eyes wide with anguish, clutching a crying newborn tightly, as the silhouette of divine Ganga fades into a stormy silver-blue river, cold pre-dawn light, detailed royal silks, intricate gold jewelry, jeweled gold mukut, cool moonlit silver-blue, vibrant colours, cinematic, portrait composition",
+    "quotable_line": "एक पिता का पुत्र मोह ही सबसे बड़ा अभिशाप बन गया।",
+    "pinned_question": "❓ एक पिता का पुत्र मोह ही सबसे बड़ा अभिशाप बन गया। इस पर आपका क्या विचार है?",
+    "next_seed": "और यही मौन बाद में भीष्म की सबसे बड़ी भूल बन गई।",
+    "language": "hi",
+    "content_type": "story",
+    "topic": "The terrifying truth of Bhishma's birth — Ganga drowning her seven newborn sons under a celestial curse, and the father whose plea saved the eighth child",
+    "series": "mahabharata",
+    "episode_n": 28,
+    "arc_character_devanagari": "भीष्म",
+    "arc_character_english": "Bhishma — The Vow That Doomed a Dynasty",
+    "_phase18_strict_pass": false,
+    "_phase18_score": 18,
+    "_phase18_score_max": 25,
+    "_phase18_score_floor": 19,
+    "_phase18_violation": "verb_action",
+    "_phase18_failing_gates": [
+      "bookend",
+      "char_names",
+      "engagement",
+      "hook",
+      "intensity",
+      "subject_lock",
+      "verb_action"
+    ],
+    "_phase18_fatal_failures": []
+  }
+}
