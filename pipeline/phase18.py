@@ -106,6 +106,12 @@ _INTENSITY_ADJECTIVES = (
     # Environmental tension
     "wind-whipped", "rain-soaked", "dust-choked", "shadow-heavy",
     "claustrophobic", "suffocating",
+    # Devotional-awe intensity (2026-07-11): the devotional register's
+    # divine-light / miracle frames are just as intense but use awe
+    # vocabulary — without these every bhakti image_prompt failed the
+    # intensity gate and odd (devotional) days quarantined at 18-21/25.
+    "radiant", "blazing", "luminous", "incandescent", "resplendent",
+    "thunderous", "overwhelming", "swirling", "billowing", "cascading",
 )
 
 
@@ -151,6 +157,14 @@ _VERB_WHITELIST = {
     "clutching", "clenching", "wielding",
     "rising", "ascending", "descending", "swooping",
     "thrown", "tossed", "flung",
+    # Devotional-awe action verbs (2026-07-11) — miracle/grace frames
+    # are kinetic too (infinite sari unfurling, cosmic form erupting,
+    # arms flung up in surrender). Without these the bhakti register's
+    # image_prompts read as noun-poses to the gate and odd days died.
+    "surrendering", "arms raised", "raising both arms", "calling out",
+    "unfurling", "erupting", "radiating", "surging", "multiplying",
+    "engulfing", "flooding", "pouring", "streaming", "spiraling",
+    "outstretched",
 }
 
 _VERB_BLACKLIST_RE = re.compile(
@@ -281,7 +295,12 @@ _BANNED_OPENERS_HI = re.compile(
 _ACTION_VERBS_HI = re.compile(
     r"\b\w+ता\s|\b\w+ती\s|\b\w+ते\s|"      # present-tense ता/ती/ते
     r"उठा|फेंक|काट|मार|गिर|टूट|जल|खींच|"     # explicit action verbs
-    r"घसीट|छीन|पकड़|बहा|दौड़|भाग|छेद|वार"
+    r"घसीट|छीन|पकड़|बहा|दौड़|भाग|छेद|वार|"
+    # 2026-07-11: crisis/miracle verbs the devotional register opens on.
+    # "लूटी जा रही है" (cheer-haran hook) matched NOTHING above — the
+    # ता/ती/ते pattern misses passive-progressive forms — so a violent
+    # devotional hook failed shock_action and the day quarantined.
+    r"लूट|पुकार|गूँज|प्रकट|बरस|फैल|उमड़|चीख|काँप"
 )
 
 
@@ -409,9 +428,15 @@ def _check_verb_per_frame(broll: list) -> tuple[bool, str]:
         )
 
     last_prompt = (broll[-1].get("image_prompt", "") or "").lower()
+    # Devotional closers (2026-07-11): the bhakti register ends on
+    # peace-after-grace, not grief — same consequence-not-triumph
+    # principle, different imagery. folded hands / serene / gratitude /
+    # calm river match the devotional directive's closing beat.
     aftermath_tokens = ("silhouette", "abandoned", "walking away",
                         "walking from", "withheld", "face withheld",
-                        "fading dusk", "lone diya", "prone body")
+                        "fading dusk", "lone diya", "prone body",
+                        "folded hands", "serene", "gratitude",
+                        "calm river", "quiet glow", "bowed in")
     if not any(t in last_prompt for t in aftermath_tokens):
         return False, (
             "broll[-1] is not an aftermath-silhouette beat. Winners close "
@@ -2274,7 +2299,7 @@ OUTPUT — return ONLY valid JSON, no markdown fences, no preamble:
   ],
   "title": "<Bilingual <60 chars, format: '[Hindi half] | [English half]'. Hindi FIRST. Each half 24-28 chars max. PHASE 22 HARD GATE (2026-06-25): TITLE DNA = [character] + [subversion adjective from whitelist: असली/छुपा/सबसे बड़ा/आखिरी/घातक or real/hidden/biggest/final/fatal] + [tribal-relational noun from whitelist: गलती/धोखा/श्राप/प्रतिज्ञा/अभिमान/बलिदान/वचन/हार/डर/शर्म or mistake/betrayal/curse/promise/pride/sacrifice/vow/loss/fear/shame]. MUST assert the OPPOSITE of the hero's canonical virtue (Karna's loyalty → 'Karna\\'s Biggest Mistake' = SHARP; Arjuna's skill → 'Arjuna\\'s Real Fear' = SHARP; Bhishma's vow → 'Bhishma\\'s Hidden Betrayal' = SHARP). PASS examples: 'कर्ण की सबसे बड़ी गलती | Karna\\'s Biggest Mistake' / 'अर्जुन का असली डर | Arjuna\\'s Real Fear' / 'भीष्म का छुपा वचन | Bhishma\\'s Hidden Vow'. REJECT (hard-fail): mood/regret/wound/sin/truth/fate/ego/'war within'/'काला सच'/'inner X'; identity nouns caste/religion/Hindu/जाति/धर्म; soft adjectives silent/quiet/inner/deep/spiritual/चुप/मौन/गहरा; pure incident-naming ('कर्ण की प्रतिज्ञा'); 'Story of X'; episode numbering. The title is the OPENING PROMISE the thumbnail pays off — make it sharp and binary, not pensive.>",
   "hook_title": "<1-5 words, 100% Devanagari script (NO Latin). MUST contain ≥1 named character (भीष्म/अर्जुन/कर्ण/कृष्ण/द्रौपदी/...) OR ≥1 paradox marker (लेकिन/पर/फिर भी/कभी नहीं/आखिरी/पहली/एकमात्र/जो). MUST NOT contain '?', '!', '...', emoji, or setup openers ('यह'/'ये'/'एक कहानी'/'बहुत समय'/'कहते हैं'). Examples that PASS: 'अर्जुन का अंतिम पाप', 'कर्ण की एक गलती', 'द्रौपदी का अंतिम सच'.>",
-  "description": "<Hook line under 90 chars expanding the title.\\n\\n#Shorts #Mahabharata #महाभारत #Krishna #HinduMythology\\n\\n100-150 words about the story.\\n\\n#Shorts #Mahabharata #महाभारत #Hindu #BhagavadGita #भगवद_गीता #Krishna #कृष्ण #Arjuna #अर्जुन #Karna #कर्ण #Bhishma #भीष्म #Draupadi #द्रौपदी #Kurukshetra #कुरुक्षेत्र #AncientIndia #IndianMythology #Dharma #MythologyShorts #VedicWisdom #HinduDharma #IndianHistory #SpiritualShorts #PauranikKathayein #SanatanDharma #HindiShorts #trending>",
+  "description": "<Hook line under 90 chars expanding the title.\\n\\n100-150 words about the story.\\n\\n#Shorts #Mahabharata #महाभारत #Krishna #HinduMythology #PauranikKatha #MythologyShorts #HindiShorts — EXACTLY these 8 hashtags in ONE block at the END, none elsewhere. (2026-07-11: winners run 5-12 hashtags; our old 28-tag wall diluted topical relevance and pattern-matches spam.)>",
   "tags": ["topic-specific tag 1","topic-specific tag 2","named char 1","named char 1 Devanagari","Mahabharata","महाभारत","Shorts","Hindu mythology"],
   "thumbnail_prompt": "<Dramatic Mahabharata thumbnail — vibrant colours, cinematic, portrait composition>",
   "quotable_line": "<≤14 words Hindi, tribal-split moral claim. MUST contain at least one charged word (बलिदान/ज़िद/धोखा/मजबूरी/गलती/पाप/अपमान/झूठ/सच/विश्वासघात/घमंड/खत्म).>",
@@ -2369,7 +2394,19 @@ def generate_phase18_script(
             "महिमा / दर्शन / विजय / कृपा), e.g. 'जब कृष्ण ने लाज बचाई | "
             "Krishna's Divine Protection'. The aftermath closer shows PEACE "
             "after grace (lone diya, folded hands silhouette, fading dusk "
-            "over a calm river) instead of grief."
+            "over a calm river) instead of grief. ALL standard visual rules "
+            "still apply to every image_prompt: lead with an ACTION verb "
+            "(unfurling / erupting / cascading / arms raised in surrender), "
+            "include one intensity adjective (radiant / blazing / luminous "
+            "work for divine light), use a [COMPOSITION-TAG] whenever two "
+            "named characters share a frame, and tag the final beat "
+            "wardrobe_context AFTERMATH. Voiceover DNA (hard gates): the "
+            "FIRST 8 words must contain a physical action verb mid-crisis "
+            "(टूटती/खींचता/लूटी/गिरती — NEVER a static खड़ी/बैठी pose), and "
+            "the title's devotional noun (रक्षा/चमत्कार/लीला/कृपा) must "
+            "appear in BOTH the first 10 AND last 10 words of the "
+            "voiceover — open on the threatened grace, close on the "
+            "delivered grace, same noun."
         )
     else:
         fingerprint_override = ""
@@ -2444,7 +2481,12 @@ def generate_phase18_script(
         "aftermath_closer",
         "title_dna",
     }
-    MAX_ATTEMPTS = 8
+    # 2026-07-11: devotional days get 12 attempts (dark keeps 8). The
+    # bhakti register is newer to the prompt+gate system — Jul-10/11 runs
+    # show it converging ~2 points lower per attempt (17-21 vs dark's
+    # 19-22), so it needs more best-of-N draws to land a ≥19 fatal-clean
+    # candidate. ~11 min at 12 attempts on GHA, inside the 29-min job cap.
+    MAX_ATTEMPTS = 12 if _ACTIVE_REGISTER == "devotional" else 8
     attempts: list = []   # each: {data, score, is_fatal_clean, violation, info, fatal_failures}
     last_violation = ""
     last_dup_title = ""

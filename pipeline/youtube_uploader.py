@@ -21,7 +21,11 @@ SCOPES = [
     "https://www.googleapis.com/auth/yt-analytics.readonly",
 ]
 
-CATEGORY_ID = "27"   # Education  (22 = People & Blogs, 24 = Entertainment)
+# 2026-07-11 competitive forensic: every niche winner (Katha Manthan 812K
+# subs, Nishva fx 232K, both category 24; Sanatan Legends 78K, category 1)
+# runs Entertainment-cluster categories. Education (27) put us in the
+# wrong audience-matching cluster for mythology storytelling.
+CATEGORY_ID = "24"   # Entertainment  (was 27 Education until 2026-07-11)
 
 # Series → playlist title. Created on demand if missing; resolved IDs cached
 # in assets/playlist_ids.json so we don't re-list playlists every upload.
