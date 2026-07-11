@@ -2243,18 +2243,35 @@ def _pick_cold_open_scene_idx(scene_moods: list, n: int) -> tuple:
 
 
 def _make_freeze_clip(image_path: str, duration: float, output_path: str) -> bool:
-    """Static (no Ken Burns) freeze frame at 1080x1920. Used for the Phase 24
-    cold-open prepend: a 1.0s flash of the climax scene's first image,
-    crossfading into scene 0's Ken Burns motion. Pure ffmpeg fallback —
-    matches the encoding spec of `_render_image_clip`'s fallback path so
-    `_build_silent_video_with_xfades` can concat the result cleanly."""
+    """Cold-open clip at 1080x1920 for the Phase 24 prepend, crossfading
+    into scene 0's Ken Burns motion.
+
+    2026-07-11 — no longer a freeze. Per-video analytics: engaged-view
+    rate is pinned at 33-53% on EVERY video (median 46%) while watchers
+    who stay average 58-193% AVD — the swipe decision is lost in the
+    first second, and that first second was a frozen still on all 63
+    uploads. Now an ~8% push-in: motion from literal frame zero. Same
+    codec/size/pix_fmt spec as `_render_image_clip`'s fallback path so
+    `_build_silent_video_with_xfades` concat behavior is unchanged.
+    COLD_OPEN_STATIC=true restores the freeze for A/B."""
+    n_frames = max(int(duration * FPS), 1)
+    if os.environ.get("COLD_OPEN_STATIC", "").strip().lower() == "true":
+        vf = ("scale=1080:1920:force_original_aspect_ratio=increase:flags=lanczos,"
+              "crop=1080:1920,setsar=1")
+    else:
+        # Upscale ~2.5x before zoompan (sub-pixel sampling kills jitter),
+        # linear zoom 1.00 -> 1.08 across the clip's frames.
+        vf = ("scale=1080:1920:force_original_aspect_ratio=increase:flags=lanczos,"
+              "crop=1080:1920,scale=2700:4800,"
+              f"zoompan=z='min(1+0.08*on/{n_frames},1.08)':d=1:"
+              "x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':"
+              f"s=1080x1920:fps={FPS},format=yuv420p,setsar=1")
     result = subprocess.run([
         "ffmpeg", "-y",
         "-loop", "1", "-framerate", str(FPS), "-i", image_path,
         "-c:v", "libx264", "-preset", "fast", "-crf", "23",
         "-pix_fmt", "yuv420p", "-t", str(duration), "-an",
-        "-vf", "scale=1080:1920:force_original_aspect_ratio=increase:flags=lanczos,"
-               "crop=1080:1920,setsar=1",
+        "-vf", vf,
         output_path,
     ], capture_output=True)
     return result.returncode == 0
