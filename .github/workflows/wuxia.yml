@@ -1,0 +1,68 @@
+name: Wuxia daily long-form
+
+# Daily 15-min 16:9 Hindi donghua episode (Martial Peak). Isolated from the
+# Mahabharata pipeline: own concurrency group, own state files, own Kaggle
+# kernel (subhamkant11/wuxia-i2v), own reusable runner (wuxia-run.yml).
+#
+# Retry chain: primary + 3 retries share PIPELINE_RUN_ID=wuxia_<run_id> so the
+# checkpoint artifact carries across attempts — a job timeout (cancelled) or
+# failure resumes the SAME Kaggle kernel poll instead of re-pushing.
+#
+# v1: no YouTube upload. The finished mp4 is a workflow artifact (+ R2 if the
+# R2_* secrets are set). Publish wiring comes later once the channel exists.
+
+on:
+  schedule:
+    # 02:30 UTC = 08:00 IST morning render (go-live time is decoupled; a later
+    # publish scheduler / manual review handles 6 PM). Matches Mahabharata cadence.
+    - cron: "30 2 * * *"
+  workflow_dispatch:
+    inputs:
+      episode_slug:
+        description: "pro_drafts/wuxia/<slug> directory to render"
+        required: false
+        default: "ep1_yang_kai_awakening"
+        type: string
+
+concurrency:
+  group: wuxia-pipeline
+  cancel-in-progress: false
+
+jobs:
+  generate:
+    uses: ./.github/workflows/wuxia-run.yml
+    secrets: inherit
+    with:
+      pipeline_run_id: wuxia_${{ github.run_id }}
+      commit_message: "Wuxia: auto-update state [skip ci]"
+      episode_slug: ${{ github.event.inputs.episode_slug || 'ep1_yang_kai_awakening' }}
+
+  retry-1:
+    needs: generate
+    if: always() && contains(fromJson('["failure", "cancelled"]'), needs.generate.result)
+    uses: ./.github/workflows/wuxia-run.yml
+    secrets: inherit
+    with:
+      pipeline_run_id: wuxia_${{ github.run_id }}
+      commit_message: "Wuxia: auto-update state (retry-1) [skip ci]"
+      episode_slug: ${{ github.event.inputs.episode_slug || 'ep1_yang_kai_awakening' }}
+
+  retry-2:
+    needs: retry-1
+    if: always() && contains(fromJson('["failure", "cancelled"]'), needs.retry-1.result)
+    uses: ./.github/workflows/wuxia-run.yml
+    secrets: inherit
+    with:
+      pipeline_run_id: wuxia_${{ github.run_id }}
+      commit_message: "Wuxia: auto-update state (retry-2) [skip ci]"
+      episode_slug: ${{ github.event.inputs.episode_slug || 'ep1_yang_kai_awakening' }}
+
+  retry-3:
+    needs: retry-2
+    if: always() && contains(fromJson('["failure", "cancelled"]'), needs.retry-2.result)
+    uses: ./.github/workflows/wuxia-run.yml
+    secrets: inherit
+    with:
+      pipeline_run_id: wuxia_${{ github.run_id }}
+      commit_message: "Wuxia: auto-update state (retry-3) [skip ci]"
+      episode_slug: ${{ github.event.inputs.episode_slug || 'ep1_yang_kai_awakening' }}

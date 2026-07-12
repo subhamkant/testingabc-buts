@@ -1,0 +1,148 @@
+{
+  "title": "Yang Kai's Awakening — Martial Peak Episode 1",
+  "topic": "yang kai awakening martial peak",
+  "language": "hi",
+  "style_anchor": "cinematic donghua, Chinese wuxia animation style, dramatic volumetric lighting, intricate detail, sharp focus, epic 16:9 landscape composition, moody atmospheric, black and gold cultivator robes",
+  "scenes": [
+    {
+      "scene_id": 1,
+      "narration_hi": "High Heaven Pavilion — yahan ke sabse neeche wale outer sect mein, Yang Kai naam ka ek ladka pichhle teen saal se sirf farsh jhaadu kar raha hai. Na koi background, na koi talent. Kam se kam, sabko yahi lagta hai.",
+      "visual_track": [
+        { "category": "environment", "requires_motion": false, "reaction_frame": false, "prompt": "a vast ruined ancient Chinese sect courtyard at dawn, cracked stone floor, weathered pagodas and stone lanterns, mist rolling between crumbling walls, a lone young cultivator in worn dark robes holding a broom, wide establishing shot" }
+      ]
+    },
+    {
+      "scene_id": 2,
+      "narration_hi": "Baaki disciples uska mazaak udaate hain. 'Sect ka kachra' — yahi uska naam ban gaya hai. Roz ki beizzati sehta hai, lekin uske andar ek aag abhi bhi zinda hai.",
+      "visual_track": [
+        { "category": "human_consequence", "requires_motion": false, "reaction_frame": true, "prompt": "a young cultivator in worn robes kneeling with lowered head while a group of arrogant richly-dressed disciples sneer and point at him, cold overcast courtyard, humiliation, cinematic emotional lighting" }
+      ]
+    },
+    {
+      "scene_id": 3,
+      "narration_hi": "Har raat, jab sab so jaate hain, Yang Kai akela practice karta hai. Pasine se bheega hua, wo baar baar wahi basic sword form dohraata hai — kyunki haar maanna use aata hi nahi.",
+      "visual_track": [
+        { "category": "motion", "requires_motion": true, "reaction_frame": false, "prompt": "a determined young cultivator training alone at night in a moonlit courtyard, practicing flowing sword forms, sweat and dust in the air, dramatic rim lighting, dynamic martial arts motion, cinematic donghua" }
+      ]
+    },
+    {
+      "scene_id": 4,
+      "narration_hi": "Sect ke elders use ek nazar dekhte hain aur mudd jaate hain. 'Iski cultivation kabhi aage nahi badhegi' — unka faisla ho chuka hai.",
+      "visual_track": [
+        { "category": "human_consequence", "requires_motion": false, "reaction_frame": true, "prompt": "a stern elderly sect elder in ornate silk robes glancing dismissively over his shoulder at a kneeling young disciple, cold grand hall with hanging banners, disdain, cinematic" }
+      ]
+    },
+    {
+      "scene_id": 5,
+      "narration_hi": "Us raat, galti se, Yang Kai sect ki forbidden library tak pahunch jaata hai. Dhool bhari purani shelves ke beech, ek bina naam wali kaali kitaab uska dhyaan kheench leti hai.",
+      "visual_track": [
+        { "category": "tension", "requires_motion": false, "reaction_frame": false, "prompt": "interior of a vast dark forbidden library at night, towering dusty wooden shelves, moonlight through a broken lattice window, a single black untitled book faintly glowing on a shelf, mysterious cinematic" }
+      ]
+    },
+    {
+      "scene_id": 6,
+      "narration_hi": "Jaise hi uski ungliyan us kitaab ko chhuti hain, panno se golden characters upar uthne lagte hain — seedha uski aankhon mein.",
+      "visual_track": [
+        { "category": "motion", "requires_motion": true, "reaction_frame": false, "prompt": "extreme close-up of a young cultivator holding a glowing black ancient book, streams of golden characters and light swirling up from the pages into his awestruck face, dim candlelit library, dramatic donghua motion" }
+      ]
+    },
+    {
+      "scene_id": 7,
+      "narration_hi": "Ek chhupi hui duniya uske dimaag mein khul jaati hai — cultivation techniques, secrets, martial arts. Sab kuch ek dam se, ek toofan ki tarah.",
+      "visual_track": [
+        { "category": "motion", "requires_motion": true, "reaction_frame": false, "prompt": "a young cultivator surrounded by a swirling galaxy of glowing golden runes and ancient diagrams orbiting his head, knowledge flooding into him, faint purple energy beginning to gather, dark library, epic donghua" }
+      ]
+    },
+    {
+      "scene_id": 8,
+      "narration_hi": "Aur phir — uski hatheli mein pehli purple chingari jalti hai. Wo taakat, jo kabhi uski honi hi nahi thi.",
+      "visual_track": [
+        { "category": "motion", "requires_motion": true, "reaction_frame": false, "prompt": "close-up of a young cultivator's open palm igniting with a crackling purple spark of spirit energy, wonder and disbelief on his face lit purple, dark background, cinematic donghua" }
+      ]
+    },
+    {
+      "scene_id": 9,
+      "narration_hi": "Ek pal mein, purple spirit energy uske poore sharir ke chaaron taraf ubalne lagti hai — jaise koi zinda toofan uske aaspaas ghoom raha ho.",
+      "visual_track": [
+        { "category": "motion", "requires_motion": true, "reaction_frame": false, "prompt": "a young wuxia cultivator in black gold-trimmed robes standing in a ruined stone courtyard, glowing purple spirit energy erupting and swirling around his whole body like a living storm, long black hair drifting upward, embers rising, intense cinematic donghua power awakening" }
+      ]
+    },
+    {
+      "scene_id": 10,
+      "narration_hi": "Pahaad ke doosre chhor par, sect ke ghamandi elders achanak ruk jaate hain. Unhe ek kampan mehsoos hota hai — ek energy jo yahan honi hi nahi chahiye thi.",
+      "visual_track": [
+        { "category": "human_consequence", "requires_motion": false, "reaction_frame": true, "prompt": "a group of stern elderly sect elders in ornate silk robes standing on a high mountain terrace, turning with alarm toward a distant purple glow on the horizon, wind whipping their long sleeves, cold blue moonlight, cinematic wide shot" }
+      ]
+    },
+    {
+      "scene_id": 11,
+      "narration_hi": "Yang Kai apne haath uthata hai. Pehli baar, energy uski marzi se chalti hai — uske baalon aur robes ko hawa mein lehraati hui.",
+      "visual_track": [
+        { "category": "motion", "requires_motion": true, "reaction_frame": false, "prompt": "a young cultivator in black gold-trimmed robes slowly raising his arms as a roaring purple aura surges around him, long black hair and robes billowing dramatically in the energy wind, glowing spirit particles, ruined courtyard, cinematic donghua" }
+      ]
+    },
+    {
+      "scene_id": 12,
+      "narration_hi": "Ek shockwave phatti hai. Toote patthar, dhool aur purple bijli — sab uske chaaron taraf ghoomne lagti hai.",
+      "visual_track": [
+        { "category": "motion", "requires_motion": true, "reaction_frame": false, "prompt": "a powerful shockwave of purple energy bursting outward from a young cultivator, cracked stones and dust and debris lifting off the ground and swirling around him, crackling purple lightning, dramatic low angle, intense cinematic donghua action" }
+      ]
+    },
+    {
+      "scene_id": 13,
+      "narration_hi": "Purple bijli uske sharir par daudti hai. Ye ab wahi kamzor ladka nahi raha jise sab 'kachra' kehte the.",
+      "visual_track": [
+        { "category": "motion", "requires_motion": true, "reaction_frame": false, "prompt": "arcs of crackling purple lightning coursing across a young cultivator's body and outstretched arms, his eyes glowing purple, intense determined expression, dark ruined courtyard, dramatic cinematic donghua" }
+      ]
+    },
+    {
+      "scene_id": 14,
+      "narration_hi": "Wahi disciples jo abhi tak has rahe the, ab darr ke maare peeche hatne lagte hain. Unki aankhon mein pehli baar Yang Kai ke liye khauf hai.",
+      "visual_track": [
+        { "category": "human_consequence", "requires_motion": false, "reaction_frame": true, "prompt": "a group of young sect disciples stumbling backward in fear and awe, faces lit by an intense purple glow off-screen, wide frightened eyes, wind blowing their robes, dark courtyard at night, cinematic" }
+      ]
+    },
+    {
+      "scene_id": 15,
+      "narration_hi": "Yang Kai ek kadam aage badhata hai. Uske peeche purple aura ki ek lambi lakeer chhod ti hui.",
+      "visual_track": [
+        { "category": "motion", "requires_motion": true, "reaction_frame": false, "prompt": "a young cultivator taking a powerful step forward, trailing a long ribbon of purple aura behind him, glowing eyes, robes rippling, cracked stone ground, low dramatic angle, cinematic donghua motion" }
+      ]
+    },
+    {
+      "scene_id": 16,
+      "narration_hi": "Ek aur surge — aur uske pairon ke neeche patthar chatak jaate hain. Taakat ab uske kaabu mein aa rahi hai.",
+      "visual_track": [
+        { "category": "motion", "requires_motion": true, "reaction_frame": false, "prompt": "the stone ground cracking and buckling beneath a young cultivator's feet as a pulse of purple energy radiates outward from him, dust exploding upward, powerful stance, intense cinematic donghua" }
+      ]
+    },
+    {
+      "scene_id": 17,
+      "narration_hi": "Door se, sect ka sabse bada elder ye sab dekh raha hai. Uske chehre par gussa nahi — curiosity hai.",
+      "visual_track": [
+        { "category": "human_consequence", "requires_motion": false, "reaction_frame": true, "prompt": "a powerful old sect grandmaster in flowing white robes watching from a distant mountain peak, faint intrigued smile, a distant purple glow reflected in his eyes, starry night sky, epic cinematic" }
+      ]
+    },
+    {
+      "scene_id": 18,
+      "narration_hi": "Yang Kai apni saari energy ek jagah kheench ta hai, aur use aasman ki taraf chhod deta hai — ek purple beam, jo raat ko cheer deti hai.",
+      "visual_track": [
+        { "category": "motion", "requires_motion": true, "reaction_frame": false, "prompt": "a young cultivator thrusting both hands upward, unleashing a towering beam of purple spirit energy into the night sky, splitting the darkness, clouds swirling around the beam, epic cinematic donghua power blast" }
+      ]
+    },
+    {
+      "scene_id": 19,
+      "narration_hi": "Aur phir sab shaant ho jaata hai. Aura dheere dheere baith ti hai. Jo ladka utha tha, wo ab badal chuka hai.",
+      "visual_track": [
+        { "category": "motion", "requires_motion": true, "reaction_frame": false, "prompt": "a young cultivator standing calm and transformed as the last wisps of purple aura gently settle around him, faint glow, steam rising from cracked ground, serene powerful expression, cinematic donghua" }
+      ]
+    },
+    {
+      "scene_id": 20,
+      "narration_hi": "Aur ye to sirf shuruaat hai. Sabse neeche wale disciple se lekar poore martial world ke peak tak — Yang Kai ka safar aaj raat se shuru hota hai.",
+      "visual_track": [
+        { "category": "motion", "requires_motion": true, "reaction_frame": false, "prompt": "a lone young cultivator standing tall with a faint purple aura still glowing around him, looking up at an endless towering mountain range disappearing into starlit clouds, embers drifting, epic sense of scale, cinematic donghua wide shot" }
+      ]
+    }
+  ]
+}

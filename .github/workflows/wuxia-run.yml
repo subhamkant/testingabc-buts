@@ -1,0 +1,140 @@
+name: Wuxia pipeline (reusable)
+
+# Reusable single-attempt runner for the Wuxia daily pipeline. Called 4x by
+# wuxia.yml (primary + 3 retries) with the SAME pipeline_run_id so the
+# checkpoint artifact carries across attempts (resume the Kaggle poll instead
+# of re-pushing). Fully isolated from the Mahabharata pipeline.
+
+on:
+  workflow_call:
+    inputs:
+      pipeline_run_id:
+        required: true
+        type: string
+      commit_message:
+        required: true
+        type: string
+      episode_slug:
+        required: true
+        type: string
+    secrets:
+      # secrets: inherit is used by the caller; declared here for clarity/opt.
+      KAGGLE_JSON_B64: { required: false }
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+    permissions:
+      contents: write
+    env:
+      PIPELINE_RUN_ID: ${{ inputs.pipeline_run_id }}
+      WUXIA_KAGGLE_KERNEL_REF: subhamkant11/wuxia-i2v
+      PYTHONUTF8: "1"
+      PYTHONIOENCODING: "utf-8"
+      # Cloudflare Workers-AI (FLUX-schnell stills) — 5-account rotation
+      CLOUDFLARE_ACCOUNT_ID:   ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      CLOUDFLARE_API_TOKEN:    ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID_2: ${{ secrets.CLOUDFLARE_ACCOUNT_ID_2 }}
+      CLOUDFLARE_API_TOKEN_2:  ${{ secrets.CLOUDFLARE_API_TOKEN_2 }}
+      CLOUDFLARE_ACCOUNT_ID_3: ${{ secrets.CLOUDFLARE_ACCOUNT_ID_3 }}
+      CLOUDFLARE_API_TOKEN_3:  ${{ secrets.CLOUDFLARE_API_TOKEN_3 }}
+      CLOUDFLARE_ACCOUNT_ID_4: ${{ secrets.CLOUDFLARE_ACCOUNT_ID_4 }}
+      CLOUDFLARE_API_TOKEN_4:  ${{ secrets.CLOUDFLARE_API_TOKEN_4 }}
+      CLOUDFLARE_ACCOUNT_ID_5: ${{ secrets.CLOUDFLARE_ACCOUNT_ID_5 }}
+      CLOUDFLARE_API_TOKEN_5:  ${{ secrets.CLOUDFLARE_API_TOKEN_5 }}
+      # TTS (ElevenLabs -> Gemini -> Edge cascade)
+      GEMINI_API_KEY:            ${{ secrets.GEMINI_API_KEY }}
+      GEMINI_API_KEY_FALLBACK:   ${{ secrets.GEMINI_API_KEY_FALLBACK }}
+      GEMINI_API_KEY_FALLBACK_2: ${{ secrets.GEMINI_API_KEY_FALLBACK_2 }}
+      GEMINI_API_KEY_FALLBACK_3: ${{ secrets.GEMINI_API_KEY_FALLBACK_3 }}
+      GEMINI_API_KEY_FALLBACK_4: ${{ secrets.GEMINI_API_KEY_FALLBACK_4 }}
+      ELEVENLABS_API_KEY:            ${{ secrets.ELEVENLABS_API_KEY }}
+      ELEVENLABS_API_KEY_FALLBACK:   ${{ secrets.ELEVENLABS_API_KEY_FALLBACK }}
+      ELEVENLABS_API_KEY_FALLBACK_2: ${{ secrets.ELEVENLABS_API_KEY_FALLBACK_2 }}
+      ELEVENLABS_API_KEY_FALLBACK_3: ${{ secrets.ELEVENLABS_API_KEY_FALLBACK_3 }}
+      # Cloudflare R2 (episode storage — optional; absent => artifact-only)
+      R2_ACCOUNT_ID:        ${{ secrets.R2_ACCOUNT_ID }}
+      R2_ACCESS_KEY_ID:     ${{ secrets.R2_ACCESS_KEY_ID }}
+      R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+      R2_BUCKET:            ${{ secrets.R2_BUCKET }}
+      R2_PUBLIC_BASE_URL:   ${{ secrets.R2_PUBLIC_BASE_URL }}
+      # Kaggle (motion kernel push/poll)
+      KAGGLE_JSON_B64: ${{ secrets.KAGGLE_JSON_B64 }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install system deps (ffmpeg + Devanagari fonts)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg fonts-noto-core fonts-lohit-deva
+
+      - name: Install Python deps
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Write kaggle.json from secret
+        run: |
+          if [ -z "$KAGGLE_JSON_B64" ]; then
+            echo "::error::KAGGLE_JSON_B64 secret is not set (base64 of your kaggle.json)."
+            exit 1
+          fi
+          echo "$KAGGLE_JSON_B64" | base64 -d > kaggle.json
+          echo "[ok] kaggle.json written ($(wc -c < kaggle.json) bytes)"
+
+      - name: Restore checkpoint (resume Kaggle poll across attempts)
+        uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          name: wuxia-checkpoint-${{ inputs.pipeline_run_id }}
+          path: cache/${{ inputs.pipeline_run_id }}
+
+      - name: Run Wuxia pipeline
+        run: |
+          echo "[run] python wuxia_main.py --from-json-dir pro_drafts/wuxia/${{ inputs.episode_slug }}"
+          python wuxia_main.py --from-json-dir "pro_drafts/wuxia/${{ inputs.episode_slug }}"
+
+      - name: Save checkpoint (always, overwrite)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: wuxia-checkpoint-${{ inputs.pipeline_run_id }}
+          path: cache/${{ inputs.pipeline_run_id }}
+          overwrite: true
+          retention-days: 3
+          if-no-files-found: ignore
+
+      - name: Upload episode mp4 + logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: wuxia-episode-${{ github.run_id }}
+          path: |
+            output/wuxia_*.mp4
+            logs/wuxia_*.log
+          retention-days: 7
+          if-no-files-found: warn
+
+      # Commit is the LAST step and NON-BLOCKING: a rebase/push race must never
+      # fail a run whose episode already shipped (artifact + R2 happened above).
+      - name: Commit wuxia state (non-blocking)
+        if: always()
+        continue-on-error: true
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git pull --rebase --autostash origin "${{ github.ref_name }}" || true
+          git add scheduled_topics_wuxia.txt recent_topics_wuxia.json 2>/dev/null || true
+          if git diff --staged --quiet; then
+            echo "[ok] no wuxia state changes to commit"
+          else
+            git commit -m "${{ inputs.commit_message }}"
+            git push
+          fi
