@@ -1,0 +1,112 @@
+{
+  "ts": "2026-07-12T04-34-10",
+  "language": "hi",
+  "score": 16,
+  "score_max": 25,
+  "violation": "anchors",
+  "topic": "Krishna's endless cloth in the Kuru sabha — the moment Draupadi let go of her sari, raised both arms and called 'Govind', and the fabric became infinite, the surrender that summoned divine protection",
+  "title": "द्रौपदी की सबसे बड़ी हार | Draupadi's Biggest Loss",
+  "script": {
+    "voiceover": "टूटती गरिमा के बीच, भरी सभा में जब द्रौपदी का चीर खींचा जा रहा था, तब उसकी आखिरी रक्षा... हर एक धागा उसकी आत्मा को नोंच रहा था। भीष्म, द्रोण, धृतराष्ट्र – हर आँख झुकी, कोई सहायता नहीं। अपमान की अग्नि उसके भीतर दहक रही थी, एक-एक पल अनंत काल सा भारी। उसने सब से गुहार लगाई, पर कोई नहीं बोला, कोई नहीं उठा। लेकिन जब हर द्वार बंद हो गया, जब अपना सब कुछ हारकर उसने दोनों हाथ ऊपर उठाए और पुकारा, 'गोविंद!'... उसी क्षण एक दिव्य चमत्कार हुआ। उसके वस्त्र अनंत होते गए, अपमान की लहरें ईश्वरीय कृपा में बदल गईं। ये सिर्फ वस्त्रों की रक्षा नहीं थी, ये अटूट विश्वास की रक्षा थी। क्या सच्ची भक्ति ही सबसे बड़ी रक्षा है?",
+    "broll": [
+      {
+        "image_prompt": "Extreme macro close-up of a deep-crimson silk sari, intricately woven with gold zari, violently pulled taut and tearing slightly, with blurred motion of hands in background, jewel-toned palette, soft cinematic lighting, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "चीर खींचा जा रहा था",
+        "mood": "Tense, violated, shocking",
+        "wardrobe_context": "PALACE",
+        "shot_type": "ACTION"
+      },
+      {
+        "image_prompt": "Sweeping panoramic shot of an ornate Nagara-style palace court with carved stone columns, Draupadi's tear-streaked face contorted in anguish, wide kohl-lined lotus eyes, long untied black hair flowing loose, deep-red silk sari modestly draped over fitted blouse, red kumkum, fierce proud bearing, jewel-toned palette, soft cinematic lighting, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "गरिमा को तोड़ती पीड़ा",
+        "mood": "Anguished, humiliated, desperate",
+        "wardrobe_context": "PALACE",
+        "shot_type": "REACTION"
+      },
+      {
+        "image_prompt": "[CONFRONTATION-WIDE] Sweeping panoramic shot, ornate Nagara-style palace court with carved stone columns, Dhritarashtra king, seated on an elevated throne, head bowed in shame, his eyes solemnly downcast, next to him, Bhishma, colossal towering muscled frame, flowing silver-white hair and thick white beard, gleaming engraved silver kavacha, ivory-white silks, silver-and-gold war diadem, his eyes also downcast, jewel-toned palette, soft cinematic lighting, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "हर आँख झुकी",
+        "mood": "Shameful, silent, complicit",
+        "wardrobe_context": "PALACE",
+        "shot_type": "AMBIGUOUS"
+      },
+      {
+        "image_prompt": "Palace court, Draupadi, desperate and pleading, arms slightly raised in a raw gesture of supplication, radiant fair wheatish-gold complexion, large kohl-lined lotus eyes, long untied black hair flowing loose, deep-red silk sari modestly draped over fitted blouse, red kumkum, fierce proud bearing, jewel-toned palette, soft cinematic lighting, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "सब से गुहार लगाई",
+        "mood": "Desperate, pleading, abandoned",
+        "wardrobe_context": "PALACE",
+        "shot_type": "AMBIGUOUS"
+      },
+      {
+        "image_prompt": "Sweeping shot of the opulent palace court, Draupadi, her spirit broken but heart resolute, raising both arms high above her head in complete surrender to the divine, eyes tightly closed in fervent prayer, radiant fair wheatish-gold complexion, long untied black hair flowing loose, deep-red silk sari modestly draped over fitted blouse, red kumkum, fierce proud bearing, jewel-toned palette, soft cinematic lighting, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "दोनों हाथ ऊपर उठाए",
+        "mood": "Surrendered, hopeful, devoted",
+        "wardrobe_context": "PALACE",
+        "shot_type": "ACTION"
+      },
+      {
+        "image_prompt": "Ornate palace chamber, a radiant, shimmering golden light erupting around Draupadi, engulfing her form, as if a divine energy is manifesting, jewel-toned palette, soft cinematic lighting, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "एक दिव्य चमत्कार हुआ",
+        "mood": "Miraculous, glorious, sacred",
+        "wardrobe_context": "DIVINE",
+        "shot_type": "AMBIGUOUS"
+      },
+      {
+        "image_prompt": "Cascading river of deep-crimson silk fabric, seemingly unfurling from an unseen source, flowing endlessly into the frame, with intricate gold zari work catching a divine glow, jewel-toned palette, soft cinematic lighting, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "वस्त्र अनंत होते गए",
+        "mood": "Boundless, awe-inspiring, magical",
+        "wardrobe_context": "DIVINE",
+        "shot_type": "AMBIGUOUS"
+      },
+      {
+        "image_prompt": "Quiet chamber at fading dusk, a lone diya flickering peacefully on a small altar, hands folded in silhouette against the gentle glow, serene and tranquil atmosphere after divine grace, jewel-toned palette, soft cinematic lighting, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "अटूट विश्वास की रक्षा थी",
+        "mood": "Peaceful, grateful, blessed",
+        "wardrobe_context": "AFTERMATH",
+        "shot_type": "AMBIGUOUS"
+      }
+    ],
+    "title": "द्रौपदी की सबसे बड़ी हार | Draupadi's Biggest Loss",
+    "hook_title": "द्रौपदी की हार",
+    "description": "एक ऐसी नारी की कहानी जो भरी सभा में अपमानित हुई, जिसने सारी आशा खो दी, और जिसने अपनी सबसे बड़ी हार में ही सबसे बड़ी शक्ति को पा लिया। जब संसार ने आँखें झुका लीं, तब एक हृदय की पुकार ने पूरे ब्रह्मांड को झुका दिया। यह सिर्फ वस्त्रों की रक्षा नहीं थी, यह उस अटूट विश्वास की विजय थी जो पूर्ण समर्पण से जन्मा।\n#Shorts #Mahabharata #महाभारत #Krishna #HinduMythology #PauranikKatha #MythologyShorts #HindiShorts",
+    "tags": [
+      "Draupadi",
+      "Krishna",
+      "Draupadi Vastraharan",
+      "द्रौपदी",
+      "कृष्ण",
+      "Mahabharata",
+      "महाभारत",
+      "Shorts",
+      "Hindu mythology"
+    ],
+    "thumbnail_prompt": "Dramatic Mahabharata thumbnail — Draupadi with tear-streaked face, hands raised in complete surrender, surrounded by a luminous golden aura, deep-red silk sari flowing endlessly, powerful contrast lighting, ornate palace court in background, cinematic, vibrant colours, portrait composition",
+    "quotable_line": "सबसे बड़ी हार में ही सबसे बड़ी कृपा छिपी होती है।",
+    "pinned_question": "❓ सबसे बड़ी हार में ही सबसे बड़ी कृपा छिपी होती है। क्या आप भी ऐसा मानते हैं?",
+    "next_seed": "यह हार हस्तिनापुर के विनाश की पहली चिंगारी बन गई।",
+    "language": "hi",
+    "content_type": "story",
+    "topic": "Krishna's endless cloth in the Kuru sabha — the moment Draupadi let go of her sari, raised both arms and called 'Govind', and the fabric became infinite, the surrender that summoned divine protection",
+    "series": "mahabharata",
+    "episode_n": 0,
+    "arc_character_devanagari": "",
+    "arc_character_english": "devotional",
+    "_phase18_strict_pass": false,
+    "_phase18_score": 16,
+    "_phase18_score_max": 25,
+    "_phase18_score_floor": 19,
+    "_phase18_violation": "anchors",
+    "_phase18_failing_gates": [
+      "anchors",
+      "bookend",
+      "char_names",
+      "engagement",
+      "intensity",
+      "subject_diversity",
+      "subject_lock",
+      "tha_tic",
+      "verb_action"
+    ],
+    "_phase18_fatal_failures": []
+  }
+}
