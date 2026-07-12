@@ -546,6 +546,18 @@ def _check_title_dna_gate(
     if _ACTIVE_REGISTER == "devotional":
         if any(n.lower() in title_lower for n in _DEVOTIONAL_TITLE_NOUNS):
             return True, "", 2
+        # 2026-07-12: REQUIRED, not optional. The first shipped devotional
+        # video (G5Hu9-0YTPM) carried dark packaging ("द्रौपदी की असली हार")
+        # because this branch fell through to the dark cascade — the title
+        # is the register's most visible surface and the seed audience
+        # sees it before a single frame plays.
+        return False, (
+            "DEVOTIONAL day: title must contain a devotional noun "
+            "(रक्षा / चमत्कार / लीला / कृपा / महिमा / दर्शन / वचन / विजय / "
+            "भक्ति or protection/miracle/grace/glory/divine/devotion). "
+            "Dark-conflict nouns (हार/धोखा/गलती/श्राप) are REJECTED on "
+            "bhakti days."
+        ), 0
 
     if not any(n.lower() in title_lower for n in _TITLE_NOUN_WHITELIST):
         return False, (
