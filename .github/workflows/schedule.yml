@@ -51,7 +51,12 @@ on:
     # action). 02:30 UTC = 8:00 AM IST render slot — GitHub's cron lag
     # (0-4h observed) no longer affects the publish time, only the size of
     # the Studio review window before the fixed 6 PM slot.
-    - cron: "30 2 * * *"
+    # 2026-07-12: moved off the :30 round mark — GitHub sheds load-window
+    # ticks and 02:30 was dropped 3/3 days (Jul 10/11/12; backups on round
+    # :00/:30 marks also arrived 24-90 min late). Odd minutes fare better
+    # per GitHub's own docs. Publish time is unaffected either way (18:00
+    # IST publishAt) — this only widens the Studio review window.
+    - cron: "43 2 * * *"
     # BACKUP TICKS (2026-07-06). GitHub schedule events are best-effort:
     # the 2026-07-06 12:15 tick was silently DROPPED (no run created;
     # workflow active, GitHub status green) and the 07-05 tick fired 1h55m
@@ -61,8 +66,8 @@ on:
     # whether today's public video already exists (one YT API call) and
     # exits in ~seconds when the primary tick succeeded, so extra ticks
     # cost no render quota on normal days.
-    - cron: "0 5 * * *"
-    - cron: "30 7 * * *"
+    - cron: "7 5 * * *"
+    - cron: "37 7 * * *"
   workflow_dispatch:
     inputs:
       target:
@@ -169,7 +174,7 @@ concurrency:
 # main.py reads this and exits in seconds when today's public video
 # already exists — backup ticks are free unless the primary was dropped.
 env:
-  BACKUP_TICK: ${{ github.event_name == 'schedule' && github.event.schedule != '30 2 * * *' && github.event.schedule != '0 4 * * *' }}
+  BACKUP_TICK: ${{ github.event_name == 'schedule' && github.event.schedule != '43 2 * * *' && github.event.schedule != '0 4 * * *' }}
 
 jobs:
   # ════════════════════════════════════════════════════════════════════════
