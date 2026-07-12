@@ -196,10 +196,17 @@ def main():
     ap.add_argument("--lang", default=None, help="override language (default: from JSON)")
     ap.add_argument("--test", action="store_true", help="3-scene smoke")
     ap.add_argument("--no-motion", action="store_true", help="stills-only (skip Kaggle)")
+    ap.add_argument("--from-chapters", action="store_true",
+                    help="generate the next episode script from source_chapters/ then render")
     args = ap.parse_args()
 
     _setup_logging(args.test)
-    path = _resolve_from_json(args.from_json, args.from_json_dir)
+    if args.from_chapters:
+        from pipeline.wuxia_script import generate_next_episode, DRAFTS_DIR
+        slug, _ = generate_next_episode()
+        path = DRAFTS_DIR / slug / "longform_hi.json"
+    else:
+        path = _resolve_from_json(args.from_json, args.from_json_dir)
     script = _load_wuxia_script(path)
     lang = (args.lang or script.get("language") or "en").strip().lower()
 

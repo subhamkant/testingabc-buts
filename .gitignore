@@ -97,3 +97,6 @@ assets/face_models/
 _motion_demo/
 # Real-ESRGAN ncnn binaries (downloaded at runtime, ~65MB)
 assets/upscaler/
+
+# Copyrighted source novel text — never commit to public repo
+source_chapters/*.txt
