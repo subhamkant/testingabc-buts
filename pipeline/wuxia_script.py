@@ -26,7 +26,11 @@ import os
 import re
 from pathlib import Path
 
+from dotenv import load_dotenv
+
 from pipeline.script_generator import _call_llm
+
+load_dotenv()  # standalone `python -m pipeline.wuxia_script` needs env keys too
 
 _ROOT = Path(__file__).resolve().parent.parent
 CHAPTERS_DIR = _ROOT / "source_chapters"
@@ -39,7 +43,12 @@ _STYLE_ANCHOR = (
     "moody atmospheric"
 )
 
-_TARGET_SCENES = int(os.environ.get("WUXIA_TARGET_SCENES", "110"))   # ~15 min at ~8s/scene
+# Scene count SCALES to source length (don't pad a short chapter into 110 scenes —
+# that forces the model to invent/repeat). ~1 scene per ~40 source words yields a
+# faithful condensation. ~110 scenes (~15 min) therefore needs ~4400+ source words.
+_WORDS_PER_SCENE = int(os.environ.get("WUXIA_WORDS_PER_SCENE", "40"))
+_MAX_SCENES = int(os.environ.get("WUXIA_MAX_SCENES", "140"))         # ~18 min ceiling
+_MIN_SCENES = int(os.environ.get("WUXIA_MIN_SCENES", "8"))
 _SCENES_PER_CALL = int(os.environ.get("WUXIA_SCENES_PER_CALL", "24"))  # fits _call_llm budget
 _MAX_MOTION = int(os.environ.get("WUXIA_MAX_MOTION", "20"))
 _CHAPTERS_PER_EP = int(os.environ.get("WUXIA_CHAPTERS_PER_EP", "3"))
@@ -187,11 +196,12 @@ def _finalize_scenes(raw: list[dict], max_motion: int) -> list[dict]:
 
 
 def generate_next_episode(chapters_per_ep: int = _CHAPTERS_PER_EP,
-                          target_scenes: int = _TARGET_SCENES,
+                          target_scenes: int | None = None,
                           advance: bool = True) -> tuple[str, dict]:
     """Generate the next episode's script from source_chapters. Returns
     (episode_slug, script_dict) and writes pro_drafts/wuxia/<slug>/longform_hi.json.
-    Advances the chapter-progress pointer unless advance=False."""
+    target_scenes=None auto-scales to source length. Advances the chapter-progress
+    pointer unless advance=False."""
     prog = _load_progress()
     start = int(prog.get("next_chapter", 1))
     ep_num = int(prog.get("episode", 1))
@@ -204,13 +214,17 @@ def generate_next_episode(chapters_per_ep: int = _CHAPTERS_PER_EP,
         )
 
     combined = "\n\n".join(texts)
+    words = len(combined.split())
+    if target_scenes is None:
+        target_scenes = min(_MAX_SCENES, max(_MIN_SCENES, words // _WORDS_PER_SCENE))
     n_segments = max(1, math.ceil(target_scenes / _SCENES_PER_CALL))
     segments = _split_into_segments(combined, n_segments)
     per = max(6, target_scenes // len(segments))
+    est_min = target_scenes * 8 / 60  # ~8s/scene
 
     print(f"[wuxia-script] episode {ep_num}: chapters {nums[0]}-{nums[-1]} "
-          f"({len(combined)} chars) -> {len(segments)} segment(s), ~{per} scenes each",
-          flush=True)
+          f"({words} words) -> target {target_scenes} scenes (~{est_min:.1f} min), "
+          f"{len(segments)} segment(s) x ~{per}", flush=True)
 
     raw: list[dict] = []
     for i, seg in enumerate(segments):
@@ -251,7 +265,7 @@ if __name__ == "__main__":
     import argparse
     ap = argparse.ArgumentParser(description="Generate the next Wuxia episode script from source_chapters/")
     ap.add_argument("--chapters", type=int, default=_CHAPTERS_PER_EP)
-    ap.add_argument("--scenes", type=int, default=_TARGET_SCENES)
+    ap.add_argument("--scenes", type=int, default=None, help="override auto-scaled scene count")
     ap.add_argument("--no-advance", action="store_true", help="don't advance the chapter pointer")
     args = ap.parse_args()
     slug, _ = generate_next_episode(args.chapters, args.scenes, advance=not args.no_advance)
