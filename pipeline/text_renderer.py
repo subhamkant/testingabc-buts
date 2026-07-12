@@ -55,11 +55,21 @@ def _ft_face(font_path: str, size_px: int) -> freetype.Face:
 
 
 def _shape(text: str, font_path: str, size_px: int):
-    """Returns (glyph_infos, glyph_positions) from HarfBuzz."""
+    """Returns (glyph_infos, glyph_positions) from HarfBuzz.
+
+    Code-switched cards (Devanagari + Latin) are mis-shaped by
+    guess_segment_properties: when the first strong character is Latin it picks
+    the 'Latn' script, so HarfBuzz never runs the Devanagari shaper and pre-base
+    i-matras (ि) aren't reordered — "दिन" renders as "दनि". If ANY Devanagari is
+    present, force the Devanagari shaper (Latin glyphs pass through unaffected;
+    pure-Devanagari and pure-Latin cards behave exactly as before)."""
     font = _hb_font(font_path, size_px)
     buf = hb.Buffer()
     buf.add_str(text)
     buf.guess_segment_properties()
+    if any("ऀ" <= c <= "ॿ" for c in text):
+        buf.script = "Deva"
+        buf.direction = "ltr"
     hb.shape(font, buf)
     return buf.glyph_infos, buf.glyph_positions
 

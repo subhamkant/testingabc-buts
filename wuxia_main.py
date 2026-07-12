@@ -38,12 +38,15 @@ load_dotenv()
 
 os.environ["PIPELINE_TEMP_ROOT"] = "temp/wx"
 os.environ.setdefault("NARRATOR_VOICE_WUXIA", "Charon")
-# Dark/epic bed for donghua action — the generic music pool otherwise defaults to
-# a "happy Indian" trailer track, a genre mismatch for wuxia. Overridable via env.
-os.environ.setdefault(
-    "BACKGROUND_MUSIC_PATH",
-    "assets/backgroundmusicforvideos-epic-epic-background-music-334868.mp3",
-)
+# Epic bed for donghua action. NOTE: .env ships an empty `BACKGROUND_MUSIC_PATH=`
+# line, so setdefault() is a no-op (the key exists, just blank), and
+# _pick_music_track has no "wuxia" branch — it would fall through to a random
+# assets/*.mp3 pick and land on an Indian-flavored track (genre mismatch for a
+# Chinese donghua). Force our epic bed whenever the env value is blank.
+if not os.environ.get("BACKGROUND_MUSIC_PATH", "").strip():
+    os.environ["BACKGROUND_MUSIC_PATH"] = (
+        "assets/backgroundmusicforvideos-epic-epic-background-music-334868.mp3"
+    )
 
 from pipeline.checkpoint import CheckpointStore, resolve_run_id
 from pipeline.tts_generator import generate_full_narration
