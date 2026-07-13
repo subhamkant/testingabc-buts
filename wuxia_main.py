@@ -38,6 +38,18 @@ load_dotenv()
 
 os.environ["PIPELINE_TEMP_ROOT"] = "temp/wx"
 os.environ.setdefault("NARRATOR_VOICE_WUXIA", "Charon")
+# Gemini-Charon TONE directive (epic/commanding). NOT speed — the codebase
+# documents that prompting Gemini to "speak slowly" makes it overshoot ~5x; the
+# actual slowdown is done deterministically via atempo (_slow_narration). So this
+# keeps the explicit "normal tempo" guard and only shapes gravitas/emphasis.
+os.environ.setdefault(
+    "TTS_STYLE_PROMPT",
+    "Narrate this Hindi wuxia cultivation story in a deep, commanding, epic "
+    "storyteller voice — gravitas and weight on every dramatic beat, arrogance in "
+    "the villains, awe at each breakthrough. IMPORTANT: keep a normal, steady "
+    "speaking tempo; do NOT slow down, stretch words, or add long pauses. The drama "
+    "comes from tone and emphasis, never from speed:",
+)
 # Epic bed for donghua action. NOTE: .env ships an empty `BACKGROUND_MUSIC_PATH=`
 # line, so setdefault() is a no-op (the key exists, just blank), and
 # _pick_music_track has no "wuxia" branch — it would fall through to a random
@@ -119,6 +131,27 @@ def _load_wuxia_script(path: Path) -> dict:
     return out
 
 
+def _slow_narration(mp3_path: str) -> str:
+    """Slow the narration for a deliberate, commanding wuxia cadence (the raw TTS
+    reads hurried). atempo preserves pitch. WUXIA_NARRATION_TEMPO overrides the
+    default 0.9 (~11% longer); set 1.0 to disable. Returns the slowed path, or the
+    original on disable/failure."""
+    import subprocess
+    tempo = float(os.environ.get("WUXIA_NARRATION_TEMPO", "0.9"))
+    if abs(tempo - 1.0) < 0.01:
+        return mp3_path
+    out = mp3_path + ".slow.mp3"
+    cmd = ["ffmpeg", "-y", "-i", mp3_path, "-filter:a", f"atempo={tempo}",
+           "-c:a", "libmp3lame", "-q:a", "2", out]
+    r = subprocess.run(cmd, capture_output=True)
+    if r.returncode == 0 and os.path.exists(out):
+        print(f"[tts] narration slowed to {tempo}x for deliberate cadence")
+        return out
+    err = r.stderr.decode("utf-8", errors="replace")[-300:] if r.stderr else ""
+    print(f"[tts] atempo slowdown failed (non-fatal), using original pace: {err}")
+    return mp3_path
+
+
 async def render(script: dict, lang: str, run_id: str, no_motion: bool) -> str:
     ck = CheckpointStore(run_id)
     scenes = script["scenes"]
@@ -142,6 +175,12 @@ async def render(script: dict, lang: str, run_id: str, no_motion: bool) -> str:
         gen_audio, char_weights = await generate_full_narration(
             scenes, language=lang, series="wuxia"
         )
+        # Slow the narration for a deliberate, commanding wuxia cadence. Done
+        # BEFORE checkpointing so the cached audio IS the slowed one and resume
+        # stays consistent. char_weights are per-scene PROPORTIONS (duration-
+        # independent), so _per_scene_durations re-scales to the longer audio and
+        # both the video scenes AND subtitles re-time correctly off the same file.
+        gen_audio = _slow_narration(gen_audio)
         ck.save_file(f"audio_{lang}.mp3", gen_audio)
         ck.save_json(f"char_weights_{lang}.json", char_weights)
         audio_path = ck.path(f"audio_{lang}.mp3")
@@ -166,12 +205,12 @@ async def render(script: dict, lang: str, run_id: str, no_motion: bool) -> str:
         ck.save_file(out_key, output_path)
         final_mp4 = output_path
 
-    # ── Step 5b: burn Hindi subtitles (Groq Whisper word timings) ───────
+    # ── Step 5b: burn Hindi subtitles (Groq-free, dual-script, scene-synced) ─
     if not ck.has(f"subbed_{lang}.done"):
         try:
-            from pipeline.longform_assembler import apply_longform_subtitles
-            print(f"[subs:{lang}] burning subtitles (Groq Whisper)...")
-            if apply_longform_subtitles(final_mp4, audio_path, language=lang):
+            from pipeline.wuxia_subtitles import burn_wuxia_subtitles
+            print(f"[subs:{lang}] burning subtitles (script-synced, dual-script)...")
+            if burn_wuxia_subtitles(final_mp4, audio_path, script, char_weights):
                 ck.mark_done(f"subbed_{lang}.done")
         except Exception as e:
             print(f"[subs] skipped (non-fatal): {e}")

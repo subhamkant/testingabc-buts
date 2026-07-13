@@ -37,43 +37,25 @@ _SCALE_CROP = (
 )
 
 
-def _make_boomerang(clip_path: str, out_path: str) -> bool:
-    """Forward + reversed concat, so a short LTX clip loops seamlessly (no hard
-    jump at the loop seam). Non-fatal — caller falls back to plain loop."""
+def _make_motion_sub_clip(clip_path: str, output_path: str, duration: float) -> bool:
+    """Fill `duration` with an LTX motion mp4, scaled/cropped to 1920x1080, silent.
+
+    FORWARD ONLY: play the clip once, then freeze (clone) its final frame to fill
+    the rest of the scene. No boomerang/reverse anywhere — the ping-pong rewind
+    (fire un-igniting, a strike un-throwing) read as broken. The clip animates
+    forward, then holds on its last pose like an intentional beat.
+    CRF 17 (was 20): this is a re-encode of the pristine kernel clip, so keep it
+    high to avoid compounding softness."""
     cmd = [
         "ffmpeg", "-y", "-i", clip_path,
-        "-filter_complex", "[0:v]reverse[r];[0:v][r]concat=n=2:v=1:a=0[v]",
-        "-map", "[v]", "-an",
-        "-c:v", "libx264", "-preset", "fast", "-crf", "20",
-        "-pix_fmt", "yuv420p", "-r", str(FPS),
-        out_path,
-    ]
-    r = subprocess.run(cmd, capture_output=True)
-    return r.returncode == 0 and os.path.exists(out_path)
-
-
-def _make_motion_sub_clip(clip_path: str, output_path: str, duration: float) -> bool:
-    """Loop an LTX motion mp4 to `duration`, scaled/cropped to 1920x1080, silent.
-    Uses a boomerang source so loops are seamless; `-stream_loop -1 -t D` both
-    loops (if shorter) and trims (if longer)."""
-    src = clip_path
-    boomerang = output_path.replace(".mp4", "_boom.mp4")
-    if _make_boomerang(clip_path, boomerang):
-        src = boomerang
-
-    cmd = [
-        "ffmpeg", "-y",
-        "-stream_loop", "-1", "-i", src,
+        "-vf", f"{_SCALE_CROP},tpad=stop_mode=clone:stop_duration=60,setsar=1,fps={FPS}",
         "-t", f"{duration:.3f}",
-        "-vf", f"{_SCALE_CROP},fps={FPS}",
         "-an",
-        "-c:v", "libx264", "-preset", "fast", "-crf", "20",
+        "-c:v", "libx264", "-preset", "slow", "-crf", "17",
         "-pix_fmt", "yuv420p", "-r", str(FPS),
         output_path,
     ]
     r = subprocess.run(cmd, capture_output=True)
-    if os.path.exists(boomerang):
-        os.remove(boomerang)
     if r.returncode != 0:
         err = r.stderr.decode("utf-8", errors="replace")[-600:] if r.stderr else ""
         print(f"    [wuxia-motion-clip] failed:\n    {err}")
@@ -82,7 +64,7 @@ def _make_motion_sub_clip(clip_path: str, output_path: str, duration: float) -> 
 
 
 def _make_sub_clip(shot_path: str, output_path: str, duration: float, motion_idx: int) -> bool:
-    """Dispatch one shot: motion mp4 -> looped clip; still -> Ken Burns."""
+    """Dispatch one shot: motion mp4 -> forward+freeze clip; still -> Ken Burns."""
     if str(shot_path).lower().endswith(".mp4"):
         return _make_motion_sub_clip(shot_path, output_path, duration)
     return _make_single_kb_clip(
@@ -133,7 +115,7 @@ def _make_wuxia_scene_clip(shots: list, output_path: str, total_duration: float)
         "ffmpeg", "-y", *inputs,
         "-filter_complex", ";".join(filter_parts),
         "-map", "[vout]",
-        "-c:v", "libx264", "-preset", "fast", "-crf", "20",
+        "-c:v", "libx264", "-preset", "medium", "-crf", "17",
         "-pix_fmt", "yuv420p", "-r", str(FPS),
         output_path,
     ]
@@ -158,7 +140,7 @@ def _normalize_pix_fmt(path: str) -> None:
         "ffmpeg", "-y", "-i", path,
         "-vf", f"format=yuv420p,setsar=1,fps={FPS}",
         "-an",
-        "-c:v", "libx264", "-preset", "fast", "-crf", "20",
+        "-c:v", "libx264", "-preset", "medium", "-crf", "16",  # near-lossless 2nd pass
         "-pix_fmt", "yuv420p", "-r", str(FPS),
         tmp,
     ]
@@ -188,7 +170,7 @@ def _concat_scenes(silent_paths: list, output_path: str) -> bool:
         print(f"    [wuxia-concat] copy-concat failed, retrying with re-encode:\n    {err}")
         cmd = [
             "ffmpeg", "-y", "-f", "concat", "-safe", "0", "-i", list_path,
-            "-c:v", "libx264", "-preset", "fast", "-crf", "20",
+            "-c:v", "libx264", "-preset", "medium", "-crf", "17",
             "-pix_fmt", "yuv420p", "-r", str(FPS), output_path,
         ]
         r = subprocess.run(cmd, capture_output=True)
@@ -240,6 +222,9 @@ def assemble_wuxia_video(
         raise RuntimeError("Failed to mux audio onto silent video")
 
     print(f"    [OK] Pre-music episode -> {output_path}")
-    _apply_landscape_music(output_path, series="wuxia")
+    _apply_landscape_music(output_path, series="wuxia")  # -c:v copy (no re-encode)
+    # NOTE: the end fade-to-black is applied by the subtitle pass
+    # (pipeline/wuxia_subtitles.py) so it shares that single final re-encode
+    # instead of adding another one here.
     print(f"    [OK] Final episode -> {output_path}")
     return output_path

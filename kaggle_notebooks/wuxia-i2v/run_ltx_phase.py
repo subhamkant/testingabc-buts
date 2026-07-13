@@ -82,7 +82,12 @@ def _load_esrgan():
 
 
 def _write_mp4(frames_uint8, out_path, fps=24):
-    """Write frames as H.264 yuv420p/High — universally playable."""
+    """Write frames as H.264 yuv420p/High — universally playable.
+
+    CRF 17 + preset slow (instead of imageio's `quality` knob) keeps the
+    golden/purple aura and crisp cel lines from being crushed; this is the FIRST
+    encode of the pixels, so any loss here compounds through the local assembler.
+    """
     import imageio
 
     imageio.mimwrite(
@@ -90,9 +95,11 @@ def _write_mp4(frames_uint8, out_path, fps=24):
         list(frames_uint8),
         fps=fps,
         codec="libx264",
-        quality=9,
         macro_block_size=None,
-        output_params=["-pix_fmt", "yuv420p", "-profile:v", "high"],
+        output_params=[
+            "-crf", "17", "-preset", "slow",
+            "-pix_fmt", "yuv420p", "-profile:v", "high",
+        ],
     )
     h, w = frames_uint8[0].shape[0], frames_uint8[0].shape[1]
     print(f"SAVED {out_path} ({len(frames_uint8)}f @ {w}x{h})", flush=True)

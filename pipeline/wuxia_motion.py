@@ -118,8 +118,10 @@ def _build_run_config(run_id: str, group: list) -> dict:
         "master_seed": _stable_master_seed(run_id),
         "run_id": run_id,
         "ltx_num_frames": int(os.environ.get("WUXIA_LTX_FRAMES", "65")),
-        "ltx_num_steps": int(os.environ.get("WUXIA_LTX_STEPS", "30")),
-        "ltx_guidance": float(os.environ.get("WUXIA_LTX_GUIDANCE", "3.0")),
+        # 36 steps (was 30) = more refinement; guidance 3.5 (was 3.0) forces
+        # sharper cel-shaded line-work for the 2D-anime look.
+        "ltx_num_steps": int(os.environ.get("WUXIA_LTX_STEPS", "36")),
+        "ltx_guidance": float(os.environ.get("WUXIA_LTX_GUIDANCE", "3.5")),
         "ltx_width": _LTX_W, "ltx_height": _LTX_H,
         "esrgan": os.environ.get("WUXIA_ESRGAN", "true").lower() != "false",
         "out_w": 1920, "out_h": 1080,
@@ -209,7 +211,11 @@ async def run_motion(ck, run_id: str, scenes: list, still_groups: list,
             ck.mark_done("motion_done")
             return _merge_clips_into_stills(still_groups, ck)
 
-        n_kernels = min(len(_KERNELS), len(plan))
+        # WUXIA_MAX_KERNELS caps concurrency. Default = all (2) for speed; set to
+        # 1 to route every clip through the single WARM kernel (reliable — the
+        # 2nd slug cold-starts slowly and can die past ltx_timeout with 0 clips).
+        max_k = int(os.environ.get("WUXIA_MAX_KERNELS", str(len(_KERNELS))))
+        n_kernels = max(1, min(len(_KERNELS), len(plan), max_k))
         groups = _split(plan, n_kernels)
         print(f"    [wuxia-motion] {len(plan)} clips across {n_kernels} parallel kernel(s): "
               f"{[len(g) for g in groups]}", flush=True)

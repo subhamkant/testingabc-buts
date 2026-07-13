@@ -133,14 +133,14 @@ def _segment_prompt(segment: str, seg_idx: int, n_segments: int,
 Write a faithful, gripping scene-by-scene recap of the SOURCE TEXT below. This is part {seg_idx + 1} of {n_segments} of one episode.
 
 OUTPUT: ONLY a JSON array. Each element is an object with exactly these keys:
-  "narration_hi": 1-2 short, punchy sentences in CONVERSATIONAL HINDI written in Devanagari, code-switched with natural English words (cultivation, sect, realm, spirit energy, disciple, elder, technique/skill names, Yuan Qi, etc.). Sound like an excited narrator telling a friend the story — NOT literary or Sanskritic Hindi.
+  "narration_hi": 1-2 sentences in CONVERSATIONAL HINDI written in Devanagari, code-switched with natural English words (cultivation, sect, realm, spirit energy, disciple, elder, technique/skill names, Yuan Qi, etc.). Tone = a GRIPPING, EPIC storyteller pulling the viewer into an addictive saga — deliberate and weighty on the big beats, NOT a hurried excited friend, and NOT literary/Sanskritic Hindi. Use an ellipsis (…) before a reveal and an em-dash (—) between clauses to create natural dramatic pauses (e.g. "और तभी… एक सुनहरा कंकाल शून्य से बाहर निकला!").
   "prompt": a vivid ENGLISH cinematic visual description of that exact moment for an AI image generator. 16:9 landscape, donghua/wuxia animation style. Describe the character(s), setting, action, and mood exactly as the text describes (techniques, locations, appearances).
   "requires_motion": true ONLY for big action / combat / power-surge / technique-unleashing beats (about 1 in 6 scenes). Dialogue, scenery, and reaction beats are false.
 
 STRICT RULES:
 - Stay 100% FAITHFUL to the source text. Do NOT invent events, cultivation realms, character names, or techniques. Use names EXACTLY as written in the text.
 - Generate about {want} scenes covering this part, in story order.
-- Keep each narration tight (this is a fast-paced recap).
+- Keep each narration tight but DRAMATIC — this is an addictive, cliffhanger-driven saga, not a rushed summary. End suspenseful beats on a hook.
 {cont}
 SOURCE TEXT (part {seg_idx + 1}/{n_segments}):
 \"\"\"
