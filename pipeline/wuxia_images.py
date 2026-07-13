@@ -15,6 +15,7 @@ Isolation: new module; does not modify image_generator. Imports its helpers.
 """
 from __future__ import annotations
 
+import json
 import os
 import re
 import tempfile
@@ -24,39 +25,69 @@ from pipeline.longform_assembler import rewrite_prompt_to_landscape
 
 _W, _H = 1920, 1080
 
-# LOCKED 2D-anime look, PREPENDED to every prompt (FLUX weights early tokens
-# most). One uniform style across all frames kills the 2D/3D/chibi/age
-# shape-shifting that a free CF-schnell flow (no IP-Adapter/FaceID) otherwise
-# produces. "consistent character design" nudges frame-to-frame identity; true
-# face-lock still needs IP-Adapter (Kaggle path) — this is the ₹0 best-effort.
-_STYLE_LOCK = (
-    "2D anime cel-shaded art style, flat cel shading, bold clean black ink "
-    "outlines, vibrant flat colors, modern donghua TV anime key art, "
-    "consistent character design, coherent art direction"
+# House style + character identity come from assets/character_registry.json —
+# one source of truth across episodes. Style = 3D DONGHUA CGI REALISM
+# (Wu Dong Qian Kun register), NOT flat 2D: 2D looked less mature AND starved
+# LTX-Video of the depth/gradient cues it animates from (flat art smears in
+# motion). Character master_tokens are PREPENDED (FLUX weights early tokens most)
+# to lock age/hair/robes/build wherever a character is named — the ₹0 stand-in
+# for IP-Adapter (reduces drift; not pixel-perfect face-lock).
+_REG_PATH = os.path.join(
+    os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+    "assets", "character_registry.json",
+)
+try:
+    _REG = json.loads(open(_REG_PATH, encoding="utf-8").read())
+except Exception as _e:  # pragma: no cover
+    print(f"[wuxia-images] character_registry.json not loaded ({_e}) — style fallback")
+    _REG = {}
+
+_STYLE_LOCK = _REG.get("_style_lock") or (
+    "cinematic 3D Chinese donghua CGI, Wu Dong Qian Kun style, realistic "
+    "atmospheric lighting, richly textured robes, mature serious tone, "
+    "intricate detail, sharp focus, epic 16:9 landscape, masterpiece"
+)
+_WUXIA_STYLE = _STYLE_LOCK  # back-compat
+
+# Negatives ONLY (FLUX RENDERS bans placed in the positive prompt). Bans flat-2D
+# so the 3D look holds, and kills FLUX's hallucinated Chinese studio logos /
+# corner calligraphy / on-rock engraved text.
+_WUXIA_NEG = _REG.get("_global_negative") or (
+    "2D, flat cartoon, anime cel-shaded, chibi, watermark, text, chinese "
+    "characters, logo, calligraphy, signature, blurry, low quality, deformed "
+    "hands, extra fingers, portrait, vertical crop"
 )
 
-# Kept for back-compat / fallback only; _build_prompt no longer trusts the
-# script's style_anchor (it fought the 2D lock with a "3D cinematic" cue).
-_WUXIA_STYLE = _STYLE_LOCK
-
-# Negatives ONLY (FLUX renders bans placed in the positive prompt). The
-# corner-text terms kill FLUX's habit of hallucinating fake Chinese studio
-# logos / calligraphy watermarks scraped from donghua training frames.
-_WUXIA_NEG = (
-    "watermark, text, signature, chinese characters, chinese text, japanese "
-    "text, logo, calligraphy, username, stamp, subtitles, caption, letters, "
-    "3d render, cgi, photorealistic, realistic, chibi, deformed, distorted "
-    "face, deformed hands, extra fingers, mutated limbs, blurry, low quality, "
-    "low resolution, soft focus, jpeg artifacts, oversaturated, washed out, "
-    "portrait, vertical crop"
-)
+# Precompiled character matchers: (alias_regex, master_token, negative_token)
+_CHARS = []
+for _key, _c in (_REG.get("characters") or {}).items():
+    _aliases = [_key.replace("_", " ")] + list(_c.get("aliases") or [])
+    _pat = re.compile(r"\b(" + "|".join(re.escape(a) for a in _aliases) + r")\b", re.IGNORECASE)
+    _CHARS.append((_pat, _c.get("master_token", ""), _c.get("negative_token", "")))
 
 
-def _build_prompt(shot: dict, style_anchor: str | None = None) -> str:
-    # PREPEND the hard 2D lock; the script's style_anchor is intentionally
-    # ignored (it carried a conflicting "cinematic donghua 3D" cue).
+def _match_characters(text: str):
+    """(master_tokens, negative_tokens) for every registry character named in
+    `text`. Order-preserving + deduped."""
+    masters, negs = [], []
+    for pat, master, neg in _CHARS:
+        if pat.search(text or ""):
+            if master and master not in masters:
+                masters.append(master)
+            if neg and neg not in negs:
+                negs.append(neg)
+    return masters, negs
+
+
+def _build_prompt(shot: dict, style_anchor: str | None = None):
+    """Returns (positive, negative). PREPEND the 3D style lock + any matched
+    character master_tokens (frozen identity) ahead of the scene action."""
     base = rewrite_prompt_to_landscape(shot.get("prompt", "") or "")
-    return f"{_STYLE_LOCK}. {base}" if base else _STYLE_LOCK
+    masters, negs = _match_characters(shot.get("prompt", "") or "")
+    head = _STYLE_LOCK + ((". " + ". ".join(masters)) if masters else "")
+    pos = f"{head}. {base}" if base else head
+    neg = _WUXIA_NEG + ((", " + ", ".join(negs)) if negs else "")
+    return pos, neg
 
 
 # Cloudflare FLUX's NSFW classifier is trigger-happy on combat/gore/occult words
@@ -93,24 +124,23 @@ def _gen_still_resilient(shot: dict, seed: int) -> bytes:
     """CF still with graceful NSFW degradation: original prompt -> sanitized ->
     generic safe fallback. Raises only if even the safe fallback exhausts (i.e.
     genuine quota death, not a content flag)."""
-    prompt = _build_prompt(shot)
+    pos, neg = _build_prompt(shot)
     try:
-        return _gen_cloudflare(prompt, seed, _W, _H, negative=_WUXIA_NEG)
+        return _gen_cloudflare(pos, seed, _W, _H, negative=neg)
     except RuntimeError as e:
         if "NSFW" not in str(e):
             raise  # genuine quota/exhaustion — let it bubble to the retry chain
-        safe = _sanitize(prompt)
-        print(f"    [wuxia-still] NSFW flag -> retrying sanitized", flush=True)
+        print("    [wuxia-still] NSFW flag -> retrying sanitized", flush=True)
         try:
-            return _gen_cloudflare(safe, seed, _W, _H, negative=_WUXIA_NEG)
+            return _gen_cloudflare(_sanitize(pos), seed, _W, _H, negative=neg)
         except RuntimeError as e2:
             if "NSFW" not in str(e2):
                 raise
             fallback = (f"{_STYLE_LOCK}. A dramatic cinematic wuxia moment, a young "
                         f"martial artist, glowing golden energy, epic atmosphere, "
                         f"wide landscape.")
-            print(f"    [wuxia-still] still flagged -> generic safe fallback", flush=True)
-            return _gen_cloudflare(fallback, seed, _W, _H, negative=_WUXIA_NEG)
+            print("    [wuxia-still] still flagged -> generic safe fallback", flush=True)
+            return _gen_cloudflare(fallback, seed, _W, _H, negative=neg)
 
 
 def generate_wuxia_stills(scenes: list, ck, run_id: str, style_anchor: str | None = None) -> list:

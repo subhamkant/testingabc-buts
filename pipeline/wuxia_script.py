@@ -133,7 +133,7 @@ def _segment_prompt(segment: str, seg_idx: int, n_segments: int,
 Write a faithful, gripping scene-by-scene recap of the SOURCE TEXT below. This is part {seg_idx + 1} of {n_segments} of one episode.
 
 OUTPUT: ONLY a JSON array. Each element is an object with exactly these keys:
-  "narration_hi": 1-2 sentences in CONVERSATIONAL HINDI written in Devanagari, code-switched with natural English words (cultivation, sect, realm, spirit energy, disciple, elder, technique/skill names, Yuan Qi, etc.). Tone = a GRIPPING, EPIC storyteller pulling the viewer into an addictive saga — deliberate and weighty on the big beats, NOT a hurried excited friend, and NOT literary/Sanskritic Hindi. Use an ellipsis (…) before a reveal and an em-dash (—) between clauses to create natural dramatic pauses (e.g. "और तभी… एक सुनहरा कंकाल शून्य से बाहर निकला!").
+  "narration_hi": 1-2 sentences in NATURAL, CONVERSATIONAL HINDI written in Devanagari. Use everyday Hindi words for ordinary things — say झाड़ू (not "sweeping"), धूल (not "dust"), शांत/सुंदर (not "elegant"), चुनौती (not "challenge"), दर्द (not "pain"), किताब (not "book"). Keep English ONLY for cultivation/martial-world JARGON that has no natural Hindi equivalent: cultivation, Qi / Yuan Qi, sect, realm and stage names (e.g. Tempered Body Stage), technique/skill names, contribution points, and proper character/place names. Tone = a GRIPPING, EPIC storyteller pulling the viewer into an addictive saga — deliberate and weighty on the big beats, NOT a hurried excited friend, and NOT literary/Sanskritic Hindi. Use an ellipsis (…) before a reveal and an em-dash (—) between clauses for natural dramatic pauses (e.g. "और तभी… एक सुनहरा कंकाल किताब से बाहर निकला!").
   "prompt": a vivid ENGLISH cinematic visual description of that exact moment for an AI image generator. 16:9 landscape, donghua/wuxia animation style. Describe the character(s), setting, action, and mood exactly as the text describes (techniques, locations, appearances).
   "requires_motion": true ONLY for big action / combat / power-surge / technique-unleashing beats (about 1 in 6 scenes). Dialogue, scenery, and reaction beats are false.
 
@@ -141,6 +141,8 @@ STRICT RULES:
 - Stay 100% FAITHFUL to the source text. Do NOT invent events, cultivation realms, character names, or techniques. Use names EXACTLY as written in the text.
 - Generate about {want} scenes covering this part, in story order.
 - Keep each narration tight but DRAMATIC — this is an addictive, cliffhanger-driven saga, not a rushed summary. End suspenseful beats on a hook.
+- In the "prompt", when a spirit / beast / legacy / inner-power manifests from an object or the body, describe it as ONE SINGLE entity ("a single colossal golden skeleton", "one lone figure") — never a group or duplicates.
+- The visual style is 3D cinematic donghua CGI realism (added automatically) — write prompts describing realistic lighting, texture, and physical detail, NOT flat/cartoon/2D.
 {cont}
 SOURCE TEXT (part {seg_idx + 1}/{n_segments}):
 \"\"\"

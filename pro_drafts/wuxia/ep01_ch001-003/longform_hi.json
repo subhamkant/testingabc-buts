@@ -6,325 +6,373 @@
   "scenes": [
     {
       "scene_id": 1,
-      "narration_hi": "सुबह हो गई है और हमारा Hero, Yang Kai, अपने छोटे से कमरे से झाड़ू लेकर बाहर आता है।",
+      "narration_hi": "सूरज की पहली किरणें… और यांग काई की नई सुबह का आगाज़ होता है, जहाँ वह पल भर के लिए शांति महसूस करता है।",
       "visual_track": [
         {
           "category": "hero",
           "requires_motion": false,
           "reaction_frame": false,
-          "prompt": "Dawn breaks over High Heaven Pavilion. Yang Kai, a young man in simple black clothes, stands at the front door of his small, humble room. He stretches, looks up at the gray sky, closes his eyes, and takes a deep, peaceful breath before reopening them."
+          "prompt": "A young man, Yang Kai, with black hair and simple black clothes, stands at the front door of a small, rustic room, stretching slightly. He looks up at the touch of gray in the dawn sky, closing his eyes and taking a deep breath, a serene expression on his face. 16:9 landscape, donghua/wuxia animation style, CGI realism."
         }
       ]
     },
     {
       "scene_id": 2,
-      "narration_hi": "वो अपनी रोज़ की sweeping शुरू करता है, एकदम शांत और elegant तरीके से, dust और leaves को magicaly एक जगह इकट्ठा करते हुए।",
+      "narration_hi": "फिर वह कोने से अपनी झाड़ू उठाता है और शांति भंग होने से पहले, धूल और पत्तों को हटाने के लिए ज़मीन साफ़ करना शुरू कर देता है।",
       "visual_track": [
         {
           "category": "hero",
           "requires_motion": false,
           "reaction_frame": false,
-          "prompt": "Yang Kai sweeps the ground, cleaning dirt and leaves. He moves with an elegant, almost still body, using only his wrist to effortlessly guide the broom. Dust and trash seem to magically accumulate in one place around him."
+          "prompt": "Yang Kai, holding a wooden broom, begins to sweep the ground in a quiet, stone-paved courtyard. The rising sun casts soft light on the old pavement, with scattered leaves and dust. 16:9 landscape, donghua/wuxia animation style, CGI realism."
         }
       ]
     },
     {
       "scene_id": 3,
-      "narration_hi": "Yang Kai, High Heaven Pavilion का एक Trial Disciple है। तीन साल में भी वो सिर्फ Tempered Body Third Stage पर ही है, जबकि बाकी सब उससे बहुत आगे निकल गए हैं।",
+      "narration_hi": "उसके सादे, काले कपड़े उसकी एकाकी और वीरान ज़िंदगी की कहानी कहते हैं—यहाँ वह सालों से अकेला और दुनिया से कटा हुआ है।",
       "visual_track": [
         {
           "category": "hero",
           "requires_motion": false,
           "reaction_frame": false,
-          "prompt": "A thoughtful close-up on Yang Kai's face as he continues sweeping, a hint of weariness in his eyes. He contemplates his slow progress, remembering how other disciples who joined with him have long surpassed him in cultivation. The grand, sprawling buildings of High Heaven Pavilion loom in the background."
+          "prompt": "A close-up on Yang Kai, a lean young man in simple, clean black robes, sweeping methodically. His face holds a hint of melancholy and isolation, emphasizing his solitary existence in the sect. 16:9 landscape, donghua/wuxia animation style, CGI realism."
         }
       ]
     },
     {
       "scene_id": 4,
-      "narration_hi": "High Heaven Pavilion कोई आम sect नहीं है। यहाँ competition बहुत intense है, survival of the fittest का rule चलता है, और fake bonds ही मिलते हैं।",
+      "narration_hi": "पर काम चाहे कितना भी मामूली हो, यांग काई की पीठ भाले की तरह सीधी रहती है—उसकी झाड़ू पकड़ने और घुमाने का तरीक़ा इतना शांत और सुंदर है, मानो हर हरकत में एक कला हो।",
       "visual_track": [
         {
           "category": "hero",
           "requires_motion": false,
           "reaction_frame": false,
-          "prompt": "A wide shot showcasing the imposing, ancient architecture of High Heaven Pavilion. Disciples in various cultivation robes are seen training or walking past each other with stern, isolated expressions, emphasizing the brutal, competitive, and friendless environment."
+          "prompt": "Yang Kai, his back ramrod straight like a javelin, sweeps with a meticulous and calm expression. His wrist rotates gracefully, moving the wooden broom with minimal effort, showcasing an elegant, almost meditative posture. 16:9 landscape, donghua/wuxia animation style, CGI realism."
         }
       ]
     },
     {
       "scene_id": 5,
-      "narration_hi": "Trial Disciple होने के कारण उसे कोई resources नहीं मिलते। उसे अपनी हर चीज़ के लिए मेहनत करनी पड़ती है, और कभी-कभी भूखा भी रहना पड़ता है, पर वो कभी हार नहीं मानता।",
+      "narration_hi": "और तभी… जैसे ही उसका शरीर हिलता है, ज़मीन की धूल और कचरा अपने आप उसके चारों ओर एक जगह इकट्ठा होने लगता है—यह उसकी अद्भुत एकाग्रता का प्रमाण है।",
       "visual_track": [
         {
           "category": "hero",
           "requires_motion": false,
           "reaction_frame": false,
-          "prompt": "Yang Kai looks tired and a bit gaunt, perhaps shivering slightly in his simple black clothes as he sweeps a remote, sparsely decorated courtyard of the sect. His determined expression highlights his toughness despite cold and hunger, showing his harsh daily life."
+          "prompt": "As Yang Kai's body moves in a fluid, precise motion while sweeping, dust and trash on the stone ground magically appear to accumulate and gather into a single, neat pile around him, demonstrating an extraordinary, almost supernatural control. 16:9 landscape, donghua/wuxia animation style, CGI realism."
         }
       ]
     },
     {
       "scene_id": 6,
-      "narration_hi": "अचानक, कदमों की आवाज़ सुनाई देती है। 30-40 disciples उसे घेर लेते हैं, और वो समझ जाता है कि आज कौन सा दिन है।",
+      "narration_hi": "हाई हेवन पैवेलियन में तीन साल की ट्रेनिंग के बाद भी, यांग काई आज भी केवल Tempered Body Third Stage पर ही है—जब कि उसके साथ के शिष्य कब के उससे आगे निकल चुके हैं।",
       "visual_track": [
         {
           "category": "hero",
           "requires_motion": false,
           "reaction_frame": false,
-          "prompt": "Yang Kai, absorbed in sweeping, suddenly looks up. A group of about thirty to forty disciples, their faces expressing a mix of taunting, eagerness, and disdain, approach and gather around him in the High Heaven Pavilion courtyard."
+          "prompt": "A subtle, contemplative shot of Yang Kai's determined face as he sweeps in the High Heaven Pavilion. A faint, almost imperceptible aura or glow around him indicates his current cultivation at Tempered Body Third Stage, highlighting his slow progress compared to others. 16:9 landscape, donghua/wuxia animation style, CGI realism."
         }
       ]
     },
     {
       "scene_id": 7,
-      "narration_hi": "High Heaven Pavilion में, हर पाँच दिन में disciples, Trial Disciples को challenge कर सकते हैं contribution points के लिए।",
+      "narration_hi": "क्योंकि हाई हेवन पैवेलियन कोई आम Sect नहीं है—यहाँ मुक़ाबला इतना क्रूर है कि केवल सबसे ताक़तवर ही ज़िंदा रह पाता है, और कमज़ोरों को कुचल दिया जाता है।",
       "visual_track": [
         {
           "category": "hero",
           "requires_motion": false,
           "reaction_frame": false,
-          "prompt": "A quick montage of the disciples' faces: some smirking, some eagerly anticipating a fight, all focused on Yang Kai. The scene highlights their hunger for easy 'contribution points' by challenging a weaker 'Trial Disciple'."
+          "prompt": "A wider, imposing shot of the sprawling High Heaven Pavilion sect grounds, with several groups of stern-faced disciples training aggressively in the background. The atmosphere is tense, competitive, and unforgiving, underscoring the harsh 'survival of the fittest' rule. 16:9 landscape, donghua/wuxia animation style, CGI realism."
         }
       ]
     },
     {
       "scene_id": 8,
-      "narration_hi": "Yang Kai हल्का सा मुस्कुराता है, और अपनी झाड़ू हवा में उछाल देता है। सब लोग देखते हैं, 'मुझे चुनो, मुझे चुनो!'",
+      "narration_hi": "एक Trial Disciple के तौर पर उसे कोई सहायता नहीं मिलती; झाड़ू लगाकर जीवन चलाना मुश्किल है, वह अक्सर भूखा और ठंड से ठिठुरता रहता है… पर उसने कभी हार नहीं मानी।",
       "visual_track": [
         {
-          "category": "motion",
-          "requires_motion": true,
+          "category": "hero",
+          "requires_motion": false,
           "reaction_frame": false,
-          "prompt": "Yang Kai lets out a soft chuckle, a rare expression of confidence on his face. He calmly lifts his wooden broom and throws it high into the sky. Dozens of disciples crane their necks, their eyes wide with expectation, silently wishing to be chosen."
+          "prompt": "Yang Kai, sweeping in a dimly lit, slightly cold corridor within the sect, his shoulders hunched slightly against the chill. His face shows signs of exhaustion and hunger, but his eyes possess an unyielding, tough resolve. 16:9 landscape, donghua/wuxia animation style, CGI realism."
         }
       ]
     },
     {
       "scene_id": 9,
-      "narration_hi": "झाड़ू हवा में कुछ बार घूमती है और एक chubby लड़के, Ding Jun की तरफ़ इशारा करते हुए नीचे गिरती है।",
+      "narration_hi": "यांग काई मानता है कि जब तक आप किसी दीवार से नहीं टकराते, तब तक आपको ये पता ही नहीं चलेगा कि असली ताक़त क्या होती है!",
       "visual_track": [
         {
           "category": "hero",
           "requires_motion": false,
           "reaction_frame": false,
-          "prompt": "The broom spins in the air for a few moments before descending and landing softly. Its handle points directly at a chubby, eager-faced young disciple named Ding Jun, who lights up with elation. Other disciples show signs of disappointment."
+          "prompt": "A close-up on Yang Kai's determined and tough expression. His gaze is focused and unwavering, embodying his personal philosophy of resilience and confronting challenges head-on. The lighting highlights the grit on his face. 16:9 landscape, donghua/wuxia animation style, CGI realism."
         }
       ]
     },
     {
       "scene_id": 10,
-      "narration_hi": "Ding Jun बहुत खुश होता है! उसे लगता है कि Yang Kai उसके लिए बस एक stepping stone है, contribution points कमाने का आसान तरीक़ा।",
+      "narration_hi": "और तभी… क़दमों की आवाज़ें क़रीब आती हैं, तीस-चालीस शिष्य उसके चारों ओर इकट्ठा हो जाते हैं और उसे ताने मारने लगते हैं—एक नई चुनौती का बिगुल बज चुका है!",
       "visual_track": [
         {
           "category": "hero",
           "requires_motion": false,
           "reaction_frame": false,
-          "prompt": "A close-up on Ding Jun's face, a wide, confident grin spread across his chubby cheeks. His eyes gleam with ambition, clearly seeing Yang Kai as an easy target for 'contribution points'."
+          "prompt": "Yang Kai looks up, his eyes narrowing slightly, as around 30-40 aggressive young disciples in varying sect robes approach him from different directions. They form a semicircle, some with sneering, taunting expressions directed at him. 16:9 landscape, donghua/wuxia animation style, CGI realism."
         }
       ]
     },
     {
       "scene_id": 11,
-      "narration_hi": "बाकी disciples एक ring बना लेते हैं, और मज़ाक में शर्त लगाते हैं कि sweeping servant कितनी देर टिकेगा।",
+      "narration_hi": "यांग काई समझ जाता है… हर पाँच दिन पर, हाई हेवन पैवेलियन अपने Disciples को Trial Disciples को चुनौती देने की इजाज़त देता है, ताकि उन्हें \"contribution points\" मिल सकें।",
       "visual_track": [
         {
           "category": "hero",
           "requires_motion": false,
           "reaction_frame": false,
-          "prompt": "The surrounding disciples quickly spread out, forming a makeshift circular arena in the courtyard. They exchange money pouches and excited whispers, casually placing bets on how quickly the 'sweeping servant' will be defeated."
+          "prompt": "Yang Kai stands calmly amidst the taunting disciples, his expression showing a quiet understanding of the ritual. The surrounding disciples look expectant, their eyes fixed on him, as the context of the challenge is subtly revealed. 16:9 landscape, donghua/wuxia animation style, CGI realism."
         }
       ]
     },
     {
       "scene_id": 12,
-      "narration_hi": "Yang Kai अपनी झाड़ू एक पेड़ के सहारे रखता है और ring के बीच में आ जाता है, उसका चेहरा एकदम शांत और expressionless है।",
+      "narration_hi": "एक हल्की हँसी के साथ, यांग काई अपनी झाड़ू उठाता है और उसे आसमान में फेंक देता है—दर्जनों आँखें उम्मीद भरी नज़रों से उसे ऊपर देखती हैं, हर कोई प्रार्थना कर रहा है, \"मुझे चुनो! मुझे चुनो!\"",
       "visual_track": [
         {
-          "category": "hero",
-          "requires_motion": false,
+          "category": "motion",
+          "requires_motion": true,
           "reaction_frame": false,
-          "prompt": "Yang Kai walks deliberately to a nearby tree and leans his wooden broom against its trunk. He then turns and steps into the center of the formed ring, his posture steady, and his expression utterly calm and unreadable, despite the morning's sweeping."
+          "prompt": "Yang Kai, with a faint chuckle, lifts his wooden broom with one hand and throws it high into the clear morning sky. Dozens of disciples in the courtyard look upwards, their faces filled with eager anticipation and silent prayers. 16:9 landscape, donghua/wuxia animation style, CGI realism."
         }
       ]
     },
     {
       "scene_id": 13,
-      "narration_hi": "Ding Jun ने ताना मारा, \"Yang Kai, तुम सिर्फ Tempered Body Third Stage पे हो। तुम्हें तो महीनों पहले ही Sect छोड़ देनी चाहिए थी।\"",
+      "narration_hi": "झाड़ू हवा में कई बार घूमती है और फिर तेज़ी से नीचे गिरती है… सीधे एक मोटे नौजवान, डिंग जून, की ओर इशारा करती है!",
       "visual_track": [
         {
-          "category": "hero",
-          "requires_motion": false,
+          "category": "motion",
+          "requires_motion": true,
           "reaction_frame": false,
-          "prompt": "Ding Jun, a cocky young male disciple with a smirk, cracks his knuckles, looking down at Yang Kai in a dirt arena. Other disciples are visible in the background, some laughing. 16:9, donghua/wuxia animation style."
+          "prompt": "The wooden broom spins several times in the air, then rapidly descends and lands point-first directly in front of a chubby young man named Ding Jun. His face lights up with elation and surprise. 16:9 landscape, donghua/wuxia animation style, CGI realism."
         }
       ]
     },
     {
       "scene_id": 14,
-      "narration_hi": "बिना किसी warning के, Ding Jun ने Yang Kai पर हमला किया, एक heavy fist सीधा उसके chest पर।",
+      "narration_hi": "डिंग जून खुशी से झूम उठता है और तेज़ी से यांग काई की ओर बढ़ता है—उसके लिए यांग काई बस एक सीढ़ी है, \"contribution points\" पाने का एक आसान ज़रिया।",
       "visual_track": [
         {
-          "category": "motion",
-          "requires_motion": true,
+          "category": "hero",
+          "requires_motion": false,
           "reaction_frame": false,
-          "prompt": "Ding Jun lunging forward with a powerful, wind-generating fist aimed at Yang Kai's chest. Yang Kai is in motion, trying to sidestep, but the blow clips his shoulder, sending him skidding across the dirt. Other disciples watch in the background. 16:9, donghua/wuxia animation style."
+          "prompt": "Ding Jun, beaming with triumph, eagerly approaches Yang Kai. His chubby face is alight with self-satisfaction, seeing Yang Kai as merely a stepping stone for easy \"contribution points\". Yang Kai watches him with an unreadable expression. 16:9 landscape, donghua/wuxia animation style, CGI realism."
         }
       ]
     },
     {
       "scene_id": 15,
-      "narration_hi": "Crowd हँस पड़ी, लेकिन Yang Kai तुरंत उठ खड़ा हुआ, अपनी आँखों में हार न मानने की आग लिए हुए।",
+      "narration_hi": "आसपास के Disciples पीछे हटकर एक गोला बना लेते हैं, जय-जयकार करते हुए और शर्त लगाते हुए कि यह झाड़ू लगाने वाला कितनी देर तक टिक पाएगा।",
       "visual_track": [
         {
           "category": "hero",
           "requires_motion": false,
           "reaction_frame": false,
-          "prompt": "Yang Kai, battered and with dust on his jaw, pushing himself up from the ground with unwavering determination in his burning eyes. The crowd's laughter has died down, some looking surprised. 16:9, donghua/wuxia animation style."
+          "prompt": "The numerous surrounding disciples quickly step back, forming a wide, makeshift combat ring in the courtyard. They cheer loudly, some gesturing with their hands as they place casual bets on the duration of the upcoming fight between Yang Kai and Ding Jun. 16:9 landscape, donghua/wuxia animation style, CGI realism."
         }
       ]
     },
     {
       "scene_id": 16,
-      "narration_hi": "Ding Jun ने फिर से rush किया, strikes की बारिश कर दी, पर Yang Kai ने momentum का फायदा उठाकर एक vicious leg whip उसके घुटनों पर मारा।",
+      "narration_hi": "यांग काई शांति से अपनी झाड़ू एक पास के पेड़ के सहारे रखता है और अखाड़े के बीच में आ जाता है—थकान के बावजूद, उसका चेहरा शांत और उसका stance अटल है।",
       "visual_track": [
         {
-          "category": "motion",
-          "requires_motion": true,
+          "category": "hero",
+          "requires_motion": false,
           "reaction_frame": false,
-          "prompt": "Ding Jun, with an angry frown, rushing at Yang Kai with a flurry of rapid strikes. Yang Kai taking hits to his ribs but pivoting dynamically, launching a powerful leg whip aimed at Ding Jun's knees. 16:9, donghua/wuxia animation style."
+          "prompt": "Yang Kai, with an unreadable and stoic expression, calmly places his wooden broom against the rough bark of a sturdy, ancient tree. He then steps deliberately into the center of the newly formed combat ring, adopting a steady, unwavering stance despite his exhaustion from sweeping all morning. 16:9 landscape, donghua/wuxia animation style, CGI realism."
         }
       ]
     },
     {
       "scene_id": 17,
-      "narration_hi": "Kick connect हुआ, Ding Jun दर्द से लड़खड़ाया, पर गुस्से में उसने एक brutal palm strike Yang Kai के chest पर दे मारा।",
+      "narration_hi": "Ding Jun की चेतावनी आती है, वह यांग काई को उसकी कमज़ोर cultivation के लिए ताना मारता है।",
       "visual_track": [
         {
-          "category": "motion",
-          "requires_motion": true,
+          "category": "hero",
+          "requires_motion": false,
           "reaction_frame": false,
-          "prompt": "Ding Jun stumbling back in pain and shock from Yang Kai's successful leg whip. Enraged, Ding Jun retaliates with a brutal, powerful palm strike slamming into Yang Kai's chest, sending him onto his back in the dirt. 16:9, donghua/wuxia animation style."
+          "prompt": "Ding Jun, a young man with a sneering expression, cracking his knuckles. Yang Kai stands opposite him, looking resolute. They are in a dusty, open-air martial arts arena within a sect. Late afternoon lighting."
         }
       ]
     },
     {
       "scene_id": 18,
-      "narration_hi": "Yang Kai ने फिर उठने की कोशिश की, पर उसकी vision blur हो गई और उसका bruised body finally हार मान गया।",
+      "narration_hi": "अचानक, Ding Jun यांग काई पर झपट पड़ता है, एक ज़ोरदार मुक्का उसके सीने की ओर मारता है। इस punch की हवा बताती है कि Ding Jun कम से कम Tempered Body Fifth Stage पर है।",
       "visual_track": [
         {
-          "category": "hero",
-          "requires_motion": false,
+          "category": "motion",
+          "requires_motion": true,
           "reaction_frame": false,
-          "prompt": "A young warrior lying on the ground of a dirt courtyard, exhausted, propping himself up on one arm with a determined but weary expression, dust settling around him, onlookers blurred in the background. wide landscape."
+          "prompt": "Ding Jun lunging forward with a powerful, heavy fist aimed directly at Yang Kai's chest. A visible gust of wind emanates from Ding Jun's fist as he attacks. Yang Kai looks surprised. They are in a dusty martial arts arena."
         }
       ]
     },
     {
       "scene_id": 19,
-      "narration_hi": "Ding Jun ने अपनी victory claim की और अपने दोस्तों के साथ चला गया, Yang Kai को अकेला छोड़कर।",
+      "narration_hi": "cultivation के इस बड़े अंतर का सामना करना नामुमकिन था—यांग काई side-step करने की कोशिश करता है, लेकिन वार उसके कंधे पर लगता है और वह धूल में फिसलकर ज़मीन पर गिर पड़ता है।",
       "visual_track": [
         {
-          "category": "hero",
-          "requires_motion": false,
+          "category": "motion",
+          "requires_motion": true,
           "reaction_frame": false,
-          "prompt": "Ding Jun, smirking in triumph, walking away from the dirt arena with his friends, leaving the battered Yang Kai lying alone on the ground. The setting sun casts long shadows. 16:9, donghua/wuxia animation style."
+          "prompt": "Yang Kai, grimacing in pain, skidding across a dusty martial arts arena floor and falling to the ground on his side. Ding Jun watches from a short distance with a satisfied expression. The surrounding crowd is blurred."
         }
       ]
     },
     {
       "scene_id": 20,
-      "narration_hi": "कुछ देर बाद Yang Kai एक पेड़ के नीचे उठा, उसे अपने pockets में blood-coating healing cream का एक छोटा jar मिला।",
+      "narration_hi": "भीड़ हँस पड़ती है, लेकिन जैसे ही यांग काई तुरंत खड़ा होता है, उसके जबड़े से धूल पोंछता है, उनकी हँसी रुक जाती है। उसकी आँखों में हार न मानने का दृढ़ निश्चय था। Ding Jun फिर से हमला करता है, लेकिन यांग काई, दो वार झेलकर, एक vicious leg whip से उसे घुटनों पर निशाना बनाता है।",
       "visual_track": [
         {
-          "category": "hero",
-          "requires_motion": false,
+          "category": "motion",
+          "requires_motion": true,
           "reaction_frame": false,
-          "prompt": "Yang Kai waking up under the shade of a large tree, rubbing his eyes. He checks his pockets and pulls out a small jar of blood-coating healing cream, looking surprised and thoughtful. 16:9, donghua/wuxia animation style."
+          "prompt": "Yang Kai, his eyes burning with defiance, pushing himself up from the dusty ground. Dust lightly coats his jaw. Ding Jun, frowning, rushes towards him. Yang Kai pivots, launching a powerful leg whip aimed at Ding Jun's knees."
         }
       ]
     },
     {
       "scene_id": 21,
-      "narration_hi": "रात होते ही, वो अपनी secluded hut की तरफ लंगड़ाता हुआ चला गया।",
+      "narration_hi": "किक Ding Jun को लगती है, और वह दर्द से लड़खड़ा कर पीछे हटता है। एक मामूली नौकर से मार खाने पर गुस्साया हुआ, Ding Jun एक brutal palm strike से यांग काई के सीने पर हमला करता है।",
       "visual_track": [
         {
-          "category": "hero",
-          "requires_motion": false,
+          "category": "motion",
+          "requires_motion": true,
           "reaction_frame": false,
-          "prompt": "Yang Kai, limping slightly, walking along a dirt path towards a small, secluded wooden hut as twilight descends, casting a blue hue over the landscape. 16:9, donghua/wuxia animation style."
+          "prompt": "Ding Jun stumbling backward in pain and shock after being kicked by Yang Kai. His face contorted in rage, Ding Jun immediately retaliates with a brutal, open-palmed strike aimed at Yang Kai's chest. They are in the dusty arena."
         }
       ]
     },
     {
       "scene_id": 22,
-      "narration_hi": "अपनी simple bed पर लेटकर, वो गहरी नींद में सो गया, जहाँ उसे mountain पर shadow opponents को हराने का dream आया।",
+      "narration_hi": "वार के ज़ोर से यांग काई पीठ के बल गिर पड़ता है। वह फिर से उठने की कोशिश करता है, लेकिन उसकी नज़र धुंधली होने लगती है और उसका ज़ख्मी शरीर आख़िरकार उसका कहना नहीं मानता—वह duel हार चुका था।",
       "visual_track": [
         {
           "category": "hero",
           "requires_motion": false,
           "reaction_frame": false,
-          "prompt": "Yang Kai lying in a simple, modest bed inside his hut, deeply asleep. The scene subtly transitions to a dream sequence where he stands atop a vast, ethereal mountain peak, easily defeating shadowy, indistinct opponents. 16:9, donghua/wuxia animation style."
+          "prompt": "Yang Kai lying on his back in the dusty arena, his body bruised, trying to push himself up. His vision is blurred, indicated by a subtle visual effect. He looks defeated and exhausted. Ding Jun stands over him, looking triumphant."
         }
       ]
     },
     {
       "scene_id": 23,
-      "narration_hi": "अचानक, एक mysterious black energy उसकी body में pulse हुई, और वो झटके से उठ बैठा।",
-      "visual_track": [
-        {
-          "category": "motion",
-          "requires_motion": true,
-          "reaction_frame": false,
-          "prompt": "A sudden, intense stream of dark, pulsing black energy flowing into Yang Kai's body, causing him to jolt awake in his bed. His eyes are wide with shock and confusion. 16:9, donghua/wuxia animation style."
-        }
-      ]
-    },
-    {
-      "scene_id": 24,
-      "narration_hi": "उसके pillow के पास एक strange black stone था, जिसे उठाते ही वो crumble होकर एक ancient black book में बदल गया!",
-      "visual_track": [
-        {
-          "category": "motion",
-          "requires_motion": true,
-          "reaction_frame": false,
-          "prompt": "Yang Kai, still in bed, looking at a small, dark black stone resting beside his pillow. He picks it up, and before his eyes, the outer layer crumbles away, revealing a mysterious, ancient black book with faint, chilling dark energy emanating from it. 16:9, donghua/wuxia animation style."
-        }
-      ]
-    },
-    {
-      "scene_id": 25,
-      "narration_hi": "उसने book खोली, pages blank थे। एक instinct से उसने अपनी उंगली काटी और खून की एक drop पहले page पर गिरा दी।",
+      "narration_hi": "Ding Jun अपनी जीत का जश्न मनाता है और अपने दोस्तों के साथ चला जाता है, उस पिटे हुए झाड़ू वाले नौकर को धूल में अकेला छोड़ कर…",
       "visual_track": [
         {
           "category": "hero",
           "requires_motion": false,
           "reaction_frame": false,
-          "prompt": "A young man holding an ancient black book open to reveal blank pages, pressing his fingertip onto the first page where a single glowing red droplet touches the paper, determined expression, faint dark mist rising from the book. wide landscape."
+          "prompt": "Ding Jun, smirking confidently, walking away from the martial arts arena with a couple of friends, their backs to the camera. Yang Kai lies alone and motionless on his back in the dusty dirt in the foreground, appearing small and abandoned. Evening light."
+        }
+      ]
+    },
+    {
+      "scene_id": 24,
+      "narration_hi": "यांग काई बहुत बाद में एक पेड़ की छाया के नीचे उठा, यह सोचकर कि वह यहाँ कैसे आया। उसकी जेब में उसे blood-coating healing cream की एक छोटी शीशी मिली—जिसकी कीमत 10 contribution points थी, जो वह पूरे महीने की सफाई के काम के बाद भी नहीं कमा पाता था। किसी ने चुपचाप यह उसके लिए रखी थी।",
+      "visual_track": [
+        {
+          "category": "hero",
+          "requires_motion": false,
+          "reaction_frame": false,
+          "prompt": "Yang Kai, his face bruised, sitting up slowly beneath the shade of a large tree as dusk approaches. He holds a small, elegant jar of healing cream in his hand, examining it with a surprised and thoughtful expression. The surrounding forest is quiet."
+        }
+      ]
+    },
+    {
+      "scene_id": 25,
+      "narration_hi": "रात होते ही, वह लँगड़ाते हुए अपनी अलग-थलग झोपड़ी में लौट आया। अपनी सादी बिस्तर पर, दिन भर की मार से थका और दर्द में डूबा हुआ, वह गहरी नींद में सो गया।",
+      "visual_track": [
+        {
+          "category": "hero",
+          "requires_motion": false,
+          "reaction_frame": false,
+          "prompt": "Yang Kai, visibly limping, approaches a small, rustic, secluded wooden hut in the twilight. Later, a close-up of Yang Kai sleeping deeply in a simple bed inside the dim hut, his face peaceful but still showing faint bruises."
         }
       ]
     },
     {
       "scene_id": 26,
-      "narration_hi": "खून लगते ही pages के बीच में एक black hole जैसा vortex बना, जिससे एक brilliant golden skeleton निकला।",
+      "narration_hi": "उसे एक अजीब सपना आया—वह एक पहाड़ की चोटी पर खड़ा था, आसानी से shadowy दुश्मनों को हरा रहा था। अचानक, काले रंग की एक रहस्यमयी ऊर्जा का प्रवाह उसके शरीर में घुसता है, जिससे उसकी नींद अचानक टूट जाती है!",
       "visual_track": [
         {
           "category": "motion",
           "requires_motion": true,
           "reaction_frame": false,
-          "prompt": "ONE single colossal radiant golden skeletal warrior spirit (solo, one figure only), rising majestically out of a single open ancient book resting on a wooden bed, swirling golden light energy behind it, proud defiant aura, dramatic low-angle hero shot, glowing golden light. wide landscape."
+          "prompt": "Yang Kai, standing majestically atop a jagged mountain peak under a dramatic, swirling night sky, easily dispatching shadowy, indistinct opponents with swift martial arts moves. Suddenly, a thick, ominous stream of pulsating black energy shoots directly into his chest. His sleeping body in the hut twitches."
         }
       ]
     },
     {
       "scene_id": 27,
-      "narration_hi": "Yang Kai उसे पकड़ना चाहता था, पर skeleton सीधा उसकी body में merge हो गया, जिससे उसे agonizing pain हुआ।",
+      "narration_hi": "वह चौंककर उठ बैठता है—केवल दो घंटे ही बीते थे! उसके तकिए के पास एक अजीब-सा, काले रंग का पत्थर पड़ा था, जो उसने सालों पहले पहाड़ों से उठाया था।",
+      "visual_track": [
+        {
+          "category": "hero",
+          "requires_motion": false,
+          "reaction_frame": false,
+          "prompt": "Yang Kai sitting up abruptly in his bed inside the dimly lit hut, his eyes wide with shock and confusion. Beside his pillow, a rough, dark black stone, about the size of a fist, rests on the simple fabric."
+        }
+      ]
+    },
+    {
+      "scene_id": 28,
+      "narration_hi": "यांग काई उसे उठाता है और तुरंत महसूस करता है कि उसका वज़न काफ़ी कम हो गया है। उसकी आँखों के सामने, काले पत्थर की बाहरी परत बिखर जाती है, और उसका असली रूप सामने आता है… एक रहस्यमयी, प्राचीन किताब जिससे हल्की, भयानक काली ऊर्जा निकल रही थी।",
       "visual_track": [
         {
           "category": "motion",
           "requires_motion": true,
           "reaction_frame": false,
-          "prompt": "A young warrior reaching toward a glowing golden skeletal spirit as it surges forward from an ancient book and flows into his chest as brilliant golden light. He kneels, head thrown back, as radiant golden energy erupts around his whole body, intense glowing aura. wide landscape."
+          "prompt": "Yang Kai holding the black stone in his hands, looking surprised. The outer layer of the stone visibly crumbles and flakes away in slow motion, revealing a dark, ancient book underneath. Faint, dark, chilling energy gently emanates from the book. The scene is lit by the dim light of his hut."
+        }
+      ]
+    },
+    {
+      "scene_id": 29,
+      "narration_hi": "उसने किताब का कवर खोला और देखा कि पन्ने पूरी तरह से खाली थे। एक अनजाने instinct से प्रेरित होकर, यांग काई अपनी उँगली काटता है और अपने खून की एक बूँद पहले खाली पन्ने पर निचोड़ता है।",
+      "visual_track": [
+        {
+          "category": "hero",
+          "requires_motion": false,
+          "reaction_frame": false,
+          "prompt": "Close-up of Yang Kai's hand holding open the ancient black book, revealing entirely blank, aged pages. He bites his finger, and a single, glistening drop of blood falls onto the center of the first blank page. The hut is dimly lit, casting shadows."
+        }
+      ]
+    },
+    {
+      "scene_id": 30,
+      "narration_hi": "जैसे ही उसका खून पन्ने को छूता है, पन्नों के अंदर एक भंवर जैसा black hole बन जाता है। उस भंवर से… एक शानदार, सुनहरे रंग का कंकाल निकलता है, जिससे प्राचीन, अहंकारी defiance की आभा निकल रही थी।",
+      "visual_track": [
+        {
+          "category": "motion",
+          "requires_motion": true,
+          "reaction_frame": false,
+          "prompt": "A close-up of the ancient black book's blank pages, where a miniature, swirling black hole vortex has just formed. From the center of this vortex, a single, brilliantly golden-colored skeleton, radiating an ancient, defiant aura, slowly emerges upwards. Yang Kai watches with wide eyes."
+        }
+      ]
+    },
+    {
+      "scene_id": 31,
+      "narration_hi": "यांग काई उसे पकड़ने के लिए हाथ बढ़ाता है, लेकिन सुनहरा कंकाल तेज़ी से आगे बढ़ता है और सीधे उसके शरीर में समा जाता है! यांग काई दर्द से कराहते हुए घुटनों के बल गिर पड़ता है। उसे ऐसा महसूस होता है जैसे उसके शरीर की हर एक हड्डी टूटकर सुनहरे कंकाल द्वारा ज़बरदस्ती फिर से बनाई जा रही हो। दाँत पीसकर, यांग काई बेहोश होने से इनकार करता है—वह जानता था कि यह रहस्यमयी legacy ही वह मोड़ है जो उसे आख़िरकार उसकी mediocre talent की ज़ंजीरों को तोड़ने और martial world के शिखर की ओर बढ़ने देगी!",
+      "visual_track": [
+        {
+          "category": "motion",
+          "requires_motion": true,
+          "reaction_frame": false,
+          "prompt": "Yang Kai, his hand outstretched, grimaces in intense, agonizing pain as a single, glowing golden skeleton rapidly shoots forward from the black book and merges directly into his chest, indicated by a bright flash of light and energy ripples. He falls to his knees, clutching his chest, his face contorted in a silent scream. His eyes burn with determination amidst the pain, refusing to collapse. Inside a dimly lit hut."
         }
       ]
     }

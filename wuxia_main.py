@@ -137,7 +137,7 @@ def _slow_narration(mp3_path: str) -> str:
     default 0.9 (~11% longer); set 1.0 to disable. Returns the slowed path, or the
     original on disable/failure."""
     import subprocess
-    tempo = float(os.environ.get("WUXIA_NARRATION_TEMPO", "0.9"))
+    tempo = float(os.environ.get("WUXIA_NARRATION_TEMPO", "0.95"))
     if abs(tempo - 1.0) < 0.01:
         return mp3_path
     out = mp3_path + ".slow.mp3"
