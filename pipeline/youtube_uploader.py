@@ -672,7 +672,7 @@ def published_public_today() -> str | None:
         if not ids:
             return None
         vids = youtube.videos().list(
-            part="status,snippet", id=",".join(ids),
+            part="status,snippet,contentDetails", id=",".join(ids),
         ).execute()
         ist = timezone(timedelta(hours=5, minutes=30))
         today_ist = datetime.now(ist).date()
@@ -685,7 +685,38 @@ def published_public_today() -> str | None:
                 if _pa:
                     _pa_dt = datetime.fromisoformat(_pa.replace("Z", "+00:00"))
                     if _pa_dt.astimezone(ist).date() == today_ist:
-                        return v["id"]
+                        # Corrupt-orphan guard (2026-07-13): a run killed at
+                        # the 29-min cap mid-UPLOAD leaves a truncated video
+                        # on YouTube (duration 'P0D', stuck processing) that
+                        # is ALREADY scheduled+private — it auto-published a
+                        # broken video at 6 PM on 2026-07-13 while both backup
+                        # ticks exited "already live". A healthy scheduled
+                        # video has a real duration within a couple minutes;
+                        # 'P0D' past a generous grace window = corrupt. Delete
+                        # it so it can't auto-publish, and DON'T count it so a
+                        # backup tick renders a fresh one.
+                        _dur = v.get("contentDetails", {}).get("duration", "")
+                        if _dur and _dur != "P0D":
+                            return v["id"]          # healthy scheduled video
+                        _up = v["snippet"].get("publishedAt", "")
+                        _age_min = 9999
+                        if _up:
+                            _age_min = (datetime.now(timezone.utc)
+                                        - datetime.fromisoformat(
+                                            _up.replace("Z", "+00:00"))
+                                        ).total_seconds() / 60
+                        if _age_min < 25:
+                            # too fresh to judge — processing may still finish
+                            return v["id"]
+                        try:
+                            youtube.videos().delete(id=v["id"]).execute()
+                            print(f"    [upload-guard] DELETED corrupt scheduled "
+                                  f"orphan {v['id']} (duration P0D, stuck "
+                                  f"{int(_age_min)}min) — backup will re-render")
+                        except Exception as _de:
+                            print(f"    [upload-guard] corrupt orphan {v['id']} "
+                                  f"(P0D) delete FAILED: {str(_de)[:80]}")
+                        continue   # broken — do not count as today's video
                 continue
             pub = v["snippet"].get("publishedAt", "")
             if not pub:
