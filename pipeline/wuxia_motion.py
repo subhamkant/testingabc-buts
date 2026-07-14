@@ -107,10 +107,30 @@ def _seed_b64(still_path: str) -> str:
     return base64.b64encode(buf.getvalue()).decode("ascii")
 
 
+# RESTING-LIMB + ENVIRONMENTAL-KINETICS motion prompt. LTX-2B on a free T4 CANNOT
+# compute articulated limb motion (arm/broom swings) — it loses spatial tracking
+# and the face/body MELT into a smeared blur by ~2s. So the LTX prompt DELIBERATELY
+# ignores the scene's action verb and instead freezes the body while animating only
+# the environment (wind/robes/hair/dust/aura + a slow camera), which LTX renders
+# cleanly with stable geometry. The still (I2V seed) still carries the pose/content.
+# Override per-scene by adding a "motion_prompt" to the scene; global via env.
+_MOTION_PROMPT = os.environ.get("WUXIA_MOTION_PROMPT") or (
+    "Cinematic 3D donghua. The character holds a completely FROZEN, still, powerful "
+    "stance — body, arms, hands and face perfectly motionless, no re-posing, no limb "
+    "movement. ONLY the environment is animated: long robes and hair billow and "
+    "flutter in the wind, dust and glowing embers drift and swirl, a faint shimmering "
+    "energy aura, and a slow smooth cinematic camera push-in. stable geometry, crisp, "
+    "no warping, no morphing, face perfectly stable."
+)
+
+
 def _build_run_config(run_id: str, group: list) -> dict:
     hero = [{
         "idx": e["idx"], "scene_idx": e["scene_idx"], "shot_idx": e["shot_idx"],
-        "prompt": e["prompt"], "image_b64": _seed_b64(e["still_path"]),
+        # Use an environmental-kinetics motion prompt (NOT the scene's action verb)
+        # to avoid the articulated-limb smear/collapse on the free T4.
+        "prompt": e.get("motion_prompt") or _MOTION_PROMPT,
+        "image_b64": _seed_b64(e["still_path"]),
     } for e in group]
     return {
         "skip_flux": True,
@@ -126,6 +146,7 @@ def _build_run_config(run_id: str, group: list) -> dict:
         "esrgan": os.environ.get("WUXIA_ESRGAN", "true").lower() != "false",
         "out_w": 1920, "out_h": 1080,
         "ltx_timeout_s": int(os.environ.get("WUXIA_LTX_TIMEOUT_S", "5400")),
+        "clip_timeout_s": int(os.environ.get("WUXIA_CLIP_TIMEOUT_S", "540")),  # kernel watchdog
     }
 
 
