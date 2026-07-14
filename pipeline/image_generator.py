@@ -79,9 +79,16 @@ STYLE_SUFFIX_MORTAL = (
     "carved sandstone temple architecture in sharp focus, "
     "balanced natural color grading, neutral whites, true skin tones, "
     "sharp focus on subject, clear facial features, "
-    "no global color wash, no orange filter, no magenta or pink cast, "
-    "no CGI plastic look, no airbrushed skin, "
-    "NO cartoon, NO anime, NO illustration, NO dead doll eyes"
+    # 2026-07-14 negation purge — this suffix ended with "NO cartoon, NO
+    # anime, NO illustration, NO dead doll eyes, no CGI plastic look, no
+    # airbrushed skin..." which, per the FLUX negation-poisoning rule
+    # (positive-prompt "no X" RENDERS X), was injecting cartoon/anime/
+    # plastic/doll tokens into EVERY Mahabharata frame — a direct cause of
+    # the waxy-figurine look the user flagged. All bans now live in
+    # _NEGATIVE_DEFAULT where they belong; the positive slot asserts the
+    # look we WANT instead.
+    "lifelike living skin with natural texture and soft subsurface glow, "
+    "hyper-realistic epic film still"
 )
 
 # DIVINE variant — same as MORTAL minus the golden-bronze skin anchor that
@@ -111,8 +118,10 @@ STYLE_SUFFIX_DIVINE = (
     "carved sandstone temple architecture in sharp focus, oil-lamp lighting, "
     "balanced natural color grading, neutral whites, "
     "sharp focus on subject, clear facial features, "
-    "no global color wash, no orange filter, no magenta or pink cast, "
-    "no CGI plastic look, no airbrushed skin"
+    # 2026-07-14 negation purge (see STYLE_SUFFIX_MORTAL note) — bans moved
+    # to _NEGATIVE_DEFAULT; positive slot asserts living divine presence.
+    "living breathing divine presence, lifelike skin with natural texture "
+    "and a warm radiant subsurface glow, hyper-realistic epic film still"
 )
 
 # Backwards-compat alias — kept so existing `style_suffix: str = STYLE_SUFFIX`
@@ -543,6 +552,14 @@ _NEGATIVE_DEFAULT = (
     # "breast" hit in this file was breastPLATE armor vocabulary. ──
     "nudity,nude,topless,exposed breast,bare breast,nipple,areola,"
     "see-through fabric,sheer fabric,cleavage,bare torso on women,"
+    # ── Anti-figurine block (2026-07-14). The waxy painted-statue look the
+    # user flagged on the Krishna thumbnail ("cartoonish"). These bans
+    # previously sat as "NO cartoon / NO anime..." INSIDE the positive
+    # style suffix — i.e. they were POISONING every frame with the very
+    # tokens they banned. Moved here where negatives belong. ──
+    "cartoon,anime,illustration,painted statue,figurine,doll face,"
+    "waxy skin,plastic skin,mannequin,porcelain skin,airbrushed,"
+    "3d render,cgi character,video game character,"
     # ── Eye-detail failure mode (TOP priority — 2026-05-14 Karna-arc local
     # test shipped 7/10 frames with dead-eye / black-void pupils. Distilled
     # FLUX-schnell loses eye micro-detail; front-loaded negatives push it
@@ -615,6 +632,13 @@ _NEGATIVE_DEFAULT = (
 # applies on scenes whose mood matches restraint keywords. Standard scenes
 # (hook, setup, rising tension) keep the full DEFAULT rejection list.
 _NEGATIVE_RESTRAINT = (
+    # ── Modesty block (2026-07-14). HOLE FOUND during the anti-figurine
+    # pass: the 2026-07-07 modesty negatives were added ONLY to
+    # _NEGATIVE_DEFAULT — grief/loss/mourning/aftermath scenes route
+    # through THIS list and rendered with ZERO nudity negatives (the
+    # exact scene types where Draupadi disrobing beats land). ──
+    "nudity,nude,topless,exposed breast,bare breast,nipple,areola,"
+    "see-through fabric,sheer fabric,cleavage,bare torso on women,"
     # Eye-detail — still a real-bug rejection; keep
     "dead eyes,glassy eyes,vacant stare,blank eyes,soulless eyes,"
     "missing pupils,missing iris,black void eyes,recessed eye sockets,"
