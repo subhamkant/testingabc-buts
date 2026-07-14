@@ -1,0 +1,117 @@
+{
+  "ts": "2026-07-14T07-30-14",
+  "language": "hi",
+  "score": 19,
+  "score_max": 25,
+  "violation": "archetype",
+  "topic": "Krishna's Vishwaroop in the Kuru court — when peace talks failed, the cosmic form blazing like a thousand suns that made the blind king's court fall to its knees in awe",
+  "title": "कृष्ण की विराट महिमा | Krishna's Cosmic Glory",
+  "script": {
+    "voiceover": "जब कुरु सभा में हर मर्यादा टूटती है, कृष्ण अपनी दिव्य महिमा का वचन देते हैं — 'जो मेरा वचन नहीं मानेगा, उसे ब्रह्मांड का नाश देखना होगा।' शांति प्रस्ताव ठुकराया जाता है, और दुर्योधन उन्हें बंदी बनाने का दुस्साहस करता है। 'मूढ़!' कृष्ण गरजते हैं, 'क्या तुम जानते हो किसे बंदी बनाना चाहते हो?' और तभी, उनकी आँखों से ब्रह्मांड की विराट ज्योति फूट पड़ती है, सहस्त्रों सूर्यों का तेज एक साथ चमक उठता है, दिशाएं कांप उठती हैं। धृतराष्ट्र की आँखों को क्षण भर का दिव्य दर्शन मिलता है, जहाँ देवता, ऋषि, काल, और हर लोक समाहित थे। उस अद्भुत क्षण में, क्या कोई भी इतनी अलौकिक महिमा को आँखों से देख कर भी, अपने घमंड में अड़ा रह सकता है?",
+    "broll": [
+      {
+        "image_prompt": "Extreme macro close-up of the hero's weapon, caught mid-action, motion-blurred battlefield chaos behind, Action moment frozen mid-air, a ceremonial royal scepter dropping from a trembling hand onto the polished marble floor of the ornate Nagara-style palace court, symbolizing the breakdown of order, jewel-toned palette, soft cinematic lighting, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "मर्यादा टूटती है",
+        "mood": "tension, broken peace, shattered",
+        "wardrobe_context": "PALACE",
+        "shot_type": "AMBIGUOUS"
+      },
+      {
+        "image_prompt": "[CONFRONTATION-WIDE] Sweeping panoramic shot, opulent Hastinapur palace court with carved stone pillars and rich tapestries, Duryodhana with a proud cruel sneer gestures dismissively, turning his back on Krishna, jewel-toned palette, soft cinematic lighting, Duryodhana: colossal mountain-like physique, thick black beard, proud cruel sneer, mirror-polished golden kavacha, jeweled gold war-crown with crimson plume, blood-red and black silks, colossal spiked golden Gada. Krishna: graceful powerful divine form, luminous monsoon-cloud blue skin, dark curls with peacock feather, golden-yellow pitambara silk, crimson sash, layered gold necklaces, divine charioteer, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "शांति प्रस्ताव ठुकराया",
+        "mood": "arrogant dismissal, rising conflict",
+        "wardrobe_context": "PALACE",
+        "shot_type": "ENVIRONMENT"
+      },
+      {
+        "image_prompt": "Ornate Nagara-style palace court with intricate frescoes and flickering oil lamps, Duryodhana orders his guards with wide-eyed rage to seize Krishna, who stands tall and serene, his form beginning to subtly glow, jewel-toned palette, soft cinematic lighting, Krishna: graceful powerful divine form, luminous monsoon-cloud blue skin, dark curls with peacock feather, golden-yellow pitambara silk, crimson sash, layered gold necklaces, divine charioteer. Duryodhana: colossal mountain-like physique, thick black beard, proud cruel sneer, mirror-polished golden kavacha, jeweled gold war-crown with crimson plume, blood-red and black silks, colossal spiked golden Gada, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "बंदी बनाने का दुस्साहस",
+        "mood": "furious defiance, divine calm",
+        "wardrobe_context": "PALACE",
+        "shot_type": "REACTION"
+      },
+      {
+        "image_prompt": "Krishna's luminous monsoon-cloud blue face blazing with divine fury, his lips parting to speak a thunderous pronouncement, kohl-lined eyes radiating cosmic energy, golden peacock feather in dark curls, jewel-toned palette, soft cinematic lighting, Krishna: graceful powerful divine form, luminous monsoon-cloud blue skin, dark curls with peacock feather, golden-yellow pitambara silk, crimson sash, layered gold necklaces, divine charioteer, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "कृष्ण गरजते हैं",
+        "mood": "divine wrath, powerful declaration",
+        "wardrobe_context": "PALACE",
+        "shot_type": "AMBIGUOUS"
+      },
+      {
+        "image_prompt": "Erupting cosmic vision, Krishna's form transforming into a blazing, swirling vortex of galaxies and celestial bodies, a radiant and overpowering divine light expanding outwards, engulfing the entire Kuru court, jewel-toned palette, soft cinematic lighting, Krishna: graceful powerful divine form, luminous monsoon-cloud blue skin, dark curls with peacock feather, golden-yellow pitambara silk, crimson sash, layered gold necklaces, divine charioteer, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "विराट ज्योति फूट पड़ती है",
+        "mood": "awe-inspiring, overwhelming, divine",
+        "wardrobe_context": "DIVINE",
+        "shot_type": "AMBIGUOUS"
+      },
+      {
+        "image_prompt": "Towering over the stunned assembly, Krishna's Vishwaroop blazing with the intensity of a thousand suns, myriad divine forms visible within the cosmic body, a blinding, golden light radiating from every pore, jewel-toned palette, soft cinematic lighting, Krishna: graceful powerful divine form, luminous monsoon-cloud blue skin, dark curls with peacock feather, golden-yellow pitambara silk, crimson sash, layered gold necklaces, divine charioteer, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "सहस्त्रों सूर्यों का तेज",
+        "mood": "sublime power, overwhelming light",
+        "wardrobe_context": "DIVINE",
+        "shot_type": "AMBIGUOUS"
+      },
+      {
+        "image_prompt": "Wide shot of the Kuru court, its marble pillars trembling and cracking under the immense cosmic vibrations, terrified courtiers and warriors collapsing to their knees, their faces hidden in fear and awe as Krishna's divine form looms overhead, jewel-toned palette, soft cinematic lighting, Duryodhana's guards: anonymous figures in palace armor, golden robes, no specific signatures. Dhritarashtra: venerable blind king, grey-streaked hair, jeweled gold mukut, rich silk dhoti, no specific signatures. Krishna's divine form partially visible in the background, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "दिशाएं कांप उठती हैं",
+        "mood": "terrifying wonder, humbling, chaos",
+        "wardrobe_context": "DIVINE",
+        "shot_type": "ENVIRONMENT"
+      },
+      {
+        "image_prompt": "Close-up of Dhritarashtra's weathered elderly face, his usually sightless eyes now wide open, reflecting a fleeting glimpse of the cosmic vision, tears of awe and wonder streaming down his cheeks, jewel-toned palette, soft cinematic lighting, Dhritarashtra: venerable blind king, grey-streaked hair, jeweled gold mukut, rich silk dhoti, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "क्षण भर का दिव्य दर्शन",
+        "mood": "profound wonder, divine grace",
+        "wardrobe_context": "DIVINE",
+        "shot_type": "AMBIGUOUS"
+      },
+      {
+        "image_prompt": "Fading dusk over a calm river, a lone diya flickering softly on the water's surface, reflecting a distant, serene silhouette of Krishna, evoking a sense of profound peace and enduring grace after the divine manifestation, jewel-toned palette, soft cinematic lighting, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "अलौकिक महिमा को आँखों",
+        "mood": "serene, peaceful, reflective",
+        "wardrobe_context": "AFTERMATH",
+        "shot_type": "AMBIGUOUS"
+      }
+    ],
+    "title": "कृष्ण की विराट महिमा | Krishna's Cosmic Glory",
+    "hook_title": "कृष्ण की विराट महिमा",
+    "description": "When peace failed, Krishna revealed His true cosmic self. When diplomacy failed in the Kuru court, Krishna, the divine envoy, faced Duryodhana's arrogant demand to be bound. In that moment of ultimate tension, Krishna unleashed His Vishwaroop – a cosmic form encompassing all existence. The court trembled, and even blind King Dhritarashtra was granted a momentary vision of this terrifying yet glorious spectacle. This divine manifestation served as a final warning, demonstrating the futility of mortal pride against the cosmic order, forcing all to confront their insignificance before true divinity.\n\n#Shorts #Mahabharata #महाभारत #Krishna #HinduMythology #PauranikKatha #MythologyShorts #HindiShorts",
+    "tags": [
+      "Krishna's Vishwaroop",
+      "Kuru court peace talks",
+      "Krishna",
+      "कृष्ण",
+      "Mahabharata",
+      "महाभारत",
+      "Shorts",
+      "Hindu mythology"
+    ],
+    "thumbnail_prompt": "Dramatic Mahabharata thumbnail, Krishna's luminous monsoon-cloud blue skin, Vishwaroop form with swirling galaxies and celestial bodies, blazing cosmic light, Dhritarashtra's awe-struck face in foreground reflecting the light, rich jewel-toned palette, cinematic, portrait composition, no text, no watermarks.",
+    "quotable_line": "घमंड की दीवारों को तोड़ने के लिए, कभी-कभी विराट दर्शन ही काफी होते हैं।",
+    "pinned_question": "❓ घमंड की दीवारों को तोड़ने के लिए, कभी-कभी विराट दर्शन ही काफी होते हैं। क्या आप भी मानते हैं कि कुछ सच्चाइयाँ सिर्फ दिव्य रूप में ही समझाई जा सकती हैं?",
+    "next_seed": "और यही विराट दर्शन युद्ध के भयानक परिणाम की भविष्यवाणी था।",
+    "language": "hi",
+    "content_type": "story",
+    "topic": "Krishna's Vishwaroop in the Kuru court — when peace talks failed, the cosmic form blazing like a thousand suns that made the blind king's court fall to its knees in awe",
+    "series": "mahabharata",
+    "episode_n": 0,
+    "arc_character_devanagari": "",
+    "arc_character_english": "devotional",
+    "_phase18_strict_pass": false,
+    "_phase18_score": 19,
+    "_phase18_score_max": 25,
+    "_phase18_score_floor": 19,
+    "_phase18_violation": "archetype",
+    "_phase18_failing_gates": [
+      "anti_merge_composition",
+      "archetype",
+      "char_names",
+      "engagement",
+      "intensity",
+      "subject_diversity"
+    ],
+    "_phase18_fatal_failures": [
+      "anti_merge_composition"
+    ]
+  }
+}
