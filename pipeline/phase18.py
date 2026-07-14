@@ -512,6 +512,57 @@ _DEVOTIONAL_TITLE_NOUNS = (
     "devotion", "victory", "birth", "blessing", "darshan",
 )
 
+# 2026-07-14 — GOLD few-shot for the devotional register. Hand-authored
+# and VALIDATOR-VERIFIED at 25/25 (validate_phase18, _ACTIVE_REGISTER=
+# 'devotional'). The register kept quarantining (Jul-10/12/14: shipped 1
+# of 3 days) not on quality but on MECHANICAL gates the dark register
+# learned over months of examples — char_names (name the deity in EVERY
+# image_prompt), engagement (≥4 sensory + ≥2 quoted-dialogue beats),
+# bookend (repeat the title noun in first AND last 10 words), monotony
+# (vary sentence-final words), shock_action (action verb in first 8
+# words). Instructions alone weren't enough; this shows the model exactly
+# what a clean pass looks like. Voiceover shown in full (teaches text
+# gates); 4 representative broll entries shown (opener/reaction/action/
+# closer) with the rest summarized. Injected ONLY on devotional days.
+_DEVOTIONAL_GOLD_FEWSHOT = (
+    "\n\nGOLD EXAMPLE — study this devotional script, then write a NEW one "
+    "for THIS topic with the SAME mechanical structure (do NOT copy its "
+    "words; match its shape). This example scores a perfect 25/25:\n"
+    '{\n'
+    '  "title": "कृष्ण की विराट महिमा | Krishna\'s Cosmic Glory",\n'
+    '  "hook_title": "कृष्ण की विराट महिमा",\n'
+    '  "voiceover": "कृष्ण की आँखों से दिव्य महिमा बरस उठती है, जब कुरु सभा की हर '
+    'मर्यादा टूट जाती है। शांति का प्रस्ताव ठुकराकर दुर्योधन गरजता है, “इस ग्वाले को '
+    'बंदी बना लो!” कृष्ण के होंठ काँपते हैं, फिर वे शांत होकर मुस्कुरा उठते हैं। लेकिन '
+    'उसी क्षण उनकी देह से सहस्त्रों सूर्यों का तेज फूट निकला। हर दिशा काँप उठी, धुआँ और '
+    'दिव्य प्रकाश पूरी सभा में फैल गए। धृतराष्ट्र की अंधी आँखें क्षण भर को खुल गईं। वे '
+    'काँपते हुए फुसफुसाए, “यह तो स्वयं ईश्वर हैं!” कृष्ण की महिमा के आगे दुर्योधन का घमंड '
+    'राख बन गया। क्या ऐसी दिव्य महिमा देखकर भी कोई अपने अहंकार पर अड़ा रहेगा?",\n'
+    '  "broll": [\n'
+    '    {"anchor_phrase":"आँखों से दिव्य महिमा","shot_type":"PROP","wardrobe_context":"PALACE",'
+    '"image_prompt":"Extreme macro close-up of Krishna\'s radiant eyes blazing with divine light, a luminous glow erupting from the pupils, kohl-lined, monsoon-blue skin, dim ornate Kuru court blurred behind. no text."},\n'
+    '    {"anchor_phrase":"बंदी बना लो","shot_type":"REACTION","wardrobe_context":"PALACE",'
+    '"image_prompt":"Duryodhana lunging forward from his gilded throne, snarling with clenched fists, his jeweled crown catching harsh torchlight, terrified courtiers recoiling behind him. no text."},\n'
+    '    {"anchor_phrase":"सूर्यों का तेज","shot_type":"ACTION","wardrobe_context":"DIVINE",'
+    '"image_prompt":"Krishna erupting into his blazing Vishwaroop, radiant cosmic form towering upward, a thousand incandescent suns surging from his body, galaxies swirling. no text."},\n'
+    '    {"anchor_phrase":"अहंकार पर अड़ा","shot_type":"ENVIRONMENT","wardrobe_context":"AFTERMATH",'
+    '"image_prompt":"Fading dusk over a calm river, a lone diya flickering on the water, a serene silhouette of Krishna with folded hands, a quiet radiant glow of gratitude and stillness. no text."}\n'
+    '  ]\n'
+    '}\n'
+    "Note the mechanics you MUST replicate: (1) EVERY image_prompt names a "
+    "canonical character (Krishna/Duryodhana/Dhritarashtra...) — never 'the "
+    "hero' or 'a warrior'; (2) each image_prompt leads with an action verb "
+    "(blazing/lunging/erupting) and carries one intensity adjective "
+    "(radiant/blazing/luminous/incandescent); (3) the title's devotional "
+    "noun (महिमा) appears in the FIRST and LAST 10 words of the voiceover; "
+    "(4) TWO “…” curly-quoted dialogue beats; (5) ≥4 sensory words "
+    "(आँख/होंठ/काँप/धुआँ/राख); (6) sentence-final words VARY "
+    "(है/लो/हैं/निकला/गए/गईं/गया/रहेगा) — never end every line on है; (7) the "
+    "final broll is wardrobe_context AFTERMATH with a peace-after-grace "
+    "image (lone diya / folded hands / calm river). Full broll has 8-10 "
+    "entries following this pattern with varied shot_types."
+)
+
 
 def _check_title_dna_gate(
     title: str,
@@ -2419,6 +2470,7 @@ def generate_phase18_script(
             "appear in BOTH the first 10 AND last 10 words of the "
             "voiceover — open on the threatened grace, close on the "
             "delivered grace, same noun."
+            + _DEVOTIONAL_GOLD_FEWSHOT
         )
     else:
         fingerprint_override = ""
