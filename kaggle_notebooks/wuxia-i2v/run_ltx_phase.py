@@ -141,6 +141,18 @@ def main():
     out_w = int(cfg.get("out_w", 1920))
     out_h = int(cfg.get("out_h", 1080))
 
+    # Per-clip WATCHDOG (Linux/Kaggle only): a single clip must never run away and
+    # burn the weekly GPU quota (a 97-frame test once hung for hours). SIGALRM
+    # raises between Python ops (e.g. the ESRGAN per-frame loop) so a stuck clip
+    # self-aborts and the loop moves on. Guarded — Windows has no SIGALRM.
+    import signal
+    clip_timeout = int(cfg.get("clip_timeout_s", 600))  # 10 min/clip ceiling
+    _has_alarm = hasattr(signal, "SIGALRM")
+    if _has_alarm:
+        def _on_alarm(signum, frame):
+            raise TimeoutError(f"clip exceeded {clip_timeout}s watchdog")
+        signal.signal(signal.SIGALRM, _on_alarm)
+
     print("Loading LTX-Video (2B, fp16, cpu-offload, vae-tiling)...", flush=True)
     t0 = time.time()
     pipe = _load_ltx()
@@ -163,6 +175,8 @@ def main():
         shot_idx = int(entry.get("shot_idx", 0))
         out_path = f"/kaggle/working/scene_{scene_idx+1:02d}_shot_{shot_idx+1:02d}.mp4"
         try:
+            if _has_alarm:
+                signal.alarm(clip_timeout)  # arm per-clip watchdog
             if not entry.get("image_b64"):
                 print(f"[{idx}] missing image_b64 — skip", flush=True)
                 failures += 1
@@ -217,6 +231,9 @@ def main():
             failures += 1
             gc.collect()
             torch.cuda.empty_cache()
+        finally:
+            if _has_alarm:
+                signal.alarm(0)  # disarm watchdog before next clip
 
     del pipe
     gc.collect()
