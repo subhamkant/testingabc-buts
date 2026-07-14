@@ -1,0 +1,102 @@
+{
+  "ts": "2026-07-14T05-33-33",
+  "language": "hi",
+  "score": 18,
+  "score_max": 25,
+  "violation": "length",
+  "topic": "Krishna's Vishwaroop in the Kuru court — when peace talks failed, the cosmic form blazing like a thousand suns that made the blind king's court fall to its knees in awe",
+  "title": "कृष्ण की सबसे बड़ी लीला | Krishna's Biggest Lila",
+  "script": {
+    "voiceover": "हस्तिनापुर की सभा में जब कृष्ण शांति प्रस्ताव रखते हैं, दुर्योधन उन्हें बांधने के लिए हाथ आगे बढ़ाता है, क्रोध और अहंकार की चरम सीमा पर। पर तभी, कृष्ण का दिव्य विराट रूप वहां प्रकट होता है, प्रकाश की हजार किरणों से भी अधिक तेजस्वी, सब कुछ कांप उठता है। धृतराष्ट्र की अंधी आँखें उस दिव्य प्रकाश को देखने के लिए तड़प उठती हैं, और पूरी सभा भय और भक्ति में घुटनों के बल गिर जाती है। क्या यह सिर्फ एक युद्ध का संकेत था, या उस अनंत सत्ता की लीला थी जिसने अहंकार के अंधेरे को उसी क्षण नष्ट कर दिया? आप उस प्रकाश के सामने खड़े होते तो क्या करते, क्या आप देख पाते वह दिव्य कृपा?",
+    "broll": [
+      {
+        "image_prompt": "Extreme macro close-up of iron shackles mid-air being shattered by unseen force, sparks flying, polished marble palace floor blurred in background, jewel-toned palette, cinematic volumetric lighting, no hands in frame, no text",
+        "anchor_phrase": "दुर्योधन उन्हें बांधने",
+        "mood": "tense, electric, chaotic",
+        "wardrobe_context": "PALACE",
+        "shot_type": "AMBIGUOUS"
+      },
+      {
+        "image_prompt": "Wide cinematic shot of the grand Hastinapur court, pillars glowing with divine golden aura, Krishna towering in the center, celestial light radiating, jewel-toned palette, no hands in frame, no text",
+        "anchor_phrase": "कृष्ण का दिव्य",
+        "mood": "awe-inspiring, radiant, majestic",
+        "wardrobe_context": "DIVINE",
+        "shot_type": "ENVIRONMENT"
+      },
+      {
+        "image_prompt": "[POWER-LOOM] Ornate palace throne room, Krishna as Vishwaroop towering with glowing multiple arms, Dhritarashtra trembling on his throne below, jewel-toned palette, no hands in frame, no text",
+        "anchor_phrase": "धृतराष्ट्र की अंधी",
+        "mood": "fearful, reverent, intense",
+        "wardrobe_context": "PALACE",
+        "shot_type": "ENVIRONMENT"
+      },
+      {
+        "image_prompt": "Close-up of radiant golden crown of Krishna, blinding light reflecting off intricate gold filigree, embers drifting in shafts of golden dusk light, jewel-toned palette, no hands in frame, no text",
+        "anchor_phrase": "दिव्य प्रकाश",
+        "mood": "blissful, warm, divine",
+        "wardrobe_context": "DIVINE",
+        "shot_type": "AMBIGUOUS"
+      },
+      {
+        "image_prompt": "[THE-FALLEN] Ornate palace court, terrified courtiers kneeling on marble floor, Krishna standing tall as luminous celestial energy, jewel-toned palette, no hands in frame, no text",
+        "anchor_phrase": "पूरी सभा",
+        "mood": "humbled, intense, overwhelming",
+        "wardrobe_context": "PALACE",
+        "shot_type": "ACTION"
+      },
+      {
+        "image_prompt": "Macro shot of cosmic nebulae swirling within human-like silhouette, glowing particles of light, deep blue and gold color palette, jewel-toned palette, no hands in frame, no text",
+        "anchor_phrase": "अनंत सत्ता",
+        "mood": "mystical, ethereal, infinite",
+        "wardrobe_context": "DIVINE",
+        "shot_type": "PROP"
+      },
+      {
+        "image_prompt": "Wide shot of the palace entrance at twilight, shadows receding, single diya burning on a stone pedestal, fading dusk light, jewel-toned palette, no hands in frame, no text",
+        "anchor_phrase": "दिव्य कृपा",
+        "mood": "peaceful, serene, calm",
+        "wardrobe_context": "AFTERMATH",
+        "shot_type": "ENVIRONMENT"
+      }
+    ],
+    "title": "कृष्ण की सबसे बड़ी लीला | Krishna's Biggest Lila",
+    "hook_title": "कृष्ण का विराट रूप",
+    "description": "हस्तिनापुर की सभा में जब दुर्योधन ने कृष्ण को कैद करने की भूल की, तब भगवान ने अपना विराट स्वरूप दिखाया। क्या आप उस अद्भुत लीला के साक्षी बनने को तैयार हैं?\n\nजब अहंकार चरम पर होता है, तब ईश्वर का दर्शन ही एकमात्र सत्य है। यह दृश्य न केवल हस्तिनापुर के गर्व को चकनाचूर करता है, बल्कि उस अनंत करुणा को भी दर्शाता है जो विनाश के बीच भी सबको बचाने की कोशिश करती है। हर योद्धा और राजा उस सभा में नतमस्तक हो गया, यह समझते हुए कि असली शक्ति शस्त्रों में नहीं, उस परम प्रकाश में है।\n\n#Shorts #Mahabharata #महाभारत #Krishna #HinduMythology #PauranikKatha #MythologyShorts #HindiShorts",
+    "tags": [
+      "Krishna",
+      "Virat Rupa",
+      "Hastinapur",
+      "कृष्ण",
+      "Mahabharata",
+      "महाभारत",
+      "Shorts",
+      "Hindu mythology"
+    ],
+    "thumbnail_prompt": "Cinematic portrayal of Krishna in Vishwaroop, blinding golden divine light, epic scale, Hastingapur palace court, vibrant jewel-toned palette, high contrast, dramatic atmosphere",
+    "quotable_line": "अहंकार जब चरम पर हो, तो ईश्वर का दर्शन ही एकमात्र सत्य है।",
+    "pinned_question": "❓ {quotable_line} क्या आप उस दिव्य प्रकाश को देखने का साहस रखते हैं?",
+    "next_seed": "और इस घटना के बाद, युद्ध का अंतिम शंखनाद बजने वाला था।",
+    "language": "hi",
+    "content_type": "story",
+    "topic": "Krishna's Vishwaroop in the Kuru court — when peace talks failed, the cosmic form blazing like a thousand suns that made the blind king's court fall to its knees in awe",
+    "series": "mahabharata",
+    "episode_n": 0,
+    "arc_character_devanagari": "",
+    "arc_character_english": "devotional",
+    "_phase18_strict_pass": false,
+    "_phase18_score": 18,
+    "_phase18_score_max": 25,
+    "_phase18_score_floor": 19,
+    "_phase18_violation": "length",
+    "_phase18_failing_gates": [
+      "bookend",
+      "char_names",
+      "engagement",
+      "length",
+      "rehook",
+      "shock_action",
+      "subject_lock"
+    ],
+    "_phase18_fatal_failures": []
+  }
+}
