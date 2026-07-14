@@ -1,0 +1,119 @@
+{
+  "ts": "2026-07-14T09-44-53",
+  "language": "hi",
+  "score": 17,
+  "score_max": 25,
+  "violation": "hook",
+  "topic": "Krishna's Vishwaroop in the Kuru court — when peace talks failed, the cosmic form blazing like a thousand suns that made the blind king's court fall to its knees in awe",
+  "title": "कृष्ण की असली महिमा | Krishna's Real Glory",
+  "script": {
+    "voiceover": "जब कुरु सभा में शांति की आखिरी उम्मीद टूटती है, दुर्योधन की आँखों ने कृष्ण की महिमा को पहचानने से इनकार किया। 'इस ग्वाले को बंदी बना लो!' उसका आदेश गूँजता है, पापी हाथ कृष्ण की ओर खींचते हैं। लेकिन तभी, उस सभा के बीच एक अविश्वसनीय परिवर्तन घटता है। श्री कृष्ण का लौकिक रूप अंधकार चीरता हुआ, विराट स्वरूप प्रकट होता है — करोड़ों सूर्यों की तेजस्विता आँखों को चौंधिया देती है, भुजाओं से शस्त्रों का अनंत चक्रव्यूह, देवगण, ऋषि, दानव दिखते हैं। धृतराष्ट्र को क्षण भर के लिए दिव्य दृष्टि मिलती है, वह चीख उठते हैं, 'यह क्या है!' वे उस अद्भुत महिमा को देख थर्रा उठते हैं। क्या ये क्षणिक भय था, या एक शाश्वत सत्य की महिमा?",
+    "broll": [
+      {
+        "image_prompt": "Extreme macro close-up of the hero's weapon, caught mid-action, motion-blurred battlefield chaos behind, Action moment frozen mid-rupture, a royal peace treaty scroll, intricately decorated with gold leaf and seals, violently tearing apart in the air, symbolic of peace dissolving, blurred figures of courtiers in the background, jewel-toned palette, soft cinematic lighting, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text.",
+        "anchor_phrase": "टूटती है",
+        "mood": "violent rupture, desperate despair",
+        "wardrobe_context": "PALACE",
+        "shot_type": "ACTION"
+      },
+      {
+        "image_prompt": "[CONFRONTATION-WIDE] Opulent Hastinapur palace court, Duryodhana, colossal mountain-like physique, thick black beard, proud cruel sneer, mirror-polished golden kavacha, jeweled gold war-crown, lunging forward with an enraged snarl, his right hand, adorned with thick gold rings, reaching out menacingly towards Krishna, who stands calm, graceful powerful divine form, luminous monsoon-cloud blue skin, golden-yellow pitambara silk, crimson sash, jewel-toned palette, soft cinematic lighting, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text.",
+        "anchor_phrase": "पापी हाथ",
+        "mood": "arrogant aggression, calm defiance",
+        "wardrobe_context": "PALACE",
+        "shot_type": "ACTION"
+      },
+      {
+        "image_prompt": "Shifting expressions on the faces of Kuru courtiers, wide-eyed in bewilderment and initial fear, their trembling lips parted, reflections of an unseen, blinding light dancing in their kohl-rimmed eyes, opulent palace pillars looming behind, jewel-toned palette, soft cinematic lighting, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text.",
+        "anchor_phrase": "परिवर्तन घटता है",
+        "mood": "bewilderment, rising fear",
+        "wardrobe_context": "PALACE",
+        "shot_type": "REACTION"
+      },
+      {
+        "image_prompt": "Looming over the entire Kuru court, Krishna's initial divine cosmic form, starting to unfurl, a partial glimpse of countless arms, weapons, and divine beings, emanating a soft, luminous golden glow that pushes back the shadows, jewel-toned palette, soft cinematic lighting, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text.",
+        "anchor_phrase": "लौकिक रूप",
+        "mood": "unfolding wonder, growing power",
+        "wardrobe_context": "DIVINE",
+        "shot_type": "AMBIGUOUS"
+      },
+      {
+        "image_prompt": "Erupting from the center of the palace court, Krishna's colossal, blazing Vishwaroop, radiating the light of a million suns, a blinding explosion of cosmic energy and divine entities, the very air shimmering with power, golden light washing over terrified faces below, jewel-toned palette, soft cinematic lighting, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text.",
+        "anchor_phrase": "करोड़ों सूर्यों की तेजस्विता",
+        "mood": "overwhelming power, divine spectacle",
+        "wardrobe_context": "DIVINE",
+        "shot_type": "AMBIGUOUS"
+      },
+      {
+        "image_prompt": "Swirling vortex of celestial weapons, glowing Sudarshana Chakras, divine maces, blazing arrows, forming an infinite cosmic arsenal within Krishna's Vishwaroop, shimmering with internal light, indistinct terrified faces of courtiers visible through the cosmic distortion in the background, jewel-toned palette, soft cinematic lighting, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text.",
+        "anchor_phrase": "अनंत चक्रव्यूह",
+        "mood": "terrifying complexity, cosmic wonder",
+        "wardrobe_context": "DIVINE",
+        "shot_type": "AMBIGUOUS"
+      },
+      {
+        "image_prompt": "[WITNESS-FROM-BEHIND] Turning his head in sudden shock, Dhritarashtra, colossal towering muscled frame, flowing silver-white hair and thick white beard, ivory-white silks, his face illuminated by a blinding divine light, his newly opened eyes, wide and bloodshot, gazing in shock at the unfurling Vishwaroop, a kneeling Sanjaya beside him, jewel-toned palette, soft cinematic lighting, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text.",
+        "anchor_phrase": "धृतराष्ट्र को क्षण भर के लिए दिव्य दृष्टि मिलती है",
+        "mood": "shocked revelation, sudden sight",
+        "wardrobe_context": "DIVINE",
+        "shot_type": "ACTION"
+      },
+      {
+        "image_prompt": "[POWER-LOOM] Recoiling in utter terror and awe, Dhritarashtra, colossal towering muscled frame, white hair and beard dishevelled, ivory-white silks, his mouth open in a silent, horrified scream, body trembling, kneeling beneath the overwhelming presence of Krishna's Vishwaroop, which looms grandly above, a soft, radiant glow from Krishna, jewel-toned palette, soft cinematic lighting, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text.",
+        "anchor_phrase": "चीख उठते हैं",
+        "mood": "terror, overwhelming awe",
+        "wardrobe_context": "DIVINE",
+        "shot_type": "ACTION"
+      },
+      {
+        "image_prompt": "Flickering peacefully, a lone diya in a vast, empty palace court, its gentle light casting long shadows, the marble floor reflecting the fading dusk outside, a silhouette of a single figure (Dhritarashtra or a penitent courtier) in the distance, hands folded in quiet reverence, after the overwhelming divine manifestation, jewel-toned palette, soft cinematic lighting, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text.",
+        "anchor_phrase": "अद्भुत महिमा",
+        "mood": "peaceful reverence, quiet awe",
+        "wardrobe_context": "AFTERMATH",
+        "shot_type": "ENVIRONMENT"
+      }
+    ],
+    "title": "कृष्ण की असली महिमा | Krishna's Real Glory",
+    "hook_title": "कृष्ण की महिमा",
+    "description": "जब शांति की सारी उम्मीदें टूट गईं और अहंकार ने सत्य को झुठलाना चाहा, तब कुरु सभा में एक अविस्मरणीय घटना घटी। श्री कृष्ण ने अपना विराट लौकिक स्वरूप प्रकट किया, जो करोड़ों सूर्यों की तेजस्विता से भी अधिक देदीप्यमान था। इस क्षणिक दर्शन ने न केवल धृतराष्ट्र को दिव्य दृष्टि दी, बल्कि पूरे दरबार को भय और अचंभे से थर्रा दिया। यह केवल शक्ति प्रदर्शन नहीं था, बल्कि एक चेतावनी थी, एक सत्य का आह्वान था, कि घमंड के पर्दे कितनी भी गहरे क्यों न हों, दिव्य प्रकाश उन्हें भेद ही देता है। यह उस क्षण की कहानी है जब ब्रह्मांड स्वयं एक गवाह बन गया।\n#Shorts #Mahabharata #महाभारत #Krishna #HinduMythology #PauranikKatha #MythologyShorts #HindiShorts",
+    "tags": [
+      "Krishna Vishwaroop",
+      "Cosmic form",
+      "Duryodhana",
+      "दुर्योधन",
+      "Krishna",
+      "कृष्ण",
+      "Mahabharata",
+      "महाभारत",
+      "Shorts",
+      "Hindu mythology"
+    ],
+    "thumbnail_prompt": "Dramatic cinematic portrait, Krishna's Vishwaroop, emanating overwhelming golden light, eyes blazing with cosmic energy, countless forms and weapons subtly visible within, a single tear of awe on Dhritarashtra's face reflected, opulent palace court in awe-struck shadows, vibrant jewel-toned palette, soft cinematic lighting.",
+    "quotable_line": "घमंड ने आँखें बंद कीं, पर महिमा का सच प्रकट होना ही था।",
+    "pinned_question": "❓ घमंड ने आँखें बंद कीं, पर महिमा का सच प्रकट होना ही था। क्या ऐसी महिमा सच में अहंकार तोड़ पाती है?",
+    "next_seed": "यही विराट दर्शन युद्ध की क्रूरता का पहला अध्याय था।",
+    "language": "hi",
+    "content_type": "story",
+    "topic": "Krishna's Vishwaroop in the Kuru court — when peace talks failed, the cosmic form blazing like a thousand suns that made the blind king's court fall to its knees in awe",
+    "series": "mahabharata",
+    "episode_n": 0,
+    "arc_character_devanagari": "",
+    "arc_character_english": "devotional",
+    "_phase18_strict_pass": false,
+    "_phase18_score": 17,
+    "_phase18_score_max": 25,
+    "_phase18_score_floor": 19,
+    "_phase18_violation": "hook",
+    "_phase18_failing_gates": [
+      "archetype",
+      "bookend",
+      "char_names",
+      "engagement",
+      "hook",
+      "intensity",
+      "shock_action",
+      "subject_lock"
+    ],
+    "_phase18_fatal_failures": []
+  }
+}
