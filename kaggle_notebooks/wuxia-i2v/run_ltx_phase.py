@@ -172,8 +172,13 @@ def main():
                 .convert("RGB")
                 .resize((W, H), Image.BICUBIC)
             )
+            # Per-entry overrides (fall back to global) — lets one kernel run a
+            # PARAM SWEEP over the same seed for motion-quality iteration.
+            e_nf = int(entry.get("num_frames", NF))
+            e_steps = int(entry.get("num_steps", STEPS))
+            e_g = float(entry.get("guidance", G))
             gen = torch.Generator("cuda").manual_seed(master_seed + idx)
-            print(f"[{idx}] render {W}x{H} {NF}f {STEPS}steps g{G} -> {out_path}", flush=True)
+            print(f"[{idx}] render {W}x{H} {e_nf}f {e_steps}steps g{e_g} -> {out_path}", flush=True)
             t0 = time.time()
             vid = pipe(
                 prompt=entry.get("prompt", ""),
@@ -181,9 +186,9 @@ def main():
                 image=cond,
                 width=W,
                 height=H,
-                num_frames=NF,
-                num_inference_steps=STEPS,
-                guidance_scale=G,
+                num_frames=e_nf,
+                num_inference_steps=e_steps,
+                guidance_scale=e_g,
                 generator=gen,
                 output_type="np",
             ).frames[0]

@@ -205,8 +205,9 @@ async def render(script: dict, lang: str, run_id: str, no_motion: bool) -> str:
         ck.save_file(out_key, output_path)
         final_mp4 = output_path
 
-    # ── Step 5b: burn Hindi subtitles (Groq-free, dual-script, scene-synced) ─
-    if not ck.has(f"subbed_{lang}.done"):
+    # ── Step 5b: burn Hindi subtitles — DISABLED for now (user request while we
+    # focus on perfecting Kaggle motion). Re-enable with WUXIA_BURN_SUBS=1.
+    if os.environ.get("WUXIA_BURN_SUBS", "0").strip() == "1" and not ck.has(f"subbed_{lang}.done"):
         try:
             from pipeline.wuxia_subtitles import burn_wuxia_subtitles
             print(f"[subs:{lang}] burning subtitles (script-synced, dual-script)...")
@@ -214,6 +215,8 @@ async def render(script: dict, lang: str, run_id: str, no_motion: bool) -> str:
                 ck.mark_done(f"subbed_{lang}.done")
         except Exception as e:
             print(f"[subs] skipped (non-fatal): {e}")
+    else:
+        print("[subs] subtitle cards disabled (WUXIA_BURN_SUBS!=1)")
 
     print(f"[done] episode -> {final_mp4}")
 
