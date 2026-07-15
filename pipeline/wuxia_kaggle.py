@@ -21,12 +21,15 @@ from __future__ import annotations
 import asyncio
 import base64
 import json
+import re
+import subprocess
 from pathlib import Path
 from typing import Any
 
 from pipeline.kaggle_client import (  # reuse verbatim
     KaggleClientError,
     _PUSH_TIMEOUT_S,
+    _kaggle_env,
     _make_code_cell,
     _parse_version_from_push_stdout,
     _run_kaggle_cli,
@@ -41,7 +44,105 @@ __all__ = [
     "download_output",
     "is_p100_failure",
     "KaggleClientError",
+    "poll_kernel_as",
+    "download_output_as",
 ]
+
+
+# ── Multi-account support (Phase 3: 3 accounts x 2 kernels = 6 GPU slots) ──────
+# The kaggle CLI resolves creds from KAGGLE_USERNAME/KAGGLE_KEY env vars FIRST
+# (they beat KAGGLE_CONFIG_DIR's kaggle.json). Each CLI call is its own
+# subprocess, so overlaying creds into the CHILD env — never os.environ — lets
+# concurrent per-account calls run without racing each other. These are forks of
+# kaggle_client's internals (that module is shared with Mahabharata: no edits).
+
+def _acct_env_overlay(creds_json: str | None) -> dict[str, str]:
+    """{KAGGLE_USERNAME, KAGGLE_KEY} for a kaggle.json-style file; {} = ambient
+    default account (repo-root kaggle.json via KAGGLE_CONFIG_DIR)."""
+    if not creds_json:
+        return {}
+    d = json.loads(Path(creds_json).read_text(encoding="utf-8"))
+    return {"KAGGLE_USERNAME": d["username"], "KAGGLE_KEY": d["key"]}
+
+
+def _run_cli_as(creds_json: str | None, args: list[str], *, timeout_s: int
+                ) -> subprocess.CompletedProcess:
+    """Account-aware fork of kaggle_client._run_kaggle_cli (same semantics)."""
+    env = _kaggle_env()
+    env.update(_acct_env_overlay(creds_json))
+    cmd = ["kaggle"] + args
+    try:
+        result = subprocess.run(
+            cmd, env=env, capture_output=True, text=True,
+            encoding="utf-8", errors="replace", timeout=timeout_s, check=False,
+        )
+    except subprocess.TimeoutExpired as e:
+        raise KaggleClientError(f"kaggle CLI timed out after {timeout_s}s: {' '.join(cmd)}") from e
+    except FileNotFoundError as e:
+        raise KaggleClientError("kaggle CLI not on PATH. `pip install kaggle>=1.6.0`.") from e
+    if result.returncode != 0:
+        raise KaggleClientError(
+            f"kaggle CLI returned exit {result.returncode}: {' '.join(cmd)}\n"
+            f"stderr: {result.stderr.strip()[:600]}"
+        )
+    return result
+
+
+async def poll_kernel_as(kernel_ref: str, creds_json: str | None, *,
+                         poll_interval_s: int = 60, timeout_s: int = 7200) -> dict:
+    """Account-aware fork of kaggle_client.poll_kernel: prints on status change,
+    tolerates up to 5 consecutive transient CLI errors, never re-pushes."""
+    deadline = asyncio.get_event_loop().time() + timeout_s
+    last_status, polls, errs = "unknown", 0, 0
+    while True:
+        polls += 1
+        try:
+            result = await asyncio.to_thread(
+                _run_cli_as, creds_json, ["kernels", "status", kernel_ref], timeout_s=30)
+            errs = 0
+        except KaggleClientError as e:
+            errs += 1
+            print(f"    [kaggle] poll #{polls}: CLI error ({str(e)[:120]}) "
+                  f"— consecutive #{errs}/5, retrying poll", flush=True)
+            if errs >= 5:
+                raise
+            if asyncio.get_event_loop().time() + poll_interval_s > deadline:
+                raise KaggleClientError(
+                    f"kernel {kernel_ref} poll exhausted timeout during CLI-error recovery") from e
+            await asyncio.sleep(poll_interval_s)
+            continue
+        m = re.search(r'status\s+"?(?:KernelWorkerStatus\.)?([a-zA-Z_]+)"?', result.stdout)
+        status = m.group(1).lower() if m else "unknown"
+        if status != last_status:
+            print(f"    [kaggle] poll #{polls}: status={status} ({kernel_ref})", flush=True)
+            last_status = status
+        if status in ("complete", "error", "cancelled", "failed"):
+            return {"status": status, "message": result.stdout.strip()}
+        if asyncio.get_event_loop().time() + poll_interval_s > deadline:
+            raise KaggleClientError(
+                f"kernel {kernel_ref} did not complete within {timeout_s}s "
+                f"(last status: {status}).")
+        await asyncio.sleep(poll_interval_s)
+
+
+async def download_output_as(kernel_ref: str, target_dir: Path,
+                             creds_json: str | None) -> list[Path]:
+    """Account-aware fork of kaggle_client.download_output (same crash-tolerant
+    semantics: non-zero CLI exit is OK iff target files actually landed)."""
+    target_dir = Path(target_dir)
+    target_dir.mkdir(parents=True, exist_ok=True)
+    args = ["kernels", "output", kernel_ref, "-p", str(target_dir), "--force"]
+    try:
+        await asyncio.to_thread(_run_cli_as, creds_json, args, timeout_s=600)
+    except KaggleClientError as e:
+        landed = [p for p in target_dir.iterdir()
+                  if p.is_file() and p.suffix.lower() in (".jpg", ".jpeg", ".png", ".mp4")]
+        if not landed:
+            raise
+        print(f"    [kaggle] download CLI non-zero ({str(e)[:120]}) but "
+              f"{len(landed)} file(s) landed — treating as success", flush=True)
+    return sorted(p for p in target_dir.iterdir()
+                  if p.is_file() and p.suffix.lower() in (".jpg", ".jpeg", ".png", ".mp4"))
 
 
 def _build_wuxia_notebook(run_config: dict[str, Any], ltx_script: str) -> dict[str, Any]:
@@ -118,15 +219,21 @@ def _build_wuxia_notebook(run_config: dict[str, Any], ltx_script: str) -> dict[s
     }
 
 
-async def push_wuxia_kernel(kernel_dir: Path, run_config: dict[str, Any]) -> int:
+async def push_wuxia_kernel(kernel_dir: Path, run_config: dict[str, Any],
+                            creds_json: str | None = None) -> int:
     """Build a self-contained notebook.ipynb (run_config + run_ltx_phase.py inlined
     as base64) into kernel_dir, then `kaggle kernels push -p kernel_dir`.
+
+    creds_json selects the Kaggle ACCOUNT to push as (kaggle.json-style file);
+    None = ambient default account. The kernel-metadata.json `id` inside
+    kernel_dir must belong to that account.
 
     Returns the new kernel version number (0 if the CLI didn't print one).
     Raises KaggleClientError on push failure/timeout.
 
-    Concurrency: caller MUST serialize (writing notebook.ipynb is not atomic with
-    the push). See pipeline/wuxia_motion.py's asyncio.Lock.
+    Concurrency: caller MUST serialize pushes to the SAME kernel_dir (writing
+    notebook.ipynb is not atomic with the push). Different kernel_dirs are safe
+    concurrently. See pipeline/wuxia_motion.py's asyncio.Lock.
     """
     kernel_dir = Path(kernel_dir)
     if not (kernel_dir / "kernel-metadata.json").exists():
@@ -142,7 +249,8 @@ async def push_wuxia_kernel(kernel_dir: Path, run_config: dict[str, Any]) -> int
     )
 
     result = await asyncio.to_thread(
-        _run_kaggle_cli,
+        _run_cli_as,
+        creds_json,
         ["kernels", "push", "-p", str(kernel_dir)],
         timeout_s=_PUSH_TIMEOUT_S,
     )

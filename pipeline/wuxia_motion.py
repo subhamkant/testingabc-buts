@@ -44,20 +44,63 @@ from PIL import Image
 from pipeline.image_generator import _stable_master_seed
 from pipeline.wuxia_kaggle import (
     KaggleClientError,
-    download_output,
+    download_output_as,
     is_p100_failure,
-    poll_kernel,
+    poll_kernel_as,
     push_wuxia_kernel,
 )
 
 _NB_ROOT = Path(__file__).resolve().parent.parent / "kaggle_notebooks"
 
-# Two kernel slugs for Kaggle's 2-concurrent-GPU-kernel limit. Override the base
-# refs via env if needed; the "-2" slug is derived from the first.
-_KERNELS = [
-    (os.environ.get("WUXIA_KAGGLE_KERNEL_REF", "subhamkant11/wuxia-i2v"), _NB_ROOT / "wuxia-i2v"),
-    (os.environ.get("WUXIA_KAGGLE_KERNEL_REF_2", "subhamkant11/wuxia-i2v-2"), _NB_ROOT / "wuxia-i2v-2"),
-]
+# ── 6-slot kernel pool: 3 accounts x 2 concurrent kernels (Kaggle's per-account
+# cap). Each entry = (slug, kernel_dir, creds_json|None); creds None = ambient
+# default account (repo-root kaggle.json = subhamkant11). Fresh accounts need
+# PHONE VERIFICATION on kaggle.com before their kernels get GPU/internet.
+# WUXIA_KERNEL_POOL selects accounts (csv of main,sk9,vyasa; default all);
+# accounts whose creds file is missing are skipped. WUXIA_MAX_KERNELS caps slots.
+_REPO_ROOT = _NB_ROOT.parent
+
+
+def _build_pool() -> list:
+    acct_defs = [
+        ("main", None, [
+            (os.environ.get("WUXIA_KAGGLE_KERNEL_REF", "subhamkant11/wuxia-i2v"), _NB_ROOT / "wuxia-i2v"),
+            (os.environ.get("WUXIA_KAGGLE_KERNEL_REF_2", "subhamkant11/wuxia-i2v-2"), _NB_ROOT / "wuxia-i2v-2"),
+        ]),
+        ("sk9", str(_REPO_ROOT / "sk9_kaggle.json"), [
+            ("subhamkant9/wuxia-i2v", _NB_ROOT / "wuxia-i2v-sk9"),
+            ("subhamkant9/wuxia-i2v-2", _NB_ROOT / "wuxia-i2v-sk9-2"),
+        ]),
+        ("vyasa", str(_REPO_ROOT / "vyasa_ai_kaggle.json"), [
+            ("vyasaai/wuxia-i2v", _NB_ROOT / "wuxia-i2v-vyasa"),
+            ("vyasaai/wuxia-i2v-2", _NB_ROOT / "wuxia-i2v-vyasa-2"),
+        ]),
+    ]
+    want = [a.strip() for a in os.environ.get(
+        "WUXIA_KERNEL_POOL", "main,sk9,vyasa").split(",") if a.strip()]
+    canonical = _NB_ROOT / "wuxia-i2v" / "run_ltx_phase.py"
+    pool = []
+    for name, creds, kernels in acct_defs:
+        if name not in want:
+            continue
+        if creds and not os.path.exists(creds):
+            continue  # account not configured on this machine
+        for slug, kdir in kernels:
+            if not kdir.exists():
+                continue
+            # Anti-drift: every pool dir runs the CANONICAL kernel script.
+            try:
+                script = canonical.read_text(encoding="utf-8")
+                target = kdir / "run_ltx_phase.py"
+                if not target.exists() or target.read_text(encoding="utf-8") != script:
+                    target.write_text(script, encoding="utf-8")
+            except OSError:
+                pass
+            pool.append((slug, kdir, creds))
+    return pool
+
+
+_KERNELS = _build_pool()
 
 _LTX_W, _LTX_H = 1152, 640
 
@@ -107,29 +150,60 @@ def _seed_b64(still_path: str) -> str:
     return base64.b64encode(buf.getvalue()).decode("ascii")
 
 
-# RESTING-LIMB + ENVIRONMENTAL-KINETICS motion prompt. LTX-2B on a free T4 CANNOT
+# RESTING-LIMB + ENVIRONMENTAL-KINETICS motion prompts. LTX-2B on a free T4 CANNOT
 # compute articulated limb motion (arm/broom swings) — it loses spatial tracking
 # and the face/body MELT into a smeared blur by ~2s. So the LTX prompt DELIBERATELY
-# ignores the scene's action verb and instead freezes the body while animating only
-# the environment (wind/robes/hair/dust/aura + a slow camera), which LTX renders
-# cleanly with stable geometry. The still (I2V seed) still carries the pose/content.
-# Override per-scene by adding a "motion_prompt" to the scene; global via env.
-_MOTION_PROMPT = os.environ.get("WUXIA_MOTION_PROMPT") or (
-    "Cinematic 3D donghua. The character holds a completely FROZEN, still, powerful "
-    "stance — body, arms, hands and face perfectly motionless, no re-posing, no limb "
-    "movement. ONLY the environment is animated: long robes and hair billow and "
-    "flutter in the wind, dust and glowing embers drift and swirl, a faint shimmering "
-    "energy aura, and a slow smooth cinematic camera push-in. stable geometry, crisp, "
-    "no warping, no morphing, face perfectly stable."
+# ignores the scene's action verb and freezes the body while animating only the
+# environment. Validated on the 2026-07-15 sk9 motion lab (5 styles, zero smear)
+# and locked by the user as the "C + D hybrid rotation":
+#   CINEMATIC (Style C, default ~70%): slow camera orbit + drifting mist/parallax —
+#     makes stills read as 3D-CGI renders in dialogue/scenic beats.
+#   IMPACT (Style D, ~30% high-impact beats): wind + embers + golden aura + dramatic
+#     push-in — for power-ups, standoffs, techniques, climaxes.
+# Per-scene override via a "motion_prompt" field; WUXIA_MOTION_PROMPT overrides ALL.
+_NB_FREEZE = (
+    "IMPORTANT: the character's body, arms, hands and pose stay COMPLETELY STILL "
+    "and frozen — no limb movement, no re-posing, no swinging, face perfectly stable."
 )
+_MOTION_CINEMATIC = os.environ.get("WUXIA_MOTION_CINEMATIC") or (
+    f"Cinematic 3D donghua. The character stands motionless like a statue. {_NB_FREEZE} "
+    "The camera slowly orbits around him with gentle parallax, atmospheric mist and "
+    "haze drift across the scene, soft shifting sunlight rays, dust motes float. ONLY "
+    "the camera and atmosphere move. stable geometry, crisp, highly detailed face, "
+    "no warping, no morphing."
+)
+_MOTION_IMPACT = os.environ.get("WUXIA_MOTION_IMPACT") or (
+    f"Cinematic 3D donghua. The character is frozen in a still powerful stance. {_NB_FREEZE} "
+    "Black robes and hair whip in the wind, swirling dust and glowing embers drift, a "
+    "faint golden energy aura shimmers around him, slow dramatic camera push-in. "
+    "stable geometry, crisp, highly detailed face, no warping, no morphing."
+)
+
+# High-impact classifier: if the shot's IMAGE prompt (which describes the beat)
+# carries energy/combat/supernatural cues, use IMPACT; else CINEMATIC.
+_IMPACT_RE = re.compile(
+    r"\b(aura|energy|qi\b|glow|lightning|flame|fire|ember|explod|erupt|surge|"
+    r"skelet|spirit|vortex|power|battle|fight|duel|strike|attack|clash|punch|"
+    r"kick|technique|breakthrough|rage|furious|storm)\w*",
+    re.IGNORECASE,
+)
+
+
+def _pick_motion_prompt(entry: dict) -> str:
+    override = os.environ.get("WUXIA_MOTION_PROMPT", "").strip()
+    if override:
+        return override
+    if entry.get("motion_prompt"):  # explicit per-scene override
+        return entry["motion_prompt"]
+    return _MOTION_IMPACT if _IMPACT_RE.search(entry.get("prompt", "") or "") else _MOTION_CINEMATIC
 
 
 def _build_run_config(run_id: str, group: list) -> dict:
     hero = [{
         "idx": e["idx"], "scene_idx": e["scene_idx"], "shot_idx": e["shot_idx"],
-        # Use an environmental-kinetics motion prompt (NOT the scene's action verb)
+        # C+D hybrid environmental-kinetics prompt (NOT the scene's action verb)
         # to avoid the articulated-limb smear/collapse on the free T4.
-        "prompt": e.get("motion_prompt") or _MOTION_PROMPT,
+        "prompt": _pick_motion_prompt(e),
         "image_b64": _seed_b64(e["still_path"]),
     } for e in group]
     return {
@@ -166,8 +240,12 @@ def _merge_clips_into_stills(still_groups: list, ck) -> list:
 
 
 async def _kernel_task(ck, i: int, slug: str, kernel_dir: Path, run_config: dict,
-                       max_p100: int) -> None:
-    """Push (if needed) -> poll -> download for ONE kernel. Own checkpoint keys."""
+                       max_p100: int, creds_json: str | None = None,
+                       stagger_s: int = 0) -> None:
+    """Push (if needed) -> poll -> download for ONE kernel. Own checkpoint keys.
+    creds_json selects the Kaggle account (None = ambient default). stagger_s
+    delays the FIRST push only (not resume) so multi-account pushes don't land
+    on Kaggle's API at the same instant."""
     done_key = f"motion_kernel_{i}.done"
     if ck.has(done_key):
         print(f"    [wuxia-motion] kernel {i} ({slug}) already done — skip", flush=True)
@@ -175,7 +253,9 @@ async def _kernel_task(ck, i: int, slug: str, kernel_dir: Path, run_config: dict
 
     state_key = f"motion_kernel_{i}.json"
     if not ck.has(state_key):
-        version = await push_wuxia_kernel(Path(kernel_dir), run_config)
+        if stagger_s:
+            await asyncio.sleep(stagger_s)
+        version = await push_wuxia_kernel(Path(kernel_dir), run_config, creds_json=creds_json)
         ck.save_json(state_key, {"slug": slug, "version": version, "attempt": 1})
         print(f"    [wuxia-motion] kernel {i} submitted {slug} v{version} "
               f"({len(run_config['hero_motion'])} clips)", flush=True)
@@ -193,16 +273,18 @@ async def _kernel_task(ck, i: int, slug: str, kernel_dir: Path, run_config: dict
     target.mkdir(parents=True, exist_ok=True)
 
     while True:
-        res = await poll_kernel(slug, poll_interval_s=poll_interval, timeout_s=poll_timeout)
+        res = await poll_kernel_as(slug, creds_json,
+                                   poll_interval_s=poll_interval, timeout_s=poll_timeout)
         if res["status"] == "complete":
-            await download_output(slug, target)
+            await download_output_as(slug, target, creds_json)
             ck.mark_done(done_key)
             print(f"    [wuxia-motion] kernel {i} ({slug}) complete + downloaded", flush=True)
             return
         meta = ck.load_json(state_key)
         attempt = int(meta.get("attempt", 1))
-        if await is_p100_failure(slug) and attempt < max_p100:
-            version = await push_wuxia_kernel(Path(kernel_dir), run_config)
+        # P100 log-check uses ambient creds — only meaningful for the main account.
+        if creds_json is None and await is_p100_failure(slug) and attempt < max_p100:
+            version = await push_wuxia_kernel(Path(kernel_dir), run_config, creds_json=creds_json)
             attempt += 1
             ck.save_json(state_key, {"slug": slug, "version": version, "attempt": attempt})
             print(f"    [wuxia-motion] kernel {i} P100 draw — re-pushed (attempt {attempt})",
@@ -245,9 +327,12 @@ async def run_motion(ck, run_id: str, scenes: list, still_groups: list,
         for i in range(n_kernels):
             if not groups[i]:
                 continue
-            slug, kdir = _KERNELS[i]
+            slug, kdir, creds = _KERNELS[i]
             rc = _build_run_config(run_id, groups[i])
-            tasks.append(_kernel_task(ck, i, slug, kdir, rc, max_p100_retries))
+            # Stagger first-pushes ~40s apart so multi-account pushes don't hit
+            # Kaggle's API simultaneously (resume polls are not delayed).
+            tasks.append(_kernel_task(ck, i, slug, kdir, rc, max_p100_retries,
+                                      creds_json=creds, stagger_s=i * 40))
 
         await asyncio.gather(*tasks)  # raises on any kernel failure -> retry resumes
 
