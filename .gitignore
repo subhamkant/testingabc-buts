@@ -100,3 +100,9 @@ assets/upscaler/
 
 # Copyrighted source novel text — never commit to public repo
 source_chapters/*.txt
+
+# Kaggle account credentials (multi-account pool) — NEVER commit
+kaggle.json
+kaggle_*.json
+sk9_kaggle.json
+vyasa_ai_kaggle.json
