@@ -19,6 +19,9 @@ import json
 import os
 import re
 import tempfile
+from io import BytesIO
+
+from PIL import Image
 
 from pipeline.image_generator import _gen_cloudflare, _stable_master_seed
 from pipeline.longform_assembler import rewrite_prompt_to_landscape
@@ -120,6 +123,26 @@ def _sanitize(prompt: str) -> str:
     return out
 
 
+def _strip_watermark(raw: bytes) -> bytes:
+    """Crop off FLUX's hallucinated corner seals/calligraphy, then scale back to
+    full size. FLUX-schnell IGNORES negative prompts (guidance-distilled), and
+    3D-donghua-style prompts strongly associate with real donghua frames carrying
+    studio watermarks — so some stills render a fake corner seal no matter what.
+    The seals live in the top ~15% corners; cropping top 16% / sides 8% / bottom
+    2% removes them (validated on the 2026-07-15 motion lab: cropped seeds came
+    out clean in stills AND the motion clips conditioned on them). Costs a slight
+    punch-in, which reads as cinematic framing. Gate: WUXIA_STRIP_WATERMARK=0."""
+    if os.environ.get("WUXIA_STRIP_WATERMARK", "1").strip() == "0":
+        return raw
+    img = Image.open(BytesIO(raw)).convert("RGB")
+    w, h = img.size
+    img = img.crop((int(w * 0.08), int(h * 0.16), int(w * 0.92), int(h * 0.98)))
+    img = img.resize((w, h), Image.LANCZOS)
+    buf = BytesIO()
+    img.save(buf, format="JPEG", quality=92)
+    return buf.getvalue()
+
+
 def _gen_still_resilient(shot: dict, seed: int) -> bytes:
     """CF still with graceful NSFW degradation: original prompt -> sanitized ->
     generic safe fallback. Raises only if even the safe fallback exhausts (i.e.
@@ -164,7 +187,7 @@ def generate_wuxia_stills(scenes: list, ck, run_id: str, style_anchor: str | Non
                 continue
 
             seed = (master + i * 100 + j) % (2**31 - 1)
-            raw = _gen_still_resilient(shot, seed)
+            raw = _strip_watermark(_gen_still_resilient(shot, seed))
 
             # _gen_cloudflare returns raw image bytes; write to a temp then
             # atomic-copy into the checkpoint (reuses ck.save_file's tmp+rename).
