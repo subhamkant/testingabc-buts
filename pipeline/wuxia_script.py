@@ -143,6 +143,7 @@ STRICT RULES:
 - Keep each narration tight but DRAMATIC — this is an addictive, cliffhanger-driven saga, not a rushed summary. End suspenseful beats on a hook.
 - In the "prompt", when a spirit / beast / legacy / inner-power manifests from an object or the body, describe it as ONE SINGLE entity ("a single colossal golden skeleton", "one lone figure") — never a group or duplicates.
 - The visual style is 3D cinematic donghua CGI realism (added automatically) — write prompts describing realistic lighting, texture, and physical detail, NOT flat/cartoon/2D.
+- COMBAT / CONFRONTATION / DIALOGUE-BETWEEN-CHARACTERS beats: the "prompt" MUST be a TWO-SHOT (or group shot) with ALL involved characters named and FULLY VISIBLE in one frame, using EXPLICIT left/right spatial tokens — say which character is "on the left side" and which is "on the right side", with clear space between them, and who does what to whom (e.g. "wide two-shot: on the left side Yang Kai twists aside mid-dodge; on the right side Ding Jun throws a heavy forward punch; clear spatial distance between the two fighters"). NEVER a solo close-up for a fight beat, never let positioning be implicit.
 {cont}
 SOURCE TEXT (part {seg_idx + 1}/{n_segments}):
 \"\"\"

@@ -4,19 +4,34 @@
   "_global_negative": "2D, flat cartoon, anime cel-shaded, flat coloring, comic book, chibi, toddler, child proportions, cute, watermark, text, chinese characters, japanese text, calligraphy, logo, emblem, seal, stamp, signature, username, subtitle, caption, title card, engraved text on rocks, poster text, blurry, low quality, deformed hands, extra fingers, jpeg artifacts, oversaturated, portrait, vertical crop",
   "characters": {
     "yang_kai": {
-      "aliases": ["yang kai", "yangkai"],
+      "aliases": [
+        "yang kai",
+        "yangkai"
+      ],
       "master_token": "Yang Kai, a mature and handsome 16-year-old male martial artist, short black hair tied in a neat topknot, sharp defined jawline, intense determined dark eyes, clean-shaven, wearing simple dark grey training robes with subtle gold embroidery trim, lean athletic build, realistic 3D donghua CGI character, consistent facial structure",
-      "negative_token": "beard, mustache, facial hair, old man, elderly, grey hair, chibi, toddler, changing face, different person, western armor"
+      "negative_token": "beard, mustache, facial hair, old man, elderly, grey hair, chibi, toddler, changing face, different person, western armor",
+      "compact_token": "Yang Kai: lean 16-year-old martial artist, black topknot, sharp jawline, simple dark grey robes with gold trim"
     },
     "ding_jun": {
-      "aliases": ["ding jun", "dingjun"],
+      "aliases": [
+        "ding jun",
+        "dingjun"
+      ],
       "master_token": "Ding Jun, a cocky chubby-faced young male sect disciple around 17, round face, smug arrogant expression, short dark hair, wearing clean sect disciple robes, realistic 3D donghua CGI character",
-      "negative_token": "old man, elderly, beard, slim gaunt face, chibi, changing face"
+      "negative_token": "old man, elderly, beard, slim gaunt face, chibi, changing face",
+      "compact_token": "Ding Jun: chubby round-faced smug young disciple in tan sect robes"
     },
     "disciple": {
-      "aliases": ["disciples", "trial disciple", "sect disciple", "crowd"],
+      "aliases": [
+        "disciples",
+        "trial disciple",
+        "sect disciple",
+        "crowd"
+      ],
       "master_token": "young male and female sect disciples in matching cultivation robes, teenagers to young adults, varied faces, realistic 3D donghua CGI",
-      "negative_token": "old people, elderly crowd, chibi, modern clothing"
+      "negative_token": "old people, elderly crowd, chibi, modern clothing",
+      "compact_token": "young sect disciples in matching grey cultivation robes"
     }
-  }
+  },
+  "_comment_compact": "compact_token = short identity descriptor used INSTEAD of master_token when 2+ registry characters appear in one shot — two full tokens + style lock would exceed FLUX's ~1000-char effective window (prompt-budget amputation)."
 }

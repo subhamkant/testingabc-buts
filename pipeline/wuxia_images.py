@@ -61,35 +61,62 @@ _WUXIA_NEG = _REG.get("_global_negative") or (
     "hands, extra fingers, portrait, vertical crop"
 )
 
-# Precompiled character matchers: (alias_regex, master_token, negative_token)
+# Precompiled character matchers: (alias_regex, master_token, compact_token, negative_token)
 _CHARS = []
 for _key, _c in (_REG.get("characters") or {}).items():
     _aliases = [_key.replace("_", " ")] + list(_c.get("aliases") or [])
     _pat = re.compile(r"\b(" + "|".join(re.escape(a) for a in _aliases) + r")\b", re.IGNORECASE)
-    _CHARS.append((_pat, _c.get("master_token", ""), _c.get("negative_token", "")))
+    _CHARS.append((_pat, _c.get("master_token", ""),
+                   _c.get("compact_token") or _c.get("master_token", ""),
+                   _c.get("negative_token", "")))
+
+# Multi-character shots: prevent the classic two-character failure modes —
+# identity bleed (both get the same face) and body fusion. Injected ONLY when
+# 2+ registry characters are matched in one shot.
+_MULTI_SCAFFOLD = (
+    "wide two-shot composition, the characters clearly separated with visible "
+    "space between them, each with a DISTINCT face and outfit"
+)
+_MULTI_NEG = (
+    "fused characters, merged bodies, conjoined bodies, merged clothing, shared "
+    "face, identical faces, face blending, prompt bleeding, overlapping features, "
+    "extra limbs"
+)
 
 
 def _match_characters(text: str):
-    """(master_tokens, negative_tokens) for every registry character named in
-    `text`. Order-preserving + deduped."""
-    masters, negs = [], []
-    for pat, master, neg in _CHARS:
+    """(identity_tokens, negative_tokens, count) for registry characters named in
+    `text`. With 2+ matches, COMPACT tokens are used instead of full master_tokens
+    (two full tokens + style lock would blow FLUX's ~1000-char window) and the
+    caller adds the spatial scaffold + anti-fusion negatives."""
+    hits, negs = [], []
+    for pat, master, compact, neg in _CHARS:
         if pat.search(text or ""):
-            if master and master not in masters:
-                masters.append(master)
+            hits.append((master, compact))
             if neg and neg not in negs:
                 negs.append(neg)
-    return masters, negs
+    if len(hits) >= 2:
+        tokens = [c for _m, c in hits]
+    else:
+        tokens = [m for m, _c in hits]
+    return tokens, negs, len(hits)
 
 
 def _build_prompt(shot: dict, style_anchor: str | None = None):
-    """Returns (positive, negative). PREPEND the 3D style lock + any matched
-    character master_tokens (frozen identity) ahead of the scene action."""
+    """Returns (positive, negative). PREPENDS: 3D style lock + character identity
+    tokens; multi-character shots additionally get a spatial two-shot scaffold
+    (left/right separation) + anti-fusion negatives."""
     base = rewrite_prompt_to_landscape(shot.get("prompt", "") or "")
-    masters, negs = _match_characters(shot.get("prompt", "") or "")
-    head = _STYLE_LOCK + ((". " + ". ".join(masters)) if masters else "")
+    tokens, negs, n_chars = _match_characters(shot.get("prompt", "") or "")
+    head = _STYLE_LOCK
+    if n_chars >= 2:
+        head += ". " + _MULTI_SCAFFOLD
+    if tokens:
+        head += ". " + ". ".join(tokens)
     pos = f"{head}. {base}" if base else head
     neg = _WUXIA_NEG + ((", " + ", ".join(negs)) if negs else "")
+    if n_chars >= 2:
+        neg += ", " + _MULTI_NEG
     return pos, neg
 
 
