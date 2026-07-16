@@ -1,0 +1,112 @@
+{
+  "ts": "2026-07-16T05-40-48",
+  "language": "hi",
+  "score": 18,
+  "score_max": 25,
+  "violation": "verb_per_frame",
+  "topic": "The day Arjuna's chariot turned to ash — Krishna stepping down after the war, Hanuman leaving the banner, and the chariot burning to reveal who had silently absorbed every celestial weapon for eighteen days",
+  "title": "कृष्ण की असली रक्षा | Krishna's Real Protection",
+  "script": {
+    "voiceover": "कृष्ण की दिव्य रक्षा से अर्जुन का रथ धुआँ उगल रहा है, युद्ध समाप्त हो चुका है। कृष्ण धीरे से नीचे उतरते हैं, 'अर्जुन, तुम भी उतर जाओ!' हनुमान भी ध्वजदंड से विदा लेते हैं। लेकिन जैसे ही अर्जुन ने पैर धरती पर रखा, रथ एक ही क्षण में जलकर राख हो गया। अठारह दिन तक जो रथ ब्रह्मास्त्रों की मार झेलता रहा, जो सैकड़ों दिव्यास्त्रों से छलनी था, वह अब स्वयं को प्रकट करता है। कृष्ण मुस्कुराते हैं, 'अर्जुन, यह रथ और हनुमान तुम्हारे लिए मेरी दिव्य रक्षा थे। उन्होंने ही सारे वार सहे!' क्या ऐसी अदृश्य रक्षा के बिना कोई भी युद्ध जीत पाता?",
+    "broll": [
+      {
+        "image_prompt": "Extreme macro close-up of a burning chariot wheel, spokes cracked and smoldering, wisps of ash-filled smoke rising, set against a desolate, dust-choked Kurukshetra battlefield, jewel-toned palette, soft cinematic lighting, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text.",
+        "anchor_phrase": "अर्जुन का रथ",
+        "mood": "Burning destruction revelation",
+        "wardrobe_context": "WAR",
+        "shot_type": "AMBIGUOUS"
+      },
+      {
+        "image_prompt": "Wide cinematic shot of the devastated Kurukshetra battlefield, broken weapons and debris scattered, Krishna gracefully descending from the golden war chariot, his golden-yellow pitambara silk billowing slightly, luminous monsoon-cloud blue skin, dark curls with peacock feather, crimson sash, layered gold necklaces, divine charioteer, jewel-toned palette, soft cinematic lighting, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text.",
+        "anchor_phrase": "कृष्ण धीरे से",
+        "mood": "Divine serenity descending",
+        "wardrobe_context": "WAR",
+        "shot_type": "ENVIRONMENT"
+      },
+      {
+        "image_prompt": "Sweeping shot of the war chariot's golden banner pole, now empty and charred, Hanuman, in his radiant divine form, rising with powerful wings from the top of the pole, a blinding golden aura blazing around him, colossal powerful monkey god, golden fur, mighty tail, jewel-toned palette, soft cinematic lighting, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text.",
+        "anchor_phrase": "हनुमान भी ध्वजदंड",
+        "mood": "Majestic divine departure",
+        "wardrobe_context": "DIVINE",
+        "shot_type": "AMBIGUOUS"
+      },
+      {
+        "image_prompt": "[OVER-SHOULDER] Sweeping shot of the devastated Kurukshetra battlefield, broken weapons and debris scattered, Krishna standing in the foreground, his back to the viewer, observing Arjuna's jeweled golden anklet-clad foot gingerly touching the scorched, dust-laden earth next to the smoldering remains of his chariot, Krishna: graceful powerful divine form, luminous monsoon-cloud blue skin, golden-yellow pitambara silk. Arjuna: powerfully built athletic archer, embossed golden kavacha, jewel-toned palette, soft cinematic lighting, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text.",
+        "anchor_phrase": "अर्जुन ने पैर",
+        "mood": "Divine observation, human fragility",
+        "wardrobe_context": "WAR",
+        "shot_type": "ENVIRONMENT"
+      },
+      {
+        "image_prompt": "[CONFRONTATION-WIDE] Wide shot of the battlefield at dawn, the charred, smoldering remains of Arjuna's chariot dominating the foreground, still subtly glowing with embedded celestial weapons, Arjuna standing left-foreground, his face etched with disbelief and fatigue, while Krishna stands calmly right mid-ground, his hand gently raised, observing the scene, Arjuna: powerfully built athletic archer, jeweled golden Kirita diadem, embossed golden kavacha. Krishna: graceful powerful divine form, luminous monsoon-cloud blue skin, golden-yellow pitambara silk. jewel-toned palette, soft cinematic lighting, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text.",
+        "anchor_phrase": "रथ ब्रह्मास्त्रों की मार",
+        "mood": "Disbelief and calm revelation",
+        "wardrobe_context": "WAR",
+        "shot_type": "AMBIGUOUS"
+      },
+      {
+        "image_prompt": "Close-up of Krishna's radiant, serene face, lit by a soft divine glow, a knowing, gentle smile playing on his lips, his kohl-lined eyes holding deep wisdom, luminous monsoon-cloud blue skin, dark curls with peacock feather, jewel-toned palette, soft cinematic lighting, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text.",
+        "anchor_phrase": "कृष्ण मुस्कुराते हैं",
+        "mood": "Divine knowing smile",
+        "wardrobe_context": "DIVINE",
+        "shot_type": "AMBIGUOUS"
+      },
+      {
+        "image_prompt": "[CONFRONTATION-WIDE] Sweeping shot of the smoldering battlefield at twilight, Krishna standing left-foreground, his form glowing with divine light, looking towards a stunned, awestruck Arjuna standing right mid-ground, his face reflecting utter shock and gratitude, Krishna: graceful powerful divine form, luminous monsoon-cloud blue skin, golden-yellow pitambara silk. Arjuna: powerfully built athletic archer, jeweled golden Kirita diadem, embossed golden kavacha, jewel-toned palette, soft cinematic lighting, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text.",
+        "anchor_phrase": "दिव्य रक्षा थे",
+        "mood": "Awe-struck realization",
+        "wardrobe_context": "WAR",
+        "shot_type": "AMBIGUOUS"
+      },
+      {
+        "image_prompt": "Fading dusk over a calm sacred river, a lone radiant diya flickering on the water, reflecting the last hues of the sunset, a serene silhouette of folded hands in gratitude on the riverbank, a quiet, golden glow of divine protection and peace, jewel-toned palette, soft cinematic lighting, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text.",
+        "anchor_phrase": "अदृश्य रक्षा",
+        "mood": "Peaceful divine gratitude",
+        "wardrobe_context": "AFTERMATH",
+        "shot_type": "AMBIGUOUS"
+      }
+    ],
+    "title": "कृष्ण की असली रक्षा | Krishna's Real Protection",
+    "hook_title": "कृष्ण की रक्षा",
+    "description": "कुरुक्षेत्र में अर्जुन का रथ राख क्यों हो गया? कृष्ण की अद्भुत रक्षा का रहस्य।\n\nकुरुक्षेत्र के युद्ध की समाप्ति पर एक चौंकाने वाला रहस्य सामने आया। अर्जुन का रथ, जो अठारह दिनों तक भीषण दिव्यास्त्रों की मार झेलता रहा था, कृष्ण और हनुमान के उतरते ही जलकर राख हो गया। यह रथ स्वयं एक कवच था, जो भगवान कृष्ण की अदृश्य शक्ति और हनुमान की दिव्य ऊर्जा से अर्जुन को हर वार से बचाता रहा। कृष्ण ने अर्जुन को बताया कि कैसे इस रथ ने उसके लिए हर ब्रह्मास्त्र और हर घातक अस्त्र का आघात सहा। यह केवल युद्ध की विजय नहीं थी, यह divine protection थी जिसने अर्जुन को जीवित रखा। क्या हम अपनी सफलताओं में भी ऐसी अदृश्य शक्तियों को पहचान पाते हैं?\n\n#Shorts #Mahabharata #महाभारत #Krishna #HinduMythology #PauranikKatha #MythologyShorts #HindiShorts",
+    "tags": [
+      "Krishna's divine protection",
+      "Arjuna's chariot",
+      "Krishna",
+      "कृष्ण",
+      "Mahabharata",
+      "महाभारत",
+      "Shorts",
+      "Hindu mythology"
+    ],
+    "thumbnail_prompt": "Vertical high-contrast shot: Arjuna, awestruck, watching his war chariot erupting into blazing, magical blue-and-orange flames and ash, celestial weapons visibly embedded within the fire, Krishna standing calmly beside him with a radiant golden halo and knowing smile, the devastated Kurukshetra battlefield behind, vibrant jewel-toned palette, soft cinematic lighting, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text.",
+    "quotable_line": "हर विजय के पीछे एक अदृश्य रक्षा का बलिदान होता है।",
+    "pinned_question": "❓ हर विजय के पीछे एक अदृश्य रक्षा का बलिदान होता है। क्या आप भी ऐसी अदृश्य कृपा पर विश्वास करते हैं?",
+    "next_seed": "क्या था कर्ण का अंतिम बलिदान, जो उसे अमर कर गया?",
+    "language": "hi",
+    "content_type": "story",
+    "topic": "The day Arjuna's chariot turned to ash — Krishna stepping down after the war, Hanuman leaving the banner, and the chariot burning to reveal who had silently absorbed every celestial weapon for eighteen days",
+    "series": "mahabharata",
+    "episode_n": 0,
+    "arc_character_devanagari": "",
+    "arc_character_english": "devotional",
+    "_phase18_strict_pass": false,
+    "_phase18_score": 18,
+    "_phase18_score_max": 25,
+    "_phase18_score_floor": 19,
+    "_phase18_violation": "verb_per_frame",
+    "_phase18_failing_gates": [
+      "anti_merge_composition",
+      "char_names",
+      "engagement",
+      "shock_action",
+      "subject_diversity",
+      "subject_lock",
+      "verb_per_frame"
+    ],
+    "_phase18_fatal_failures": [
+      "anti_merge_composition",
+      "verb_per_frame"
+    ]
+  }
+}
