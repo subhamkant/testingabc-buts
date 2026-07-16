@@ -83,6 +83,17 @@ _MULTI_NEG = (
     "extra limbs"
 )
 
+# GROUP fights (a horde/mob/crowd attacking): add crowd-specific failure bans —
+# the classic collapse is every group member getting the hero's face, or the
+# group merging into a multi-limbed mass.
+_GROUP_RE = re.compile(
+    r"\b(group of|horde|mob|crowd of|surround(ed|ing)|dozens|several (disciples|"
+    r"opponents|attackers)|多)\b", re.IGNORECASE)
+_GROUP_NEG = (
+    "crowd morphing, duplicate heroes, cloned faces in crowd, hydra, "
+    "multi-headed, overlapping weapons, tangled bodies"
+)
+
 
 def _match_characters(text: str):
     """(identity_tokens, negative_tokens, count) for registry characters named in
@@ -117,6 +128,8 @@ def _build_prompt(shot: dict, style_anchor: str | None = None):
     neg = _WUXIA_NEG + ((", " + ", ".join(negs)) if negs else "")
     if n_chars >= 2:
         neg += ", " + _MULTI_NEG
+    if _GROUP_RE.search(shot.get("prompt", "") or ""):
+        neg += ", " + _GROUP_NEG
     return pos, neg
 
 

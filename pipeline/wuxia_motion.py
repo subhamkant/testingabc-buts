@@ -188,6 +188,21 @@ _IMPACT_RE = re.compile(
     re.IGNORECASE,
 )
 
+# GROUP-fight beats (a horde attacking): animate the GROUP as one kinetic force
+# advancing while the hero's body stays locked — never individual choreography
+# for 3+ characters (that's what melts).
+_GROUP_RE = re.compile(
+    r"\b(group of|horde|mob|crowd of|surround(ed|ing)|dozens|several (disciples|"
+    r"opponents|attackers))\b", re.IGNORECASE)
+_MOTION_HORDE = os.environ.get("WUXIA_MOTION_HORDE") or (
+    f"Cinematic 3D donghua. The hero holds a completely FROZEN defensive stance — "
+    f"body, arms and face perfectly still and stable. The surrounding group of "
+    f"disciples surges forward aggressively toward him AS ONE MASS, robes billowing "
+    f"violently, heavy dust clouds erupting from the ground, weapon blades glinting; "
+    f"slow cinematic camera pan. High visual tension, fluid donghua physics, stable "
+    f"geometry, no warping, no morphing, distinct crowd figures."
+)
+
 
 def _pick_motion_prompt(entry: dict) -> str:
     override = os.environ.get("WUXIA_MOTION_PROMPT", "").strip()
@@ -195,7 +210,10 @@ def _pick_motion_prompt(entry: dict) -> str:
         return override
     if entry.get("motion_prompt"):  # explicit per-scene override
         return entry["motion_prompt"]
-    return _MOTION_IMPACT if _IMPACT_RE.search(entry.get("prompt", "") or "") else _MOTION_CINEMATIC
+    text = entry.get("prompt", "") or ""
+    if _GROUP_RE.search(text):
+        return _MOTION_HORDE
+    return _MOTION_IMPACT if _IMPACT_RE.search(text) else _MOTION_CINEMATIC
 
 
 def _build_run_config(run_id: str, group: list) -> dict:
