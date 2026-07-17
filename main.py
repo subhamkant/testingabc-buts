@@ -678,6 +678,10 @@ async def run_pipeline(language: str = "en", test_mode: bool = False, test_uploa
                         _parts = _title.split("|", 1)
                         _hindi_half = _parts[0].strip()
                         _ov_text = _hindi_half
+                    else:
+                        # 2026-07-17 pure-Hindi title convention — no pipe;
+                        # the whole title IS the Hindi overlay text.
+                        _ov_text = _title.strip()
                     generate_thumbnail(
                         script["thumbnail_prompt"], series="mahabharata",
                         overlay_text=_ov_text[:25],  # 25-char cap for thumbnail legibility
