@@ -31,7 +31,10 @@ FESTIVALS_2026 = [
      "Draupadi's strip of silk on Krishna's bleeding finger — the first "
      "rakhi, the small act of care Krishna repaid with endless cloth in the "
      "Kuru sabha, the promise of protection that never broke"),
-    ("2026-09-03", 2, "Janmashtami",
+    # 2026-07-17 date corrected Sep 3 -> Sep 4 (drikpanchang/timeanddate:
+    # Smarta observance Fri Sep 4, ISKCON/Vaishnava Sep 5). Window 2 covers
+    # the Sep 2-4 lead-up; the Sep-5 ISKCON day rides the spike's tail.
+    ("2026-09-04", 2, "Janmashtami",
      "Krishna's divine birth at midnight — prison chains falling open, "
      "guards asleep by divine will, the Yamuna parting for Vasudeva's "
      "basket, the night the protector of the Pandavas chose to be born"),
