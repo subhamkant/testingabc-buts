@@ -1,0 +1,118 @@
+{
+  "ts": "2026-07-17T09-38-04",
+  "language": "hi",
+  "score": 16,
+  "score_max": 25,
+  "violation": "length",
+  "topic": "Draupadi's hidden rage in forest exile — twelve years of secret humiliation she refused to forget, the queen's coldest vow waiting for the day of revenge",
+  "title": "द्रौपदी का असली डर | Draupadi's Real Fear",
+  "script": {
+    "voiceover": "द्रौपदी सूखी ज़मीन पर आँखें गड़ाए बैठी है, बारह साल का वनवास, हर दिन एक नया अपमान। चीरहरण की वो अग्नि अब भी उसकी रगों में जल रही है। हर सुबह सूर्योदय से पहले, वो अपने अपमानित, खुले बालों को छूती है, उस शांत जंगल में अपनी प्रतिज्ञा को दोहराती है। यह जंगल उसकी चीखें नहीं सुनता, पर उसकी आत्मा में एक प्रतिशोध का तूफान पल रहा है। लेकिन, क्या वो प्रतिज्ञा सिर्फ़ दुश्मनों को खत्म करने की थी, या खुद को भी भीतर से जला देने की? उसके मन में केवल एक ही बात गूँजती है: \"क्या यह प्रतिशोध मुझे शांति देगा या बस एक और खालीपन?\" उस अपमान की आग ने उसके हृदय को ऐसे कठोर कर दिया है कि अब आँसू भी सूख गए हैं। और जो द्रौपदी ने अगले युद्ध में किया... आज भी कांप उठाता है। क्या इस प्रतिशोध की शीतलता उसके भीतर की इंसानियत को हमेशा के लिए बर्फ़ बना देगी, या वह अपमान ही उसकी सबसे बड़ी शक्ति बन गया था?",
+    "broll": [
+      {
+        "image_prompt": "Extreme macro close-up of Draupadi's long untied black hair, tangled and wind-whipped, a single strand of rudraksha beads woven through it, forest floor in bokeh, symbolizing a broken vow, firelit crimson + saffron, regal red-and-gold sari, warm Indian skin tone, warm torchlight and oil-lamp, contrasted, intense BUT faces clearly visible, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "आँखें गड़ाए बैठी है",
+        "mood": "Humiliated, burning rage",
+        "wardrobe_context": "FOREST",
+        "shot_type": "AMBIGUOUS"
+      },
+      {
+        "image_prompt": "Leaning into the vastness of a dense, shadowy forest clearing at dawn, Draupadi sits cross-legged on the dry forest ground, her large kohl-lined lotus eyes fixed intensely on the horizon, deep-red silk sari modestly draped over fitted blouse, red kumkum, long untied black hair flowing loose, fierce proud bearing, firelit crimson + saffron, warm Indian skin tone, contrasted, intense BUT faces clearly visible, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "एक नया अपमान",
+        "mood": "Silent, simmering anger",
+        "wardrobe_context": "FOREST",
+        "shot_type": "AMBIGUOUS"
+      },
+      {
+        "image_prompt": "Tight close-up of Draupadi's tear-streaked face, kohl-lined lotus eyes burning with an inner fire, veins visibly throbbing on her temple, long untied black hair wind-whipped around her, deep-red silk sari, dense forest backdrop, firelit crimson + saffron, warm Indian skin tone, contrasted, intense BUT faces clearly visible, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "रगों में जल रही है",
+        "mood": "Burning, internal fury",
+        "wardrobe_context": "FOREST",
+        "shot_type": "REACTION"
+      },
+      {
+        "image_prompt": "[POWER-LOOM] Draupadi raising a hand to touch her long untied black hair, a look of profound humiliation and resolve on her radiant fair wheatish-gold complexion, while a shadowy figure of Duryodhana, colossal mountain-like physique, thick black beard, proud cruel sneer, mirror-polished golden kavacha, jeweled gold war-crown with crimson plume, blood-red and black silks, looms over her in a memory vision, forest edge background with dappled sunlight, firelit crimson + saffron, warm Indian skin tone, contrasted, intense BUT faces clearly visible, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "अपमानित, खुले बालों को",
+        "mood": "Solemn, vengeful",
+        "wardrobe_context": "FOREST",
+        "shot_type": "ACTION"
+      },
+      {
+        "image_prompt": "[CONFRONTATION-WIDE] Draupadi looming over a smoldering fire, her eyes filled with a storm of revenge, while Yudhishthira, tall powerfully built regal frame, warm golden-bronze skin, salt-and-pepper beard, refined golden kavacha over white-and-gold silk, jeweled gold mukut, watches her from a respectful distance with a look of deep sorrow, humble forest ashram background, firelit crimson + saffron, warm Indian skin tone, contrasted, intense BUT faces clearly visible, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "प्रतिशोध का तूफान",
+        "mood": "Foreboding, desperate",
+        "wardrobe_context": "FOREST",
+        "shot_type": "AMBIGUOUS"
+      },
+      {
+        "image_prompt": "Tight close-up of Draupadi's radiant fair wheatish-gold complexion, her large kohl-lined lotus eyes wide with an existential question, a single tear trembling on her lower eyelid, deep-red silk sari modestly draped, firelit crimson + saffron, warm Indian skin tone, contrasted, intense BUT faces clearly visible, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "शांति देगा या बस",
+        "mood": "Anguished, contemplative",
+        "wardrobe_context": "FOREST",
+        "shot_type": "AMBIGUOUS"
+      },
+      {
+        "image_prompt": "Extreme macro close-up of flickering embers in a small forest fire pit, the flames casting dancing shadows, blood-streaked ash swirling gently, symbolic of Draupadi's burning humiliation, firelit crimson + saffron, contrasted, intense BUT faces clearly visible, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "अपमान की आग",
+        "mood": "Intense, destructive",
+        "wardrobe_context": "FOREST",
+        "shot_type": "AMBIGUOUS"
+      },
+      {
+        "image_prompt": "[CONFRONTATION-WIDE] Draupadi clenching her fists, knuckles white and trembling, her face a mask of cold fury and resolve, long untied black hair flowing around her, deep-red silk sari, while Arjuna, powerfully built athletic archer, clean-jawed with neat dark mustache, jeweled golden Kirita diadem, embossed golden kavacha, indigo-and-white silk dhoti, twin quivers, glowing Gandiva bow, stands in the mid-ground, his face reflecting a deep sorrow, dense forest background, firelit crimson + saffron, warm Indian skin tone, contrasted, intense BUT faces clearly visible, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "मुट्ठियाँ भींचती हुई",
+        "mood": "Resolute, seething",
+        "wardrobe_context": "FOREST",
+        "shot_type": "AMBIGUOUS"
+      },
+      {
+        "image_prompt": "Wide shot of a desolate, ash-covered forest path fading into a dark, foreboding horizon, Draupadi's lone silhouette walking away, her back to the camera, towards a distant, faint glow of war fires, symbolizing her transformation of humiliation into power, firelit crimson + saffron, regal red-and-gold sari, warm Indian skin tone, contrasted, intense BUT faces clearly visible, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "सबसे बड़ी शक्ति बन",
+        "mood": "Ominous, powerful",
+        "wardrobe_context": "AFTERMATH",
+        "shot_type": "ENVIRONMENT"
+      }
+    ],
+    "title": "द्रौपदी का असली डर | Draupadi's Real Fear",
+    "hook_title": "द्रौपदी का असली डर",
+    "description": "▶️ अगला भाग: Draupadi's untold grief after the war\n\nवनवास के बारह साल, द्रौपदी के भीतर अपमान की आग ने एक घातक प्रतिशोध को जन्म दिया। क्या यह बदला उसे शांति देगा या अंदर से तोड़ देगा?\n\nमहाभारत के वनवास काल में, द्रौपदी हर दिन अपने अपमान और चीरहरण की यादों से जूझती थी। उसके खुले बाल, उसकी मौन प्रतिज्ञा, और उसकी आँखों में जलती बदले की अग्नि। यह सिर्फ़ दुश्मनों को मिटाने का संकल्प नहीं था, बल्कि खुद को भी भीतर से जला देने की तैयारी थी। हर पल उसके मन में एक ही प्रश्न गूँजता था: क्या यह प्रतिशोध उसे शांति देगा, या केवल एक नया खालीपन? उसके हृदय में जमा यह कठोरता ही उसके भविष्य का मार्ग तय करने वाली थी।\n#Shorts #Mahabharata #महाभारत #Krishna #HinduMythology #PauranikKatha #MythologyShorts #HindiShorts",
+    "tags": [
+      "Draupadi's Rage",
+      "Forest Exile",
+      "Draupadi",
+      "द्रौपदी",
+      "Mahabharata",
+      "महाभारत",
+      "Shorts",
+      "Hindu mythology"
+    ],
+    "thumbnail_prompt": "Vertical composition, dramatic shot, Draupadi, radiant fair wheatish-gold complexion, large kohl-lined lotus eyes, long untied black hair flowing loose, deep-red silk sari modestly draped, red kumkum, fiercely clenching her fists, knuckles white with rage and resolve, standing amidst a desolate forest, a haunting, translucent silhouette of Duryodhana's cruel sneer looms in the background, firelit crimson + saffron, high-contrast rim lighting, vibrant jewel colours, intense, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+    "quotable_line": "अपमान की आग ने उसे शक्ति तो दी, पर इंसानियत जला दी।",
+    "pinned_question": "❓ अपमान की आग ने उसे शक्ति तो दी, पर इंसानियत जला दी। क्या आप मानते हैं कि बदले की आग हमेशा ऐसा ही करती है?",
+    "next_seed": "और इसी प्रतिशोध ने युद्ध के बाद उसे सबसे बड़ा दुख दिया।",
+    "language": "hi",
+    "content_type": "story",
+    "topic": "Draupadi's hidden rage in forest exile — twelve years of secret humiliation she refused to forget, the queen's coldest vow waiting for the day of revenge",
+    "series": "mahabharata",
+    "episode_n": 46,
+    "arc_character_devanagari": "द्रौपदी",
+    "arc_character_english": "Draupadi — The Queen Who Lit the War",
+    "_phase18_strict_pass": false,
+    "_phase18_score": 16,
+    "_phase18_score_max": 25,
+    "_phase18_score_floor": 19,
+    "_phase18_violation": "length",
+    "_phase18_failing_gates": [
+      "anchors",
+      "bookend",
+      "intensity",
+      "length",
+      "monotony",
+      "repetition",
+      "shock_action",
+      "subject_diversity",
+      "subject_lock"
+    ],
+    "_phase18_fatal_failures": []
+  }
+}
