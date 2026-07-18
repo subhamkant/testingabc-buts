@@ -10,16 +10,18 @@
       ],
       "master_token": "Yang Kai, a mature and handsome 16-year-old male martial artist, short black hair tied in a neat topknot, sharp defined jawline, intense determined dark eyes, clean-shaven, wearing simple dark grey training robes with subtle gold embroidery trim, lean athletic build, realistic 3D donghua CGI character, consistent facial structure",
       "negative_token": "beard, mustache, facial hair, old man, elderly, grey hair, chibi, toddler, changing face, different person, western armor",
-      "compact_token": "Yang Kai: lean 16-year-old martial artist, black topknot, sharp jawline, simple dark grey robes with gold trim"
+      "compact_token": "Yang Kai: lean 16-year-old martial artist, black topknot, sharp jawline, simple dark grey robes with gold trim",
+      "root_anchor": "assets/anchors/wuxia/yang_kai_root.jpg"
     },
     "ding_jun": {
       "aliases": [
         "ding jun",
         "dingjun"
       ],
-      "master_token": "Ding Jun, a cocky chubby-faced young male sect disciple around 17, round face, smug arrogant expression, short dark hair, wearing clean sect disciple robes, realistic 3D donghua CGI character",
-      "negative_token": "old man, elderly, beard, slim gaunt face, chibi, changing face",
-      "compact_token": "Ding Jun: chubby round-faced smug young disciple in tan sect robes"
+      "master_token": "Ding Jun, a VERY FAT chubby young male sect disciple around 17, extremely round plump face, chubby puffy cheeks, double chin, small eyes, smug arrogant grin, short dark hair in a tiny topknot, heavyset wide body in tan sect robes, realistic 3D donghua CGI character",
+      "negative_token": "old man, elderly, beard, slim gaunt face, chibi, changing face, slim, lean, thin, skinny, sharp jawline, athletic build",
+      "compact_token": "Ding Jun: very fat round-faced smug young disciple, double chin, tan sect robes",
+      "root_anchor": "assets/anchors/wuxia/ding_jun_root.jpg"
     },
     "disciple": {
       "aliases": [
