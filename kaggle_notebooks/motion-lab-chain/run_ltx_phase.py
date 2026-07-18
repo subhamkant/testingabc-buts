@@ -23,16 +23,25 @@ import time
 from io import BytesIO
 
 os.environ.setdefault("PYTORCH_CUDA_ALLOC_CONF", "expandable_segments:True")
+# HF download hardening: two runs stalled mid-download for 87-100 min. The
+# rust downloader (hf_transfer) + a per-request timeout make fetches fast
+# and fail-fast (huggingface_hub auto-resumes on retry).
+os.environ["HF_HUB_ENABLE_HF_TRANSFER"] = "1"
+os.environ.setdefault("HF_HUB_DOWNLOAD_TIMEOUT", "30")
 subprocess.run([sys.executable, "-m", "pip", "install", "-q", "-U",
-                "transformers", "ftfy"], check=False)
+                "transformers", "ftfy", "hf_transfer"], check=False)
 
 import numpy as np
 import torch
 from PIL import Image
 
-_ESR_URL = ("https://github.com/xinntao/Real-ESRGAN/releases/download/"
-            "v0.2.2.4/RealESRGAN_x4plus_anime_6B.pth")
-_ESR_PATH = "/kaggle/working/anime_esrgan.pth"
+_ESR_URLS = {
+    "anime": ("https://github.com/xinntao/Real-ESRGAN/releases/download/"
+              "v0.2.2.4/RealESRGAN_x4plus_anime_6B.pth"),
+    "photo": ("https://github.com/xinntao/Real-ESRGAN/releases/download/"
+              "v0.1.0/RealESRGAN_x4plus.pth"),
+}
+_ESR_PATH = "/kaggle/working/esrgan.pth"
 
 
 def _write_mp4(frames_uint8, out_path, fps=24):
@@ -47,11 +56,11 @@ def _write_mp4(frames_uint8, out_path, fps=24):
     print(f"SAVED {out_path} ({len(frames_uint8)}f @ {w}x{h})", flush=True)
 
 
-def _load_esrgan():
+def _load_esrgan(kind="photo"):
     import urllib.request
     if not os.path.exists(_ESR_PATH):
-        print("Downloading anime Real-ESRGAN weights...", flush=True)
-        urllib.request.urlretrieve(_ESR_URL, _ESR_PATH)
+        print(f"Downloading Real-ESRGAN weights ({kind})...", flush=True)
+        urllib.request.urlretrieve(_ESR_URLS.get(kind, _ESR_URLS["photo"]), _ESR_PATH)
     from spandrel import ModelLoader
     return ModelLoader().load_from_file(_ESR_PATH).cuda().eval()
 
@@ -70,6 +79,13 @@ def _esrgan_frames(esr, frames_np, out_w, out_h):
         if i % 50 == 0:
             print(f"  esrgan frame {i}/{frames_np.shape[0]}", flush=True)
     return outs
+
+
+def _sharpness(img):
+    """Gradient-variance sharpness (no scipy needed)."""
+    g = img.mean(axis=2)
+    gy, gx = np.gradient(g)
+    return float((gx * gx + gy * gy).var())
 
 
 def main():
@@ -117,6 +133,10 @@ def main():
     # ── Stage 2: autoregressive chunk-and-chain ─────────────────────────
     cond = (Image.open(BytesIO(base64.b64decode(entry["image_b64"])))
             .convert("RGB").resize((W, H), Image.BICUBIC))
+    # Per-chunk story beats: same-prompt chaining makes later chunks go static
+    # (model believes the action already happened). chunk_prompts progresses
+    # the choreography chunk by chunk.
+    chunk_prompts = cfg.get("chunk_prompts") or []
     prompt = entry.get("prompt", "")
     neg = entry.get("negative",
                     "blurry, low quality, deformed, melting, warping, extra limbs, mutated")
@@ -127,9 +147,10 @@ def main():
             if _has_alarm:
                 signal.alarm(clip_timeout)
             gen = torch.Generator("cuda").manual_seed(seed0 + c)
+            c_prompt = chunk_prompts[c] if c < len(chunk_prompts) else prompt
             print(f"[chunk {c+1}/{CHUNKS}] {W}x{H} {NF}f {STEPS}steps g{G} seed={seed0+c}", flush=True)
             t0 = time.time()
-            out = pipe(image=cond, prompt=prompt, negative_prompt=neg,
+            out = pipe(image=cond, prompt=c_prompt, negative_prompt=neg,
                        height=H, width=W, num_frames=NF,
                        num_inference_steps=STEPS, guidance_scale=G,
                        generator=gen).frames[0]
@@ -139,8 +160,13 @@ def main():
             else:
                 arr = (np.asarray(out) * 255).clip(0, 255).astype("uint8")
             _write_mp4(arr, f"/kaggle/working/chunk_{c+1:02d}.mp4")
-            # chain: last frame becomes the next conditioning image
-            cond = Image.fromarray(arr[-1])
+            # chain: condition the next chunk on the SHARPEST of the last 8
+            # frames (seeding from a motion-blurred frame propagates blur).
+            tail = arr[-8:]
+            sharp_i = int(np.argmax([_sharpness(f) for f in tail]))
+            cond = Image.fromarray(tail[sharp_i])
+            print(f"  next-chunk seed frame: tail[{sharp_i}] "
+                  f"(sharpness={_sharpness(tail[sharp_i]):.0f})", flush=True)
             # drop duplicate first frame on chunks 2+
             all_frames.append(arr if c == 0 else arr[1:])
             ok_chunks += 1
@@ -193,7 +219,7 @@ def main():
         import imageio
         frames = np.stack([f for f in imageio.mimread(interp_src, memtest=False)])
         print(f"upscaling {frames.shape[0]} frames to {out_w}x{out_h}...", flush=True)
-        esr = _load_esrgan()
+        esr = _load_esrgan(cfg.get("esr_model", "photo"))
         up = _esrgan_frames(esr, frames, out_w, out_h)
         _write_mp4(up, "/kaggle/working/scene_01_shot_01.mp4", fps=out_fps)
         del esr, frames, up

@@ -16,10 +16,15 @@ import time
 from io import BytesIO
 
 os.environ.setdefault("PYTORCH_CUDA_ALLOC_CONF", "expandable_segments:True")
+# HF download hardening: two runs stalled mid-download for 87-100 min. The
+# rust downloader (hf_transfer) + a per-request timeout make fetches fast
+# and fail-fast (huggingface_hub auto-resumes on retry).
+os.environ["HF_HUB_ENABLE_HF_TRANSFER"] = "1"
+os.environ.setdefault("HF_HUB_DOWNLOAD_TIMEOUT", "30")
 
 # extra deps beyond the notebook's base pip line
 subprocess.run([sys.executable, "-m", "pip", "install", "-q", "-U",
-                "transformers", "ftfy"], check=False)
+                "transformers", "ftfy", "hf_transfer"], check=False)
 
 import numpy as np
 import torch
