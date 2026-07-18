@@ -3317,7 +3317,8 @@ def assemble_from_video_clips(
     return output_path
 
 
-def apply_end_band(video_path: str, band_s: float = 3.0) -> bool:
+def apply_end_band(video_path: str, band_s: float = 3.0,
+                   question: str = "") -> bool:
     """Sprint 3.2 (built 2026-07-08, Operation 500K) — subscribe identity
     end-band. Burns a channel-identity band over the FINAL `band_s` seconds:
     the channel thesis line + an explicit subscribe CTA with the handle.
@@ -3349,9 +3350,17 @@ def apply_end_band(video_path: str, band_s: float = 3.0) -> bool:
         # ── Compose the band PNG (1080 x 240, dark translucent) ──────────
         W, H = 1080, 240
         band = Image.new("RGBA", (W, H), (10, 10, 14, 205))
+        # 2026-07-18 comment engineering: line 1 is now the video's OWN
+        # closing question (comment trigger — every niche winner's comment
+        # section is a debate war; ours had 1 bot comment per video). The
+        # spoken question already ends the voiceover; showing it in writing
+        # over the final seconds doubles the prompt. Falls back to the
+        # channel thesis when no usable question is passed (legacy scripts).
+        _q = (question or "").strip()
+        if not (8 <= len(_q) <= 80 and _q.endswith("?")):
+            _q = "हर हीरो ने किसी को खत्म किया"
         line1 = render_text_card(
-            "हर हीरो ने किसी को खत्म किया",
-            FONT_PATH, 52, fill=(255, 255, 255, 255), outline_px=4)
+            _q, FONT_PATH, 52, fill=(255, 255, 255, 255), outline_px=4)
         # Line 2 is mixed-script: the Devanagari font has NO Latin glyphs
         # ("@VyasaKathas" rendered as tofu boxes in the first local test),
         # so compose it from two segments, each shaped with its own font.

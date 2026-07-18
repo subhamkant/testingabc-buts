@@ -744,7 +744,19 @@ async def run_pipeline(language: str = "en", test_mode: bool = False, test_uploa
             if os.environ.get("END_BAND", "true").strip().lower() == "true":
                 try:
                     from pipeline.video_assembler import apply_end_band
-                    apply_end_band(video_path)
+                    # 2026-07-18 comment engineering: band line 1 = the
+                    # voiceover's own closing question (phase18's loop gate
+                    # guarantees the script ends with one). Written + spoken
+                    # question together = the comment trigger every winner
+                    # channel runs. Falls back to thesis inside apply_end_band.
+                    _vo = script.get("voiceover", "") or ""
+                    _q = ""
+                    if _vo.rstrip().endswith("?"):
+                        import re as _re
+                        _parts = [p.strip() for p in _re.split(r"[।!?]", _vo) if p.strip()]
+                        if _parts:
+                            _q = _parts[-1] + "?"
+                    apply_end_band(video_path, question=_q)
                 except Exception as band_err:
                     print(f"    [end-band] non-fatal: {band_err}")
 
