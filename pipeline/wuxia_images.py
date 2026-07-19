@@ -206,6 +206,111 @@ def _gen_still_resilient(shot: dict, seed: int) -> bytes:
             return _gen_cloudflare(fallback, seed, _W, _H, negative=neg)
 
 
+def _facelock_batch(scenes: list, ck, master: int, style_anchor: str | None) -> None:
+    """One IPA face-lock kernel run for every uncached shot that names a
+    registry character with a root_anchor. Saves outputs into ck under the
+    same stills/scene_XX_shot_YY.jpg keys the CF loop uses."""
+    import asyncio
+    import base64 as _b64
+    from io import BytesIO as _BIO
+    from pathlib import Path as _P
+
+    from PIL import Image as _Img
+
+    from pipeline.kaggle_client import (download_output, poll_kernel,
+                                        push_kernel_with_run_config)
+
+    # registry characters that have enshrined root anchors
+    anchors: dict[str, str] = {}
+    keys: list[str] = []
+    for key, c in (_REG.get("characters") or {}).items():
+        root = c.get("root_anchor")
+        if root and os.path.exists(root):
+            img = _Img.open(root).convert("RGB").resize((512, 512), _Img.LANCZOS)
+            buf = _BIO(); img.save(buf, format="JPEG", quality=88)
+            anchors[key] = _b64.b64encode(buf.getvalue()).decode("ascii")
+            keys.append(key)
+    if not anchors:
+        print("    [facelock] no root anchors in registry — skipping")
+        return
+
+    jobs = []   # (ck_name, anchor_key, prompt, seed)
+    for i, scene in enumerate(scenes):
+        for j, shot in enumerate(scene.get("visual_track", []) or []):
+            name = f"stills/scene_{i+1:02d}_shot_{j+1:02d}.jpg"
+            if ck.has(name):
+                continue
+            text = shot.get("prompt", "") or ""
+            matched = None
+            for key in keys:
+                c = _REG["characters"][key]
+                aliases = [key.replace("_", " ")] + list(c.get("aliases") or [])
+                pat = r"\b(" + "|".join(re.escape(a) for a in aliases) + r")\b"
+                if re.search(pat, text, re.IGNORECASE):
+                    matched = key
+                    break
+            if not matched:
+                continue
+            pos, _neg = _build_prompt(shot, style_anchor)
+            seed = (master + i * 100 + j) % (2**31 - 1)
+            jobs.append((name, matched, pos, seed))
+    if not jobs:
+        print("    [facelock] nothing to lock (all cached or no char shots)")
+        return
+
+    print(f"    [facelock] batching {len(jobs)} character shots -> "
+          f"cinematic kernel (~{len(jobs)*2.7+25:.0f} min)", flush=True)
+    fl_scenes = [{"idx": k, "w": 1024, "h": 576, "seed": s,
+                  "anchor_key": a, "prompt": p}
+                 for k, (_n, a, p, s) in enumerate(jobs)]
+    rc = {"hero_mode": True, "use_ip_adapter": True, "anchors": anchors,
+          "ip_scale": float(os.environ.get("WUXIA_FACELOCK_SCALE", "0.45")),
+          "num_steps": 8, "scenes": fl_scenes, "style_anchor": style_anchor or "",
+          "master_seed": master, "run_id": f"facelock_{master}",
+          "requires_motion": [], "skip_flux": False, "force_nf4": True,
+          "flux_timeout_s": max(3600, int(len(jobs) * 170 + 1800))}
+
+    async def _run():
+        await push_kernel_with_run_config(
+            _P("kaggle_notebooks/motion-lab-facelock"), rc)
+        res = await poll_kernel("subhamkant11/cinematic-i2v-batch",
+                                poll_interval_s=60,
+                                timeout_s=rc["flux_timeout_s"] + 2400)
+        if res["status"] != "complete":
+            raise RuntimeError(f"facelock kernel status={res['status']}")
+        out = _P("temp/facelock_out")
+        out.mkdir(parents=True, exist_ok=True)
+        return await download_output("subhamkant11/cinematic-i2v-batch", out)
+
+    # generate_wuxia_stills is a SYNC function called from inside the async
+    # render() loop — asyncio.run() here would hit "already running loop".
+    # Run the kernel round-trip on its own thread with its own loop.
+    import threading
+    box: dict = {}
+
+    def _worker():
+        try:
+            box["files"] = asyncio.run(_run())
+        except Exception as exc:
+            box["err"] = exc
+
+    t = threading.Thread(target=_worker, daemon=True)
+    t.start()
+    t.join()
+    if "err" in box:
+        raise box["err"]
+    files = box.get("files") or []
+    got = {f.name: f for f in files if f.name.startswith("hero_")}
+    saved = 0
+    for k, (name, _a, _p, _s) in enumerate(jobs):
+        f = got.get(f"hero_{k:02d}.jpg")
+        if f and os.path.getsize(f) > 10000:
+            ck.save_file(name, str(f))
+            saved += 1
+    print(f"    [facelock] locked {saved}/{len(jobs)} shots "
+          f"(rest -> CF fallback)", flush=True)
+
+
 def generate_wuxia_stills(scenes: list, ck, run_id: str, style_anchor: str | None = None) -> list:
     """Generate a 1920x1080 CF still per shot. Returns a positional list-of-lists
     (one inner list per scene, one entry per shot) of cache paths.
@@ -215,6 +320,19 @@ def generate_wuxia_stills(scenes: list, ck, run_id: str, style_anchor: str | Non
     master = _stable_master_seed(run_id)
     manifest: dict[str, str] = {}
     scene_groups: list[list[str]] = []
+
+    # NEW PLATFORM (2026-07-19): FACE-LOCKED stills. Character shots run as ONE
+    # batched IPA face-lock kernel job (main account, keyed per-character root
+    # anchors from the registry) BEFORE the CF loop; anything the kernel
+    # doesn't cover (no character match / kernel failure) falls back to CF.
+    # Gate: WUXIA_FACELOCK=0 disables. Resumable: covered shots land in ck
+    # and the CF loop skips them.
+    if os.environ.get("WUXIA_FACELOCK", "1") != "0":
+        try:
+            _facelock_batch(scenes, ck, master, style_anchor)
+        except Exception as e:  # face-lock is an enhancement, never a blocker
+            print(f"    [facelock] batch failed ({str(e)[:140]}) — "
+                  f"CF fallback for all shots", flush=True)
 
     for i, scene in enumerate(scenes):
         shots = scene.get("visual_track", []) or []

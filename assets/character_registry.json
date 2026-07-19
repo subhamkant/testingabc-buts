@@ -11,17 +11,21 @@
       "master_token": "Yang Kai, a mature and handsome 16-year-old male martial artist, short black hair tied in a neat topknot, sharp defined jawline, intense determined dark eyes, clean-shaven, wearing simple dark grey training robes with subtle gold embroidery trim, lean athletic build, realistic 3D donghua CGI character, consistent facial structure",
       "negative_token": "beard, mustache, facial hair, old man, elderly, grey hair, chibi, toddler, changing face, different person, western armor",
       "compact_token": "Yang Kai: lean 16-year-old martial artist, black topknot, sharp jawline, simple dark grey robes with gold trim",
-      "root_anchor": "assets/anchors/wuxia/yang_kai_root.jpg"
+      "root_anchor": "assets/anchors/wuxia/yang_kai_root.jpg",
+      "color_palette": "deep charcoal-grey robes with gold trim, warm golden rim light, bronze dusk tones",
+      "aura": "disciplined defiant underdog energy, quiet lethal focus"
     },
     "ding_jun": {
       "aliases": [
         "ding jun",
         "dingjun"
       ],
-      "master_token": "Ding Jun, a VERY FAT chubby young male sect disciple around 17, extremely round plump face, chubby puffy cheeks, double chin, small eyes, smug arrogant grin, short dark hair in a tiny topknot, heavyset wide body in tan sect robes, realistic 3D donghua CGI character",
-      "negative_token": "old man, elderly, beard, slim gaunt face, chibi, changing face, slim, lean, thin, skinny, sharp jawline, athletic build",
-      "compact_token": "Ding Jun: very fat round-faced smug young disciple, double chin, tan sect robes",
-      "root_anchor": "assets/anchors/wuxia/ding_jun_root.jpg"
+      "master_token": "Ding Jun, a VERY FAT chubby young male sect disciple around 17, extremely round plump face, chubby puffy cheeks, double chin, small eyes, smug arrogant grin, short dark hair in a tiny topknot, heavyset wide body in tan sect robes, realistic 3D donghua CGI character, full black hair in a small neat topknot",
+      "negative_token": "old man, elderly, beard, slim gaunt face, chibi, changing face, slim, lean, thin, skinny, sharp jawline, athletic build, bald, shaved head, monk haircut",
+      "compact_token": "Ding Jun: very fat round-faced, full black hair in a small neat topknot, smug young disciple, double chin, tan sect robes",
+      "root_anchor": "assets/anchors/wuxia/ding_jun_root.jpg",
+      "color_palette": "tan-ochre robes, warm firelight tones on round face",
+      "aura": "smug bully bravado crumbling into comic dread"
     },
     "disciple": {
       "aliases": [
@@ -35,5 +39,29 @@
       "compact_token": "young sect disciples in matching grey cultivation robes"
     }
   },
-  "_comment_compact": "compact_token = short identity descriptor used INSTEAD of master_token when 2+ registry characters appear in one shot — two full tokens + style lock would exceed FLUX's ~1000-char effective window (prompt-budget amputation)."
+  "_comment_compact": "compact_token = short identity descriptor used INSTEAD of master_token when 2+ registry characters appear in one shot — two full tokens + style lock would exceed FLUX's ~1000-char effective window (prompt-budget amputation).",
+  "_prompt_template": {
+    "still_structure": [
+      "scene declaration + atmosphere in one clause",
+      "6-8 concrete ground-level micro-details (objects, debris, wear)",
+      "ONE focal object with a story (e.g. 'a lone banner hanging by a thread')",
+      "depth layer: fog/dust/silhouettes at distance",
+      "sky + light direction",
+      "quality tokens + 'zero smoothing'",
+      "Mood: exactly three words"
+    ],
+    "quality_suffix": "cinematic ultra-detailed lighting, hyper-detailed ground textures, natural debris, high-definition micro-details, lifelike dust particles floating, zero smoothing",
+    "shot_variants": [
+      "close-up version",
+      "medium shot version",
+      "wide reveal version"
+    ],
+    "video_prompt_rule": "derive motion prompt FROM the finished still (vision-describe it), never from the scene concept",
+    "av_sync_rules": [
+      "hook = dead silence + wind + cloth flutter only",
+      "dialogue/narration starts 1s BEFORE its visual",
+      "sudden bass drop ON the reveal shot, not on the cut",
+      "sound events tie to narrative beats, not just cuts"
+    ]
+  }
 }

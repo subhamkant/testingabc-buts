@@ -31,6 +31,47 @@ import torch
 from PIL import Image
 
 
+_ESR_URL = ("https://github.com/xinntao/Real-ESRGAN/releases/download/"
+            "v0.1.0/RealESRGAN_x4plus.pth")
+_ESR_PATH = "/kaggle/working/esrgan.pth"
+_ESR_MODEL = None
+
+
+def _esrgan_up(frames_np, out_w, out_h):
+    """2x-ish detail restore on the T4 before the mp4 ever leaves Kaggle.
+    x4plus then bicubic down to (out_w, out_h). Lazy-loads spandrel + weights."""
+    global _ESR_MODEL
+    import torch.nn.functional as Fnn
+    if _ESR_MODEL is None:
+        try:
+            from spandrel import ModelLoader
+        except ImportError:
+            import subprocess
+            subprocess.run([sys.executable, "-m", "pip", "install", "-q",
+                            "spandrel"], check=True)
+            from spandrel import ModelLoader
+        if not os.path.exists(_ESR_PATH):
+            import urllib.request
+            print("Downloading Real-ESRGAN weights...", flush=True)
+            urllib.request.urlretrieve(_ESR_URL, _ESR_PATH)
+        _ESR_MODEL = ModelLoader().load_from_file(_ESR_PATH).cuda().eval()
+    outs = []
+    for i in range(frames_np.shape[0]):
+        t = (torch.from_numpy(frames_np[i]).permute(2, 0, 1).unsqueeze(0)
+             .float().cuda() / 255.0)
+        with torch.no_grad():
+            o = _ESR_MODEL(t)
+            o = Fnn.interpolate(o, size=(out_h, out_w), mode="bicubic",
+                                align_corners=False)
+        outs.append((o.clamp(0, 1)[0].permute(1, 2, 0).cpu().numpy()
+                     * 255).astype("uint8"))
+        del t, o
+        torch.cuda.empty_cache()
+        if i % 16 == 0:
+            print(f"  esrgan {i}/{frames_np.shape[0]}", flush=True)
+    return np.stack(outs)
+
+
 def _write_mp4(frames_uint8, out_path, fps=24):
     import imageio
     imageio.mimwrite(
@@ -46,6 +87,34 @@ def _write_mp4(frames_uint8, out_path, fps=24):
 def main():
     with open("current_run.json") as f:
         cfg = json.load(f)
+
+    # esrgan_only: finishing pass — no Wan load. Clips arrive as b64 in the
+    # run config, get ESRGAN-upscaled 2x, and land in /kaggle/working.
+    if cfg.get("esrgan_only"):
+        import imageio
+        for item in cfg.get("esrgan_clips", []):
+            name = item["name"]
+            raw = base64.b64decode(item["mp4_b64"])
+            src = f"/kaggle/working/_in_{name}"
+            with open(src, "wb") as fh:
+                fh.write(raw)
+            frames = np.stack([np.asarray(f) for f in
+                               imageio.mimread(src, memtest=False)])
+            h, w = frames.shape[1], frames.shape[2]
+            print(f"{name}: {frames.shape[0]}f {w}x{h} -> {w*2}x{h*2}",
+                  flush=True)
+            t0 = time.time()
+            up = _esrgan_up(frames, w * 2, h * 2)
+            fps = float(item.get("fps", 16))
+            _write_mp4(up, f"/kaggle/working/{name}", fps=fps)
+            print(f"  done {time.time()-t0:.0f}s", flush=True)
+            os.remove(src)
+            del frames, up
+            gc.collect()
+            torch.cuda.empty_cache()
+        print("ESRGAN_ONLY_COMPLETE", flush=True)
+        return
+
     hero = cfg.get("hero_motion", [])
     if not hero:
         print("No hero_motion entries. Exiting.", flush=True)
@@ -74,12 +143,21 @@ def main():
         "Wan-AI/Wan2.2-TI2V-5B-Diffusers", torch_dtype=_dt,
         low_cpu_mem_usage=True,  # meta-device load: no 2x host-RAM spike (SIGKILL fix)
     )
+    if cfg.get("wan_vae_fp32"):
+        pipe.vae = pipe.vae.to(torch.float32)  # fp32 decode kills fp16 color drift
+        print("VAE upcast to fp32", flush=True)
     pipe.enable_model_cpu_offload()
     try:
         pipe.vae.enable_tiling()
     except Exception as e:
         print(f"vae tiling unavailable: {e}", flush=True)
     print(f"Wan loaded in {time.time()-t0:.0f}s", flush=True)
+
+    # flow_shift = the motion-amplitude knob (UniPC scheduler). Default config
+    # value is conservative; higher shift => stronger scene motion. Per-entry
+    # override lets one run sweep it.
+    from diffusers import UniPCMultistepScheduler
+    _base_sched_cfg = dict(pipe.scheduler.config)
 
     failures = 0
     for entry in hero:
@@ -90,17 +168,25 @@ def main():
         try:
             if _has_alarm:
                 signal.alarm(clip_timeout)
+            e_w = int(entry.get("width", W))
+            e_h = int(entry.get("height", H))
+            e_nf = int(entry.get("num_frames", NF))
+            e_shift = entry.get("flow_shift", cfg.get("flow_shift"))
+            if e_shift is not None:
+                pipe.scheduler = UniPCMultistepScheduler.from_config(
+                    {**_base_sched_cfg, "flow_shift": float(e_shift)})
             img = (Image.open(BytesIO(base64.b64decode(entry["image_b64"])))
-                   .convert("RGB").resize((W, H), Image.BICUBIC))
+                   .convert("RGB").resize((e_w, e_h), Image.BICUBIC))
             gen = torch.Generator("cuda").manual_seed(seed0 + idx)
-            print(f"[{idx}] WAN render {W}x{H} {NF}f {STEPS}steps g{G}", flush=True)
+            print(f"[{idx}] WAN render {e_w}x{e_h} {e_nf}f {STEPS}steps g{G} "
+                  f"shift={e_shift}", flush=True)
             t0 = time.time()
             out = pipe(
                 image=img,
                 prompt=entry.get("prompt", ""),
                 negative_prompt=entry.get("negative", "blurry, low quality, deformed, melting, warping, extra limbs, mutated"),
-                height=H, width=W,
-                num_frames=NF,
+                height=e_h, width=e_w,
+                num_frames=e_nf,
                 num_inference_steps=STEPS,
                 guidance_scale=G,
                 generator=gen,
@@ -124,6 +210,38 @@ def main():
                 signal.alarm(0)
     if failures:
         print(f"WAN_PHASE_PARTIAL: {failures} clip(s) failed", flush=True)
+
+    # ESRGAN as a SEPARATE PHASE after the Wan pipe is released — running it
+    # with the pipe resident SIGKILLed the kernel at -9 (host RAM, v20).
+    if cfg.get("esrgan"):
+        print("Releasing Wan pipeline before ESRGAN phase...", flush=True)
+        del pipe
+        gc.collect()
+        torch.cuda.empty_cache()
+        import glob as _glob
+        import imageio
+        for mp4 in sorted(_glob.glob("/kaggle/working/scene_*.mp4")):
+            try:
+                if _has_alarm:
+                    signal.alarm(int(cfg.get("clip_timeout_s", 1500)))
+                frames = np.stack([np.asarray(f) for f in
+                                   imageio.mimread(mp4, memtest=False)])
+                h, w = frames.shape[1], frames.shape[2]
+                t1 = time.time()
+                up = _esrgan_up(frames, w * 2, h * 2)
+                _write_mp4(up, mp4)
+                print(f"  esrgan {mp4} {time.time()-t1:.0f}s -> {w*2}x{h*2}",
+                      flush=True)
+                del frames, up
+                gc.collect()
+                torch.cuda.empty_cache()
+            except Exception:
+                import traceback
+                print(f"ESRGAN FAILED {mp4} (raw kept):\n"
+                      + traceback.format_exc(), flush=True)
+            finally:
+                if _has_alarm:
+                    signal.alarm(0)
 
 
 if __name__ == "__main__":

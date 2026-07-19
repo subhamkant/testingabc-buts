@@ -38,29 +38,76 @@ _SCALE_CROP = (
 
 
 def _make_motion_sub_clip(clip_path: str, output_path: str, duration: float) -> bool:
-    """Fill `duration` with an LTX motion mp4, scaled/cropped to 1920x1080, silent.
+    """Fill `duration` with a motion mp4, scaled/cropped to 1920x1080, silent.
 
-    FORWARD ONLY: play the clip once, then freeze (clone) its final frame to fill
-    the rest of the scene. No boomerang/reverse anywhere — the ping-pong rewind
-    (fire un-igniting, a strike un-throwing) read as broken. The clip animates
-    forward, then holds on its last pose like an intentional beat.
-    CRF 17 (was 20): this is a re-encode of the pristine kernel clip, so keep it
-    high to avoid compounding softness."""
-    cmd = [
-        "ffmpeg", "-y", "-i", clip_path,
-        "-vf", f"{_SCALE_CROP},tpad=stop_mode=clone:stop_duration=60,setsar=1,fps={FPS}",
-        "-t", f"{duration:.3f}",
-        "-an",
-        "-c:v", "libx264", "-preset", "slow", "-crf", "17",
-        "-pix_fmt", "yuv420p", "-r", str(FPS),
-        output_path,
-    ]
-    r = subprocess.run(cmd, capture_output=True)
-    if r.returncode != 0:
-        err = r.stderr.decode("utf-8", errors="replace")[-600:] if r.stderr else ""
-        print(f"    [wuxia-motion-clip] failed:\n    {err}")
-        return False
-    return os.path.exists(output_path)
+    NEW PLATFORM (2026-07-19) 'LIVING FREEZE': the Wan kernel writes 33f@24fps
+    but the model's motion intent is ~16fps, so first RETIME 1.5x to native
+    speed (kills the 'jarring fast slideshow'). If the scene outlasts the
+    retimed clip, the remainder is a slow Ken Burns push on the clip's LAST
+    frame — a moving hold, never a dead freeze-frame (the v5 complaint).
+    FORWARD ONLY, no boomerang. CRF 17 to avoid compounding softness."""
+    retime = float(os.environ.get("WUXIA_MOTION_RETIME", "1.5"))
+    try:
+        probe = subprocess.run(
+            ["ffprobe", "-v", "error", "-show_entries", "format=duration",
+             "-of", "csv=p=0", clip_path], capture_output=True, text=True)
+        motion_s = float(probe.stdout.strip()) * retime
+    except (ValueError, OSError):
+        motion_s = 2.0
+
+    base_vf = f"setpts={retime}*PTS,{_SCALE_CROP},setsar=1,fps={FPS}"
+    if motion_s >= duration - 0.05:
+        cmd = ["ffmpeg", "-y", "-i", clip_path, "-vf", base_vf,
+               "-t", f"{duration:.3f}", "-an", "-c:v", "libx264",
+               "-preset", "slow", "-crf", "17", "-pix_fmt", "yuv420p",
+               "-r", str(FPS), output_path]
+        r = subprocess.run(cmd, capture_output=True)
+        if r.returncode != 0:
+            print("    [wuxia-motion-clip] failed:\n    "
+                  + (r.stderr.decode("utf-8", "replace")[-400:] if r.stderr else ""))
+            return False
+        return os.path.exists(output_path)
+
+    # motion part + living-hold part
+    part_a = output_path.replace(".mp4", "_mA.mp4")
+    part_b = output_path.replace(".mp4", "_mB.mp4")
+    last_png = output_path.replace(".mp4", "_last.png")
+    try:
+        r = subprocess.run(["ffmpeg", "-y", "-i", clip_path, "-vf", base_vf,
+                            "-an", "-c:v", "libx264", "-preset", "slow",
+                            "-crf", "17", "-pix_fmt", "yuv420p", "-r", str(FPS),
+                            part_a], capture_output=True)
+        if r.returncode != 0:
+            return False
+        subprocess.run(["ffmpeg", "-y", "-sseof", "-0.06", "-i", part_a,
+                        "-frames:v", "1", last_png], capture_output=True)
+        hold_s = max(0.3, duration - motion_s)
+        frames = max(2, int(hold_s * FPS))
+        # gentle 5% push on the final pose — reads as a held beat, stays alive
+        r2 = subprocess.run(
+            ["ffmpeg", "-y", "-loop", "1", "-i", last_png, "-vf",
+             (f"scale={int(WIDTH*1.1)}:{int(HEIGHT*1.1)}:flags=lanczos,"
+              f"zoompan=z='1+0.05*on/{frames}':x='(iw-iw/zoom)/2':"
+              f"y='(ih-ih/zoom)/2':d={frames}:s={WIDTH}x{HEIGHT}:fps={FPS}"),
+             "-t", f"{hold_s:.3f}", "-an", "-c:v", "libx264", "-preset", "medium",
+             "-crf", "17", "-pix_fmt", "yuv420p", part_b], capture_output=True)
+        if r2.returncode != 0:
+            return False
+        lst = output_path.replace(".mp4", "_list.txt")
+        with open(lst, "w") as f:
+            f.write(f"file '{os.path.abspath(part_a)}'\n"
+                    f"file '{os.path.abspath(part_b)}'\n")
+        r3 = subprocess.run(["ffmpeg", "-y", "-f", "concat", "-safe", "0",
+                             "-i", lst, "-t", f"{duration:.3f}", "-c", "copy",
+                             output_path], capture_output=True)
+        return r3.returncode == 0 and os.path.exists(output_path)
+    finally:
+        for p in (part_a, part_b, last_png,
+                  output_path.replace(".mp4", "_list.txt")):
+            try:
+                os.remove(p)
+            except OSError:
+                pass
 
 
 def _make_sub_clip(shot_path: str, output_path: str, duration: float, motion_idx: int) -> bool:
@@ -226,5 +273,39 @@ def assemble_wuxia_video(
     # NOTE: the end fade-to-black is applied by the subtitle pass
     # (pipeline/wuxia_subtitles.py) so it shares that single final re-encode
     # instead of adding another one here.
+    if os.environ.get("WUXIA_MASTER_PASS", "1") != "0":
+        _master_grade_watermark(output_path)
     print(f"    [OK] Final episode -> {output_path}")
     return output_path
+
+
+def _master_grade_watermark(path: str) -> None:
+    """FINAL MASTER PASS (new platform 2026-07-19): warm filmic grade +
+    vignette + bloom + channel watermarks, ONE re-encode, in place.
+
+    Bloom blend order is load-bearing: ffmpeg `blend` treats the FIRST input
+    as the base — sharp stream MUST come first ([v][b]); the reversed order
+    output ~95% gaussian blur (the v9-v11 'vaseline' bug, user-found).
+    Watermarks: 2x top corners @26% + bottom-right @85% (user spec)."""
+    wm = os.path.join("assets", "brand", "kd_lockup.png")
+    tmp = path.replace(".mp4", "_master.mp4")
+    grade = (
+        "curves=r='0/0 0.5/0.55 1/1':g='0/0 0.5/0.51 1/1':b='0/0.02 0.5/0.47 1/0.96',"
+        "eq=saturation=1.15:contrast=1.05,vignette=PI/4.8,"
+        "gblur=sigma=10[bl];[v][bl]blend=all_mode=screen:all_opacity=0.08")
+    fc = (
+        f"[0:v]unsharp=5:5:0.6:5:5:0.0,split[v][g];[g]{grade}[graded];"
+        f"[1:v]scale=-1:38,format=rgba,colorchannelmixer=aa=0.26,split=2[wtl][wtr];"
+        f"[1:v]scale=-1:46,format=rgba,colorchannelmixer=aa=0.85[wb];"
+        f"[graded][wtl]overlay=26:20[a];[a][wtr]overlay=W-w-26:20[b2];"
+        f"[b2][wb]overlay=W-w-30:H-h-24[out]")
+    cmd = ["ffmpeg", "-y", "-i", path, "-i", wm, "-filter_complex", fc,
+           "-map", "[out]", "-map", "0:a?", "-c:v", "libx264", "-preset",
+           "medium", "-crf", "16", "-pix_fmt", "yuv420p", "-c:a", "copy", tmp]
+    r = subprocess.run(cmd, capture_output=True)
+    if r.returncode == 0 and os.path.exists(tmp):
+        os.replace(tmp, path)
+        print("    [master] grade + watermarks applied")
+    else:
+        err = r.stderr.decode("utf-8", "replace")[-400:] if r.stderr else ""
+        print(f"    [master] FAILED (episode kept ungraded):\n    {err}")

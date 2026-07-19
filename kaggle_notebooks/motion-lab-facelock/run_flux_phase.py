@@ -108,7 +108,12 @@ def main():
     from transformers import T5EncoderModel
     from transformers import BitsAndBytesConfig as TransformersBnb
 
-    MODEL = "black-forest-labs/FLUX.1-schnell"
+    # flux_model knob: schnell (8-step, fast) | dev (25-step, benchmark detail).
+    # dev is GATED on HF — token account must have accepted the license.
+    MODEL = ("black-forest-labs/FLUX.1-dev"
+             if cfg.get("flux_model") == "dev"
+             else "black-forest-labs/FLUX.1-schnell")
+    print(f"FLUX model: {MODEL}", flush=True)
     # DTYPE (2026-07-05 fix): FLUX's native dtype is bfloat16 — the text
     # encoders emit bf16 hidden states. The June code loaded the transformer
     # as float16 (a T4 tensor-core optimization), which crashed the FIRST
@@ -243,13 +248,34 @@ def main():
         from io import BytesIO
         from PIL import Image
         anchor_pil = None
+        _anchor_cache = {}
+
+        def _scene_anchor(sc):
+            # Per-scene anchor so ONE push face-locks MANY characters.
+            # Anchors ride ONCE in cfg["anchors"] = {key: b64} and scenes
+            # reference them by anchor_key (payload stays small — a b64
+            # per scene blew past Kaggle's push size limit, 400 error).
+            key = sc.get("anchor_key")
+            if key and key in cfg.get("anchors", {}):
+                if key not in _anchor_cache:
+                    _anchor_cache[key] = Image.open(BytesIO(
+                        base64.b64decode(cfg["anchors"][key]))).convert("RGB")
+                return _anchor_cache[key]
+            b64 = sc.get("anchor_b64") or cfg.get("anchor_b64")
+            if not b64:
+                return None
+            ck = b64[:64]
+            if ck not in _anchor_cache:
+                _anchor_cache[ck] = Image.open(
+                    BytesIO(base64.b64decode(b64))).convert("RGB")
+            return _anchor_cache[ck]
+
         if ip_ready:
-            anchor_pil = Image.open(
-                BytesIO(base64.b64decode(cfg["anchor_b64"]))).convert("RGB")
+            anchor_pil = _scene_anchor(cfg["scenes"][0])
             ip_scale = float(cfg.get("ip_scale", 0.6))
             pipe.set_ip_adapter_scale(ip_scale)
             print(f"hero_mode: {len(cfg['scenes'])} frames, FACE-LOCK ON "
-                  f"ip_scale={ip_scale}, anchor={anchor_pil.size}", flush=True)
+                  f"ip_scale={ip_scale}, per-scene anchors", flush=True)
         else:
             print(f"hero_mode: {len(cfg['scenes'])} frames, FACE-LOCK OFF "
                   f"(seed+prompt only)", flush=True)
@@ -272,13 +298,14 @@ def main():
                 pooled_prompt_embeds=_hero_embeds[_j][1],
                 height=int(sc.get("h", 1344)),
                 width=int(sc.get("w", 768)),
-                guidance_scale=0.0,
+                guidance_scale=float(cfg.get('guidance_scale', 0.0)),
                 num_inference_steps=n_steps,
                 generator=generator,
                 callback_on_step_end=_step_cb,
             )
-            if ip_ready and anchor_pil is not None:
-                gen_kwargs["ip_adapter_image"] = anchor_pil
+            _a = _scene_anchor(sc) if ip_ready else None
+            if _a is not None:
+                gen_kwargs["ip_adapter_image"] = _a
             image = pipe(**gen_kwargs).images[0]
             print(f"  frame done in {_time.time()-_t0:.1f}s", flush=True)
             image.save(f"/kaggle/working/hero_{int(sc['idx']):02d}.jpg")
@@ -306,7 +333,7 @@ def main():
                 prompt=prompt,
                 height=1344,
                 width=768,
-                guidance_scale=0.0,
+                guidance_scale=float(cfg.get('guidance_scale', 0.0)),
                 num_inference_steps=8,
                 generator=generator
             ).images[0]
@@ -333,7 +360,7 @@ def main():
                     prompt=prompt,
                     height=1920,
                     width=1080,
-                    guidance_scale=0.0,
+                    guidance_scale=float(cfg.get('guidance_scale', 0.0)),
                     num_inference_steps=4,
                     generator=generator
                 ).images[0]
@@ -347,7 +374,7 @@ def main():
                     height=1920,
                     width=1080,
                     ip_adapter_image=master_anchor_pil,
-                    guidance_scale=0.0,
+                    guidance_scale=float(cfg.get('guidance_scale', 0.0)),
                     num_inference_steps=4,
                     generator=generator
                 ).images[0]

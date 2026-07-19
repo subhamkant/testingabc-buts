@@ -78,7 +78,14 @@ def _build_pool() -> list:
     ]
     want = [a.strip() for a in os.environ.get(
         "WUXIA_KERNEL_POOL", "main,sk9,vyasa").split(",") if a.strip()]
-    canonical = _NB_ROOT / "wuxia-i2v" / "run_ltx_phase.py"
+    # NEW PLATFORM (2026-07-19): the canonical bulk engine is Wan2.2-5B
+    # (motion-lab-wan script: golden envelope, per-entry flow_shift, phased
+    # ESRGAN, swap-cell notebook — the full July hardening), replacing LTX.
+    # WUXIA_ENGINE=ltx reverts to the old script.
+    engine_dir = ("wuxia-i2v" if os.environ.get("WUXIA_ENGINE") == "ltx"
+                  else "motion-lab-wan")
+    canonical = _NB_ROOT / engine_dir / "run_ltx_phase.py"
+    canonical_nb = _NB_ROOT / engine_dir / "notebook.ipynb"
     pool = []
     for name, creds, kernels in acct_defs:
         if name not in want:
@@ -88,12 +95,18 @@ def _build_pool() -> list:
         for slug, kdir in kernels:
             if not kdir.exists():
                 continue
-            # Anti-drift: every pool dir runs the CANONICAL kernel script.
+            # Anti-drift: every pool dir runs the CANONICAL kernel script
+            # AND notebook (the notebook carries the 8GB-swap cell that
+            # absorbs the mp4-writer RAM spike — the historical -9s).
             try:
                 script = canonical.read_text(encoding="utf-8")
                 target = kdir / "run_ltx_phase.py"
                 if not target.exists() or target.read_text(encoding="utf-8") != script:
                     target.write_text(script, encoding="utf-8")
+                nb = canonical_nb.read_text(encoding="utf-8")
+                nb_target = kdir / "notebook.ipynb"
+                if not nb_target.exists() or nb_target.read_text(encoding="utf-8") != nb:
+                    nb_target.write_text(nb, encoding="utf-8")
             except OSError:
                 pass
             pool.append((slug, kdir, creds))
@@ -115,8 +128,16 @@ _CLIP_RE = re.compile(r"scene_(\d+)_shot_(\d+)\.mp4$", re.IGNORECASE)
 
 
 def plan_motion(scenes: list, still_groups: list) -> list:
-    """One LTX clip per shot flagged `requires_motion` (that has a still)."""
+    """One motion clip per shot flagged `requires_motion` (that has a still).
+
+    NEW PLATFORM (2026-07-19): user-locked coverage = 60-70% of SCENES carry
+    real motion (rest are Ken Burns stills). If the script's own flags fall
+    short of WUXIA_MOTION_COVERAGE (default 0.65), promote additional scenes'
+    first shot — highest-impact scenes first (the IMPACT regex), then in
+    script order — until the target is met.
+    """
     plan: list[dict] = []
+    covered: set[int] = set()
     idx = 0
     for i, scene in enumerate(scenes):
         for j, shot in enumerate(scene.get("visual_track", []) or []):
@@ -131,7 +152,36 @@ def plan_motion(scenes: list, still_groups: list) -> list:
                 "idx": idx, "scene_idx": i, "shot_idx": j,
                 "prompt": shot.get("prompt", "") or "", "still_path": still,
             })
+            covered.add(i)
             idx += 1
+
+    target = float(os.environ.get("WUXIA_MOTION_COVERAGE", "0.65"))
+    want = int(round(target * len(scenes)))
+    if len(covered) < want:
+        candidates = []
+        for i, scene in enumerate(scenes):
+            if i in covered:
+                continue
+            track = scene.get("visual_track", []) or []
+            if not track:
+                continue
+            still = (still_groups[i][0]
+                     if i < len(still_groups) and still_groups[i] else None)
+            if not still or not os.path.exists(still):
+                continue
+            prompt = track[0].get("prompt", "") or ""
+            impact = 1 if _IMPACT_RE.search(prompt) else 0
+            candidates.append((-impact, i, prompt, still))
+        candidates.sort()
+        for _neg_impact, i, prompt, still in candidates[:want - len(covered)]:
+            plan.append({
+                "idx": idx, "scene_idx": i, "shot_idx": 0,
+                "prompt": prompt, "still_path": still,
+            })
+            covered.add(i)
+            idx += 1
+        print(f"[motion] coverage promoted to {len(covered)}/{len(scenes)} "
+              f"scenes (target {target:.0%})", flush=True)
     return plan
 
 
@@ -216,29 +266,55 @@ def _pick_motion_prompt(entry: dict) -> str:
     return _MOTION_IMPACT if _IMPACT_RE.search(text) else _MOTION_CINEMATIC
 
 
+# Motion negative: the July lab list — includes the Wan Chinese-calligraphy
+# hallucination ban (sk9 scene3, 2026-07-19) and the anti-limb/fire set.
+_MOTION_NEG = (
+    "motion blur, blur streaks, smeared movement, ghosting, blurry, low quality, "
+    "deformed, melting, warping, extra limbs, mutated, face distortion, changing "
+    "face, fire, flames, burning, walking, stepping, punching, kicking, "
+    "body rotation, turning around, chinese text, calligraphy, watermark, "
+    "text overlay, subtitles")
+
+
 def _build_run_config(run_id: str, group: list) -> dict:
     hero = [{
         "idx": e["idx"], "scene_idx": e["scene_idx"], "shot_idx": e["shot_idx"],
         # C+D hybrid environmental-kinetics prompt (NOT the scene's action verb)
         # to avoid the articulated-limb smear/collapse on the free T4.
         "prompt": _pick_motion_prompt(e),
+        "negative": _MOTION_NEG,
         "image_b64": _seed_b64(e["still_path"]),
     } for e in group]
+    if os.environ.get("WUXIA_ENGINE") == "ltx":
+        return {
+            "skip_flux": True,
+            "hero_motion": hero,
+            "master_seed": _stable_master_seed(run_id),
+            "run_id": run_id,
+            "ltx_num_frames": int(os.environ.get("WUXIA_LTX_FRAMES", "65")),
+            "ltx_num_steps": int(os.environ.get("WUXIA_LTX_STEPS", "36")),
+            "ltx_guidance": float(os.environ.get("WUXIA_LTX_GUIDANCE", "3.5")),
+            "ltx_width": _LTX_W, "ltx_height": _LTX_H,
+            "esrgan": os.environ.get("WUXIA_ESRGAN", "true").lower() != "false",
+            "out_w": 1920, "out_h": 1080,
+            "ltx_timeout_s": int(os.environ.get("WUXIA_LTX_TIMEOUT_S", "5400")),
+            "clip_timeout_s": int(os.environ.get("WUXIA_CLIP_TIMEOUT_S", "540")),
+        }
+    # Wan2.2-5B GOLDEN ENVELOPE (do not change without a lab run): fp16,
+    # 33 frames, 35 steps @ 832x480 = 4/4 reliability on free T4 (bf16 OOMs,
+    # 49f@40steps host-RAM SIGKILLs). Phased ESRGAN upscales 2x in-kernel.
     return {
         "skip_flux": True,
         "hero_motion": hero,
         "master_seed": _stable_master_seed(run_id),
         "run_id": run_id,
-        "ltx_num_frames": int(os.environ.get("WUXIA_LTX_FRAMES", "65")),
-        # 36 steps (was 30) = more refinement; guidance 3.5 (was 3.0) forces
-        # sharper cel-shaded line-work for the 2D-anime look.
-        "ltx_num_steps": int(os.environ.get("WUXIA_LTX_STEPS", "36")),
-        "ltx_guidance": float(os.environ.get("WUXIA_LTX_GUIDANCE", "3.5")),
-        "ltx_width": _LTX_W, "ltx_height": _LTX_H,
+        "wan_dtype": "fp16",
+        "wan_frames": int(os.environ.get("WUXIA_WAN_FRAMES", "33")),
+        "wan_steps": int(os.environ.get("WUXIA_WAN_STEPS", "35")),
         "esrgan": os.environ.get("WUXIA_ESRGAN", "true").lower() != "false",
-        "out_w": 1920, "out_h": 1080,
-        "ltx_timeout_s": int(os.environ.get("WUXIA_LTX_TIMEOUT_S", "5400")),
-        "clip_timeout_s": int(os.environ.get("WUXIA_CLIP_TIMEOUT_S", "540")),  # kernel watchdog
+        # generous ceilings: ~10 clips/kernel x (gen ~5min + esrgan ~1.5min)
+        "ltx_timeout_s": int(os.environ.get("WUXIA_LTX_TIMEOUT_S", "10800")),
+        "clip_timeout_s": int(os.environ.get("WUXIA_CLIP_TIMEOUT_S", "900")),
     }
 
 
