@@ -38,6 +38,9 @@ _PLAYLIST_TITLES = {
     # playlist on whichever channel the token authorizes (EN → Five Second World
     # via token_curiosity.pickle; HI → Kant Decodes via token_explainer.pickle).
     "curiosity":   "Cinematic Curiosity — Wounds, Not Poems",
+    # Wuxia long-form recaps (HI → Kant Decodes via token_explainer.pickle).
+    # Every episode lands in this one playlist per user directive 2026-07-19.
+    "wuxia":       "Martial Peak — Hindi Anime Series",
 }
 _PLAYLIST_DESCRIPTIONS = {
     "mahabharata": "Cinematic short stories from the Mahabharata epic — Krishna, Arjuna, Karna, Draupadi, and the eternal lessons of dharma.",
@@ -45,6 +48,7 @@ _PLAYLIST_DESCRIPTIONS = {
     "whatif":      "What if reality bent for a moment? Curiosity-driven thought experiments about Earth, science, nature, and the cosmos.",
     "explainer":   "Hindi explainers separating facts from internet hype. AI, scams, productivity myths, work culture, psychology — what's actually going on behind the noise.",
     "curiosity":   "Emotionally unsafe explorations of science, technology, and existential futures. Every video is a wound, not a poem.",
+    "wuxia":       "Martial Peak की पूरी कहानी हिंदी में — cinematic anime recap series. Yang Kai का सफर, हर episode में। नया episode रोज़।",
 }
 
 # Pinned-comment template per series. After upload, the bot auto-replies its
@@ -297,6 +301,13 @@ def _series_tag_pack(series: str, language: str) -> list:
     if series == "explainer":
         # Hindi-only channel; no English variant.
         return list(_TAGS_EXPLAINER)
+    if series == "wuxia":
+        return [
+            "martial peak hindi", "anime recap hindi", "martial peak explained in hindi",
+            "donghua hindi", "cultivation anime hindi", "martial peak yang kai",
+            "anime story hindi", "wuxia anime hindi", "Kant Decodes",
+            "हिंदी एनीमे", "एनीमे कहानी हिंदी", "martial peak episode 1",
+        ]
     if series == "curiosity":
         base = list(_TAGS_CURIOSITY)
         if language == "hi":
@@ -491,11 +502,17 @@ def upload_to_youtube(
     # then ensure #Shorts for Shorts algorithm classification.
     description = script_data.get("description", "")
     description = _cap_description_hashtags(description, top_n=3)
-    if "#Shorts" not in description:
+    # wuxia = long-form episodes; tagging them #Shorts would be wrong.
+    if "#Shorts" not in description and series != "wuxia":
         description += "\n\n#Shorts"
 
     # Title: strip any leaked episode/part numbering, then trim to 60 chars.
-    title = _sanitize_title(script_data["title"])[:60]
+    # wuxia: serialized long-form — "Episode N" is navigation, not a reach
+    # suppressor; skip the Shorts-era episode-number strip.
+    if series == "wuxia":
+        title = script_data["title"].strip()[:100]
+    else:
+        title = _sanitize_title(script_data["title"])[:60]
     if series == "whatif" and not title.lower().startswith("what if"):
         title = ("What If: " + title)[:60]
 
