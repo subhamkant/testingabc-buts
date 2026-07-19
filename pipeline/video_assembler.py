@@ -3368,8 +3368,16 @@ def apply_end_band(video_path: str, band_s: float = 3.0,
         seg_dev = render_text_card(
             "सब्सक्राइब करें", FONT_PATH, 62,
             fill=(255, 230, 0, 255), outline_px=5)
+        # 2026-07-19 fresh-channel relaunch prep: handle is now env-driven
+        # (CHANNEL_HANDLE) so pointing the pipeline at the new channel is a
+        # pure config change — no code edit, no risk of the old @VyasaKathas
+        # being burned into the new channel's videos. Default preserves the
+        # archive/testbed channel.
+        _handle = os.environ.get("CHANNEL_HANDLE", "@VyasaKathas").strip()
+        if not _handle.startswith("@"):
+            _handle = "@" + _handle
         seg_lat = render_text_card(
-            "@VyasaKathas", latin_font, 62,
+            _handle, latin_font, 62,
             fill=(255, 230, 0, 255), outline_px=5)
         gap = 28
         l2w = seg_dev.width + gap + seg_lat.width
