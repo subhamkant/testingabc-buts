@@ -1,0 +1,115 @@
+{
+  "ts": "2026-07-19T05-47-28",
+  "language": "hi",
+  "score": 18,
+  "score_max": 25,
+  "violation": "hook",
+  "topic": "The terrifying truth of Bhishma's birth — Ganga drowning her seven newborn sons under a celestial curse, and the father whose plea saved the eighth child",
+  "title": "भीष्म की असली हार",
+  "script": {
+    "voiceover": "गंगा अपने आठवें पुत्र को नदी में बहाने चली है... शांतनु का दिल चीत्कार उठता है। सात बेटों को खोने का दर्द, अपनी ही चुप्पी का बोझ, उसे अंदर से जला रहा था। वह कैसे चुप रहता? उसकी प्रतिज्ञा ने उसे बांध रखा था, पर एक पिता का हृदय उसे ये सब देखने की अनुमति नहीं दे रहा था। और तभी, उसकी आवाज़ टूटती है, \"तुम्हें मेरे बच्चों को मारने का अधिकार नहीं!\" गंगा रुकती है, एक कड़वा सच सामने आता है – देवताओं का श्राप, वासुओं का पुनर्जन्म। वह देवव्रत को बचाती है, पर उसे दूर ले जाती है। शांतनु ने एक पुत्र तो बचाया, लेकिन उस दिन जो बीज बोया गया था, क्या उसी ने हमेशा के लिए उसके दिल में एक गहरा घाव छोड़ दिया?",
+    "broll": [
+      {
+        "image_prompt": "Extreme macro close-up of the hero's weapon, caught mid-action, motion-blurred battlefield chaos behind, Action moment frozen mid-gesture, Ganga's hands lowering a tiny newborn child into cold river water, moonlight reflecting on the water's surface, sorrowful divine river goddess Ganga, flowing white-and-silver silk sari modestly draped, long dark flowing hair, calm yet sorrowful eyes, luminous aura, cool moonlit silver-blue, restrained noble tones, white-and-silver silk dhoti, faces clearly lit, cold pre-dawn moonlight, faces visible and dignified, no deep shadows, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "गंगा अपने आठवें",
+        "mood": "chilling despair, somber ritual",
+        "wardrobe_context": "DIVINE",
+        "shot_type": "ACTION"
+      },
+      {
+        "image_prompt": "Kneeling by a moonlit riverbank, regal King Shantanu's powerful chest heaves with silent sobs, his face shadowed by anguish, regal King Shantanu, jeweled gold mukut, rich royal silk dhoti, intricate gold armbands, anguished expression, cool moonlit silver-blue, restrained noble tones, white-and-silver silk dhoti, faces clearly lit, cold pre-dawn moonlight, faces visible and dignified, no deep shadows, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "शांतनु का दिल",
+        "mood": "internal torment, silent grief",
+        "wardrobe_context": "PALACE",
+        "shot_type": "ACTION"
+      },
+      {
+        "image_prompt": "Sinking slowly into dark, still river water, seven tiny, delicate infants' swaddles are visible under a cold, crescent moon, the riverbank barely visible in the dim background, cool moonlit silver-blue, restrained noble tones, faces clearly lit, cold pre-dawn moonlight, faces visible and dignified, no deep shadows, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "सात बेटों को",
+        "mood": "profound loss, chilling emptiness",
+        "wardrobe_context": "DIVINE",
+        "shot_type": "ACTION"
+      },
+      {
+        "image_prompt": "Close-up shot of King Shantanu's trembling face, a single tear-streaked eye wide with desperation, mouth open as if crying out, regal King Shantanu, jeweled gold mukut, rich royal silk dhoti, intricate gold armbands, anguished expression, cool moonlit silver-blue, restrained noble tones, white-and-silver silk dhoti, faces clearly lit, cold pre-dawn moonlight, faces visible and dignified, no deep shadows, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "आवाज़ टूटती है",
+        "mood": "desperate plea, breaking silence",
+        "wardrobe_context": "PALACE",
+        "shot_type": "REACTION"
+      },
+      {
+        "image_prompt": "[CONFRONTATION-WIDE] Sweeping shot of a luminous Ganga holding a tiny newborn child protectively, turning with a sorrowful expression to a pleading King Shantanu in the foreground, divine river goddess Ganga, flowing white-and-silver silk sari modestly draped, long dark flowing hair, calm yet sorrowful eyes, luminous aura, regal King Shantanu, jeweled gold mukut, rich royal silk dhoti, intricate gold armbands, anguished expression, cool moonlit silver-blue, restrained noble tones, white-and-silver silk dhoti, faces clearly lit, cold pre-dawn moonlight, faces visible and dignified, no deep shadows, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "गंगा रुकती है",
+        "mood": "profound revelation, somber understanding",
+        "wardrobe_context": "DIVINE",
+        "shot_type": "REACTION"
+      },
+      {
+        "image_prompt": "[WITNESS-FROM-BEHIND] Sweeping shot of King Shantanu's back-of-head in foreground, as he witnesses Ganga, holding the tiny newborn Devavrata close, gazing at him with a mixture of love and sorrow, on the riverbank under cold moonlight, divine river goddess Ganga, flowing white-and-silver silk sari modestly draped, long dark flowing hair, calm yet sorrowful eyes, luminous aura, regal King Shantanu, jeweled gold mukut, rich royal silk dhoti, intricate gold armbands, cool moonlit silver-blue, restrained noble tones, white-and-silver silk dhoti, faces clearly lit, cold pre-dawn moonlight, faces visible and dignified, no deep shadows, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "वह देवव्रत को",
+        "mood": "tender farewell, tragic acceptance",
+        "wardrobe_context": "DIVINE",
+        "shot_type": "REACTION"
+      },
+      {
+        "image_prompt": "Walking away from shot, the divine river goddess Ganga, her back to the viewer, carrying the newborn child wrapped in white silk, fading into a mist over the river, King Shantanu's silhouette watching from the distant bank, divine river goddess Ganga, flowing white-and-silver silk sari modestly draped, long dark flowing hair, calm yet sorrowful eyes, luminous aura, cool moonlit silver-blue, restrained noble tones, white-and-silver silk dhoti, faces clearly lit, cold pre-dawn moonlight, faces visible and dignified, no deep shadows, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "दूर ले जाती",
+        "mood": "poignant departure, lingering sorrow",
+        "wardrobe_context": "DIVINE",
+        "shot_type": "REACTION"
+      },
+      {
+        "image_prompt": "Gripping his chest with a hand, King Shantanu's face is etched with deep, internal pain, his silent grief illuminated by harsh moonlight, regal King Shantanu, jeweled gold mukut, rich royal silk dhoti, intricate gold armbands, anguished expression, cool moonlit silver-blue, restrained noble tones, white-and-silver silk dhoti, faces clearly lit, cold pre-dawn moonlight, faces visible and dignified, no deep shadows, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "उसके दिल में",
+        "mood": "crushing regret, quiet despair",
+        "wardrobe_context": "PALACE",
+        "shot_type": "ACTION"
+      },
+      {
+        "image_prompt": "A lone King Shantanu recoiling onto the riverbank, shoulders slumped in silhouette, the river flowing silently in the fading dusk, cool moonlit silver-blue, restrained noble tones, white-and-silver silk dhoti, faces clearly lit, cold pre-dawn moonlight, faces visible and dignified, no deep shadows, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "गहरा घाव छोड़",
+        "mood": "eternal burden, solitary reflection",
+        "wardrobe_context": "AFTERMATH",
+        "shot_type": "AMBIGUOUS"
+      }
+    ],
+    "title": "भीष्म की असली हार",
+    "hook_title": "भीष्म की हार",
+    "description": "▶️ अगला भाग: Amba's revenge, Bhishma's biggest mistake\n\nएक पिता का दर्द और वो प्रतिज्ञा जिसने एक राजवंश का भविष्य बदल दिया।\n\nमहाभारत के नायक भीष्म के जन्म की वो कहानी, जो उनके पिता शांतनु के गहरे दर्द और एक भयानक प्रतिज्ञा से जुड़ी है। गंगा अपने आठवें पुत्र देवव्रत को नदी में डुबोने चली थी, जब शांतनु अपनी चुप्पी तोड़ते हैं। यह सिर्फ एक बच्चे को बचाने का क्षण नहीं था, बल्कि एक ऐसी कीमत थी जो हस्तिनापुर को सदियों तक चुकानी पड़ी। यह उस नायक की कहानी है जिसने अपने दिल के घावों को हमेशा के लिए चुपचाप सह लिया।\n\n#Shorts #Mahabharata #महाभारत #Krishna #HinduMythology #PauranikKatha #MythologyShorts #HindiShorts",
+    "tags": [
+      "Bhishma birth",
+      "Ganga Shantanu",
+      "Bhishma vow origin",
+      "भीष्म",
+      "महाभारत",
+      "Shorts",
+      "Hindu mythology"
+    ],
+    "thumbnail_prompt": "Vertical shot, dramatic pre-dawn moonlight, Ganga, the divine river goddess, stands sorrowfully, holding a tiny newborn child towards the dark, swirling river, her white-and-silver sari flowing dramatically, King Shantanu in the mid-ground, anguish etched on his face, reaching out a trembling hand in a desperate plea, luminous aura around Ganga, cool moonlit silver-blue, high-contrast rim lighting, vibrant jewel colours, main figures large, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+    "quotable_line": "एक बेटे को बचाने की ज़िद, जिसने हस्तिनापुर को हमेशा के लिए बांध दिया।",
+    "pinned_question": "❓ एक बेटे को बचाने की ज़िद, जिसने हस्तिनापुर को हमेशा के लिए बांध दिया। क्या शांतनु का फैसला सही था, या यह सिर्फ एक और त्रासदी की शुरुआत थी?",
+    "next_seed": "और यही मौन प्रतिज्ञा भीष्म के जीवन का सबसे बड़ा धोखा बनी।",
+    "language": "hi",
+    "content_type": "story",
+    "topic": "The terrifying truth of Bhishma's birth — Ganga drowning her seven newborn sons under a celestial curse, and the father whose plea saved the eighth child",
+    "series": "mahabharata",
+    "episode_n": 28,
+    "arc_character_devanagari": "भीष्म",
+    "arc_character_english": "Bhishma — The Vow That Doomed a Dynasty",
+    "_phase18_strict_pass": false,
+    "_phase18_score": 18,
+    "_phase18_score_max": 25,
+    "_phase18_score_floor": 19,
+    "_phase18_violation": "hook",
+    "_phase18_failing_gates": [
+      "archetype",
+      "char_names",
+      "engagement",
+      "hook",
+      "intensity",
+      "subject_diversity",
+      "tha_tic"
+    ],
+    "_phase18_fatal_failures": []
+  }
+}
