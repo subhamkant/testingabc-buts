@@ -258,6 +258,28 @@ _MOTION_HORDE = os.environ.get("WUXIA_MOTION_HORDE") or (
 )
 
 
+# WAN-5B motion prompts (2026-07-20): Wan2.2-5B does NOT melt on body motion
+# the way LTX-2B did, so the hard-freeze language (_NB_FREEZE) that crushed it
+# to motion 1-3 is REPLACED with "subtle natural motion" — confirmed to lift
+# the same still from 2 -> 15 motion while staying coherent + identity-locked.
+# The LTX melt-guard prompts are kept for WUXIA_ENGINE=ltx only.
+_WAN_MOVE = ("subtle natural body sway and breathing, head stable and face "
+             "perfectly sharp, no warping, no morphing, identity unchanged")
+_WAN_CINEMATIC = os.environ.get("WUXIA_WAN_CINEMATIC") or (
+    f"Cinematic 3D donghua. Slow cinematic camera push-in with gentle parallax. "
+    f"His robes and hair ripple in a soft wind, atmospheric mist and dust motes "
+    f"drift through shifting light. {_WAN_MOVE}.")
+_WAN_IMPACT = os.environ.get("WUXIA_WAN_IMPACT") or (
+    f"Cinematic 3D donghua. Dramatic slow camera push-in. His robes and hair "
+    f"whip in the wind, swirling dust and glowing embers stream past, a golden "
+    f"energy aura flares and pulses around him, high kinetic energy. {_WAN_MOVE}.")
+_WAN_HORDE = os.environ.get("WUXIA_WAN_HORDE") or (
+    f"Cinematic 3D donghua. The hero holds his stance, face sharp and stable, "
+    f"as the surrounding group surges forward as one mass, robes billowing, dust "
+    f"erupting, weapons glinting; slow cinematic pan. {_WAN_MOVE}, distinct "
+    f"crowd figures, no fused bodies.")
+
+
 def _pick_motion_prompt(entry: dict) -> str:
     override = os.environ.get("WUXIA_MOTION_PROMPT", "").strip()
     if override:
@@ -265,9 +287,13 @@ def _pick_motion_prompt(entry: dict) -> str:
     if entry.get("motion_prompt"):  # explicit per-scene override
         return entry["motion_prompt"]
     text = entry.get("prompt", "") or ""
+    ltx = os.environ.get("WUXIA_ENGINE") == "ltx"
     if _GROUP_RE.search(text):
-        return _MOTION_HORDE
-    return _MOTION_IMPACT if _IMPACT_RE.search(text) else _MOTION_CINEMATIC
+        return _MOTION_HORDE if ltx else _WAN_HORDE
+    impact = bool(_IMPACT_RE.search(text))
+    if ltx:
+        return _MOTION_IMPACT if impact else _MOTION_CINEMATIC
+    return _WAN_IMPACT if impact else _WAN_CINEMATIC
 
 
 # Motion negative: the July lab list — includes the Wan Chinese-calligraphy
@@ -315,6 +341,11 @@ def _build_run_config(run_id: str, group: list) -> dict:
         "wan_dtype": "fp16",
         "wan_frames": int(os.environ.get("WUXIA_WAN_FRAMES", "33")),
         "wan_steps": int(os.environ.get("WUXIA_WAN_STEPS", "35")),
+        # flow_shift = Wan's motion-amplitude knob. Default 12 (mapped 2026-07-19:
+        # coherent strong motion; 8 detonates on explosive stills). WITHOUT this
+        # the pipeline ran conservative-default motion (clips came out ~1-3);
+        # 12 + loosened prompts lifted the same still to motion 15 (confirmed).
+        "flow_shift": float(os.environ.get("WUXIA_WAN_FLOW_SHIFT", "12")),
         # 2026-07-20: gen dims env-configurable (kernel default is 832x480
         # landscape). PORTRAIT caller sets 480x832 -> ESRGAN 2x -> 960x1664,
         # which the portrait assembler crops to 1080x1920. Default preserves
@@ -328,15 +359,66 @@ def _build_run_config(run_id: str, group: list) -> dict:
     }
 
 
+def _clip_motion(path: str) -> float:
+    """Mean inter-frame luma delta — cheap motion-energy metric (matches the
+    audit tooling). Returns 0.0 on any failure (treated as static)."""
+    import subprocess
+    import tempfile
+
+    import numpy as np
+    d = tempfile.mkdtemp(prefix="mchk_")
+    try:
+        r = subprocess.run(
+            ["ffmpeg", "-nostdin", "-y", "-v", "error", "-i", path,
+             "-vf", "fps=8,scale=320:180", f"{d}/f%03d.png"],
+            capture_output=True)
+        if r.returncode != 0:
+            return 0.0
+        frames = sorted(Path(d).glob("f*.png"))
+        prev = None
+        deltas = []
+        for f in frames:
+            g = np.asarray(Image.open(f).convert("L"), dtype=np.float32)
+            if prev is not None:
+                deltas.append(float(np.abs(g - prev).mean()))
+            prev = g
+        return float(np.mean(deltas)) if deltas else 0.0
+    except Exception:
+        return 0.0
+    finally:
+        import shutil
+        shutil.rmtree(d, ignore_errors=True)
+
+
 def _merge_clips_into_stills(still_groups: list, ck) -> list:
-    """Positional merge: motion mp4 where present, else the CF still."""
+    """Positional merge: motion mp4 where present AND actually moving, else the
+    CF still (which the assembler animates with a Ken Burns push).
+
+    MOTION FLOOR (2026-07-20): a clip below WUXIA_MOTION_FLOOR (default 4.0)
+    barely moves — it would read as a dead freeze. Dropping it to its still
+    means the assembler gives it a Ken Burns camera push instead, which at
+    least breathes. Result cached so the (slow) measurement runs once."""
+    floor = float(os.environ.get("WUXIA_MOTION_FLOOR", "5.0"))
+    scored = ck.load_json("motion_scores.json") if ck.has("motion_scores.json") else {}
     clip_by_pos: dict[tuple[int, int], str] = {}
+    dropped = 0
     clips_dir = Path(ck.path("motion_clips"))
     if clips_dir.exists():
         for p in clips_dir.glob("*.mp4"):
             m = _CLIP_RE.search(p.name)
-            if m:
-                clip_by_pos[(int(m.group(1)) - 1, int(m.group(2)) - 1)] = str(p)
+            if not m:
+                continue
+            key = p.name
+            if key not in scored:
+                scored[key] = _clip_motion(str(p))
+            if scored[key] < floor:
+                dropped += 1
+                continue
+            clip_by_pos[(int(m.group(1)) - 1, int(m.group(2)) - 1)] = str(p)
+    ck.save_json("motion_scores.json", scored)
+    if dropped:
+        print(f"    [wuxia-motion] {dropped} clip(s) below motion floor {floor} "
+              f"-> Ken Burns (no dead freezes)", flush=True)
     merged: list[list[str]] = []
     for i, row in enumerate(still_groups):
         merged.append([clip_by_pos.get((i, j), still) for j, still in enumerate(row)])
