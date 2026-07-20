@@ -1,0 +1,110 @@
+{
+  "ts": "2026-07-20T06-07-22",
+  "language": "hi",
+  "score": 19,
+  "score_max": 25,
+  "violation": "subject_diversity",
+  "topic": "Krishna choosing Vidura's humble saag over Duryodhana's royal feast — the night God walked past a palace banquet to eat greens served with love, and taught Hastinapur what devotion tastes like",
+  "title": "कृष्ण का असली बलिदान | Krishna's Real Sacrifice",
+  "script": {
+    "voiceover": "विदुर की कुटिया में कृष्ण की कृपा बरसती है, जब हस्तिनापुर के वैभव को वे पीछे छोड़ देते हैं। दुर्योधन के स्वर्ण पात्रों में परोसे गए छप्पन भोग धरे रह जाते हैं, क्योंकि कृष्ण तो केवल प्रेम का भूखा है। विदुर की पत्नी सुध-बुध खोकर सादा साग खिलाती है, और कृष्ण हर निवाले में तृप्ति ढूँढते हैं। लेकिन जब दुर्योधन पूछता है कि उसने मेरा अपमान क्यों किया, तो कृष्ण मुस्कराकर कहते हैं, 'पदार्थ नहीं, भाव ही मुझे बाँधते हैं।' जिस ईश्वर के लिए सारा संसार खड़ा हो, वह एक साधारण साग में अपनी ममता क्यों ढूँढता है? क्या आप भी उस प्रेम की कृपा को पहचान पाए?",
+    "broll": [
+      {
+        "image_prompt": "Extreme macro close-up of a humble clay plate containing leafy greens, golden light glowing from the surface, rustic wooden table, cinematic volumetric lighting, no hands in frame, no text.",
+        "anchor_phrase": "विदुर की कुटिया",
+        "mood": "warm, devotional, serene",
+        "wardrobe_context": "FOREST",
+        "shot_type": "AMBIGUOUS"
+      },
+      {
+        "image_prompt": "Looming over the royal banquet, rows of jeweled golden platters overflowing with exotic delicacies, dim harsh torchlight reflecting on polished surfaces, empty throne of Duryodhana in background, no hands in frame, no text.",
+        "anchor_phrase": "हस्तिनापुर के वैभव",
+        "mood": "cold, arrogant, opulent",
+        "wardrobe_context": "PALACE",
+        "shot_type": "AMBIGUOUS"
+      },
+      {
+        "image_prompt": "Walking away from the gleaming palace pillars, Krishna in glowing yellow pitambara silk, monsoon-blue skin radiating divine soft light, serene expression, palace guards blurred behind, no hands in frame, no text.",
+        "anchor_phrase": "पीछे छोड़ देते",
+        "mood": "calm, purposeful, divine",
+        "wardrobe_context": "PALACE",
+        "shot_type": "AMBIGUOUS"
+      },
+      {
+        "image_prompt": "Kneeling beneath the humble thatched roof, Krishna with a radiant smile accepts a handful of greens, divine aura illuminating the dark cottage, deep-red and gold embroidery on simple cloths, no hands in frame, no text.",
+        "anchor_phrase": "कृष्ण तो केवल",
+        "mood": "divine, intimate, grateful",
+        "wardrobe_context": "FOREST",
+        "shot_type": "ACTION"
+      },
+      {
+        "image_prompt": "Snarling with rage, Duryodhana lunging forward in the royal court, mirror-polished golden kavacha catching intense embers of fury, jeweled mukut tilted, dramatic shadows, no hands in frame, no text.",
+        "anchor_phrase": "दुर्योधन पूछता है",
+        "mood": "angry, volatile, tense",
+        "wardrobe_context": "PALACE",
+        "shot_type": "ACTION"
+      },
+      {
+        "image_prompt": "Striking a pose of eternal stillness, Krishna standing amidst swirling celestial dust, monsoon-blue skin, radiant golden aura, gentle smile of cosmic wisdom, divine light everywhere, no hands in frame, no text.",
+        "anchor_phrase": "कृष्ण मुस्कराकर कहते",
+        "mood": "awe-inspiring, serene, divine",
+        "wardrobe_context": "DIVINE",
+        "shot_type": "ACTION"
+      },
+      {
+        "image_prompt": "Falling petals of marigolds scattering across a polished marble floor, soft sunlight streaming through latticed windows, lingering glow of grace, no hands in frame, no text.",
+        "anchor_phrase": "प्रेम की कृपा",
+        "mood": "peaceful, light, warm",
+        "wardrobe_context": "AFTERMATH",
+        "shot_type": "ACTION"
+      },
+      {
+        "image_prompt": "Fading dusk over a calm riverbank, a lone diya flickering in the dark, silhouette of a devoted soul with folded hands in the distance, soft radiant glow, no hands in frame, no text.",
+        "anchor_phrase": "कृपा को पहचान",
+        "mood": "quiet, devotional, still",
+        "wardrobe_context": "AFTERMATH",
+        "shot_type": "ENVIRONMENT"
+      }
+    ],
+    "title": "कृष्ण का असली बलिदान | Krishna's Real Sacrifice",
+    "hook_title": "कृष्ण का असली वचन",
+    "description": "कृष्ण ने महलों को ठुकराकर विदुर के प्रेम को क्यों चुना? ईश्वर के लिए भोग नहीं, भक्ति मायने रखती है।\n\nइस कथा में जानिए कि कैसे भगवान ने हस्तिनापुर के वैभव को छोड़कर एक भक्त की सादगी में अपनी तृप्ति ढूँढी। जब घमंड और प्रेम आमने-सामने आए, तब कृष्ण ने दिखाया कि भक्ति का असली स्वाद क्या होता है। यह सिर्फ एक भोजन की कथा नहीं, बल्कि समर्पण के उस शिखर की गाथा है जहाँ ईश्वर स्वयं भक्त के द्वार पर खड़े होते हैं।\n\n#Shorts #Mahabharata #महाभारत #Krishna #HinduMythology #PauranikKatha #MythologyShorts #HindiShorts",
+    "tags": [
+      "Krishna",
+      "कृष्ण",
+      "Vidura",
+      "विदुर",
+      "Mahabharata",
+      "महाभारत",
+      "Shorts",
+      "Hindu mythology"
+    ],
+    "thumbnail_prompt": "Extreme close-up of Krishna, monsoon-blue skin glowing with divine light, accepting a humble offering from a radiant devoted hand, ornate golden palace background in bokeh contrast, jewel-toned palette, cinematic rim lighting, high-contrast emotional peak.",
+    "quotable_line": "पदार्थ नहीं, केवल प्रेम का भाव ही ईश्वर को बाँधता है।",
+    "pinned_question": "❓ {quotable_line} क्या आप भी ईश्वर को सादगी में खोज सकते हैं?",
+    "next_seed": "और यही भक्ति का मार्ग कुरुक्षेत्र में सबसे बड़ा हथियार बनेगा।",
+    "language": "hi",
+    "content_type": "story",
+    "topic": "Krishna choosing Vidura's humble saag over Duryodhana's royal feast — the night God walked past a palace banquet to eat greens served with love, and taught Hastinapur what devotion tastes like",
+    "series": "mahabharata",
+    "episode_n": 0,
+    "arc_character_devanagari": "",
+    "arc_character_english": "devotional",
+    "_phase18_strict_pass": false,
+    "_phase18_score": 19,
+    "_phase18_score_max": 25,
+    "_phase18_score_floor": 19,
+    "_phase18_violation": "subject_diversity",
+    "_phase18_failing_gates": [
+      "anti_merge_composition",
+      "char_names",
+      "engagement",
+      "intensity",
+      "monotony",
+      "subject_diversity"
+    ],
+    "_phase18_fatal_failures": [
+      "anti_merge_composition"
+    ]
+  }
+}
