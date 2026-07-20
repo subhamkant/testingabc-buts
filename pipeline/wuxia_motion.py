@@ -121,7 +121,11 @@ _LTX_W, _LTX_H = 1152, 640
 # rejects oversized source (~1MB => 400). LTX only uses the seed as a
 # composition guide (resizes internally; in-kernel ESRGAN reconstructs detail),
 # so a small 640x360 q78 seed (~50-70KB b64) keeps ~12 clips/kernel under the cap.
-_SEED_W, _SEED_H = 640, 360
+# 2026-07-20: seed dims env-configurable so a PORTRAIT caller (Mahabharata
+# Shorts) can seed 360x640 without distorting the still. Default = landscape
+# (wuxia), zero behavior change.
+_SEED_W = int(os.environ.get("WUXIA_SEED_W", "640"))
+_SEED_H = int(os.environ.get("WUXIA_SEED_H", "360"))
 
 _LOCK = asyncio.Lock()
 _CLIP_RE = re.compile(r"scene_(\d+)_shot_(\d+)\.mp4$", re.IGNORECASE)
@@ -311,6 +315,12 @@ def _build_run_config(run_id: str, group: list) -> dict:
         "wan_dtype": "fp16",
         "wan_frames": int(os.environ.get("WUXIA_WAN_FRAMES", "33")),
         "wan_steps": int(os.environ.get("WUXIA_WAN_STEPS", "35")),
+        # 2026-07-20: gen dims env-configurable (kernel default is 832x480
+        # landscape). PORTRAIT caller sets 480x832 -> ESRGAN 2x -> 960x1664,
+        # which the portrait assembler crops to 1080x1920. Default preserves
+        # the wuxia golden envelope (832x480).
+        "wan_width": int(os.environ.get("WUXIA_WAN_WIDTH", "832")),
+        "wan_height": int(os.environ.get("WUXIA_WAN_HEIGHT", "480")),
         "esrgan": os.environ.get("WUXIA_ESRGAN", "true").lower() != "false",
         # generous ceilings: ~10 clips/kernel x (gen ~5min + esrgan ~1.5min)
         "ltx_timeout_s": int(os.environ.get("WUXIA_LTX_TIMEOUT_S", "10800")),
@@ -384,10 +394,17 @@ async def _kernel_task(ck, i: int, slug: str, kernel_dir: Path, run_config: dict
             print(f"    [wuxia-motion] kernel {i} P100 draw — re-pushed (attempt {attempt})",
                   flush=True)
             continue
-        raise KaggleClientError(
-            f"wuxia kernel {i} ({slug}) ended status={res['status']} (attempt {attempt}); "
-            f"GHA retry job will resume."
-        )
+        # BEST-EFFORT (default, local runs): a single kernel failing must NOT
+        # abort the whole episode — its shots fall back to Ken Burns stills in
+        # the positional merge. Set WUXIA_MOTION_BEST_EFFORT=0 for the GHA
+        # retry-chain behavior (raise so the retry job resumes this kernel).
+        if os.environ.get("WUXIA_MOTION_BEST_EFFORT", "1") == "0":
+            raise KaggleClientError(
+                f"wuxia kernel {i} ({slug}) ended status={res['status']} "
+                f"(attempt {attempt}); GHA retry job will resume.")
+        print(f"    [wuxia-motion] kernel {i} ({slug}) FAILED status={res['status']} "
+              f"— those shots fall back to Ken Burns (best-effort)", flush=True)
+        return
 
 
 async def run_motion(ck, run_id: str, scenes: list, still_groups: list,
@@ -428,11 +445,24 @@ async def run_motion(ck, run_id: str, scenes: list, still_groups: list,
             tasks.append(_kernel_task(ck, i, slug, kdir, rc, max_p100_retries,
                                       creds_json=creds, stagger_s=i * 40))
 
-        await asyncio.gather(*tasks)  # raises on any kernel failure -> retry resumes
+        # best-effort: gather without letting one kernel's failure abort the
+        # rest. In GHA mode (_BEST_EFFORT=0) _kernel_task still raises and the
+        # exception surfaces here to fail the job for the retry chain.
+        results = await asyncio.gather(*tasks, return_exceptions=True)
+        errs = [r for r in results if isinstance(r, Exception)]
+        if errs and os.environ.get("WUXIA_MOTION_BEST_EFFORT", "1") == "0":
+            raise errs[0]
 
         target = Path(ck.path("motion_clips"))
         mp4s = [str(p) for p in target.glob("*.mp4")] if target.exists() else []
+        if not mp4s:
+            # total motion wipeout — don't checkpoint 'done' (so a re-run can
+            # retry motion once the -9/quota cause is fixed); degrade to stills.
+            print("    [wuxia-motion] NO clips produced — episode = all Ken Burns "
+                  "this pass (motion NOT marked done; re-run to retry)", flush=True)
+            return _merge_clips_into_stills(still_groups, ck)
         ck.save_json("motion_manifest.json", {"clips": mp4s})
         ck.mark_done("motion_done")
-        print(f"    [wuxia-motion] all kernels complete — {len(mp4s)} clip(s) total", flush=True)
+        print(f"    [wuxia-motion] {len(mp4s)} clip(s) landed "
+              f"({len(errs)} kernel(s) failed -> those shots = Ken Burns)", flush=True)
         return _merge_clips_into_stills(still_groups, ck)
