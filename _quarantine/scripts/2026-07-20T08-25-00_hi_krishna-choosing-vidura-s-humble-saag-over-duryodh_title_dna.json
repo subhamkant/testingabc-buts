@@ -1,0 +1,119 @@
+{
+  "ts": "2026-07-20T08-25-00",
+  "language": "hi",
+  "score": 20,
+  "score_max": 25,
+  "violation": "title_dna",
+  "topic": "Krishna choosing Vidura's humble saag over Duryodhana's royal feast — the night God walked past a palace banquet to eat greens served with love, and taught Hastinapur what devotion tastes like",
+  "title": "दुर्योधन का असली अभिमान",
+  "script": {
+    "voiceover": "दुर्योधन का भव्य भोज सजता है, पर कृष्ण की कृपा उसे छूती नहीं। सोने की थालियाँ, रत्नों से सजे पात्र... दुर्योधन अहंकार से गरजता है, \"प्रभु, मेरा आतिथ्य स्वीकार करें!\" कृष्ण बस मुस्कुराते हुए, महलों की चमक छोड़, एक छोटे से कुटिया की ओर चल पड़ते हैं। लेकिन वहीं विदुर अपनी पत्नी के साथ साग के पत्ते चुन रहे थे, आँखों में अगाध प्रेम। कृष्ण उनके द्वार पर रुक जाते हैं। विदुर प्रेम से कहते हैं, \"मेरे पास तो कुछ नहीं, प्रभु, बस यह साग और प्रेम है।\" कृष्ण स्वाद से साग खाते हैं, हर निवाला जैसे स्वर्ग का भोग। उस छोटे से घर में, प्रेम की एक अद्भुत कृपा बरस जाती है। क्या प्रेम से मिली साधारण भेंट, सोने की थाली से बड़ी कृपा नहीं होती?",
+    "broll": [
+      {
+        "image_prompt": "Extreme macro close-up of a lavish royal feast, golden plates piled high with exotic delicacies, shimmering silks, scattered jewels, ornate carved columns, soft cinematic lighting, jewel-toned palette, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "भव्य भोज सजता है",
+        "mood": "Opulent, anticipatory, grand",
+        "wardrobe_context": "PALACE",
+        "shot_type": "AMBIGUOUS"
+      },
+      {
+        "image_prompt": "[POWER-LOOM] Sweeping panoramic shot of an ornate Nagara-style palace court with carved stone columns and marble floor, Duryodhana lunging forward from his gilded throne with a proud cruel sneer, mirror-polished golden kavacha, jeweled gold war-crown with crimson plume, blood-red and black silks, Bhishma and other courtiers witnessing from below in background, jewel-toned palette, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "दुर्योधन अहंकार से गरजता है",
+        "mood": "Arrogant, demanding, imposing",
+        "wardrobe_context": "PALACE",
+        "shot_type": "ENVIRONMENT"
+      },
+      {
+        "image_prompt": "Wide cinematic shot of Krishna walking away from a grand palace, a radiant luminous glow around him, a calm smile on his face, graceful powerful divine form, luminous monsoon-cloud blue skin, dark curls with peacock feather, golden-yellow pitambara silk, crimson sash, layered gold necklaces, divine charioteer, palace lights fading behind him, jewel-toned palette, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "महलों की चमक छोड़",
+        "mood": "Serene, mysterious, divine",
+        "wardrobe_context": "PALACE",
+        "shot_type": "ENVIRONMENT"
+      },
+      {
+        "image_prompt": "[CONFRONTATION-WIDE] Rustic forest dwelling, Vidura kneeling in simple valkala bark-cloth, rudraksha mala, barefoot, carefully picking green saag leaves from a small patch, his wife beside him, devoted and serene, humble earthen pots nearby, dappled sunlight filtering through sparse trees, jewel-toned palette, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "विदुर अपनी पत्नी के साथ",
+        "mood": "Humble, devout, peaceful",
+        "wardrobe_context": "FOREST",
+        "shot_type": "ACTION"
+      },
+      {
+        "image_prompt": "Medium shot of Krishna standing at the entrance of a humble, mud-plastered hut, a warm welcoming glow emanating from the doorway, graceful powerful divine form, luminous monsoon-cloud blue skin, dark curls with peacock feather, golden-yellow pitambara silk, crimson sash, layered gold necklaces, divine charioteer, the hut surrounded by simple nature, jewel-toned palette, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "कृष्ण उनके द्वार पर रुक जाते हैं",
+        "mood": "Arrival, grace, warmth",
+        "wardrobe_context": "FOREST",
+        "shot_type": "AMBIGUOUS"
+      },
+      {
+        "image_prompt": "[OVER-SHOULDER] Vidura's back in foreground, offering a small earthen pot of saag with trembling, devoted hands, Krishna's gentle, accepting face in soft focus, luminous monsoon-cloud blue skin, dark curls with peacock feather, golden-yellow pitambara silk, crimson sash, layered gold necklaces, divine charioteer, jewel-toned palette, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "मेरे पास तो कुछ नहीं, प्रभु",
+        "mood": "Devotional, vulnerable, heartfelt",
+        "wardrobe_context": "FOREST",
+        "shot_type": "AMBIGUOUS"
+      },
+      {
+        "image_prompt": "Close-up of Krishna eating simple green saag from a small earthen bowl, a blissful, radiant expression on his face, graceful powerful divine form, luminous monsoon-cloud blue skin, dark curls with peacock feather, golden-yellow pitambara silk, the humble saag glowing with divine light, jewel-toned palette, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "कृष्ण स्वाद से साग खाते हैं",
+        "mood": "Blissful, divine, content",
+        "wardrobe_context": "FOREST",
+        "shot_type": "AMBIGUOUS"
+      },
+      {
+        "image_prompt": "Wide shot of the humble hut interior bathed in radiant, golden-white divine light, Krishna seated serenely, Vidura and his wife kneeling in reverent awe, tears on their faces, the entire space imbued with a powerful, warm spiritual glow, jewel-toned palette, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "अद्भुत कृपा बरस जाती है",
+        "mood": "Awe, wonder, divine bliss",
+        "wardrobe_context": "DIVINE",
+        "shot_type": "ENVIRONMENT"
+      },
+      {
+        "image_prompt": "Fading dusk over a calm river, a lone diya flickering on the water, a serene silhouette of Vidura with folded hands, a quiet radiant glow of gratitude and stillness, jewel-toned palette, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "बड़ी कृपा नहीं होती?",
+        "mood": "Peaceful, grateful, reflective",
+        "wardrobe_context": "AFTERMATH",
+        "shot_type": "AMBIGUOUS"
+      }
+    ],
+    "title": "दुर्योधन का असली अभिमान",
+    "hook_title": "दुर्योधन का अभिमान",
+    "description": "कृष्ण जब हस्तिनापुर पहुंचे, तो दुर्योधन ने उनके लिए भव्य भोज का आयोजन किया। सोने की थालियाँ, रत्नों से सजे पात्र और शाही व्यंजन। लेकिन कृष्ण ने उस अहंकारपूर्ण निमंत्रण को ठुकरा दिया। इसके बजाय, वे नम्र विदुर की कुटिया में गए, जहाँ प्रेम से परोसा गया साधारण साग ही उन्हें स्वर्ग जैसा लगा। यह कहानी दिखाती है कि बाहरी वैभव नहीं, बल्कि हृदय की पवित्रता और प्रेम ही सच्ची भक्ति का आधार है। कृष्ण की यह लीला दुर्योधन के घमंड को चूर-चूर कर देती है, और हमें सिखाती है कि ईश्वर केवल निस्वार्थ प्रेम के भूखे होते हैं, शाही ठाट-बाट के नहीं। इस घटना ने हस्तिनापुर को एक ऐसा भावनात्मक सत्य दिखाया, जो वर्षों तक उनके भीतर गूँजता रहा।\n\n#Shorts #Mahabharata #महाभारत #Krishna #HinduMythology #PauranikKatha #MythologyShorts #HindiShorts",
+    "tags": [
+      "Krishna",
+      "Vidura",
+      "Duryodhana",
+      "कृष्ण",
+      "विदुर",
+      "दुर्योधन",
+      "Mahabharata",
+      "महाभारत",
+      "Shorts",
+      "Hindu mythology"
+    ],
+    "thumbnail_prompt": "Confrontational wide shot, Krishna mid-stride, turning away from a towering, opulent palace entrance, his luminous monsoon-cloud blue skin glowing with divine light, looking towards a humble, dimly lit mud hut in the distance, Duryodhana stands in the foreground with a proud cruel sneer, mirror-polished golden kavacha, fists clenched in disbelief, high-contrast rim lighting, vibrant jewel colours, vertical composition with the main figures large, jewel-toned palette, no hands in frame, no text",
+    "quotable_line": "दुर्योधन का घमंड, कृष्ण की कृपा से टूट गया।",
+    "pinned_question": "❓ दुर्योधन का घमंड, कृष्ण की कृपा से टूट गया। क्या यही सच्ची भक्ति की पहचान है?",
+    "next_seed": "और यही घमंड कुरुक्षेत्र तक ले जाएगा।",
+    "language": "hi",
+    "content_type": "story",
+    "topic": "Krishna choosing Vidura's humble saag over Duryodhana's royal feast — the night God walked past a palace banquet to eat greens served with love, and taught Hastinapur what devotion tastes like",
+    "series": "mahabharata",
+    "episode_n": 0,
+    "arc_character_devanagari": "",
+    "arc_character_english": "devotional",
+    "_phase18_strict_pass": false,
+    "_phase18_score": 20,
+    "_phase18_score_max": 25,
+    "_phase18_score_floor": 19,
+    "_phase18_violation": "title_dna",
+    "_phase18_failing_gates": [
+      "anti_merge_composition",
+      "char_names",
+      "engagement",
+      "intensity",
+      "title_dna"
+    ],
+    "_phase18_fatal_failures": [
+      "anti_merge_composition",
+      "title_dna"
+    ]
+  }
+}
