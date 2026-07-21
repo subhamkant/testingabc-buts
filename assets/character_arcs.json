@@ -68,7 +68,28 @@
         "Arjuna's bitter truth after Krishna's death — the Gandiva gone silent, common thieves defeating the greatest archer alive as he failed to protect the widows in his care",
         "Arjuna's first gurudakshina, the hidden cost of obedience — dragging King Drupada in chains to Drona's feet, the schoolboy victory that lit the fire Draupadi would be born from"
       ],
-      "_auto_added": []
+      "_auto_added": [
+        {
+          "topic": "Arjuna's secret pride — challenging the disguised Shiva for a boar, the glorious archer's doubt in his penance nearly cost him the Pasupatastra.",
+          "source": "auto_expansion_v21",
+          "added_at": "2026-07-21T05:38:32.105801+00:00",
+          "validated_passes": [
+            "semantic_gate",
+            "stage2_dedup"
+          ],
+          "llm_quality_tier": "fast"
+        },
+        {
+          "topic": "Arjuna's hidden mistake — breaking his celibacy vow for Ulupi and Chitrangada, the glorious warrior's doubt in his ascetic path swayed by love during exile.",
+          "source": "auto_expansion_v21",
+          "added_at": "2026-07-21T05:38:32.105991+00:00",
+          "validated_passes": [
+            "semantic_gate",
+            "stage2_dedup"
+          ],
+          "llm_quality_tier": "fast"
+        }
+      ]
     },
     {
       "name": "Draupadi — The Queen Who Lit the War",
