@@ -119,6 +119,77 @@ def _make_sub_clip(shot_path: str, output_path: str, duration: float, motion_idx
     )
 
 
+def _kb_beat(src_img: str, out: str, dur: float, variant: int) -> bool:
+    """One Ken Burns beat with framing that VARIES by `variant` so consecutive
+    hard-cut beats off the same still don't look identical: push-in, pan-left
+    on a tighter crop, pan-right, tilt-up. Gives the benchmark's cut rhythm
+    without needing a second still."""
+    frames = max(2, int(dur * FPS))
+    z = f"1+0.10*on/{frames}"
+    presets = [
+        (z, "(iw-iw/zoom)/2", "(ih-ih/zoom)/2"),                 # centre push-in
+        ("1.12", f"(iw-iw/zoom)*(0.15+0.20*on/{frames})", "(ih-ih/zoom)/2"),  # pan L->R tight
+        ("1.12", f"(iw-iw/zoom)*(0.65-0.20*on/{frames})", "(ih-ih/zoom)/2"),  # pan R->L tight
+        (z, "(iw-iw/zoom)/2", f"(ih-ih/zoom)*(0.30+0.15*on/{frames})"),       # push + tilt down
+    ]
+    zz, xx, yy = presets[variant % len(presets)]
+    vf = (f"scale={int(WIDTH*1.18)}:{int(HEIGHT*1.18)}:flags=lanczos,"
+          f"zoompan=z='{zz}':x='{xx}':y='{yy}':d={frames}:s={WIDTH}x{HEIGHT}:fps={FPS},"
+          f"setsar=1")
+    r = subprocess.run(
+        ["ffmpeg", "-y", "-loop", "1", "-i", src_img, "-vf", vf,
+         "-t", f"{dur:.3f}", "-an", "-c:v", "libx264", "-preset", "medium",
+         "-crf", "17", "-pix_fmt", "yuv420p", out], capture_output=True)
+    return r.returncode == 0 and os.path.exists(out)
+
+
+def _make_beat_sequence(shot: str, output_path: str, total_duration: float) -> bool:
+    """SHORTER-CUTS (2026-07-21): a long single-shot scene becomes several
+    ~WUXIA_MAX_CUT_S hard-cut beats instead of 1.4s motion + a long frozen
+    hold. Beat 0 = the motion clip (retimed) if this shot is an mp4; the
+    remaining beats are varied Ken Burns moves on the clip's last frame (or
+    the still), so the eye gets a fresh frame every few seconds."""
+    max_cut = float(os.environ.get("WUXIA_MAX_CUT_S", "4.5"))
+    if total_duration <= max_cut * 1.35:
+        return _make_sub_clip(shot, output_path, total_duration, 0)
+
+    n_beats = max(2, round(total_duration / max_cut))
+    beat_dur = total_duration / n_beats
+    is_mp4 = str(shot).lower().endswith(".mp4")
+    tmp: list = []
+    last_png = output_path.replace(".mp4", "_seq_last.png")
+    try:
+        for b in range(n_beats):
+            bp = output_path.replace(".mp4", f"_seq{b:02d}.mp4")
+            if b == 0 and is_mp4:
+                if not _make_motion_sub_clip(shot, bp, beat_dur):
+                    return False
+                # grab the motion clip's last frame as the KB source for later beats
+                subprocess.run(["ffmpeg", "-y", "-sseof", "-0.1", "-i", bp,
+                                "-frames:v", "1", last_png], capture_output=True)
+            else:
+                src = last_png if (is_mp4 and os.path.exists(last_png)) else shot
+                if str(src).lower().endswith(".mp4"):
+                    src = shot  # still-only scene
+                if not _kb_beat(src, bp, beat_dur, b):
+                    return False
+            tmp.append(bp)
+        lst = output_path.replace(".mp4", "_seq_list.txt")
+        with open(lst, "w") as f:
+            for p in tmp:
+                f.write(f"file '{os.path.abspath(p)}'\n")
+        r = subprocess.run(["ffmpeg", "-y", "-f", "concat", "-safe", "0",
+                            "-i", lst, "-t", f"{total_duration:.3f}",
+                            "-c", "copy", output_path], capture_output=True)
+        return r.returncode == 0 and os.path.exists(output_path)
+    finally:
+        for p in tmp + [last_png, output_path.replace(".mp4", "_seq_list.txt")]:
+            try:
+                os.remove(p)
+            except OSError:
+                pass
+
+
 def _make_wuxia_scene_clip(shots: list, output_path: str, total_duration: float) -> bool:
     """Landscape scene clip from N shots (motion or still) dissolved via xfade.
     Mirrors longform_assembler._make_landscape_scene_clip but dispatches per shot."""
@@ -126,6 +197,10 @@ def _make_wuxia_scene_clip(shots: list, output_path: str, total_duration: float)
     if n == 0:
         return False
     if n == 1:
+        # SHORTER-CUTS: long single-shot scenes are beat-split (hard cuts every
+        # ~WUXIA_MAX_CUT_S) unless disabled.
+        if os.environ.get("WUXIA_BEAT_CUTS", "1") != "0":
+            return _make_beat_sequence(shots[0], output_path, total_duration)
         return _make_sub_clip(shots[0], output_path, total_duration, 0)
 
     overlap_per = SHOT_XFADE_S * (n - 1)

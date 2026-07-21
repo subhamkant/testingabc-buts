@@ -489,6 +489,61 @@ async def _kernel_task(ck, i: int, slug: str, kernel_dir: Path, run_config: dict
         return
 
 
+# 14B hero prompt: real camera + kinetic (the 14B handles body+camera motion
+# the 5B can't). Impact scenes get combat/aura language; the rest a push-in.
+def _hero_14b_prompt(entry: dict) -> str:
+    text = entry.get("prompt", "") or ""
+    move = ("real 3D camera movement and parallax, characters move naturally, "
+            "sharp faces, identity unchanged, cinematic 3D donghua, no warping")
+    if _IMPACT_RE.search(text) or _GROUP_RE.search(text):
+        return (f"Dynamic cinematic shot with a burst of golden qi energy, dust "
+                f"and embers erupting, robes and hair whipping in the shockwave, "
+                f"high kinetic energy. {move}.")
+    return (f"Slow cinematic camera push-in with gentle parallax, robes and hair "
+            f"drift in the wind, atmospheric embers and dust float past. {move}.")
+
+
+def _run_hero_14b(ck, plan: list) -> None:
+    """Route up to WUXIA_ZEROGPU_BUDGET highest-impact clips to the 14B ZeroGPU
+    engine. Writes scene_XX_shot_YY.mp4 into motion_clips/ (shared with the 5B
+    pool). Pure-blocking (safe inside the async loop); failures fall through to
+    the 5B pool because those (scene,shot) keys simply won't exist yet."""
+    try:
+        from pipeline.wuxia_zerogpu import generate_14b, zerogpu_available
+    except Exception as e:
+        print(f"    [hybrid] zerogpu helper unavailable ({e}) — all-5B", flush=True)
+        return
+    budget = int(os.environ.get("WUXIA_ZEROGPU_BUDGET", "6"))
+    if budget <= 0 or not zerogpu_available():
+        print("    [hybrid] ZeroGPU unavailable/disabled — all-5B this run", flush=True)
+        return
+    # rank: IMPACT/GROUP scenes first (they benefit most from real motion)
+    ranked = sorted(
+        plan,
+        key=lambda e: 0 if (_IMPACT_RE.search(e.get("prompt", "") or "")
+                            or _GROUP_RE.search(e.get("prompt", "") or "")) else 1)
+    picks = ranked[:budget]
+    target = Path(ck.path("motion_clips"))
+    target.mkdir(parents=True, exist_ok=True)
+    master = _stable_master_seed(ck.run_id)
+    print(f"    [hybrid] 14B ZeroGPU on {len(picks)} hero scene(s) "
+          f"(budget {budget})", flush=True)
+    done = 0
+    for e in picks:
+        out = str(target / f"scene_{e['scene_idx']+1:02d}_shot_{e['shot_idx']+1:02d}.mp4")
+        if os.path.exists(out):
+            done += 1
+            continue
+        ok = generate_14b(e["still_path"], _hero_14b_prompt(e), out,
+                          seed=(master + e["scene_idx"]) % (2**31 - 1))
+        if ok:
+            done += 1
+        else:
+            break  # quota/space dead — stop; rest go to 5B
+    print(f"    [hybrid] 14B produced {done}/{len(picks)} hero clip(s); "
+          f"remainder -> 5B pool", flush=True)
+
+
 async def run_motion(ck, run_id: str, scenes: list, still_groups: list,
                      max_p100_retries: int = 5) -> list:
     """Generate motion clips across up to 2 parallel Kaggle kernels (resumable),
@@ -504,6 +559,29 @@ async def run_motion(ck, run_id: str, scenes: list, still_groups: list,
             ck.save_json("motion_plan.json", plan)
 
         if not plan:
+            ck.mark_done("motion_done")
+            return _merge_clips_into_stills(still_groups, ck)
+
+        # ── HYBRID (2026-07-21): route the highest-impact scenes to the 14B
+        # ZeroGPU engine (motion ~13, real camera moves) up to the daily quota;
+        # everything else goes to the free-T4 Wan-5B pool. Clips from BOTH land
+        # in motion_clips/scene_XX_shot_YY.mp4 so the merge is engine-agnostic.
+        # Gate: WUXIA_HYBRID=0 disables (all-5B). Budget: WUXIA_ZEROGPU_BUDGET.
+        if os.environ.get("WUXIA_HYBRID", "1") != "0" and not ck.has("hero14b_done"):
+            _run_hero_14b(ck, plan)
+            ck.mark_done("hero14b_done")
+        hero_done = set()
+        clips_dir = Path(ck.path("motion_clips"))
+        if clips_dir.exists():
+            for p in clips_dir.glob("*.mp4"):
+                m = _CLIP_RE.search(p.name)
+                if m:
+                    hero_done.add((int(m.group(1)) - 1, int(m.group(2)) - 1))
+        plan = [e for e in plan if (e["scene_idx"], e["shot_idx"]) not in hero_done]
+        if not plan:
+            # 14B covered everything (small episode / big quota)
+            mp4s = [str(p) for p in clips_dir.glob("*.mp4")]
+            ck.save_json("motion_manifest.json", {"clips": mp4s})
             ck.mark_done("motion_done")
             return _merge_clips_into_stills(still_groups, ck)
 
