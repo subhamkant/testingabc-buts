@@ -1,0 +1,110 @@
+{
+  "ts": "2026-07-22T05-51-14",
+  "language": "hi",
+  "score": 19,
+  "score_max": 25,
+  "violation": "shock_action",
+  "topic": "Krishna choosing Vidura's humble saag over Duryodhana's royal feast — the night God walked past a palace banquet to eat greens served with love, and taught Hastinapur what devotion tastes like",
+  "title": "कृष्ण की असली कृपा",
+  "script": {
+    "voiceover": "दुर्योधन का निमंत्रण ठुकराते हैं कृष्ण। दुर्योधन ने कृष्ण के लिए भव्य भोज का आयोजन किया, हीरे-मोती की चमक से सजे महल में। वह घमंड से बोला, \"प्रभु, आपके लिए उत्तम व्यंजन तैयार हैं!\" लेकिन कृष्ण ने उस राजसी ठाठ-बाट को छोड़ दिया। वे महामंत्री विदुर की कुटिया की ओर चल पड़े। विदुर, प्रेम और भक्ति से भरे, कृष्ण को सूखा साग और पानी ही दे पाए। विदुर की आँखों से कृतज्ञता के आँसू बह निकले। कृष्ण ने खाया और बोले, \"मुझे बस सच्चा प्रेम चाहिए, न कि सोने-चाँदी का दिखावा।\" उस रात, हस्तिनापुर ने सीखा कि ईश्वर की कृपा सच्ची भक्ति में बसती है। क्या हम भी अहंकार छोड़, उस प्रेम की कृपा के पात्र बन सकते हैं?",
+    "broll": [
+      {
+        "image_prompt": "Extreme macro close-up of a lavish royal feast table laden with gleaming gold plates, overflowing with exotic fruits and ornate sweets, soft cinematic lighting, jewel-toned palette, dim palace interior blurred behind. no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "भव्य भोज का",
+        "mood": "Opulent, tempting, rejected",
+        "wardrobe_context": "PALACE",
+        "shot_type": "AMBIGUOUS"
+      },
+      {
+        "image_prompt": "[POWER-LOOM] Duryodhana towering over Krishna, snarling his invitation with a proud, cruel sneer, mirror-polished golden kavacha, jeweled gold war-crown with crimson plume, blood-red and black silks. Krishna (graceful powerful divine form, luminous monsoon-cloud blue skin, golden-yellow pitambara silk) standing calmly, observing, soft cinematic lighting, jewel-toned palette. no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "वह घमंड से",
+        "mood": "Arrogant, challenging, tense",
+        "wardrobe_context": "PALACE",
+        "shot_type": "AMBIGUOUS"
+      },
+      {
+        "image_prompt": "Krishna turning his back, walking away from a brightly lit palace doorway, his graceful powerful divine form (luminous monsoon-cloud blue skin, golden-yellow pitambara silk) moving towards a darker, humble path, soft cinematic lighting, jewel-toned palette, intricate carved stone columns of the palace fading behind. no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "राजसी ठाठ-बाट को",
+        "mood": "Deliberate, resolute, spiritual",
+        "wardrobe_context": "PALACE",
+        "shot_type": "AMBIGUOUS"
+      },
+      {
+        "image_prompt": "Looming shot of a simple mud-brick hut with a thatched roof, surrounded by lush green foliage, a flickering earthen lamp illuminating the doorway, soft cinematic lighting, jewel-toned palette, Vidura (weathered elderly Indian face, simple white cotton dhoti) waiting humbly at the entrance. no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "कुटिया की ओर",
+        "mood": "Humble, welcoming, warm",
+        "wardrobe_context": "PALACE",
+        "shot_type": "AMBIGUOUS"
+      },
+      {
+        "image_prompt": "[POWER-LOOM] Kneeling beneath Krishna, Vidura (aged sage, white hair, simple white cotton dhoti, white angavastram) offering a small earthen pot of fresh green saag with trembling hands, Krishna (graceful powerful divine divine form, luminous monsoon-cloud blue skin, golden-yellow pitambara silk) reaching to accept, a flickering oil lamp casting soft shadows, soft cinematic lighting, jewel-toned palette. no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "सूखा साग और पानी",
+        "mood": "Devotional, sincere, humble",
+        "wardrobe_context": "PALACE",
+        "shot_type": "ENVIRONMENT"
+      },
+      {
+        "image_prompt": "Weeping over with profound gratitude, Vidura's weathered face (simple white cotton dhoti), tear-streaked with kohl-rimmed eyes, expressing pure devotion, soft cinematic lighting, jewel-toned palette, a faint divine glow illuminating his face. no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "कृतज्ञता के आँसू",
+        "mood": "Overwhelmed, grateful, blessed",
+        "wardrobe_context": "PALACE",
+        "shot_type": "REACTION"
+      },
+      {
+        "image_prompt": "Krishna gracefully accepting and eating simple green saag from an earthen pot, a serene smile of contentment on his luminous monsoon-cloud blue skin, dark curls with peacock feather, soft cinematic lighting, jewel-toned palette, Vidura's devoted face blurred in background. no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "प्रेम चाहिए",
+        "mood": "Content, divine, loving",
+        "wardrobe_context": "PALACE",
+        "shot_type": "AMBIGUOUS"
+      },
+      {
+        "image_prompt": "Fading dusk over a calm river, a lone diya flickering on the water, a serene silhouette of Krishna with folded hands, radiating a quiet, luminous glow of gratitude and stillness, soft cinematic lighting, jewel-toned palette. no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "कृपा के पात्र",
+        "mood": "Peaceful, divine, serene",
+        "wardrobe_context": "AFTERMATH",
+        "shot_type": "AMBIGUOUS"
+      }
+    ],
+    "title": "कृष्ण की असली कृपा",
+    "hook_title": "कृष्ण की असली कृपा",
+    "description": "जब भगवान ने राजसी भोग छोड़कर प्रेम से परोसा साग खाया।\n\nमहाभारत में जब कृष्ण शांति प्रस्ताव लेकर हस्तिनापुर पहुँचे, दुर्योधन ने उनके लिए भव्य भोज का आयोजन किया। लेकिन कृष्ण ने उस राजसी ठाठ-बाट को ठुकरा कर, महामंत्री विदुर की कुटिया में जाकर केवल सूखा साग खाया। यह घटना सिर्फ भोजन के बारे में नहीं थी, बल्कि सच्ची भक्ति और प्रेम के महत्व को उजागर करती है। कृष्ण ने दिखाया कि ईश्वर को आडंबर नहीं, बल्कि हृदय की पवित्रता प्रिय है। इस छोटी सी घटना ने हस्तिनापुर के अहंकार को चुनौती दी और यह संदेश दिया कि सच्चा आदर और प्रेम ही सबसे बड़ा भोग है।\n\n#Shorts #Mahabharata #महाभारत #Krishna #HinduMythology #PauranikKatha #MythologyShorts #HindiShorts",
+    "tags": [
+      "Krishna",
+      "Vidura",
+      "Duryodhana",
+      "कृष्ण",
+      "विदुर",
+      "महाभारत",
+      "Shorts",
+      "Hindu mythology"
+    ],
+    "thumbnail_prompt": "Vertical composition, Krishna (graceful powerful divine form, luminous monsoon-cloud blue skin, dark curls with peacock feather, golden-yellow pitambara silk) with a serene, contented smile, gracefully accepting a small earthen pot of green saag from Vidura (weathered elderly Indian face, simple white cotton dhoti, white angavastram) who is kneeling with tear-streaked eyes full of devotion, a radiant golden halo glow around Krishna's head, soft cinematic lighting, vibrant jewel colours, flickering oil lamp in background.",
+    "quotable_line": "प्रेम से दी गई छोटी सी चीज़ भी घमंड के बड़े भोग से बेहतर होती है।",
+    "pinned_question": "❓ प्रेम से दी गई छोटी सी चीज़ भी घमंड के बड़े भोग से बेहतर होती है। क्या आप इस बात से सहमत हैं?",
+    "next_seed": "और यही प्रेम एक दिन हस्तिनापुर के अहंकार को तोड़ देगा।",
+    "language": "hi",
+    "content_type": "story",
+    "topic": "Krishna choosing Vidura's humble saag over Duryodhana's royal feast — the night God walked past a palace banquet to eat greens served with love, and taught Hastinapur what devotion tastes like",
+    "series": "mahabharata",
+    "episode_n": 0,
+    "arc_character_devanagari": "",
+    "arc_character_english": "devotional",
+    "_phase18_strict_pass": false,
+    "_phase18_score": 19,
+    "_phase18_score_max": 25,
+    "_phase18_score_floor": 19,
+    "_phase18_violation": "shock_action",
+    "_phase18_failing_gates": [
+      "anti_merge_composition",
+      "char_names",
+      "engagement",
+      "rehook",
+      "shock_action",
+      "subject_diversity"
+    ],
+    "_phase18_fatal_failures": [
+      "anti_merge_composition"
+    ]
+  }
+}
