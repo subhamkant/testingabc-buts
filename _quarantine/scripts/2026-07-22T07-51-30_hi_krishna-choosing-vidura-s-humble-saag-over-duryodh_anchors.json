@@ -1,0 +1,109 @@
+{
+  "ts": "2026-07-22T07-51-30",
+  "language": "hi",
+  "score": 20,
+  "score_max": 25,
+  "violation": "anchors",
+  "topic": "Krishna choosing Vidura's humble saag over Duryodhana's royal feast — the night God walked past a palace banquet to eat greens served with love, and taught Hastinapur what devotion tastes like",
+  "title": "कृष्ण की दिव्य कृपा",
+  "script": {
+    "voiceover": "कृष्ण की दिव्य कृपा जब राजमहल की भव्य दावत ठुकराती हुई, विदुर के आँगन में रुक जाती है। दुर्योधन का अहंकार अपनी शाही दावत सजाता है, हर अतिथि कृष्ण की प्रतीक्षा करता है। \"प्रभु, आपने हमारे महल को अस्वीकार किया?\" दूत कांपते हुए पूछता है। लेकिन उसी क्षण, कृष्ण प्रेम से परोसे गए सिर्फ़ साग के हर निवाले में दिव्य कृपा महसूस करते हैं। विदुर की पत्नी के हाथ काँपते हैं, \"यह तो बस पालक का साग है, प्रभु!\" कृष्ण के होंठों पर संतोष की अद्भुत मुस्कान खिल उठती है, आँखों में गहरी तृप्ति। क्या ऐसी सच्ची कृपा अहंकार के सारे भ्रम तोड़ नहीं देती?",
+    "broll": [
+      {
+        "image_prompt": "Extreme macro close-up of a royal platter piled high with untouched, lavish food, gilded edges catching harsh light, intricate gold engravings on the plate, shimmering silks draped in the background, jewel-toned palette, soft cinematic lighting, no hands in frame, no text.",
+        "anchor_phrase": "राजमहल की भव्य दावत",
+        "mood": "Ostentatious expectation",
+        "wardrobe_context": "PALACE",
+        "shot_type": "AMBIGUOUS"
+      },
+      {
+        "image_prompt": "Walking away from a brightly lit, distant palace gate, Krishna's feet in golden sandals tread a humble, dusty path, his graceful powerful divine form illuminated by moonlight, luminous monsoon-cloud blue skin, golden-yellow pitambara silk, crimson sash, jewel-toned palette, soft cinematic lighting, no hands in frame, no text.",
+        "anchor_phrase": "चरण गति विदुर के",
+        "mood": "Divine redirection",
+        "wardrobe_context": "JOURNEY",
+        "shot_type": "ENVIRONMENT"
+      },
+      {
+        "image_prompt": "[CONFRONTATION-WIDE] Kneeling before Duryodhana on his gilded throne, a messenger with trembling hands clasped, his face wide-eyed with fear, Duryodhana looms over him with a proud cruel sneer, mirror-polished golden kavacha, jeweled gold war-crown, blood-red and black silks, ornate Nagara-style palace court in background, jewel-toned palette, soft cinematic lighting, no hands in frame, no text.",
+        "anchor_phrase": "दूत कांपते हुए पूछता",
+        "mood": "Royal indignation",
+        "wardrobe_context": "PALACE",
+        "shot_type": "ACTION"
+      },
+      {
+        "image_prompt": "[WITNESS-FROM-BEHIND] Advancing towards Vidura's humble ashram, Krishna steps over the threshold of the small, clean courtyard, Vidura stands waiting respectfully, his humble valkala bark-cloth robes glowing in the soft light of a lone diya flickering inside the mud-brick hut, graceful powerful divine form, luminous monsoon-cloud blue skin, golden-yellow pitambara silk, crimson sash, jewel-toned palette, soft cinematic lighting, no hands in frame, no text.",
+        "anchor_phrase": "आँगन में रुक",
+        "mood": "Humble arrival",
+        "wardrobe_context": "FOREST",
+        "shot_type": "ENVIRONMENT"
+      },
+      {
+        "image_prompt": "Gripping a rustic clay bowl, Vidura's wife offers simple green spinach (palak saag), steam gently rising, her elderly, wrinkled face showing humble devotion, modestly draped in plain white sari, sorrowful dignified eyes, humble wooden table in soft focus background, jewel-toned palette, soft cinematic lighting, no hands in frame, no text.",
+        "anchor_phrase": "पालक का साग है",
+        "mood": "Simple offering",
+        "wardrobe_context": "FOREST",
+        "shot_type": "ACTION"
+      },
+      {
+        "image_prompt": "[OVER-SHOULDER] Leaning into the simple meal, Krishna partakes of the green saag from a clay bowl, a radiant golden glow emanating from his serene face, luminous monsoon-cloud blue skin, dark curls with peacock feather, golden-yellow pitambara silk. Vidura sits humbly beside him, watching with tear-streaked eyes of devotion, jewel-toned palette, soft cinematic lighting, no hands in frame, no text.",
+        "anchor_phrase": "दिव्य कृपा महसूस करते",
+        "mood": "Divine satisfaction",
+        "wardrobe_context": "FOREST",
+        "shot_type": "REACTION"
+      },
+      {
+        "image_prompt": "Extreme close-up of Krishna's serene face, his kohl-lined eyes closed in bliss, a gentle smile on his lips, radiant with an inner peace and divine glow, luminous monsoon-cloud blue skin, peacock feather in his dark curls, jewel-toned palette, soft cinematic lighting, no hands in frame, no text.",
+        "anchor_phrase": "होंठों पर संतोष की",
+        "mood": "Profound peace",
+        "wardrobe_context": "DIVINE",
+        "shot_type": "PROP"
+      },
+      {
+        "image_prompt": "Fading dusk over a calm river, a lone diya flickering on the water, a serene silhouette of Vidura and his wife with folded hands, a quiet radiant glow of gratitude and stillness, jewel-toned palette, soft cinematic lighting, no text.",
+        "anchor_phrase": "सारे भ्रम तोड़ नहीं",
+        "mood": "Grateful peace",
+        "wardrobe_context": "AFTERMATH",
+        "shot_type": "AMBIGUOUS"
+      }
+    ],
+    "title": "कृष्ण की दिव्य कृपा",
+    "hook_title": "कृष्ण की कृपा",
+    "description": "जब कृष्ण ने ठुकराया राजशाही वैभव और चुना प्रेम का सच्चा स्वाद।\n\nमहाभारत में जब कृष्ण शांति दूत बनकर हस्तिनापुर आए, दुर्योधन ने उनके लिए भव्य दावत का आयोजन किया। सोने की थालियाँ, स्वादिष्ट व्यंजन, राजसी सत्कार — सब कुछ तैयार था। लेकिन कृष्ण का हृदय जानता था कि सच्चा प्रेम और भक्ति कहाँ वास करती है। उन्होंने राजमहल के अहंकार को त्यागकर, साधारण विदुर के घर में शरण ली। विदुर की पत्नी ने उन्हें प्रेम और विनम्रता से सिर्फ़ पालक का साग परोसा, और कृष्ण ने उस सादे भोजन में ही ब्रह्मांड का परम सुख पा लिया। यह सिर्फ़ एक भोजन नहीं, भक्ति का एक शक्तिशाली प्रदर्शन था, जिसने हस्तिनापुर के वैभव को चुनौती दी और दिखाया कि ईश्वर धन नहीं, मन का भाव देखते हैं। यह घटना हमें सिखाती है कि सच्ची महानता बाहरी दिखावे में नहीं, बल्कि आंतरिक शुद्धता और प्रेम में है।\n\n#Shorts #Mahabharata #महाभारत #Krishna #HinduMythology #PauranikKatha #MythologyShorts #HindiShorts",
+    "tags": [
+      "Krishna's visit Hastinapur",
+      "Vidura's saag",
+      "Krishna Vidura story",
+      "कृष्ण",
+      "कृष्ण लीला",
+      "महाभारत",
+      "Shorts",
+      "Hindu mythology"
+    ],
+    "thumbnail_prompt": "Krishna, graceful powerful divine form, luminous monsoon-cloud blue skin, dark curls with peacock feather, golden-yellow pitambara silk, crimson sash, layered gold necklaces, divine charioteer, sitting cross-legged on a simple mat, eating green spinach (palak saag) from a rustic clay bowl with a serene smile, a radiant golden halo glowing around his head, in the foreground of Vidura's humble, dimly lit mud hut. In the blurred, distant background, Duryodhana stands with a furious expression, mirror-polished golden kavacha, jeweled gold war-crown, at the entrance of a grand, brightly lit Hastinapur palace, high-contrast rim lighting, vibrant jewel colours, vertical composition with Krishna large, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text.",
+    "quotable_line": "प्रेम का निवाला अहंकार की दावत से ज़्यादा शक्तिशाली होता है।",
+    "pinned_question": "❓ प्रेम का निवाला अहंकार की दावत से ज़्यादा शक्तिशाली होता है। क्या आप भी दिखावे पर प्रेम को चुनेंगे?",
+    "next_seed": "और यही प्रेम एक दिन पूरे हस्तिनापुर को बदल देगा।",
+    "language": "hi",
+    "content_type": "story",
+    "topic": "Krishna choosing Vidura's humble saag over Duryodhana's royal feast — the night God walked past a palace banquet to eat greens served with love, and taught Hastinapur what devotion tastes like",
+    "series": "mahabharata",
+    "episode_n": 0,
+    "arc_character_devanagari": "",
+    "arc_character_english": "devotional",
+    "_phase18_strict_pass": false,
+    "_phase18_score": 20,
+    "_phase18_score_max": 25,
+    "_phase18_score_floor": 19,
+    "_phase18_violation": "anchors",
+    "_phase18_failing_gates": [
+      "anchors",
+      "anti_merge_composition",
+      "char_names",
+      "intensity",
+      "shock_action"
+    ],
+    "_phase18_fatal_failures": [
+      "anti_merge_composition"
+    ]
+  }
+}
