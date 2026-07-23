@@ -186,6 +186,28 @@
         "Eklavya's untold legacy as Nishadha king — the hidden loyalty his people kept alive, the secret history the kshatriyas erased from every record",
         "Krishna's hidden sin against Eklavya — the greatest secret murder that secured Arjuna's title, the dharma-defender's untold betrayal of a true devotee",
         "Eklavya's untold absence in the Gita — Krishna's greatest silence, the secret name the scripture refused to honor, the hidden sin of devotion forgotten"
+      ],
+      "_auto_added": [
+        {
+          "topic": "Eklavya's greatest resolve — the hidden loyalty to an unteaching guru, the silent moment he chose sacrifice over his unjust destiny.",
+          "source": "auto_expansion_v21",
+          "added_at": "2026-07-23T05:42:21.054835+00:00",
+          "validated_passes": [
+            "semantic_gate",
+            "stage2_dedup"
+          ],
+          "llm_quality_tier": "fast"
+        },
+        {
+          "topic": "Eklavya's final offering — the untold price of a thumb given to a guru who refused to teach, the true cost of devotion in a caste-bound world.",
+          "source": "auto_expansion_v21",
+          "added_at": "2026-07-23T05:42:21.054942+00:00",
+          "validated_passes": [
+            "semantic_gate",
+            "stage2_dedup"
+          ],
+          "llm_quality_tier": "fast"
+        }
       ]
     },
     {
