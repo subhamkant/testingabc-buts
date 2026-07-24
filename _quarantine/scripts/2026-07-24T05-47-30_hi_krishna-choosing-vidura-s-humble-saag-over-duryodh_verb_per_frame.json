@@ -1,0 +1,110 @@
+{
+  "ts": "2026-07-24T05-47-30",
+  "language": "hi",
+  "score": 20,
+  "score_max": 25,
+  "violation": "verb_per_frame",
+  "topic": "Krishna choosing Vidura's humble saag over Duryodhana's royal feast — the night God walked past a palace banquet to eat greens served with love, and taught Hastinapur what devotion tastes like",
+  "title": "कृष्ण की विदुर पर सच्ची कृपा",
+  "script": {
+    "voiceover": "कृष्ण की कृपा बरसती है, जब वो भव्य महल की रौनक छोड़ देते हैं। दुर्योधन अपने राजसी भोज का घमंड करता है, सोने के थाल सजे हैं, पकवानों की सुगंध फैलती है। वो गरजता है, “भगवान स्वयं मेरे महल में पधारेंगे!” लेकिन कृष्ण महल के द्वार से ही निकल जाते हैं, एक वृद्ध भक्त विदुर की झोपड़ी की ओर। विदुर के आँसू बह उठते हैं, \"प्रभु, मेरे पास तो सिर्फ साग और प्रेम है।\" कृष्ण प्रेम से साग खाते हैं, हर निवाले में सच्ची श्रद्धा पाते हैं। इस लीला से हस्तिनापुर को समझ आया कि भक्ति की भूख कभी पकवानों से नहीं मिटती। क्या यह सच्ची कृपा का प्रतीक नहीं?",
+    "broll": [
+      {
+        "image_prompt": "Extreme macro close-up of an ornate, gilded palace door, intricately carved with mythical beasts and celestial beings, jewel-toned palette, soft cinematic lighting, Krishna's serene silhouette walking away from it, radiant golden aura, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text.",
+        "anchor_phrase": "भव्य महल की रौनक",
+        "mood": "Awe-filled divine departure",
+        "wardrobe_context": "PALACE",
+        "shot_type": "AMBIGUOUS"
+      },
+      {
+        "image_prompt": "Sweeping panoramic shot of a lavish royal banquet hall within Hastinapur palace, golden platters overflowing with exotic delicacies, Duryodhana sitting on a gilded throne at the head, a proud cruel sneer on his face, mirror-polished golden kavacha, jeweled gold war-crown with crimson plume, blood-red and black silks, numerous other Kaurava princes and advisors feasting at long tables, jewel-toned palette, soft cinematic lighting, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text.",
+        "anchor_phrase": "राजसी भोज का घमंड",
+        "mood": "Arrogant opulence",
+        "wardrobe_context": "PALACE",
+        "shot_type": "AMBIGUOUS"
+      },
+      {
+        "image_prompt": "[CONFRONTATION-WIDE] Duryodhana left-foreground side-profile, a proud cruel sneer on his face, mirror-polished golden kavacha, jeweled gold war-crown with crimson plume, blood-red and black silks, looking towards the palace entrance, while terrified courtiers cower in the background, jewel-toned palette, soft cinematic lighting, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text.",
+        "anchor_phrase": "“भगवान स्वयं मेरे महल में पधारेंगे!”",
+        "mood": "Boastful anticipation",
+        "wardrobe_context": "PALACE",
+        "shot_type": "AMBIGUOUS"
+      },
+      {
+        "image_prompt": "Exterior shot of a humble, mud-plastered hut with a thatched roof, surrounded by simple green fields, a lone earthen diya flickering by the doorway, Vidura's serene silhouette standing, aged and humble, wearing simple white cotton dhoti, rudraksha mala, jewel-toned palette, soft cinematic lighting, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text.",
+        "anchor_phrase": "वृद्ध भक्त विदुर की झोपड़ी",
+        "mood": "Humble devotion",
+        "wardrobe_context": "FOREST",
+        "shot_type": "AMBIGUOUS"
+      },
+      {
+        "image_prompt": "Close-up of Vidura's weathered elderly face, tears streaming down his cheeks, eyes filled with overwhelming devotion and humility, silver-streaked hair, simple white cotton dhoti, rudraksha mala, jewel-toned palette, soft cinematic lighting, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text.",
+        "anchor_phrase": "विदुर के आँसू बह उठते हैं",
+        "mood": "Overwhelmed humility",
+        "wardrobe_context": "FOREST",
+        "shot_type": "AMBIGUOUS"
+      },
+      {
+        "image_prompt": "[OVER-SHOULDER] Vidura's humble hand offering a small bowl of simple green saag, Krishna sitting on a low stool, his graceful powerful divine form, luminous monsoon-cloud blue skin, dark curls with peacock feather, golden-yellow pitambara silk, crimson sash, layered gold necklaces, eating the saag with a serene smile, jewel-toned palette, soft cinematic lighting, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text.",
+        "anchor_phrase": "कृष्ण प्रेम से साग खाते हैं",
+        "mood": "Divine contentment",
+        "wardrobe_context": "FOREST",
+        "shot_type": "AMBIGUOUS"
+      },
+      {
+        "image_prompt": "Extreme macro close-up of Krishna's radiant lips, a faint divine smile, a piece of green saag resting on his tongue, his luminous monsoon-cloud blue skin, dark curls with peacock feather, jewel-toned palette, soft cinematic lighting, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text.",
+        "anchor_phrase": "सच्ची श्रद्धा पाते हैं",
+        "mood": "Sublime grace",
+        "wardrobe_context": "DIVINE",
+        "shot_type": "AMBIGUOUS"
+      },
+      {
+        "image_prompt": "Wide shot of Hastinapur palace, distant and grand, but with a lone, humble figure of a devotee (Vidura silhouette) walking away from it towards a serene riverbank, fading dusk, a quiet realization dawning, jewel-toned palette, soft cinematic lighting, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text.",
+        "anchor_phrase": "भक्ति की भूख",
+        "mood": "Profound realization",
+        "wardrobe_context": "AFTERMATH",
+        "shot_type": "ENVIRONMENT"
+      }
+    ],
+    "title": "कृष्ण की विदुर पर सच्ची कृपा",
+    "hook_title": "विदुर पर कृपा",
+    "description": "एक रात कृष्ण ने हस्तिनापुर के भव्य महल और उसके राजसी भोज को ठुकरा दिया। इसके बजाय, वह अपने भक्त विदुर की झोपड़ी में गए, जहाँ प्रेम से परोसा गया साधारण साग ही भगवान का सच्चा प्रसाद बना। यह कहानी दिखाती है कि कैसे भगवान दौलत या दिखावे से नहीं, बल्कि सच्ची भावना और भक्ति से प्रसन्न होते हैं।\n\n#Shorts #Mahabharata #महाभारत #Krishna #HinduMythology #PauranikKatha #MythologyShorts #HindiShorts",
+    "tags": [
+      "Krishna Vidura saag",
+      "कृष्ण विदुर साग",
+      "Krishna",
+      "कृष्ण",
+      "Mahabharata",
+      "महाभारत",
+      "Shorts",
+      "Hindu mythology"
+    ],
+    "thumbnail_prompt": "Vertical wide shot of Krishna, graceful powerful divine form, luminous monsoon-cloud blue skin, dark curls with peacock feather, golden-yellow pitambara silk, crimson sash, layered gold necklaces, divine charioteer, gently accepting a humble bowl of green saag from Vidura, aged and humble, wearing simple white cotton dhoti, outside a small mud hut, with Duryodhana's opulent palace faintly visible and grand in the distant background, high-contrast rim lighting, vibrant jewel colours, radiant golden halo glow around Krishna.",
+    "quotable_line": "घमंड से भरी दौलत से ज्यादा, प्रेम का साग ही सच्चा प्रसाद है।",
+    "pinned_question": "❓ घमंड से भरी दौलत से ज्यादा, प्रेम का साग ही सच्चा प्रसाद है। क्या आप भी यही मानते हैं?",
+    "next_seed": "और यह कृपा ही धर्मयुद्ध की नींव रखेगी।",
+    "language": "hi",
+    "content_type": "story",
+    "topic": "Krishna choosing Vidura's humble saag over Duryodhana's royal feast — the night God walked past a palace banquet to eat greens served with love, and taught Hastinapur what devotion tastes like",
+    "series": "mahabharata",
+    "episode_n": 0,
+    "arc_character_devanagari": "",
+    "arc_character_english": "devotional",
+    "_phase18_strict_pass": false,
+    "_phase18_score": 20,
+    "_phase18_score_max": 25,
+    "_phase18_score_floor": 19,
+    "_phase18_violation": "verb_per_frame",
+    "_phase18_failing_gates": [
+      "engagement",
+      "intensity",
+      "subject_diversity",
+      "title_dna",
+      "verb_per_frame"
+    ],
+    "_phase18_fatal_failures": [
+      "title_dna",
+      "verb_per_frame"
+    ]
+  }
+}
