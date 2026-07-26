@@ -1,0 +1,114 @@
+{
+  "ts": "2026-07-26T07-52-08",
+  "language": "hi",
+  "score": 18,
+  "score_max": 25,
+  "violation": "verb_per_frame",
+  "topic": "Krishna choosing Vidura's humble saag over Duryodhana's royal feast — the night God walked past a palace banquet to eat greens served with love, and taught Hastinapur what devotion tastes like",
+  "title": "कृष्ण की सच्ची कृपा",
+  "script": {
+    "voiceover": "कृष्ण की सच्ची कृपा जब दुर्योधन का भव्य भोज ठुकराती है, तो कुरु सभा में सब स्तब्ध रह जाते हैं। दुर्योधन गरजता है, \"मेरे महल में आपका स्वागत है, प्रभु!\" हर व्यंजन, हर थाल, उसके घमंड की कहानी कहता है। कृष्ण द्वारपालों से कहते हैं, \"मुझे भूख नहीं है।\" और तभी, वे चुपचाप उस वैभव को छोड़कर, विदुर की साधारण कुटिया की ओर चल पड़ते हैं। विदुर, प्रेम और भक्ति से, केवल साग परोसते हैं। कृष्ण अपनी आँखों में एक अद्भुत चमक लिए, उस सादे भोजन को ग्रहण करते हैं, मानो वही उनका सबसे प्रिय भोग हो। विदुर की आँखों में आँसू छलक आते हैं, इस अद्भुत कृपा को देखकर। क्या ऐसी प्रेम की कृपा से बढ़कर कोई भी भव्यता हो सकती है?",
+    "broll": [
+      {
+        "image_prompt": "Extreme macro close-up of a lavishly adorned royal banquet table, overflowing with gleaming golden platters and jewel-encrusted goblets, untouched food, a lone servant recoiling from the opulent display in the background, jewel-toned palette, soft cinematic lighting, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text.",
+        "anchor_phrase": "भव्य भोज ठुकराती है",
+        "mood": "Opulent rejection, symbolic void",
+        "wardrobe_context": "PALACE",
+        "shot_type": "AMBIGUOUS"
+      },
+      {
+        "image_prompt": "[POWER-LOOM] Sweeping panoramic shot, ornate Nagara-style palace court with carved stone columns and silk banners, Duryodhana standing tall from his gilded throne, snarling with clenched fists, his mirror-polished golden kavacha gleaming, jeweled gold war-crown with crimson plume, blood-red and black silks, courtiers recoiling in fear, jewel-toned palette, soft cinematic lighting, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text.",
+        "anchor_phrase": "दुर्योधन गरजता है",
+        "mood": "Furious pride, shocked court",
+        "wardrobe_context": "PALACE",
+        "shot_type": "ENVIRONMENT"
+      },
+      {
+        "image_prompt": "[CONFRONTATION-WIDE] Ornate palace corridor, Krishna in the foreground walking away, looking back over his shoulder with a gentle, firm expression towards a confused palace guard in the mid-ground, luminous monsoon-cloud blue skin, golden-yellow pitambara silk, crimson sash, layered gold necklaces, jewel-toned palette, soft cinematic lighting, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text.",
+        "anchor_phrase": "मुझे भूख नहीं है",
+        "mood": "Quiet refusal, divine resolve",
+        "wardrobe_context": "PALACE",
+        "shot_type": "AMBIGUOUS"
+      },
+      {
+        "image_prompt": "Wide shot of a humble, peaceful village hut (kutia) with mud walls and a thatched roof, surrounded by simple green foliage and a small clay chulha, tranquil evening light, Vidura's silhouette inside, jewel-toned palette, soft cinematic lighting, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text.",
+        "anchor_phrase": "विदुर की साधारण कुटिया",
+        "mood": "Humble serenity, approaching divine",
+        "wardrobe_context": "PALACE",
+        "shot_type": "ENVIRONMENT"
+      },
+      {
+        "image_prompt": "Kneeling beneath a humble, glowing oil lamp, Vidura gently places a small bowl of vibrant green saag (spinach) on a modest leaf platter, his face humble and devotional, jewel-toned palette, soft cinematic lighting, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text.",
+        "anchor_phrase": "केवल साग परोसते हैं",
+        "mood": "Pure devotion, humble offering",
+        "wardrobe_context": "PALACE",
+        "shot_type": "ACTION"
+      },
+      {
+        "image_prompt": "Krishna's graceful powerful divine form, luminous monsoon-cloud blue skin, a gentle smile, eyes wide with profound joy, his head leaning into the humble offering from Vidura, dark curls with peacock feather, golden-yellow pitambara silk, crimson sash, layered gold necklaces, jewel-toned palette, soft cinematic lighting, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text.",
+        "anchor_phrase": "अद्भुत चमक लिए",
+        "mood": "Divine acceptance, inner bliss",
+        "wardrobe_context": "PALACE",
+        "shot_type": "AMBIGUOUS"
+      },
+      {
+        "image_prompt": "Tight close-up of Vidura's weathered face, weeping over Krishna's divine presence, tear-streaked eyes, kohl-lined, humble sage-like features, simple white cotton dhoti, white angavastram, sacred yajnopavita thread across chest, illuminated by the soft light of a single diya, jewel-toned palette, soft cinematic lighting, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text.",
+        "anchor_phrase": "आँसू छलक आते हैं",
+        "mood": "Overwhelmed devotion, tearful grace",
+        "wardrobe_context": "PALACE",
+        "shot_type": "REACTION"
+      },
+      {
+        "image_prompt": "Fading dusk over a calm river, a single lone diya flickering gently on the water, a serene silhouette of Krishna walking away from the riverbank, his folded hands raised in gratitude, a quiet radiant glow of divine peace, jewel-toned palette, soft cinematic lighting, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text.",
+        "anchor_phrase": "प्रेम की कृपा से",
+        "mood": "Peaceful gratitude, divine blessing",
+        "wardrobe_context": "AFTERMATH",
+        "shot_type": "AMBIGUOUS"
+      }
+    ],
+    "title": "कृष्ण की सच्ची कृपा",
+    "hook_title": "कृष्ण की सच्ची कृपा",
+    "description": "एक शाम, जब ईश्वर ने महल का वैभव ठुकराकर प्रेम का साग चुना।\n\nदुर्योधन ने अपने अहंकार से भरा भव्य भोज सजाया था, पर कृष्ण ने उसे अस्वीकार कर दिया। उन्होंने उस प्रेम और सच्ची भक्ति को चुना जो विदुर की साधारण कुटिया में साग के रूप में परोसा गया था। यह सिर्फ भोजन नहीं, बल्कि एक सबक था - कि ईश्वर को आडंबर नहीं, केवल हृदय का सच्चा भाव भाता है। कृष्ण ने दिखा दिया कि बाहरी चमक से कहीं अधिक महत्वपूर्ण आंतरिक शुद्धता और प्रेम है। क्या आप भी अपने जीवन में सच्ची भक्ति का मूल्य समझते हैं?\n\n#Shorts #Mahabharata #महाभारत #Krishna #HinduMythology #PauranikKatha #MythologyShorts #HindiShorts",
+    "tags": [
+      "Krishna's grace",
+      "Vidura's devotion",
+      "Duryodhana's feast",
+      "Krishna",
+      "कृष्ण",
+      "Mahabharata",
+      "महाभारत",
+      "Shorts",
+      "Hindu mythology"
+    ],
+    "thumbnail_prompt": "Vertical composition, Krishna in the foreground with a gentle smile, luminous monsoon-cloud blue skin, wearing golden-yellow pitambara silk, gracefully accepting a small bowl of humble green saag from a kneeling Vidura, whose face is tear-streaked with devotion, a humble hut interior in the background, contrasting with a blurred, opulent palace banquet table far behind, divine golden glow emanating from Krishna, high-contrast rim lighting, vibrant jewel colours, no text.",
+    "quotable_line": "घमंड का भव्य भोज नहीं, प्रेम का एक निवाला ही सच्ची भक्ति है।",
+    "pinned_question": "❓ घमंड का भव्य भोज नहीं, प्रेम का एक निवाला ही सच्ची भक्ति है। क्या आप भी यही मानते हैं?",
+    "next_seed": "और यही प्रेम बाद में धर्मयुद्ध की नींव बन जाएगा।",
+    "language": "hi",
+    "content_type": "story",
+    "topic": "Krishna choosing Vidura's humble saag over Duryodhana's royal feast — the night God walked past a palace banquet to eat greens served with love, and taught Hastinapur what devotion tastes like",
+    "series": "mahabharata",
+    "episode_n": 0,
+    "arc_character_devanagari": "",
+    "arc_character_english": "devotional",
+    "_phase18_strict_pass": false,
+    "_phase18_score": 18,
+    "_phase18_score_max": 25,
+    "_phase18_score_floor": 19,
+    "_phase18_violation": "verb_per_frame",
+    "_phase18_failing_gates": [
+      "anti_merge_composition",
+      "char_names",
+      "engagement",
+      "intensity",
+      "shock_action",
+      "title_dna",
+      "verb_per_frame"
+    ],
+    "_phase18_fatal_failures": [
+      "anti_merge_composition",
+      "title_dna",
+      "verb_per_frame"
+    ]
+  }
+}
