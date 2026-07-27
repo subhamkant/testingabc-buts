@@ -1,0 +1,118 @@
+{
+  "ts": "2026-07-27T08-48-56",
+  "language": "hi",
+  "score": 18,
+  "score_max": 25,
+  "violation": "verb_action",
+  "topic": "The terrifying truth of Bhishma's birth — Ganga drowning her seven newborn sons under a celestial curse, and the father whose plea saved the eighth child",
+  "title": "भीष्म का असली श्राप",
+  "script": {
+    "voiceover": "गंगा अपने नवजात शिशु को नदी में बहाती है – शीतल जल, निष्ठुर हाथ, आँखों में शून्य भाव। शांतनु उसे देखता है, हर चीख उसके गले में घुट जाती है, दिल चीरता सन्नाटा। सात बार, सात मासूम साँसों को जीवन से मुक्त किया गया, एक भयानक, मौन अनुष्ठान। वो काँप उठता है, उसकी आत्मा कराहती है, पर वो जकड़ा हुआ था एक अदृश्य शाप से। लेकिन जब आठवाँ शिशु आता है, शांतनु टूट जाता है, 'बस करो! इन्हें मत मारो!' गंगा उसे देखती है, 'यह शिशु मेरा है, मैं इसे ले जाती हूँ।' यही वो पल था, वो मजबूर चुप्पी जिसने भीष्म के जीवन का मार्ग तय कर दिया। क्या उस दिन गंगा का बहता जल केवल शिशुओं को नहीं, बल्कि एक साम्राज्य की नियति भी बहा रहा था?",
+    "broll": [
+      {
+        "image_prompt": "Extreme macro close-up of the hero's weapon, caught mid-action, motion-blurred battlefield chaos behind, Action moment frozen mid-release, Ganga's pale hand, luminous and ethereal, lowering a tiny, wrapped newborn infant into the moonlit silver-blue river, rippling water reflecting cold pre-dawn light, her face serene yet hollow-eyed, modestly draped in flowing white-and-silver silks, divine golden aura, cool moonlit silver-blue, restrained noble tones, faces clearly lit, cold pre-dawn moonlight or candlelit interior, faces visible and dignified, no deep shadows, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text.",
+        "anchor_phrase": "शिशु को नदी में बहाती है",
+        "mood": "chilling, sorrowful, ethereal",
+        "wardrobe_context": "DIVINE",
+        "shot_type": "REACTION"
+      },
+      {
+        "image_prompt": "Sweeping panoramic shot, the riverbank, Shantanu, tall powerfully built regal frame, noble features, in white-and-silver silk dhoti, gripping his robes, his tear-streaked face wide-eyed in horror, trying to intervene, cool moonlit silver-blue, restrained noble tones, faces clearly lit, cold pre-dawn moonlight or candlelit interior, faces visible and dignified, no deep shadows, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text.",
+        "anchor_phrase": "शांतनु उसे देखता है",
+        "mood": "horrified, helpless, anguished",
+        "wardrobe_context": "PALACE",
+        "shot_type": "ACTION"
+      },
+      {
+        "image_prompt": "Environment shot, the vast, ancient river flowing under a dim, shadow-heavy moonlit sky, subtle glowing ripples, seven small, ethereal lights or blurred forms fading into the cool silver-blue water, restrained noble tones, cool moonlit silver-blue, restrained noble tones, faces clearly lit, cold pre-dawn moonlight, no deep shadows, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text.",
+        "anchor_phrase": "सात मासूम साँसों को",
+        "mood": "mysterious, haunting, fading",
+        "wardrobe_context": "DIVINE",
+        "shot_type": "AMBIGUOUS"
+      },
+      {
+        "image_prompt": "[WITNESS-FROM-BEHIND] A wide shot from behind Shantanu, tall powerfully built regal frame, noble features, in white-and-silver silk dhoti, clenched with desperation, standing rigid, almost frozen, at the river's edge, unable to move, his face withheld, the moonlit river stretching endlessly before him, cool moonlit silver-blue, restrained noble tones, faces clearly lit, cold pre-dawn moonlight, faces visible and dignified, no deep shadows, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text.",
+        "anchor_phrase": "जकड़ा हुआ था",
+        "mood": "paralyzed, helpless, silent despair",
+        "wardrobe_context": "PALACE",
+        "shot_type": "AMBIGUOUS"
+      },
+      {
+        "image_prompt": "[CONFRONTATION-WIDE] A dimly lit riverbank, Ganga, graceful powerful divine form, luminous, flowing white-and-silver silks, divine golden aura, holding the eighth newborn child, its tiny face visible and peaceful, turning to face Shantanu, tall powerfully built regal frame, noble features, in white-and-silver silk dhoti, who is collapsing to his knees, his face desperate and pleading, cool moonlit silver-blue, restrained noble tones, faces clearly lit, cold pre-dawn moonlight, faces visible and dignified, no deep shadows, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text.",
+        "anchor_phrase": "आठवाँ शिशु आता है",
+        "mood": "desperate, pleading, tense",
+        "wardrobe_context": "DIVINE",
+        "shot_type": "ACTION"
+      },
+      {
+        "image_prompt": "[CONFRONTATION-WIDE] Tight close-up of Ganga's radiant, luminous divine face, her large kohl-lined lotus eyes piercing Shantanu's desperate, tear-streaked eyes, her expression serene but cold, devoid of emotion, a faint ethereal glow around her, cool moonlit silver-blue, restrained noble tones, modestly draped white-and-silver silks for Ganga, white-and-silver silk dhoti for Shantanu, faces clearly lit, cold pre-dawn moonlight, faces visible and dignified, no deep shadows, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text.",
+        "anchor_phrase": "गंगा उसे देखती है",
+        "mood": "cold, serene, unyielding",
+        "wardrobe_context": "DIVINE",
+        "shot_type": "ACTION"
+      },
+      {
+        "image_prompt": "Ganga, graceful powerful divine form, luminous, flowing white-and-silver silks, divine golden aura, turning away from Shantanu, walking away from the riverbank, cradling the eighth newborn infant against her modestly draped white-and-silver silks, a faint, flickering divine golden aura, cool moonlit silver-blue, restrained noble tones, faces clearly lit, cold pre-dawn moonlight, faces visible and dignified, no deep shadows, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text.",
+        "anchor_phrase": "मैं इसे ले जाती हूँ",
+        "mood": "departing, determined, bittersweet",
+        "wardrobe_context": "DIVINE",
+        "shot_type": "AMBIGUOUS"
+      },
+      {
+        "image_prompt": "Shantanu, tall powerfully built regal frame, noble features, in white-and-silver silk dhoti, collapsing alone, broken, at the edge of the cool moonlit silver-blue river, head bowed, his royal silk dhoti disheveled, a single tear-streaked face, the vast, empty river stretching out into the cold pre-dawn moonlight, restrained noble tones, faces clearly lit, faces visible and dignified, no deep shadows, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text.",
+        "anchor_phrase": "मजबूर चुप्पी जिसने",
+        "mood": "broken, silent, despairing",
+        "wardrobe_context": "PALACE",
+        "shot_type": "ACTION"
+      },
+      {
+        "image_prompt": "Wide cinematic shot, the vast, silent river flowing under a fading dusk sky, its surface reflecting the last silver-blue light, an abandoned, lone diya floating gently downriver, cool moonlit silver-blue, restrained noble tones, no deep shadows, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text.",
+        "anchor_phrase": "नियति भी बहा रहा था",
+        "mood": "haunting, destined, lingering",
+        "wardrobe_context": "AFTERMATH",
+        "shot_type": "AMBIGUOUS"
+      }
+    ],
+    "title": "भीष्म का असली श्राप",
+    "hook_title": "भीष्म का श्राप",
+    "description": "▶️ अगला भाग: Amba's revenge, Bhishma's biggest mistake\n\nगंगा की गोद में शांतनु की लाचारी ने एक ऐसे वचन को जन्म दिया, जिसने भीष्म को हमेशा बांधे रखा।\n\nगंगा और शांतनु के मिलन की कहानी में छिपा था एक गहरा रहस्य। एक माता जिसने अपने ही नवजात शिशुओं को नदी में डुबो दिया, और एक पिता जो लाचार होकर देखता रहा। यह सिर्फ बच्चों की मौत नहीं थी, बल्कि एक ऐसी मजबूर चुप्पी थी जिसने आगे चलकर भीष्म के जीवन की दिशा तय की। शांतनु की वह बेबसी, वह आंतरिक विनाश, हस्तिनापुर के भाग्य को कैसे बदलने वाला था? क्या एक पिता की लाचारी ने एक वंश का भविष्य हमेशा के लिए बदल दिया?\n\n#Shorts #Mahabharata #महाभारत #Krishna #HinduMythology #PauranikKatha #MythologyShorts #HindiShorts",
+    "tags": [
+      "Bhishma birth",
+      "Ganga curse",
+      "Shantanu",
+      "भीष्म",
+      "Mahabharata",
+      "महाभारत",
+      "Shorts",
+      "Hindu mythology"
+    ],
+    "thumbnail_prompt": "Ganga, graceful powerful divine form, luminous, flowing white-and-silver silks, divine golden aura, lowering a tiny, peaceful newborn infant with elegant hands into the cool, glowing silver-blue river, her face serene but with a hint of sorrow, Shantanu, tall powerfully built regal frame, noble features, in white-and-silver silk dhoti, on the riverbank in the background, his tear-streaked face wide-eyed in anguish, reaching out in a desperate, futile gesture, high-contrast rim lighting, vibrant jewel colors, vertical composition, main figure large, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text.",
+    "quotable_line": "शांतनु की मजबूरी ने भीष्म के भाग्य को अमर बंधन में बाँध दिया।",
+    "pinned_question": "❓ शांतनु की मजबूरी ने भीष्म के भाग्य को अमर बंधन में बाँध दिया। क्या आप भी मानते हैं कि भीष्म पहले से ही बंधे हुए थे?",
+    "next_seed": "यही चुप्पी और प्रतिज्ञा भीष्म के सबसे बड़े पछतावे की जड़ बनी।",
+    "language": "hi",
+    "content_type": "story",
+    "topic": "The terrifying truth of Bhishma's birth — Ganga drowning her seven newborn sons under a celestial curse, and the father whose plea saved the eighth child",
+    "series": "mahabharata",
+    "episode_n": 28,
+    "arc_character_devanagari": "भीष्म",
+    "arc_character_english": "Bhishma — The Vow That Doomed a Dynasty",
+    "_phase18_strict_pass": false,
+    "_phase18_score": 18,
+    "_phase18_score_max": 25,
+    "_phase18_score_floor": 19,
+    "_phase18_violation": "verb_action",
+    "_phase18_failing_gates": [
+      "archetype",
+      "bookend",
+      "char_names",
+      "engagement",
+      "hook",
+      "verb_action",
+      "verb_per_frame"
+    ],
+    "_phase18_fatal_failures": [
+      "verb_per_frame"
+    ]
+  }
+}
