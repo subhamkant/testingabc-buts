@@ -1,0 +1,116 @@
+{
+  "ts": "2026-07-27T10-58-17",
+  "language": "hi",
+  "score": 18,
+  "score_max": 25,
+  "violation": "shock_action",
+  "topic": "Draupadi's untold grief after the war — the queen's greatest betrayal by victory, winning a kingdom of corpses, losing all five sons in one secret night",
+  "title": "द्रौपदी की आखिरी हार | Draupadi's Final Loss",
+  "script": {
+    "voiceover": "द्रौपदी विजय के बाद खून से सने महल में अकेली बैठती है। बाहर जीत का जश्न है, पर अंदर सब कुछ राख हो चुका है — एक खामोश रात, जहाँ उसके पाँचों बेटे सो रहे थे, पर कभी नहीं जागे। अश्वत्थामा की तलवार ने राजपाट तो दे दिया, पर कोख सूनी कर दी। उसने युद्ध इसलिए नहीं कराया था कि सिंहासन खाली मिले, उसने बदला चाहा था, विनाश नहीं। कृष्ण सामने आते हैं, पर इस बार कोई सांत्वना नहीं देती — ‘यही तो कीमत है उस आग की, जो तुमने जलाई थी।’ और उस रात के बाद... हस्तिनापुर की रानी कभी नहीं मुस्कुराई... क्या यह जीत थी या सबसे बड़ा धोखा?",
+    "broll": [
+      {
+        "image_prompt": "Action moment frozen mid-strike around draupadi, dust and sparks suspended in the air, Wide cinematic shot, sun-baked palace courtyard of Hastinapur with blood-stained marble floors and fading torchlight, Draupadi sitting alone in a deep-red silk sari modestly draped, radiant fair wheatish-gold complexion, large kohl-lined lotus eyes, long untied black hair flowing loose, red kumkum, fierce proud bearing, tragic hollow-eyed expression, gold pillars casting long shadows, warm torchlight and oil-lamp, contrasted, intense, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "द्रौपदी विजय के बाद",
+        "mood": "somber desolate royal grief",
+        "wardrobe_context": "PALACE",
+        "shot_type": "REACTION"
+      },
+      {
+        "image_prompt": "Extreme macro close-up of an oil lamp flickering out on a blood-smeared marble floor, a single dying flame casting long trembling shadows, scattered marigold petals crushed in dust, firelit crimson and saffron palette, warm Indian skin tone, court grandeur, contrasted, intense, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "खून से सने महल",
+        "mood": "gloomy tragic silence",
+        "wardrobe_context": "PALACE",
+        "shot_type": "AMBIGUOUS"
+      },
+      {
+        "image_prompt": "[THE-FALLEN] Wide cinematic shot of a darkened royal bedchamber in Hastinapur palace, five young warrior princes lying prone in dust below, sleeping children motionless under heavy silk blankets, ash-covered floors, dim flickering oil-lamp light, tragic sorrowful atmosphere, regal red-and-gold drapes, warm Indian skin tone, contrasted, intense, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "पाँचों बेटे सो रहे",
+        "mood": "heartbreaking tragic loss",
+        "wardrobe_context": "PALACE",
+        "shot_type": "AMBIGUOUS"
+      },
+      {
+        "image_prompt": "[OVER-SHOULDER] Sweeping cinematic shot of a war tent at night, Ashwatthama towering broad-shouldered muscular frame, ash-pale vibhuti-dusted skin, long wild mane from a warrior topknot, forehead Mani gem blazing crimson-white, white ash tripundra lines, dark bronze kavacha, crimson-black dhoti, wielding a blood-streaked sword overhead, mid-strike arc, firelit crimson and saffron palette, warm Indian skin tone, contrasted, intense, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "अश्वत्थामा की तलवार",
+        "mood": "tense vicious midnight dread",
+        "wardrobe_context": "WAR",
+        "shot_type": "ACTION"
+      },
+      {
+        "image_prompt": "Wide shot of the Hastinapur throne room, an empty golden throne gleaming under harsh torchlight, carved stone columns with blood-streaked marble steps, absolute silence, firelit crimson and saffron palette, regal red-and-gold pillars, warm Indian skin tone, court grandeur, contrasted, intense, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "राजपाट तो दे दिया",
+        "mood": "hollow hollow victory",
+        "wardrobe_context": "PALACE",
+        "shot_type": "ENVIRONMENT"
+      },
+      {
+        "image_prompt": "Wide cinematic shot of the Kurukshetra battlefield at dusk, burning chariot wheels half-buried in blood-soaked mud, smoke-filled sky, distant fires smoldering, firelit crimson and saffron palette, warm Indian skin tone, contrasted, intense, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "उसने युद्ध इसलिए",
+        "mood": "devastated scorched earth",
+        "wardrobe_context": "WAR",
+        "shot_type": "ENVIRONMENT"
+      },
+      {
+        "image_prompt": "[CONFRONTATION-WIDE] Sweeping shot of the palace corridor, Krishna graceful powerful divine form, luminous monsoon-cloud blue skin, dark curls with peacock feather, golden-yellow pitambara silk, crimson sash, layered gold necklaces, standing beside Draupadi in her deep-red silk sari modestly draped, large kohl-lined lotus eyes, fierce proud bearing, firelit crimson and saffron palette, warm Indian skin tone, court grandeur, contrasted, intense, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "कृष्ण सामने आते",
+        "mood": "solemn divine judgment",
+        "wardrobe_context": "DIVINE",
+        "shot_type": "AMBIGUOUS"
+      },
+      {
+        "image_prompt": "Macro shot of a lone earthen diya oil-lamp flickering on a cracked marble floor, warm torchlight casting long dancing shadows, firelit crimson and saffron palette, warm Indian skin tone, court grandeur, contrasted, intense, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "आग की, जो",
+        "mood": "haunting lingering grief",
+        "wardrobe_context": "PALACE",
+        "shot_type": "PROP"
+      },
+      {
+        "image_prompt": "Wide cinematic shot of Hastinapur palace gates at twilight, silhouette of a lone queen walking away into heavy shadows, abandoned courtyards, fading dusk, firelit crimson and saffron palette, regal red-and-gold pillars, warm Indian skin tone, court grandeur, contrasted, intense, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "हस्तिनापुर की रानी",
+        "mood": "haunted sorrowful aftermath",
+        "wardrobe_context": "AFTERMATH",
+        "shot_type": "ENVIRONMENT"
+      }
+    ],
+    "title": "द्रौपदी की आखिरी हार | Draupadi's Final Loss",
+    "hook_title": "द्रौपदी की आखिरी हार",
+    "description": "▶️ अगला भाग: Draupadi's fatal abduction\n\nयुद्ध जीतने के बाद भी क्या मिला? जानिए उस रात की कहानी जब महारानी द्रौपदी ने सब कुछ खो दिया।\n\nमहाभारत की यह घटना विजय के असली और भयानक सच को सामने लाती है। हस्तिनापुर के सिंहासन पर बैठी रानी के हाथ में केवल राख थी। इस वीडियो में देखिए कैसे विजय ने सब कुछ छीन लिया।\n\n#Shorts #Mahabharata #महाभारत #Krishna #HinduMythology #PauranikKatha #MythologyShorts #HindiShorts",
+    "tags": [
+      "Draupadi",
+      "द्रौपदी",
+      "Ashwatthama",
+      "अश्वत्थामा",
+      "Mahabharata",
+      "महाभारत",
+      "Shorts",
+      "Hindu mythology"
+    ],
+    "thumbnail_prompt": "Draupadi in a radiant deep-red silk sari modestly draped, standing alone in the massive Hastinapur throne room with an empty golden throne behind her, tear-streaked face, kohl-rimmed eyes wide with anguish, burning oil-lamps casting dramatic crimson rim lighting, high-contrast shadows, vertical composition with the queen large in frame, no hands in frame",
+    "quotable_line": "जीत मिली, पर कोख सूनी हो गई — क्या यही रानी का भाग्य था?",
+    "pinned_question": "❓ जीत मिली, पर कोख सूनी हो गई — क्या यही रानी का भाग्य था? बताइए, क्या इस युद्ध का अंत न्यायसंगत था?",
+    "next_seed": "और उस रात के बाद... हस्तिनापुर की रानी कभी नहीं मुस्कुराई...",
+    "language": "hi",
+    "content_type": "story",
+    "topic": "Draupadi's untold grief after the war — the queen's greatest betrayal by victory, winning a kingdom of corpses, losing all five sons in one secret night",
+    "series": "mahabharata",
+    "episode_n": 47,
+    "arc_character_devanagari": "द्रौपदी",
+    "arc_character_english": "Draupadi — The Queen Who Lit the War",
+    "_phase18_strict_pass": false,
+    "_phase18_score": 18,
+    "_phase18_score_max": 25,
+    "_phase18_score_floor": 19,
+    "_phase18_violation": "shock_action",
+    "_phase18_failing_gates": [
+      "archetype",
+      "bookend",
+      "char_names",
+      "engagement",
+      "shock_action",
+      "subject_lock",
+      "tha_tic"
+    ],
+    "_phase18_fatal_failures": []
+  }
+}
