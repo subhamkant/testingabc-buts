@@ -1,0 +1,118 @@
+{
+  "ts": "2026-07-28T05-46-48",
+  "language": "hi",
+  "score": 19,
+  "score_max": 25,
+  "violation": "verb_per_frame",
+  "topic": "Krishna choosing Vidura's humble saag over Duryodhana's royal feast — the night God walked past a palace banquet to eat greens served with love, and taught Hastinapur what devotion tastes like",
+  "title": "कृष्ण की असली कृपा",
+  "script": {
+    "voiceover": "कृष्ण के कदम राजसी भव्यता को ठुकराते हैं। दुर्योधन अपने स्वर्णिम महल में अहंकार से गरजता है, “भगवान कृष्ण को शाही भोज से तृप्त करो!” पर भगवान एक साधारण कुटिया की ओर बढ़ते हैं। विदुर की पत्नी भय से काँपती है, उनके पास बस साग के पत्ते हैं। विदुर कृष्ण के सामने झुकते हैं, आँखों में प्रेम और शर्मिंदगी। लेकिन कृष्ण को भूख नहीं थी पकवानों की, उन्हें तो केवल प्रेम का स्वाद चाहिए था। वे भक्ति से परोसा गया साग खाते हैं, विदुर की आँखों से कृतज्ञता के आँसू बह निकलते हैं। कृष्ण मुस्कुराकर कहते हैं, “इस साग में जो कृपा है, वो किसी राजसी भोज में नहीं!” हस्तिनापुर ने सीखा कि ईश्वर को केवल हृदय का सच्चा प्रेम चाहिए। क्या यही सच्ची कृपा का अमृत नहीं?",
+    "broll": [
+      {
+        "image_prompt": "Extreme macro close-up of a jeweled golden mukut, glinting under harsh palace torchlight, symbolizing Duryodhana's immense pride and arrogance, blurred background of royal courtiers, jewel-toned palette, soft cinematic lighting, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text.",
+        "anchor_phrase": "राजसी भव्यता को ठुकराते हैं",
+        "mood": "Opulent, proud, overlooked",
+        "wardrobe_context": "PALACE",
+        "shot_type": "AMBIGUOUS"
+      },
+      {
+        "image_prompt": "Lunging forward, Duryodhana sits on his gilded throne, a proud cruel sneer on his face, mirror-polished golden kavacha gleaming, jeweled gold war-crown with crimson plume, blood-red and black silks, demanding attention from cowering courtiers, jewel-toned palette, soft cinematic lighting, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text.",
+        "anchor_phrase": "अहंकार से गरजता है",
+        "mood": "Arrogant, commanding, prideful",
+        "wardrobe_context": "PALACE",
+        "shot_type": "ACTION"
+      },
+      {
+        "image_prompt": "Walking away from a distant, shimmering opulent palace, Krishna's graceful powerful divine form moves towards a humble, dimly lit mud-brick hut under a fading dusk sky, golden-yellow pitambara silk, crimson sash, layered gold necklaces, jewel-toned palette, soft cinematic lighting, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text.",
+        "anchor_phrase": "कुटिया की ओर बढ़ते हैं",
+        "mood": "Humble, purposeful, serene",
+        "wardrobe_context": "JOURNEY",
+        "shot_type": "ENVIRONMENT"
+      },
+      {
+        "image_prompt": "Trembling, Kunti's tear-streaked face wide-eyed in apprehension, as she stands in the dim light of a simple mud-brick hut, wearing a plain unadorned white silk sari, looking towards the entrance, jewel-toned palette, soft cinematic lighting, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text.",
+        "anchor_phrase": "भय से काँपती है",
+        "mood": "Anxious, humble, apprehensive",
+        "wardrobe_context": "FOREST",
+        "shot_type": "REACTION"
+      },
+      {
+        "image_prompt": "Falling from a simple woven basket, fresh, dew-kissed green saag leaves land gently onto a rough-hewn wooden plate, an extreme macro close-up, illuminated by a single flickering oil lamp, the humble interior of a mud hut blurred in background, jewel-toned palette, soft cinematic lighting, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text.",
+        "anchor_phrase": "साग के पत्ते हैं",
+        "mood": "Simple, pure, sparse",
+        "wardrobe_context": "FOREST",
+        "shot_type": "ACTION"
+      },
+      {
+        "image_prompt": "[POWER-LOOM] Humble Vidura, in simple white cotton dhoti, kneeling beneath Krishna, his face filled with devotion and shame, as Krishna's graceful powerful divine form stands tall, luminous monsoon-cloud blue skin, dark curls with peacock feather, golden-yellow pitambara silk, crimson sash, jewel-toned palette, soft cinematic lighting, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text.",
+        "anchor_phrase": "विदुर कृष्ण के सामने झुकते हैं",
+        "mood": "Devoted, respectful, grateful",
+        "wardrobe_context": "FOREST",
+        "shot_type": "ACTION"
+      },
+      {
+        "image_prompt": "Krishna's luminous monsoon-cloud blue skin, peacock feather in his dark curls, a serene smile as he partakes in the humble green saag from a small clay plate, golden-yellow pitambara silk, deep adoration in his eyes, jewel-toned palette, soft cinematic lighting, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text.",
+        "anchor_phrase": "साग खाते हैं",
+        "mood": "Content, divine, loving",
+        "wardrobe_context": "FOREST",
+        "shot_type": "AMBIGUOUS"
+      },
+      {
+        "image_prompt": "Vidura's tear-streaked face, eyes wide with profound gratitude and wonder, simple white cotton dhoti, weathered skin, a single flickering oil lamp casting soft shadows on his face, jewel-toned palette, soft cinematic lighting, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text.",
+        "anchor_phrase": "आँसू बह निकलते हैं",
+        "mood": "Overwhelmed, moved, tearful",
+        "wardrobe_context": "FOREST",
+        "shot_type": "REACTION"
+      },
+      {
+        "image_prompt": "Fading dusk over a calm river, a lone diya flickering on the water, a serene silhouette of Krishna with folded hands, a quiet radiant glow of gratitude and stillness, jewel-toned palette, soft cinematic lighting, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text.",
+        "anchor_phrase": "सच्ची कृपा का अमृत",
+        "mood": "Peaceful, enlightened, serene",
+        "wardrobe_context": "AFTERMATH",
+        "shot_type": "AMBIGUOUS"
+      }
+    ],
+    "title": "कृष्ण की असली कृपा",
+    "hook_title": "कृष्ण की कृपा",
+    "description": "एक राजा का अहंकार, एक भक्त का प्रेम। जब भगवान कृष्ण ने हस्तिनापुर के शाही भोज को ठुकराकर एक साधारण कुटिया में साग खाया। उन्होंने दुनिया को सिखाया कि सच्ची कृपा केवल विनम्रता और हृदय के प्रेम में मिलती है, धन और दिखावे में नहीं। यह कहानी हमें याद दिलाती है कि ईश्वर की नज़र में, सबसे बड़ा दान वही है जो निस्वार्थ भाव से दिया जाए।\n\n#Shorts #Mahabharata #महाभारत #Krishna #HinduMythology #PauranikKatha #MythologyShorts #HindiShorts",
+    "tags": [
+      "Krishna Vidura story",
+      "Mahabharata bhakti",
+      "Krishna",
+      "कृष्ण",
+      "Mahabharata",
+      "महाभारत",
+      "Shorts",
+      "Hindu mythology"
+    ],
+    "thumbnail_prompt": "Vertical composition, Krishna's graceful powerful divine form gently eating humble green saag from a small clay plate, a serene smile on his luminous monsoon-cloud blue skin, with Duryodhana's opulent, distant palace silhouetted in the background under fading dusk, divine golden aura, high-contrast rim lighting, vibrant jewel colours, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text.",
+    "quotable_line": "घमंड की थाली से बेहतर, प्रेम का एक पत्ता ही सच्ची कृपा है।",
+    "pinned_question": "❓ घमंड की थाली से बेहतर, प्रेम का एक पत्ता ही सच्ची कृपा है। क्या आप भी ऐसे ही प्रेम की तलाश में हैं?",
+    "next_seed": "और यह कृपा हस्तिनापुर के अहंकार को तोड़ देगी।",
+    "language": "hi",
+    "content_type": "story",
+    "topic": "Krishna choosing Vidura's humble saag over Duryodhana's royal feast — the night God walked past a palace banquet to eat greens served with love, and taught Hastinapur what devotion tastes like",
+    "series": "mahabharata",
+    "episode_n": 0,
+    "arc_character_devanagari": "",
+    "arc_character_english": "devotional",
+    "_phase18_strict_pass": false,
+    "_phase18_score": 19,
+    "_phase18_score_max": 25,
+    "_phase18_score_floor": 19,
+    "_phase18_violation": "verb_per_frame",
+    "_phase18_failing_gates": [
+      "anti_merge_composition",
+      "bookend",
+      "char_names",
+      "intensity",
+      "repetition",
+      "verb_per_frame"
+    ],
+    "_phase18_fatal_failures": [
+      "anti_merge_composition",
+      "verb_per_frame"
+    ]
+  }
+}
