@@ -433,8 +433,52 @@ def _video_intact(path: str, min_s: float = 3.0) -> bool:
         return False
 
 
+def _resolve_ai_clip_scenes(n: int) -> "list[int] | None":
+    """Phase 30 (2026-07-30) — pick which scenes get real I2V motion.
+
+    User directive: 2-3 hero scenes get real motion clips, the rest stay
+    Ken Burns. Priority:
+      1. AI_CLIP_SCENES="all"        → None (every scene)
+      2. AI_CLIP_SCENES="0,4,8"      → those indices (negative = from end)
+      3. legacy WAN_HOOK_ONLY="true" → [0] (hook only, back-compat)
+      4. default                     → hero triplet: hook(0), mid, climax(n-2)
+    Returns None ("every scene") or a sorted list of valid indices.
+    """
+    if n <= 0:
+        return [0]
+    raw = os.environ.get("AI_CLIP_SCENES", "").strip().lower()
+    if raw == "all":
+        return None
+    if raw:
+        idxs = []
+        for tok in raw.replace(" ", "").split(","):
+            try:
+                i = int(tok)
+            except ValueError:
+                continue
+            if i < 0:
+                i += n
+            if 0 <= i < n:
+                idxs.append(i)
+        if idxs:
+            return sorted(set(idxs))
+    if os.environ.get("WAN_HOOK_ONLY", "").strip().lower() == "true":
+        return [0]
+    # Default: 2-3 hero scenes — hook, middle beat, climax (broll[-2], the
+    # frame just before the aftermath closer).
+    hero = {0, max(0, n // 2), max(0, n - 2)}
+    return sorted(i for i in hero if 0 <= i < n)
+
+
 async def run_pipeline(language: str = "en", test_mode: bool = False, test_upload: bool = False):
     lang_name = "Hindi" if language == "hi" else "English"
+    # Phase 30 (2026-07-30) — user directive: Mahabharata Shorts run 25-45s.
+    # The active Phase 18 voiceover (80-110 words) already lands ~32-42s;
+    # this is a hard-cap safety guard so an occasional long voiceover can't
+    # push a Short past 45s. setdefault keeps it overridable per-run and
+    # never touches WhatIf longform (separate `python main.py whatif` entry,
+    # which sets MAX_DURATION_S=999 itself).
+    os.environ.setdefault("MAX_DURATION_S", "45")
     mode_tag = " [TEST-UPLOAD - 1 scene]" if test_upload else (" [TEST - 1 scene]" if test_mode else "")
 
     print(f"\n{'='*55}")
@@ -594,15 +638,6 @@ async def run_pipeline(language: str = "en", test_mode: bool = False, test_uploa
 
             if _ai_clips_available:
                 try:
-                    # Phase 11 retention refactor 2026-06-02: WAN_HOOK_ONLY=true
-                    # restricts Wan-2.1-I2V to scene 0 only (the t=0 hook
-                    # window). Scenes 1+ use Ken Burns, saving provider quota
-                    # and keeping Wan focused where motion-pursuit attention
-                    # matters. Set WAN_HOOK_ONLY=false to restore legacy
-                    # (try every scene).
-                    wan_hook_only = os.environ.get(
-                        "WAN_HOOK_ONLY", "true"
-                    ).strip().lower() != "false"
                     print("\nStep 3 — Generating AI video clips...")
                     # Phase 18 (2026-06-16): shim — generate_video_clips
                     # expects scene-like dicts (image_prompt + video_prompt +
@@ -620,14 +655,17 @@ async def run_pipeline(language: str = "en", test_mode: bool = False, test_uploa
                             }
                             for b in _clip_input
                         ]
-                    if wan_hook_only:
-                        clip_files, ref_images = await generate_video_clips(
-                            _clip_input, scene_indices=[0],
-                        )
-                    else:
-                        clip_files, ref_images = await generate_video_clips(
-                            _clip_input,
-                        )
+                    # Phase 30 (2026-07-30): 2-3 hero scenes get real I2V
+                    # motion (hook + mid-beat + climax); the rest stay Ken
+                    # Burns. Override via AI_CLIP_SCENES; see
+                    # _resolve_ai_clip_scenes. None → every scene.
+                    _scene_sel = _resolve_ai_clip_scenes(len(_clip_input))
+                    print(f"    [motion] hero scene selection: "
+                          f"{'ALL' if _scene_sel is None else _scene_sel} "
+                          f"of {len(_clip_input)} broll frames")
+                    clip_files, ref_images = await generate_video_clips(
+                        _clip_input, scene_indices=_scene_sel,
+                    )
                     n_ai = sum(1 for c in clip_files if c)
                     if n_ai == 0:
                         print("    All AI clip providers failed — using full static-image pipeline")
@@ -1021,15 +1059,6 @@ async def run_krishna_speech(test_mode: bool = False, test_upload: bool = False)
 
             if _ai_clips_available:
                 try:
-                    # Phase 11 retention refactor 2026-06-02: WAN_HOOK_ONLY=true
-                    # restricts Wan-2.1-I2V to scene 0 only (the t=0 hook
-                    # window). Scenes 1+ use Ken Burns, saving provider quota
-                    # and keeping Wan focused where motion-pursuit attention
-                    # matters. Set WAN_HOOK_ONLY=false to restore legacy
-                    # (try every scene).
-                    wan_hook_only = os.environ.get(
-                        "WAN_HOOK_ONLY", "true"
-                    ).strip().lower() != "false"
                     print("\nStep 3 — Generating AI video clips...")
                     # Phase 18 (2026-06-16): shim — generate_video_clips
                     # expects scene-like dicts (image_prompt + video_prompt +
@@ -1047,14 +1076,17 @@ async def run_krishna_speech(test_mode: bool = False, test_upload: bool = False)
                             }
                             for b in _clip_input
                         ]
-                    if wan_hook_only:
-                        clip_files, ref_images = await generate_video_clips(
-                            _clip_input, scene_indices=[0],
-                        )
-                    else:
-                        clip_files, ref_images = await generate_video_clips(
-                            _clip_input,
-                        )
+                    # Phase 30 (2026-07-30): 2-3 hero scenes get real I2V
+                    # motion (hook + mid-beat + climax); the rest stay Ken
+                    # Burns. Override via AI_CLIP_SCENES; see
+                    # _resolve_ai_clip_scenes. None → every scene.
+                    _scene_sel = _resolve_ai_clip_scenes(len(_clip_input))
+                    print(f"    [motion] hero scene selection: "
+                          f"{'ALL' if _scene_sel is None else _scene_sel} "
+                          f"of {len(_clip_input)} broll frames")
+                    clip_files, ref_images = await generate_video_clips(
+                        _clip_input, scene_indices=_scene_sel,
+                    )
                     n_ai = sum(1 for c in clip_files if c)
                     if n_ai == 0:
                         print("    All AI clip providers failed — using full static-image pipeline")

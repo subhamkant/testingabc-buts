@@ -254,13 +254,22 @@ def get_youtube_service(token_path: str = "token.pickle"):
 
 # ── Series-specific tag bundles ──────────────────────────────────────────────
 
+# Phase 30 (2026-07-30) — expanded higher-reach entity + long-tail pool.
+# The uploader dedupes editorial (LLM script_data["tags"]) FIRST, then fills
+# from this bundle up to the 30-tag / 480-char budget, so ordering here is a
+# priority list: broad-reach mytho terms first, then named characters
+# (EN+HI, the strongest Suggested-feed clustering signal), then long-tail.
 _TAGS_MAHABHARATA = [
-    "Mahabharata", "महाभारत", "Hindu mythology",
-    "Ancient India", "Bhagavad Gita", "भगवद गीता",
-    "Krishna", "कृष्ण", "Arjuna", "अर्जुन",
-    "epic story", "dharma", "spiritual", "Indian history",
-    "Hindu dharma", "vedic wisdom", "kurukshetra", "krishna stories",
-    "Indian mythology",
+    "Mahabharata", "महाभारत", "mahabharat", "mahabharat story",
+    "Hindu mythology", "Indian mythology", "पौराणिक कथा",
+    "Ancient India", "Bhagavad Gita", "भगवद गीता", "Gita",
+    "Krishna", "कृष्ण", "Arjuna", "अर्जुन", "Karna", "कर्ण",
+    "Bhishma", "भीष्म", "Draupadi", "द्रौपदी", "Duryodhana", "दुर्योधन",
+    "Pandava", "Kaurava", "पांडव", "कौरव",
+    "epic story", "dharma", "kurukshetra", "कुरुक्षेत्र",
+    "krishna stories", "mythology shorts", "hindi mythology",
+    "hindu dharma", "vedic wisdom", "Indian history", "spiritual",
+    "mahabharat ki kahani", "pauranik katha", "sanatan dharma",
 ]
 _TAGS_WHATIF = [
     "what if", "hypothetical", "thought experiment", "Shorts",

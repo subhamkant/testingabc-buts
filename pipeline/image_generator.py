@@ -68,7 +68,7 @@ STYLE_SUFFIX_MORTAL = (
     # Posture + lighting — the literal halo effect.
     "regal posture, high-end epic fantasy film styling, "
     "golden hour rim lighting creating an ethereal halo on hair and shoulders, "
-    "85mm portrait, crisp intricate detail on jewelry, engraved metal and fabric weave, richly textured ornate surfaces, "
+    "85mm portrait, crisp intricate detail on jewelry, hyper-detailed engraved metal armor and fabric weave, richly textured ornate silks and ornaments, individual visible hair strands, "
     # Face-exposure anchor — added 2026-05-14 after FLUX over-interpreted
     # "oil-lamp" cues and rendered Karna near-black. Canonical Karna is
     # golden-bronze (Surya's son), not silhouette-dark.
@@ -129,6 +129,20 @@ STYLE_SUFFIX_DIVINE = (
 # the divine override fires only when a divine character is detected in the
 # prompt (see generate_image_bytes).
 STYLE_SUFFIX = STYLE_SUFFIX_MORTAL
+
+# Phase 30 (2026-07-30) — costume guarantee. The user flagged characters
+# rendering "with no clothes" / undressed. Root causes: the ENVIRONMENT
+# composition led with "bare torso" (fixed above) AND wide shots skip
+# character injection so their figures carry no garment tokens. This short
+# POSITIVE clause (bans stay in _NEGATIVE_DEFAULT per the negation-poisoning
+# rule) is appended to every Mahabharata prompt — including ENVIRONMENT —
+# so all figures assert ornate period dress regardless of shot type.
+_COSTUME_GUARANTEE = (
+    " Every human figure is fully robed in richly detailed ornate period "
+    "attire — engraved armor, layered silks, draped dhoti and angavastram, "
+    "with jewelry and ornaments; women modestly draped with chest and "
+    "shoulders covered."
+)
 
 
 # ── Phase 12 per-character palette + lighting (2026-06-03) ──────────────────
@@ -948,8 +962,9 @@ _SHOT_COMPOSITIONS = [
         # schnell obeys early tokens above all else. BFT1ix75d0s shipped
         # 6/8 plate-armor frames from clean scripts because of this word.
         "if a character is present: FULL BODY visible, READABLE SILHOUETTE "
-        "on a phone screen (recognizable shape — bare torso, silk drape, "
-        "posture, weapon — NOT a tiny indistinct dot), occupying roughly "
+        "on a phone screen (recognizable shape — fully dressed in ornate "
+        "engraved armor and layered draped silks, posture, weapon — NOT a "
+        "tiny indistinct dot), occupying roughly "
         "1/4 to 1/3 of frame "
         "height. subject grounded in the environment. ENVIRONMENT DOMINANT — "
         "show the SETTING explicitly (battlefield, palace court, forest, "
@@ -1280,6 +1295,23 @@ def _primary_character(prompt: str) -> str:
     return earliest_name
 
 
+def _count_principals(prompt: str) -> int:
+    """Phase 30 (2026-07-30): count how many PRINCIPAL characters (those with
+    a signature_lock — i.e. render-able heroes, not props/mounts) appear in
+    the prompt, word-boundary matched. Used to decide whether a hero scene
+    should get explicit two-figure spatial blocking (2 principals) or stay a
+    single readable silhouette (1). 3+ is capped downstream — schnell merges."""
+    if not _CHARACTERS:
+        return 0
+    n = 0
+    for name, data in _CHARACTERS.items():
+        if not data.get("signature_lock"):
+            continue
+        if re.search(rf"\b{re.escape(name)}\b", prompt, re.IGNORECASE):
+            n += 1
+    return n
+
+
 def _char_stable_seed(character: str, shot_index: int) -> int:
     """
     Deterministic seed derived from character name + shot index. Same character
@@ -1373,7 +1405,10 @@ def _inject_characters(prompt: str, wardrobe_context: str = "") -> str:
         n_principals = sum(1 for _, _, p in injected if p)
         def _fit(text, is_principal):
             if is_principal and n_principals > 1:
-                return _clause_trim(text, 220)
+                # Phase 30 (2026-07-30): 220→300. Scene count dropped to
+                # ~5-6 (shorter 25-45s videos) so the T5 window has room for
+                # richer costume detail on both characters in a shared frame.
+                return _clause_trim(text, 300)
             return text
         if use_full_fingerprint:
             fingerprints = "; ".join(
@@ -2527,15 +2562,31 @@ def generate_images(scenes_or_script, single_shot: bool = False, series: str = "
         # honors — Phase 23.10b lesson). Mahabharata-only.
         if (series == "mahabharata" and len(scenes) >= 4
                 and i == len(scenes) - 2):
-            scene_compositions = [(
-                "ICONIC TABLEAU, ",
+            # Phase 30 (2026-07-30): when the climax scene names TWO
+            # principals, stage them with explicit left/right blocking so
+            # schnell renders both distinct figures instead of merging them
+            # into one central hero (the "only one character per frame"
+            # complaint). Single-principal climaxes keep the original tableau.
+            _climax_two = _count_principals(scene.get("image_prompt", "")) >= 2
+            _tableau_dir = (
                 "the single defining mythic moment of this story frozen at "
                 "its peak, staged like a legendary temple mural, divine "
                 "golden glow erupting around the central figures, dramatic "
                 "silhouettes against the light, every element charged with "
-                "consequence, ",
+                "consequence, ")
+            if _climax_two:
+                _tableau_dir = (
+                    "TWO distinct named figures staged face-to-face, one "
+                    "clearly on the LEFT and one on the RIGHT of frame, each "
+                    "fully visible with their own colour palette so they read "
+                    "apart instantly, "
+                    + _tableau_dir)
+            scene_compositions = [(
+                "ICONIC TABLEAU, ",
+                _tableau_dir,
             )] + list(scene_compositions[1:])
-            print(f"    [climax] scene {i} shot 0 → iconic tableau staging")
+            print(f"    [climax] scene {i} shot 0 → iconic tableau staging"
+                  f"{' (two-figure)' if _climax_two else ''}")
 
         for j, (angle_label, composition_directive) in enumerate(scene_compositions):
             output_path = f"{_TEMP_ROOT}/images/scene_{i:02d}_shot_{j:02d}.jpg"
@@ -2590,6 +2641,7 @@ def generate_images(scenes_or_script, single_shot: bool = False, series: str = "
                     + base_prompt          # raw LLM prompt (verb + scene action) + [Name: lock]
                     + " "
                     + iconography_anchor   # scene descriptor (env + depth + multi-character)
+                    + _COSTUME_GUARANTEE   # Phase 30: assert ornate dress on every figure
                 )
             else:
                 prompt = f"{angle_label}{composition_directive}{base_prompt}"
@@ -2632,23 +2684,28 @@ def generate_images(scenes_or_script, single_shot: bool = False, series: str = "
                 # fall through to per-scene checkpointing below
                 success = True
             elif (j == 0 and series == "mahabharata" and len(scenes) >= 4
-                  and i in (0, len(scenes) - 2)
+                  and (os.environ.get("FACE_SELECT_ALL", "true").strip().lower()
+                       not in ("0", "false", "no")
+                       or i in (0, len(scenes) - 2))
                   and os.environ.get("FACE_SELECT", "true").strip().lower()
                   not in ("0", "false", "no")):
                 # Best-of-N face-similarity selection (Sprint 2.2-lite,
-                # 2026-07-04). Hero scenes (hook + climax): generate N
+                # 2026-07-04; widened Phase 30, 2026-07-30). Generate N
                 # schnell candidates, keep the face closest to the
-                # character's approved master anchor. All-0.0 scores keep
-                # candidate 0 (the stable-seed baseline = pre-existing
-                # behavior); anchor/model failures fall through to the
-                # normal cascade untouched.
+                # character's approved master anchor. Phase 30: with scene
+                # count dropped to ~5-6, run this on EVERY scene whose
+                # primary character has an anchor (FACE_SELECT_ALL=true,
+                # the default) — not just hook + climax — so faces stay
+                # locked across the whole video. Set FACE_SELECT_ALL=false
+                # to revert to hook+climax only. Scenes whose hero has no
+                # anchor fall through to the normal cascade untouched.
                 success = False
                 _hero_fs = _primary_character(raw_prompt)
                 from pipeline import face_selector as _fsel
                 _emb = (_fsel.get_anchor_embedding(_hero_fs)
                         if _hero_fs else None)
                 if _emb is not None:
-                    _n = max(int(os.environ.get("FACE_SELECT_N", "3")), 2)
+                    _n = max(int(os.environ.get("FACE_SELECT_N", "4")), 2)
                     _best, _best_score, _fs_scores = None, -1.0, []
                     for _k in range(_n):
                         try:

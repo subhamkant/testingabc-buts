@@ -80,9 +80,21 @@ def _build_video_prompt(scene: dict) -> str:
         or scene.get("image_prompt", "")[:150]
         or "dramatic cinematic scene"
     )
+    # Phase 30 (2026-07-30) — richer, more directed I2V motion. Ported from
+    # the Mahagatha motion-shot vocabulary (camera move + living subject
+    # motion + atmospheric VFX) so hero clips actually MOVE cinematically
+    # instead of a soft drift. All-positive phrasing (identity kept stable
+    # by asserting consistency, never "no morphing" which some I2V models
+    # read as an instruction to morph).
     return (
-        f"{base}, cinematic motion, smooth animation, "
-        "epic lighting, shallow depth of field, high quality, vertical 9:16"
+        f"{base}. Slow cinematic camera push-in with gentle parallax; the "
+        "character moves naturally and alive — steady breathing, hair and "
+        "silk garments drifting in the wind, subtle weight-shift of the "
+        "body, weapon or hand moving with intent; drifting dust, floating "
+        "embers and soft volumetric god-rays in the air; the face and "
+        "identity stay stable and consistent throughout; smooth film-grade "
+        "motion, dramatic epic lighting, shallow depth of field, "
+        "high detail, vertical 9:16 cinematic"
     )
 
 

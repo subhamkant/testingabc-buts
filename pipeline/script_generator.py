@@ -3740,6 +3740,34 @@ def generate_script(
     bottom on epic battlefield shots.)
 
     ═══════════════════════════════════════════════════════════════
+    TWO-CHARACTER STAGING — CONFRONTATION & DIALOGUE SCENES
+    ═══════════════════════════════════════════════════════════════
+    Mahabharata drama lives in confrontations (Karna vs Arjuna, Krishna
+    counselling a Pandava, Draupadi facing the Kaurava court). When a
+    scene's emotional core is TWO named characters together — especially
+    the HOOK (scene 1) and the CLIMAX (second-to-last scene) — you MUST
+    stage BOTH of them with EXPLICIT SPATIAL BLOCKING so the render does
+    not merge them into one figure:
+
+      • Place one character clearly on the LEFT and the other on the RIGHT
+        (or foreground vs. background), and SAY SO in the prompt
+        ("KARNA on the left, ARJUNA on the right, facing each other").
+      • Give each their own action/pose in the same sentence.
+      • Lean on their DISTINCT PALETTES so they read apart instantly
+        (e.g. Karna = golden-bronze sun armor; Arjuna = silver-blue;
+        Krishna = golden-yellow silk with peacock crown; Draupadi = deep
+        crimson). Name the colour on each so FLUX separates them.
+      • Keep it to at most TWO detailed foreground figures — 3+ named
+        principals in one frame reliably merges/deforms. Extra people
+        stay as an out-of-focus crowd or silhouettes.
+
+    GOOD (two figures, blocked left/right, palette-separated):
+        "Wide dramatic two-shot: KARNA on the LEFT in gleaming golden-bronze
+         sun-emblem armor drawing his bow, ARJUNA on the RIGHT in silver-blue
+         armor drawing the Gandiva, the two archers facing each other across
+         a dust-choked battlefield, chariots and distant armies behind..."
+
+    ═══════════════════════════════════════════════════════════════
     CHARACTER NAMING — CRITICAL FOR VISUAL CONSISTENCY
     ═══════════════════════════════════════════════════════════════
     EVERY image_prompt that depicts a character MUST use the character's
