@@ -2684,8 +2684,8 @@ def generate_images(scenes_or_script, single_shot: bool = False, series: str = "
                 # fall through to per-scene checkpointing below
                 success = True
             elif (j == 0 and series == "mahabharata" and len(scenes) >= 4
-                  and (os.environ.get("FACE_SELECT_ALL", "true").strip().lower()
-                       not in ("0", "false", "no")
+                  and (os.environ.get("FACE_SELECT_ALL", "false").strip().lower()
+                       in ("1", "true", "yes")
                        or i in (0, len(scenes) - 2))
                   and os.environ.get("FACE_SELECT", "true").strip().lower()
                   not in ("0", "false", "no")):
@@ -2693,11 +2693,14 @@ def generate_images(scenes_or_script, single_shot: bool = False, series: str = "
                 # 2026-07-04; widened Phase 30, 2026-07-30). Generate N
                 # schnell candidates, keep the face closest to the
                 # character's approved master anchor. Phase 30: with scene
-                # count dropped to ~5-6, run this on EVERY scene whose
-                # primary character has an anchor (FACE_SELECT_ALL=true,
-                # the default) — not just hook + climax — so faces stay
-                # locked across the whole video. Set FACE_SELECT_ALL=false
-                # to revert to hook+climax only. Scenes whose hero has no
+                # count dropped to ~5-6, FACE_SELECT_ALL=true runs this on
+                # EVERY scene whose primary character has an anchor — not
+                # just hook + climax — so faces stay locked across the whole
+                # video. Default is FALSE (opt-in): on GHA, best-of-N on
+                # every anchored scene is a lot of extra Cloudflare calls +
+                # OpenCV load under the 29-min cap, and base faces already
+                # render clean without it (verified 2026-07-30). Hook +
+                # climax always get best-of-N. Scenes whose hero has no
                 # anchor fall through to the normal cascade untouched.
                 success = False
                 _hero_fs = _primary_character(raw_prompt)

@@ -473,12 +473,15 @@ def _resolve_ai_clip_scenes(n: int) -> "list[int] | None":
 async def run_pipeline(language: str = "en", test_mode: bool = False, test_upload: bool = False):
     lang_name = "Hindi" if language == "hi" else "English"
     # Phase 30 (2026-07-30) — user directive: Mahabharata Shorts run 25-45s.
-    # The active Phase 18 voiceover (80-110 words) already lands ~32-42s;
-    # this is a hard-cap safety guard so an occasional long voiceover can't
-    # push a Short past 45s. setdefault keeps it overridable per-run and
-    # never touches WhatIf longform (separate `python main.py whatif` entry,
-    # which sets MAX_DURATION_S=999 itself).
-    os.environ.setdefault("MAX_DURATION_S", "45")
+    # ONLY cap at 45s on the active Phase 18 path, whose 80-110 word
+    # voiceover already lands ~32-42s (so 45 is a harmless safety guard, no
+    # chop). The legacy 13-scene path produces ~57s of audio designed for
+    # the 58s cap — force-capping THAT to 45 hard-chops the aftermath/CTA
+    # (verified 2026-07-30 local: "atempo 1.41x exceeds ceiling, residue
+    # chopped"). So gate on PHASE18_DECOUPLED. setdefault keeps it
+    # overridable; WhatIf longform is a separate entry (sets 999 itself).
+    if os.environ.get("PHASE18_DECOUPLED", "false").strip().lower() == "true":
+        os.environ.setdefault("MAX_DURATION_S", "45")
     mode_tag = " [TEST-UPLOAD - 1 scene]" if test_upload else (" [TEST - 1 scene]" if test_mode else "")
 
     print(f"\n{'='*55}")
