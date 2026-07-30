@@ -666,9 +666,25 @@ async def run_pipeline(language: str = "en", test_mode: bool = False, test_uploa
                     print(f"    [motion] hero scene selection: "
                           f"{'ALL' if _scene_sel is None else _scene_sel} "
                           f"of {len(_clip_input)} broll frames")
-                    clip_files, ref_images = await generate_video_clips(
-                        _clip_input, scene_indices=_scene_sel,
-                    )
+                    if os.environ.get("MAHA_MOTION_KAGGLE", "false").strip().lower() == "true":
+                        # Phase 30 (2026-07-31): free-T4 Kaggle LTX I2V
+                        # (portrait 512x768, reliable + free, ~10-15 min warm)
+                        # instead of the fal/Replicate/HF cascade. Generate
+                        # reference stills via the normal cascade
+                        # (scene_indices=[] → ref stills only, no provider
+                        # clips), then animate the hero scenes on Kaggle.
+                        # Isolated in pipeline/maha_kaggle_motion.py.
+                        from pipeline.maha_kaggle_motion import generate_kaggle_motion_clips
+                        _, ref_images = await generate_video_clips(
+                            _clip_input, scene_indices=[])
+                        _sel = (list(range(len(_clip_input)))
+                                if _scene_sel is None else _scene_sel)
+                        clip_files = await generate_kaggle_motion_clips(
+                            _clip_input, _sel, ref_images, ck.run_id)
+                    else:
+                        clip_files, ref_images = await generate_video_clips(
+                            _clip_input, scene_indices=_scene_sel,
+                        )
                     n_ai = sum(1 for c in clip_files if c)
                     if n_ai == 0:
                         print("    All AI clip providers failed — using full static-image pipeline")
@@ -1087,9 +1103,25 @@ async def run_krishna_speech(test_mode: bool = False, test_upload: bool = False)
                     print(f"    [motion] hero scene selection: "
                           f"{'ALL' if _scene_sel is None else _scene_sel} "
                           f"of {len(_clip_input)} broll frames")
-                    clip_files, ref_images = await generate_video_clips(
-                        _clip_input, scene_indices=_scene_sel,
-                    )
+                    if os.environ.get("MAHA_MOTION_KAGGLE", "false").strip().lower() == "true":
+                        # Phase 30 (2026-07-31): free-T4 Kaggle LTX I2V
+                        # (portrait 512x768, reliable + free, ~10-15 min warm)
+                        # instead of the fal/Replicate/HF cascade. Generate
+                        # reference stills via the normal cascade
+                        # (scene_indices=[] → ref stills only, no provider
+                        # clips), then animate the hero scenes on Kaggle.
+                        # Isolated in pipeline/maha_kaggle_motion.py.
+                        from pipeline.maha_kaggle_motion import generate_kaggle_motion_clips
+                        _, ref_images = await generate_video_clips(
+                            _clip_input, scene_indices=[])
+                        _sel = (list(range(len(_clip_input)))
+                                if _scene_sel is None else _scene_sel)
+                        clip_files = await generate_kaggle_motion_clips(
+                            _clip_input, _sel, ref_images, ck.run_id)
+                    else:
+                        clip_files, ref_images = await generate_video_clips(
+                            _clip_input, scene_indices=_scene_sel,
+                        )
                     n_ai = sum(1 for c in clip_files if c)
                     if n_ai == 0:
                         print("    All AI clip providers failed — using full static-image pipeline")
