@@ -667,20 +667,23 @@ async def run_pipeline(language: str = "en", test_mode: bool = False, test_uploa
                           f"{'ALL' if _scene_sel is None else _scene_sel} "
                           f"of {len(_clip_input)} broll frames")
                     if os.environ.get("MAHA_MOTION_KAGGLE", "false").strip().lower() == "true":
-                        # Phase 30 (2026-07-31): free-T4 Kaggle LTX I2V
-                        # (portrait 512x768, reliable + free, ~10-15 min warm)
-                        # instead of the fal/Replicate/HF cascade. Generate
-                        # reference stills via the normal cascade
-                        # (scene_indices=[] → ref stills only, no provider
-                        # clips), then animate the hero scenes on Kaggle.
-                        # Isolated in pipeline/maha_kaggle_motion.py.
-                        from pipeline.maha_kaggle_motion import generate_kaggle_motion_clips
-                        _, ref_images = await generate_video_clips(
-                            _clip_input, scene_indices=[])
-                        _sel = (list(range(len(_clip_input)))
-                                if _scene_sel is None else _scene_sel)
-                        clip_files = await generate_kaggle_motion_clips(
-                            _clip_input, _sel, ref_images, ck.run_id)
+                        # Phase 31 (2026-07-31): ALL-SCENE motion via the
+                        # resumable free-T4 Kaggle pool (3 accounts x 2 kernels
+                        # = 6 slots). Ref stills come from generate_images WITH
+                        # ck, so a resumed GHA retry-attempt reuses the cached
+                        # stills instead of re-hitting Cloudflare. Default =
+                        # every scene; AI_CLIP_SCENES overrides (explicit csv,
+                        # or "all"). Resumable across the retry chain via ck;
+                        # missing/failed clips fall back to Ken Burns.
+                        from pipeline.maha_kaggle_motion import generate_motion_clips_pool
+                        _ref_groups = generate_images(
+                            script, single_shot=True, series="mahabharata", ck=ck)
+                        ref_images = [g[0] if g else None for g in _ref_groups]
+                        _aic = os.environ.get("AI_CLIP_SCENES", "").strip().lower()
+                        _sel = (_scene_sel if (_aic and _aic != "all")
+                                else list(range(len(_clip_input))))
+                        clip_files = await generate_motion_clips_pool(
+                            ck, _clip_input, _sel, ref_images, ck.run_id)
                     else:
                         clip_files, ref_images = await generate_video_clips(
                             _clip_input, scene_indices=_scene_sel,
@@ -1104,20 +1107,23 @@ async def run_krishna_speech(test_mode: bool = False, test_upload: bool = False)
                           f"{'ALL' if _scene_sel is None else _scene_sel} "
                           f"of {len(_clip_input)} broll frames")
                     if os.environ.get("MAHA_MOTION_KAGGLE", "false").strip().lower() == "true":
-                        # Phase 30 (2026-07-31): free-T4 Kaggle LTX I2V
-                        # (portrait 512x768, reliable + free, ~10-15 min warm)
-                        # instead of the fal/Replicate/HF cascade. Generate
-                        # reference stills via the normal cascade
-                        # (scene_indices=[] → ref stills only, no provider
-                        # clips), then animate the hero scenes on Kaggle.
-                        # Isolated in pipeline/maha_kaggle_motion.py.
-                        from pipeline.maha_kaggle_motion import generate_kaggle_motion_clips
-                        _, ref_images = await generate_video_clips(
-                            _clip_input, scene_indices=[])
-                        _sel = (list(range(len(_clip_input)))
-                                if _scene_sel is None else _scene_sel)
-                        clip_files = await generate_kaggle_motion_clips(
-                            _clip_input, _sel, ref_images, ck.run_id)
+                        # Phase 31 (2026-07-31): ALL-SCENE motion via the
+                        # resumable free-T4 Kaggle pool (3 accounts x 2 kernels
+                        # = 6 slots). Ref stills come from generate_images WITH
+                        # ck, so a resumed GHA retry-attempt reuses the cached
+                        # stills instead of re-hitting Cloudflare. Default =
+                        # every scene; AI_CLIP_SCENES overrides (explicit csv,
+                        # or "all"). Resumable across the retry chain via ck;
+                        # missing/failed clips fall back to Ken Burns.
+                        from pipeline.maha_kaggle_motion import generate_motion_clips_pool
+                        _ref_groups = generate_images(
+                            script, single_shot=True, series="mahabharata", ck=ck)
+                        ref_images = [g[0] if g else None for g in _ref_groups]
+                        _aic = os.environ.get("AI_CLIP_SCENES", "").strip().lower()
+                        _sel = (_scene_sel if (_aic and _aic != "all")
+                                else list(range(len(_clip_input))))
+                        clip_files = await generate_motion_clips_pool(
+                            ck, _clip_input, _sel, ref_images, ck.run_id)
                     else:
                         clip_files, ref_images = await generate_video_clips(
                             _clip_input, scene_indices=_scene_sel,
