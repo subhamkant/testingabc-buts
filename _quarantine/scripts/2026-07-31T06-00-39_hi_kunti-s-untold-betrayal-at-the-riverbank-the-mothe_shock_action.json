@@ -1,0 +1,109 @@
+{
+  "ts": "2026-07-31T06-00-39",
+  "language": "hi",
+  "score": 18,
+  "score_max": 25,
+  "violation": "shock_action",
+  "topic": "Kunti's untold betrayal at the riverbank — the mother who abandoned Karna at birth begging him before the war to spare her other sons, and the bitter promise that she would still have five",
+  "title": "कर्ण का छुपा धोखा | Karna's Hidden Betrayal",
+  "script": {
+    "voiceover": "गंगा तट की रेत पर कुंती कर्ण का चेहरा छूती है, जन्म के समय बक्से में बंद उस बेटे को आज पहली बार माँ पुकारती है। उसकी आँखों में आंसू हैं, और जुबान पर उस युद्ध का भय जो उसके पाँचों बेटों की जान ले सकता है। वह भीख मांगती है— अपने बाकी बेटों को बख्श दे। लेकिन उसी क्षण कर्ण का दिल टूट जाता है — जिस माँ ने दूध नहीं दिया, वो आज प्राण मांग रही है। फिर भी वो वचन देता है, तुम्हारी गोद खाली नहीं होगी, युधिष्ठिर, भीम, अर्जुन, नकुल, सहदेव या मैं। क्या उस नदी किनारे माँ का प्यार सच था, या वो सिर्फ अपने राजवंश का सौदा कर रही थी?",
+    "broll": [
+      {
+        "image_prompt": "Action moment frozen mid-strike around the hero's weapon, dust and sparks suspended in the air, Wide cinematic shot, sun-drenched Ganges riverbank with wet golden sand and rippling water, Kunti kneels with trembling hands outstretched, weary but graceful older Indian woman, pale golden Indian skin, sorrowful dignified eyes, silver-streaked dark hair, simple unadorned white silk sari, holding a simple earthen pot, warm sunset amber palette, harsh golden-hour edge-light, embers in the air, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "गंगा तट की",
+        "mood": "sorrowful heavy emotional burden",
+        "wardrobe_context": "JOURNEY",
+        "shot_type": "AMBIGUOUS"
+      },
+      {
+        "image_prompt": "[OVER-SHOULDER] Sweeping cinematic shot of a sacred riverbank at dusk, Karna towering mighty physique, golden-bronze skin, long flowing dark mane, engraved golden kavacha with blazing sun emblem on his chest, gold kundals, crimson cape over steel-blue dhoti, solar aura, white-knuckled grip on bow, sweat-drenched skin, harsh golden-hour edge-light, embers in foreground, warm sunset amber palette, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "जन्म के समय",
+        "mood": "intense heavy betrayal",
+        "wardrobe_context": "JOURNEY",
+        "shot_type": "AMBIGUOUS"
+      },
+      {
+        "image_prompt": "Close-up shot of a grieving mother's tear-streaked face, sorrowful dignified eyes, silver-streaked dark hair, simple unadorned white silk sari, trembling lips, kohl-rimmed eyes, tear-streaked face, shadow-heavy frame, warm sunset amber palette, golden divine glow, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "उसकी आँखों में",
+        "mood": "desperate pleading anguish",
+        "wardrobe_context": "JOURNEY",
+        "shot_type": "REACTION"
+      },
+      {
+        "image_prompt": "Wide shot of a desolate riverbank at sunset, Kunti standing with palms pressed together in desperate supplication, weary older Indian woman, sorrowful dignified eyes, unadorned white silk sari, wind-whipped hair, dust-choked air, scorched earth, warm sunset amber palette, golden-hour edge-light, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "वह भीख मांगती है",
+        "mood": "hollow begging grief",
+        "wardrobe_context": "JOURNEY",
+        "shot_type": "ENVIRONMENT"
+      },
+      {
+        "image_prompt": "[POWER-LOOM] Karna towering mighty physique, golden-bronze skin, engraved golden kavacha with blazing sun emblem on his chest, gold kundals, crimson cape over steel-blue dhoti, solar aura, standing tall and rigid on the riverbank while Kunti kneels below in dust, tear-streaked face, shadow-heavy frame, harsh golden-hour edge-light, warm sunset amber palette, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "लेकिन उसी क्षण",
+        "mood": "shattered broken loyalty",
+        "wardrobe_context": "JOURNEY",
+        "shot_type": "REACTION"
+      },
+      {
+        "image_prompt": "Extreme macro close-up of golden kundal earrings catching the fading oil-lamp glow, intricate filigree on antique Vedic gold, glistening sweat droplets, hyper-detailed skin pores, cinematic volumetric rim lighting, warm sunset amber palette, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "वो आज प्राण",
+        "mood": "bitter sacrifice pain",
+        "wardrobe_context": "JOURNEY",
+        "shot_type": "AMBIGUOUS"
+      },
+      {
+        "image_prompt": "Wide cinematic shot of the Ganges riverbank at dusk, Karna turning away with a solemn stride, towering mighty physique, engraved golden kavacha with blazing sun emblem, solar aura, crimson cape fluttering in wind, dust-choked air, warm sunset amber palette, golden-hour edge-light, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "तुम्हारी गोद खाली",
+        "mood": "cold solemn promise",
+        "wardrobe_context": "JOURNEY",
+        "shot_type": "ENVIRONMENT"
+      },
+      {
+        "image_prompt": "Wide cinematic shot of a lone earthen diya flickering on the dark riverbank, warm orange flame casting long shadows on wet sand, fading dusk light, abandoned riverbed, silhouette of a solitary warrior walking away into mist, warm sunset amber palette, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "माँ का प्यार सच",
+        "mood": "haunting lingering sorrow",
+        "wardrobe_context": "AFTERMATH",
+        "shot_type": "ENVIRONMENT"
+      }
+    ],
+    "title": "कर्ण का छुपा धोखा | Karna's Hidden Betrayal",
+    "hook_title": "कर्ण का छुपा धोखा",
+    "description": "▶️ अगला भाग: Karna's final sacrifice as he lay dying\n\nगंगा किनारे वह रहस्यमयी मुलाकात, जहाँ त्याग की मूर्ति कही जाने वाली कुंती ने अपने ही त्यागे हुए बेटे से वो मांग लिया जो कोई माँ कभी नहीं मांग सकती।\n\nजब महाभारत के सबसे बड़े योद्धा को उसकी अपनी जन्मदात्री ने युद्ध के मैदान से पहले ठुकरा दिया, तब उसके भीतर क्या टूटा? इस वीडियो में जानिए कर्ण और कुंती के उस अनकहे संवाद का कड़वा सच, जिसने इतिहास की धारा बदल दी।\n\n#Shorts #Mahabharata #महाभारत #Krishna #HinduMythology #PauranikKatha #MythologyShorts #HindiShorts",
+    "tags": [
+      "Kunti",
+      "Karna",
+      "Mahabharata",
+      "कुंती",
+      "कर्ण",
+      "महाभारत",
+      "Shorts",
+      "Hindu mythology"
+    ],
+    "thumbnail_prompt": "Close-up split dramatic composition: Kunti with tear-streaked face pleading with folded hands on the left, and Karna towering in engraved golden kavacha with blazing sun emblem looking away in cold anguish on the right, Ganges riverbank at sunset background, warm sunset amber palette, golden divine glow, high-contrast rim lighting, vibrant jewel colors, vertical composition",
+    "quotable_line": "जिस माँ ने दूध नहीं दिया, उसने अंत में प्राण मांग लिए।",
+    "pinned_question": "❓ जिस माँ ने दूध नहीं दिया, उसने अंत में प्राण मांग लिए। क्या कर्ण का यह वचन उसकी महानता थी या उसकी सबसे बड़ी विवशता?",
+    "next_seed": "और अगले भाग में, कर्ण का अंतिम युद्ध और वह रहस्यमयी ब्राह्मण...",
+    "language": "hi",
+    "content_type": "story",
+    "topic": "Kunti's untold betrayal at the riverbank — the mother who abandoned Karna at birth begging him before the war to spare her other sons, and the bitter promise that she would still have five",
+    "series": "mahabharata",
+    "episode_n": 21,
+    "arc_character_devanagari": "कर्ण",
+    "arc_character_english": "Karna — The Forgotten Son",
+    "_phase18_strict_pass": false,
+    "_phase18_score": 18,
+    "_phase18_score_max": 25,
+    "_phase18_score_floor": 19,
+    "_phase18_violation": "shock_action",
+    "_phase18_failing_gates": [
+      "archetype",
+      "bookend",
+      "char_names",
+      "engagement",
+      "monotony",
+      "shock_action",
+      "tha_tic"
+    ],
+    "_phase18_fatal_failures": []
+  }
+}
