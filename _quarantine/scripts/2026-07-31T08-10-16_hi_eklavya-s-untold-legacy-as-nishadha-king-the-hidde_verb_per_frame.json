@@ -1,0 +1,119 @@
+{
+  "ts": "2026-07-31T08-10-16",
+  "language": "hi",
+  "score": 18,
+  "score_max": 25,
+  "violation": "verb_per_frame",
+  "topic": "Eklavya's untold legacy as Nishadha king — the hidden loyalty his people kept alive, the secret history the kshatriyas erased from every record",
+  "title": "एकलव्य का छुपा बलिदान",
+  "script": {
+    "voiceover": "एकलव्य अपनी विरासत बुनता है, निषाद राजा के रूप में। उसकी उँगलियाँ, जिसमें कभी अंगूठा नहीं था, लोगों के लिए न्याय का संकल्प लिए हुए थीं। द्रोण के छल के बाद, निषादों ने उसे अपना राजा बनाया। उनकी वफादारी, गहरा घाव, इतिहास से मिटाया गया सच। वे कहते थे, 'हमारा राजा, हमारा सम्मान!' एकलव्य ने अपने राज्य को शक्ति दी, उसकी भक्ति अब जनता की रक्षा में बदल चुकी थी। लेकिन क्षत्रियों की गौरव-गाथाओं में उसका नाम कहाँ? उन्होंने उसे एक विद्रोही, अनदेखा राजा बना दिया, जिसकी प्रजा की आँखें नम थीं पर हृदय में अग्नि जल रही थी। उसका साम्राज्य फलता-फूलता रहा, शक्तिशाली, अनदेखा... यह तो सिर्फ शुरुआत थी... अगले भाग में: कृष्ण का वह रहस्यमयी पाप। क्या यही सच्ची विरासत थी, जिसे इतिहास ने निगल लिया?",
+    "broll": [
+      {
+        "image_prompt": "Action moment frozen mid-creation, Eklavya's powerful, dark mud-streaked tribal hand shaping a rudimentary wooden mukut, his severed right thumb ALWAYS visible, intense devoted eyes focused, surrounded by tribal artisans in a sun-dappled forest clearing, forest greens + earth-browns, dappled golden sunlight through banyan canopy, warm Indian skin tone, untouched by court colors, faces clearly lit, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "विरासत बुनता है",
+        "mood": "determined, focused, ancestral",
+        "wardrobe_context": "FOREST",
+        "shot_type": "AMBIGUOUS"
+      },
+      {
+        "image_prompt": "Clenching his left hand into a fist, Eklavya stands resolute on a riverbank, dark mud-streaked tribal skin, bare-chested with bark-cloth lower garment, his right arm slightly bent showing the severed right thumb ALWAYS visible, intense devoted eyes staring into the distance, his loyal Nishadha people reflected in the shimmering water, forest greens + earth-browns, dappled golden sunlight through banyan canopy, warm Indian skin tone, untouched by court colors, faces clearly lit, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "न्याय का संकल्प",
+        "mood": "resolved, righteous, tribal",
+        "wardrobe_context": "FOREST",
+        "shot_type": "AMBIGUOUS"
+      },
+      {
+        "image_prompt": "[POWER-LOOM] Nishadha people, faces wide-eyed and reverent, kneeling beneath Eklavya who stands tall on a raised earthen platform, dark mud-streaked tribal skin, bare-chested with bark-cloth lower garment, his severed right thumb ALWAYS visible, rudraksha beads, intense devoted eyes gazing at his people, a simple wooden crown on his head, forest greens + earth-browns, dappled golden sunlight through banyan canopy, warm Indian skin tone, untouched by court colors, faces clearly lit, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "राजा बनाया",
+        "mood": "reverent, accepting, hopeful",
+        "wardrobe_context": "FOREST",
+        "shot_type": "ACTION"
+      },
+      {
+        "image_prompt": "Extreme macro close-up of Eklavya's right hand, the healed but visible scar where the thumb was severed, dark mud-streaked tribal skin, rudraksha beads wrapped around the wrist, glistening sweat droplets, dense forest backdrop with dappled sunlight, forest greens + earth-browns, warm Indian skin tone, untouched by court colors, dappled sunlight through banyan canopy, faces clearly lit, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "गहरा घाव",
+        "mood": "scarred, poignant, resilient",
+        "wardrobe_context": "FOREST",
+        "shot_type": "AMBIGUOUS"
+      },
+      {
+        "image_prompt": "Whispering amongst themselves, a group of Nishadha men and women, with tear-streaked faces but determined expressions, clustered together around a flickering campfire in a hidden tribal encampment, Eklavya's silhouette in the background, forest greens + earth-browns, dappled golden sunlight through banyan canopy, warm Indian skin tone, untouched by court colors, faces clearly lit, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "कहते थे",
+        "mood": "whispering, defiant, sorrowful",
+        "wardrobe_context": "FOREST",
+        "shot_type": "REACTION"
+      },
+      {
+        "image_prompt": "Wielding a powerful, intricately carved wooden bow, Eklavya, dark mud-streaked tribal skin, bare-chested with bark-cloth lower garment, his intense devoted eyes now stern and protective, surveying his flourishing village from a cliff edge overlooking the forest, his severed right thumb ALWAYS visible, forest greens + earth-browns, dappled golden sunlight through banyan canopy, warm Indian skin tone, untouched by court colors, faces clearly lit, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "बदल चुकी थी",
+        "mood": "protective, strong, transformed",
+        "wardrobe_context": "FOREST",
+        "shot_type": "ACTION"
+      },
+      {
+        "image_prompt": "Sweeping panoramic shot, ornate Nagara-style palace court with carved stone columns and marigold petals on marble floor, but with a vast empty space where a great warrior's statue should be, overgrown with creeping vines and forest moss, sun-drenched, forest greens + earth-browns, dappled golden sunlight, warm Indian skin tone, untouched by court colors, dappled sunlight through banyan canopy, faces clearly lit, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "नाम कहाँ",
+        "mood": "empty, overlooked, forgotten",
+        "wardrobe_context": "PALACE",
+        "shot_type": "AMBIGUOUS"
+      },
+      {
+        "image_prompt": "Clutching tribal weapons, the defiant Nishadha people, their tear-streaked faces glowing with an inner fire, are seen from behind Eklavya's silhouette at the edge of their thriving village, forest greens + earth-browns, dappled golden sunlight through banyan canopy, warm Indian skin tone, untouched by court colors, faces clearly lit, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "हृदय में अग्नि",
+        "mood": "defiant, passionate, hopeful",
+        "wardrobe_context": "FOREST",
+        "shot_type": "REACTION"
+      },
+      {
+        "image_prompt": "A lone diya flickering in a dense, silent forest, its light barely breaking the deepening dusk, an abandoned rudimentary wooden crown lying on the mossy ground, Eklavya's silhouette walking away into the shadowy distance, forest greens + earth-browns, fading dusk light, warm Indian skin tone, untouched by court colors, dappled sunlight through banyan canopy, faces clearly lit, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "निगल लिया",
+        "mood": "fading, mysterious, ominous",
+        "wardrobe_context": "AFTERMATH",
+        "shot_type": "AMBIGUOUS"
+      }
+    ],
+    "title": "एकलव्य का छुपा बलिदान",
+    "hook_title": "एकलव्य का सच",
+    "description": "▶️ अगला भाग: Krishna's hidden sin against Eklavya\n\nएकलव्य की कहानी सिर्फ अंगूठा कटने की नहीं, बल्कि इतिहास से मिटाए गए एक साम्राज्य की भी है।\n\nगुरु द्रोण के धोखे के बाद, निषादों ने एकलव्य को अपना राजा चुना। उसने अपनी भक्ति को अपने लोगों की रक्षा में बदल दिया, एक ऐसा साम्राज्य बनाया जो चुपचाप फलता-फूलता रहा। लेकिन क्षत्रियों ने उसके नाम और उसकी विरासत को इतिहास से मिटा दिया। यह वीडियो उस अनदेखी शक्ति और बलिदान की कहानी है जो कभी मिटाई नहीं जा सकी। उसके लोगों की वफादारी और उसके दिल की अग्नि ने एक ऐसी विरासत को जीवित रखा जिसे कोई दरबार नहीं मिटा सका।\n\n#Shorts #Mahabharata #महाभारत #Krishna #HinduMythology #PauranikKatha #MythologyShorts #HindiShorts",
+    "tags": [
+      "Eklavya",
+      "Eklavya's legacy",
+      "Nishadha king",
+      "निषाद",
+      "एकलव्य",
+      "Mahabharata",
+      "महाभारत",
+      "Shorts",
+      "Hindu mythology"
+    ],
+    "thumbnail_prompt": "Vertical composition, Eklavya as a powerful Nishadha king, dark mud-streaked tribal skin, bare-chested, bark-cloth, severed right thumb prominently visible, holding a wooden scepter, intensely gazing out over a thriving but ancient tribal village, with faded, almost transparent silhouettes of disapproving Kshatriya figures (like Drona and Arjuna) in the background, a subtle, ethereal golden glow around Eklavya, forest greens + earth-browns, dappled golden sunlight, warm Indian skin tone, untouched by court colors, faces clearly lit, high-contrast rim lighting, vibrant jewel colors.",
+    "quotable_line": "भक्ति का बलिदान अक्सर इतिहास के पन्नों से मिटा दिया जाता है।",
+    "pinned_question": "❓ भक्ति का बलिदान अक्सर इतिहास के पन्नों से मिटा दिया जाता है। क्या एकलव्य को उनका असली न्याय कभी मिला?",
+    "next_seed": "और यही रहस्यमय पाप एक नए युद्ध की नींव रखेगा।",
+    "language": "hi",
+    "content_type": "story",
+    "topic": "Eklavya's untold legacy as Nishadha king — the hidden loyalty his people kept alive, the secret history the kshatriyas erased from every record",
+    "series": "mahabharata",
+    "episode_n": 65,
+    "arc_character_devanagari": "एकलव्य",
+    "arc_character_english": "Eklavya — The Devotion That Cost a Thumb",
+    "_phase18_strict_pass": false,
+    "_phase18_score": 18,
+    "_phase18_score_max": 25,
+    "_phase18_score_floor": 19,
+    "_phase18_violation": "verb_per_frame",
+    "_phase18_failing_gates": [
+      "archetype",
+      "char_names",
+      "engagement",
+      "intensity",
+      "subject_diversity",
+      "tha_tic",
+      "verb_per_frame"
+    ],
+    "_phase18_fatal_failures": [
+      "verb_per_frame"
+    ]
+  }
+}
