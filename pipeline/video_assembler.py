@@ -396,6 +396,29 @@ def get_audio_duration(audio_path: str) -> float:
     return 5.0
 
 
+def _probe_video_duration(video_path: str) -> float:
+    """Real duration of a (possibly SILENT) video clip. get_audio_duration
+    returns 5.0 for silent clips (no audio stream) — which mis-sized every
+    Wan I2V motion clip (2026-07-20). Probe the video stream, then the
+    container, then fall back to 0.0 (caller decides)."""
+    try:
+        r = subprocess.run(
+            ["ffprobe", "-v", "quiet", "-print_format", "json",
+             "-show_streams", "-show_format", video_path],
+            capture_output=True, text=True,
+        )
+        data = json.loads(r.stdout)
+        for stream in data.get("streams", []):
+            if stream.get("codec_type") == "video" and stream.get("duration"):
+                return float(stream["duration"])
+        fmt = data.get("format", {})
+        if fmt.get("duration"):
+            return float(fmt["duration"])
+    except Exception:
+        pass
+    return 0.0
+
+
 # ── Ken Burns motion expressions (portrait 1080×1920) ─────────────────────────
 
 def _ken_burns_expr(motion: str, frames: int, intensity: float = 1.0,
@@ -2411,17 +2434,32 @@ def _make_silent_video_scene_clip(
     `scene_index=-1`/`is_ai_clip=False` defaults preserve legacy behavior
     for any caller that doesn't pass the new args."""
 
-    # Probe the source clip duration
-    src_dur = get_audio_duration(raw_clip_path) or 3.4
+    # Probe the REAL source clip duration. MUST use the video-stream probe:
+    # Wan I2V clips are SILENT, and get_audio_duration returns 5.0 for a clip
+    # with no audio stream — which mis-sized every motion clip (2026-07-20,
+    # the xfade-assembly failure). Fall back to 3.4 only if the probe fails.
+    src_dur = _probe_video_duration(raw_clip_path) or 3.4
 
-    # Phase 13: scene-0 AI clips get 2x slow-mo, so effective source length
-    # is doubled. Boomerang is almost never needed in that branch.
-    is_scene0_ai = (scene_index == 0 and is_ai_clip)
-    effective_src_dur = src_dur * 2.0 if is_scene0_ai else src_dur
+    # 2026-07-20 — SHORT-CLIP TIME-STRETCH (replaces the scene-0-only 2x hack).
+    # Wan clips are ~1.4s; looping them 3-8x to fill a scene produces visible
+    # jump-cuts. Instead TIME-STRETCH via setpts to fill the scene — the
+    # freeze-face + atmosphere content slows into deliberate cinematic
+    # slow-motion (validated on the 2026-07-20 montage). Cap the stretch
+    # (AI_CLIP_MAX_STRETCH); only if the scene is longer than the cap allows
+    # do we then loop the stretched clip via a seamless boomerang.
+    vf_parts = []
+    stretch = 1.0
+    if is_ai_clip and duration > src_dur * 1.02:
+        max_stretch = float(os.environ.get("AI_CLIP_MAX_STRETCH", "4.0"))
+        stretch = min(duration / src_dur, max_stretch)
+        if stretch > 1.02:
+            # setpts MUST come first (operates on input PTS); fps interpolates
+            # so the stretched clip keeps a smooth ~30fps cadence.
+            vf_parts.append(f"setpts={stretch:.4f}*PTS")
+            vf_parts.append("fps=30")
+    effective_src_dur = src_dur * stretch
 
-    # Boomerang only when we actually need to loop. If duration <= src_dur
-    # (or doubled effective in the slow-mo case), one straight playback covers
-    # the scene.
+    # Boomerang-loop ONLY if the stretched clip still can't cover the scene.
     src_for_loop = raw_clip_path
     boomerang_path = output_path.replace(".mp4", "_boom.mp4")
     used_boomerang = False
@@ -2430,15 +2468,10 @@ def _make_silent_video_scene_clip(
             src_for_loop = boomerang_path
             used_boomerang = True
 
-    vf_parts = []
-    if is_scene0_ai:
-        # Slow-motion stretch — comma-joined into the same filter chain so
-        # ffmpeg evaluates these sequentially with the downstream scale/crop
-        # filters. setpts MUST come BEFORE scale (operates on input PTS),
-        # fps interpolates to keep playback smooth post-slowdown.
-        vf_parts.append("setpts=2.0*PTS")
-        vf_parts.append("fps=30")
-        print(f"    [phase13-slowmo] scene 0 AI clip stretched 2x via setpts (src={src_dur:.2f}s -> effective={effective_src_dur:.2f}s)")
+    if is_ai_clip:
+        print(f"    [ai-clip] scene {scene_index}: src={src_dur:.2f}s "
+              f"stretch={stretch:.2f}x -> {effective_src_dur:.2f}s "
+              f"(target {duration:.2f}s{', +loop' if used_boomerang else ''})")
     # Phase 16 D1 (2026-06-09) — Scene 0 NEVER fades from black. The fade-
     # from-black at t=0 was producing a pure-black opening frame for
     # ~0.4s which is a swipe-instant kill in the Shorts feed (verified
@@ -2455,6 +2488,12 @@ def _make_silent_video_scene_clip(
     if scene_index != 0:
         base_filters.append("fade=t=in:st=0:d=0.4")
     base_filters.append(f"fade=t=out:st={max(duration - 0.4, 0):.2f}:d=0.4")
+    # 2026-07-20: force uniform 30fps on every AI clip. Wan clips are 24fps;
+    # Ken Burns fallback clips are FPS(=30). A mixed-fps clip list makes the
+    # xfade concat fail (the original assembly error). "fps=30" is idempotent
+    # if setpts already added it.
+    if "fps=30" not in vf_parts:
+        base_filters.append(f"fps={FPS}")
     base_filters.append("setsar=1")
     vf_parts.extend(base_filters)
     cmd = [
@@ -2529,8 +2568,40 @@ def _build_silent_video_with_xfades(clip_paths: list, durations: list, output_pa
     ], capture_output=True)
 
     if result.returncode != 0:
-        print(f"    [ERROR] Silent xfade assembly failed:\n{result.stderr.decode()[:400]}")
-        return False
+        # 2026-08-01: xfade chains are fragile across many clips of varying
+        # duration (a single input's timebase/length mismatch aborts the whole
+        # graph — observed on a 9-clip all-motion render, GHA run 30681934280,
+        # which then fell all the way back to STATIC Ken Burns). Two changes:
+        #  (1) log the TAIL of stderr (the actual error), not the ffmpeg banner;
+        #  (2) fall back to a plain concat (hard cuts) so MOTION still ships.
+        print(f"    [ERROR] Silent xfade assembly failed (rc={result.returncode}); "
+              f"trying hard-cut concat fallback. ffmpeg tail:\n"
+              f"{result.stderr.decode(errors='replace')[-1200:]}")
+        n = len(clip_paths)
+        concat_inputs = []
+        for cp in clip_paths:
+            concat_inputs += ["-i", cp]
+        # concat FILTER (re-encode) is robust to the minor SAR/timebase
+        # differences that xfade rejects; clips are already normalized to
+        # 1080x1920 / FPS / setsar=1 by _make_video_scene_clip.
+        concat_filter = (
+            "".join(f"[{i}:v]" for i in range(n)) + f"concat=n={n}:v=1:a=0[vout]"
+        )
+        r2 = subprocess.run([
+            "ffmpeg", "-y", *concat_inputs,
+            "-filter_complex", concat_filter,
+            "-map", "[vout]",
+            "-c:v", "libx264", "-preset", "fast", "-crf", "23",
+            "-pix_fmt", "yuv420p", "-an",
+            output_path,
+        ], capture_output=True)
+        if r2.returncode != 0:
+            print(f"    [ERROR] concat fallback also failed:\n"
+                  f"{r2.stderr.decode(errors='replace')[-800:]}")
+            return False
+        print("    [OK] motion assembled via hard-cut concat fallback "
+              "(xfade unavailable this render)")
+        return True
     return True
 
 
