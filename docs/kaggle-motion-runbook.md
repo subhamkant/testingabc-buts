@@ -80,8 +80,8 @@ static Ken-Burns video.
 | Secret | Needed for | How to make it |
 |---|---|---|
 | `KAGGLE_JSON_B64` | main account (2 kernels) — **required** | `base64 -w0 kaggle.json` |
-| `SK9_KAGGLE_JSON_B64` | +subhamkant9 (→ 4 kernels) — optional | `base64 -w0 sk9_kaggle.json` |
-| `VYASA_KAGGLE_JSON_B64` | +vyasaai (→ full 6 kernels) — optional | `base64 -w0 vyasa_ai_kaggle.json` |
+| `KAGGLE_JSON_SK9_B64` | +subhamkant9 (→ 4 kernels) — optional | `base64 -w0 sk9_kaggle.json` |
+| `KAGGLE_JSON_VYASA_B64` | +vyasaai (→ full 6 kernels) — optional | `base64 -w0 vyasa_ai_kaggle.json` |
 
 Paste each base64 string into a new repository secret. With only
 `KAGGLE_JSON_B64` the test runs 2-kernel (all scenes batched across 2 slots,

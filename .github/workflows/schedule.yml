@@ -136,7 +136,7 @@ on:
           - "false"
           - "true"
       enable_motion:
-        description: "Phase 31 (2026-07-31) — enable free-Kaggle-T4 LTX I2V all-scene MOTION for this MANUAL run only. Writes the Kaggle cred file(s) from secrets (KAGGLE_JSON_B64 = main/subhamkant11; optional SK9_KAGGLE_JSON_B64 + VYASA_KAGGLE_JSON_B64 unlock the full 6-slot pool) and sets ENABLE_AI_CLIPS + MAHA_MOTION_KAGGLE. Default 'false' → cron keeps shipping proven static Ken-Burns. Pair with yt_privacy=private for a review render."
+        description: "Phase 31 (2026-07-31) — enable free-Kaggle-T4 LTX I2V all-scene MOTION for this MANUAL run only. Writes the Kaggle cred file(s) from secrets (KAGGLE_JSON_B64 = main/subhamkant11; optional KAGGLE_JSON_SK9_B64 + KAGGLE_JSON_VYASA_B64 unlock the full 6-slot pool) and sets ENABLE_AI_CLIPS + MAHA_MOTION_KAGGLE. Default 'false' → cron keeps shipping proven static Ken-Burns. Pair with yt_privacy=private for a review render."
         required: false
         default: "false"
         type: choice
@@ -230,8 +230,8 @@ jobs:
             echo "ENABLE_AI_CLIPS=true" >> $GITHUB_ENV
             echo "MAHA_MOTION_KAGGLE=true" >> $GITHUB_ENV
             B="${{ secrets.KAGGLE_JSON_B64 }}"; if [ -n "$B" ]; then echo "$B" | base64 -d > kaggle.json; fi
-            B="${{ secrets.SK9_KAGGLE_JSON_B64 }}"; if [ -n "$B" ]; then echo "$B" | base64 -d > sk9_kaggle.json; fi
-            B="${{ secrets.VYASA_KAGGLE_JSON_B64 }}"; if [ -n "$B" ]; then echo "$B" | base64 -d > vyasa_ai_kaggle.json; fi
+            B="${{ secrets.KAGGLE_JSON_SK9_B64 }}"; if [ -n "$B" ]; then echo "$B" | base64 -d > sk9_kaggle.json; fi
+            B="${{ secrets.KAGGLE_JSON_VYASA_B64 }}"; if [ -n "$B" ]; then echo "$B" | base64 -d > vyasa_ai_kaggle.json; fi
             echo "[motion] enabled; kaggle cred files present: $(ls kaggle.json sk9_kaggle.json vyasa_ai_kaggle.json 2>/dev/null | wc -l)"
           fi
       # Phase 16 D2 (2026-06-09) — workflow_dispatch revival input handler.
@@ -345,8 +345,8 @@ jobs:
             echo "ENABLE_AI_CLIPS=true" >> $GITHUB_ENV
             echo "MAHA_MOTION_KAGGLE=true" >> $GITHUB_ENV
             B="${{ secrets.KAGGLE_JSON_B64 }}"; if [ -n "$B" ]; then echo "$B" | base64 -d > kaggle.json; fi
-            B="${{ secrets.SK9_KAGGLE_JSON_B64 }}"; if [ -n "$B" ]; then echo "$B" | base64 -d > sk9_kaggle.json; fi
-            B="${{ secrets.VYASA_KAGGLE_JSON_B64 }}"; if [ -n "$B" ]; then echo "$B" | base64 -d > vyasa_ai_kaggle.json; fi
+            B="${{ secrets.KAGGLE_JSON_SK9_B64 }}"; if [ -n "$B" ]; then echo "$B" | base64 -d > sk9_kaggle.json; fi
+            B="${{ secrets.KAGGLE_JSON_VYASA_B64 }}"; if [ -n "$B" ]; then echo "$B" | base64 -d > vyasa_ai_kaggle.json; fi
             echo "[motion] enabled; kaggle cred files present: $(ls kaggle.json sk9_kaggle.json vyasa_ai_kaggle.json 2>/dev/null | wc -l)"
           fi
       - uses: ./.github/actions/run-pipeline-with-checkpoint
@@ -429,8 +429,8 @@ jobs:
             echo "ENABLE_AI_CLIPS=true" >> $GITHUB_ENV
             echo "MAHA_MOTION_KAGGLE=true" >> $GITHUB_ENV
             B="${{ secrets.KAGGLE_JSON_B64 }}"; if [ -n "$B" ]; then echo "$B" | base64 -d > kaggle.json; fi
-            B="${{ secrets.SK9_KAGGLE_JSON_B64 }}"; if [ -n "$B" ]; then echo "$B" | base64 -d > sk9_kaggle.json; fi
-            B="${{ secrets.VYASA_KAGGLE_JSON_B64 }}"; if [ -n "$B" ]; then echo "$B" | base64 -d > vyasa_ai_kaggle.json; fi
+            B="${{ secrets.KAGGLE_JSON_SK9_B64 }}"; if [ -n "$B" ]; then echo "$B" | base64 -d > sk9_kaggle.json; fi
+            B="${{ secrets.KAGGLE_JSON_VYASA_B64 }}"; if [ -n "$B" ]; then echo "$B" | base64 -d > vyasa_ai_kaggle.json; fi
             echo "[motion] enabled; kaggle cred files present: $(ls kaggle.json sk9_kaggle.json vyasa_ai_kaggle.json 2>/dev/null | wc -l)"
           fi
       - uses: ./.github/actions/run-pipeline-with-checkpoint
@@ -513,8 +513,8 @@ jobs:
             echo "ENABLE_AI_CLIPS=true" >> $GITHUB_ENV
             echo "MAHA_MOTION_KAGGLE=true" >> $GITHUB_ENV
             B="${{ secrets.KAGGLE_JSON_B64 }}"; if [ -n "$B" ]; then echo "$B" | base64 -d > kaggle.json; fi
-            B="${{ secrets.SK9_KAGGLE_JSON_B64 }}"; if [ -n "$B" ]; then echo "$B" | base64 -d > sk9_kaggle.json; fi
-            B="${{ secrets.VYASA_KAGGLE_JSON_B64 }}"; if [ -n "$B" ]; then echo "$B" | base64 -d > vyasa_ai_kaggle.json; fi
+            B="${{ secrets.KAGGLE_JSON_SK9_B64 }}"; if [ -n "$B" ]; then echo "$B" | base64 -d > sk9_kaggle.json; fi
+            B="${{ secrets.KAGGLE_JSON_VYASA_B64 }}"; if [ -n "$B" ]; then echo "$B" | base64 -d > vyasa_ai_kaggle.json; fi
             echo "[motion] enabled; kaggle cred files present: $(ls kaggle.json sk9_kaggle.json vyasa_ai_kaggle.json 2>/dev/null | wc -l)"
           fi
       - uses: ./.github/actions/run-pipeline-with-checkpoint
