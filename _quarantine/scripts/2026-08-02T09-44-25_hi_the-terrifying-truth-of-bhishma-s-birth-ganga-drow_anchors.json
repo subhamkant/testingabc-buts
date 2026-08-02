@@ -1,0 +1,113 @@
+{
+  "ts": "2026-08-02T09-44-25",
+  "language": "hi",
+  "score": 17,
+  "score_max": 25,
+  "violation": "anchors",
+  "topic": "The terrifying truth of Bhishma's birth — Ganga drowning her seven newborn sons under a celestial curse, and the father whose plea saved the eighth child",
+  "title": "भीष्म का असली बलिदान",
+  "script": {
+    "voiceover": "शांतनु अपनी आँखें झुकाए मौन खड़े हैं, जबकि गंगा अपने नवजात शिशु को जलधारा में बहाती है। एक, दो, तीन... सात पुत्रों को उसने बिना पलक झपकाए खोया, हर बार एक चीख उनके गले में ही घुट जाती। दर्द उसके भीतर ज्वालामुखी सा धधकता रहा, पर गंगा का अदृश्य श्राप उसे चुप रहने पर मजबूर करता। लेकिन जैसे ही आठवें शिशु को गंगा बहाने चली, शांतनु से और नहीं सहा गया। उनकी रूह कांप उठी, और उन्होंने पुकारा, \"मुझे बस एक पुत्र चाहिए!\" गंगा ने बताया, \"ये स्वर्ग के वसु थे, श्राप से मुक्त हो रहे।\" शांतनु ने उस एक शिशु को बचाया, और उस दिन के बाद... हस्तिनापुर कभी पहले जैसा नहीं रहा। क्या उस मौन क्षण में शांतनु का फैसला सही था?",
+    "broll": [
+      {
+        "image_prompt": "Extreme macro close-up of a newborn infant's tiny foot, disappearing into the dark, swirling river water, cool moonlit silver-blue, restrained noble tones, shadow-heavy frame, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "शिशु को जलधारा",
+        "mood": "devastating grief, cold",
+        "wardrobe_context": "DIVINE",
+        "shot_type": "AMBIGUOUS"
+      },
+      {
+        "image_prompt": "Gripping his own arm, Shantanu, a tall powerfully built regal frame, warm golden-bronze skin, salt-and-pepper beard, tear-streaked face, wide-eyed with anguish, jaw clenched in silent agony, refined silver kavacha over white-and-silver silk, jeweled silver mukut, cool moonlit silver-blue, restrained noble tones, faces clearly lit and dignified, no deep shadows, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "आँखें झुकाए मौन",
+        "mood": "silent agony, heartbreaking",
+        "wardrobe_context": "PALACE",
+        "shot_type": "ACTION"
+      },
+      {
+        "image_prompt": "[CONFRONTATION-WIDE] Sweeping view of a desolate riverbank under a cold, pre-dawn moonlit sky, Ganga, her divine form somber, watches as another tiny bundle sinks into the dark river, while Shantanu, a tall powerfully built regal frame, warm golden-bronze skin, salt-and-pepper beard, stands in the mid-ground, his face etched with silent despair, cool moonlit silver-blue, restrained noble tones, white-and-silver silk dhoti, modestly draped white silk sari for Ganga, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "सात पुत्रों को",
+        "mood": "profound sorrow, despair",
+        "wardrobe_context": "DIVINE",
+        "shot_type": "AMBIGUOUS"
+      },
+      {
+        "image_prompt": "Recoiling from the memory, Shantanu, a tall powerfully built regal frame, warm golden-bronze skin, salt-and-pepper beard, wide-eyed face, sweat-drenched brow, internal volcanic rage barely contained beneath a mask of forced calm, refined silver kavacha over white-and-silver silk, jeweled silver mukut, cool moonlit silver-blue, restrained noble tones, faces clearly lit and dignified, no deep shadows, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "ज्वालामुखी सा धधकता",
+        "mood": "suppressed rage, burning",
+        "wardrobe_context": "PALACE",
+        "shot_type": "REACTION"
+      },
+      {
+        "image_prompt": "[CONFRONTATION-WIDE] Action moment frozen, Ganga's divine hand, luminous and cold, poised over the river holding the eighth newborn infant, her face unreadable, as Shantanu, his colossal towering muscled frame, warm golden-bronze skin, salt-and-pepper beard, lunges forward slightly, his face distorted in desperate plea, refined silver kavacha over white-and-silver silk, jeweled silver mukut, cool moonlit silver-blue, restrained noble tones, modestly draped white silk sari for Ganga, faces visible and dignified, no deep shadows, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "आठवें शिशु को",
+        "mood": "desperate turning point",
+        "wardrobe_context": "DIVINE",
+        "shot_type": "ACTION"
+      },
+      {
+        "image_prompt": "Leaning into his desperate plea, Shantanu, a tall powerfully built regal frame, warm golden-bronze skin, salt-and-pepper beard, his body trembling, face contorted with raw emotion, outstretched towards Ganga, refined silver kavacha over white-and-silver silk, jeweled silver mukut, cool moonlit silver-blue, restrained noble tones, faces clearly lit and dignified, no deep shadows, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "एक पुत्र चाहिए",
+        "mood": "urgent, desperate plea",
+        "wardrobe_context": "DIVINE",
+        "shot_type": "AMBIGUOUS"
+      },
+      {
+        "image_prompt": "[OVER-SHOULDER] Sweeping view of the serene riverbank, Shantanu, a tall powerfully built regal frame, warm golden-bronze skin, salt-and-pepper beard, cradling a tiny newborn infant gently in his arms, his expression a mixture of relief and deep sorrow, Ganga's back to the viewer, walking away into the faint pre-dawn light, cool moonlit silver-blue, restrained noble tones, white-and-silver silk dhoti for Shantanu, modestly draped white silk sari for Ganga, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "एक शिशु को बचाया",
+        "mood": "bittersweet relief, somber",
+        "wardrobe_context": "DIVINE",
+        "shot_type": "AMBIGUOUS"
+      },
+      {
+        "image_prompt": "Abandoned Hastinapur palace court, ornate Nagara-style architecture, empty throne room, lone diya flickering on a polished marble floor, cool moonlit silver-blue, restrained noble tones, dim shadow-heavy frame, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "हस्तिनापुर कभी पहले",
+        "mood": "haunting emptiness, foreboding",
+        "wardrobe_context": "AFTERMATH",
+        "shot_type": "ENVIRONMENT"
+      }
+    ],
+    "title": "भीष्म का असली बलिदान",
+    "hook_title": "शांतनु का वचन",
+    "description": "▶️ अगला भाग: Amba's revenge, Bhishma's biggest mistake\n\nएक पिता की खामोशी ने कैसे एक वंश का भविष्य तय कर दिया?\nशांतनु और देवी गंगा के विवाह की एक शर्त थी — गंगा जो भी करे, शांतनु मौन रहेंगे। जब गंगा ने अपने सात नवजात पुत्रों को नदी में बहाना शुरू किया, तो शांतनु का दिल टूट गया, पर वे अपने वचन से बंधे रहे। हर डूबते शिशु के साथ उनका दर्द बढ़ता गया, उनकी आत्मा कराहती रही। लेकिन जब गंगा आठवें पुत्र को बहाने चली, शांतनु ने अपनी प्रतिज्ञा तोड़ दी और एक पुत्र की याचना की। गंगा ने रहस्य बताया कि ये आठ वसु थे जिन्हें श्राप मिला था। शांतनु के इस हस्तक्षेप से आठवां वसु, देवव्रत (जो बाद में भीष्म कहलाए), जीवित रहा। यह पल एक राजवंश की नियति का मोड़ था — एक ऐसा बलिदान जिसने हस्तिनापुर को बचाने की कोशिश की, पर अंततः उसे भीतर से खोखला कर दिया। भीष्म का यह जीवन, एक मौन बलिदान की देन था, जिसकी जड़ें शांतनु की उस एक प्रार्थना में थीं।\n#Shorts #Mahabharata #महाभारत #Krishna #HinduMythology #PauranikKatha #MythologyShorts #HindiShorts",
+    "tags": [
+      "Bhishma birth",
+      "Shantanu Ganga",
+      "Bhishma vow",
+      "Bhishma",
+      "भीष्म",
+      "Mahabharata",
+      "महाभारत",
+      "Shorts",
+      "Hindu mythology"
+    ],
+    "thumbnail_prompt": "Vertical composition, Shantanu, a tall powerfully built regal frame, warm golden-bronze skin, salt-and-pepper beard, refined silver kavacha over white-and-silver silk, jeweled silver mukut, wide-eyed with anguish, outstretched arm pleading desperately towards Ganga, a divine goddess, luminous and somber, modestly draped white silk sari, holding a tiny newborn infant over dark swirling river waters, cool moonlit silver-blue, high-contrast rim lighting, vibrant jewel colours, divine golden halo glow around Ganga, no hands in frame.",
+    "quotable_line": "मजबूरी में लिया एक वचन पूरे वंश को खा जाता है।",
+    "pinned_question": "❓ मजबूरी में लिया एक वचन पूरे वंश को खा जाता है। क्या उस मौन क्षण में शांतनु का फैसला सही था?",
+    "next_seed": "और इस शिशु के जीवन से... एक ऐसा वचन बँधा जिसने प्रेम को भी बलिदान कर दिया।",
+    "language": "hi",
+    "content_type": "story",
+    "topic": "The terrifying truth of Bhishma's birth — Ganga drowning her seven newborn sons under a celestial curse, and the father whose plea saved the eighth child",
+    "series": "mahabharata",
+    "episode_n": 28,
+    "arc_character_devanagari": "भीष्म",
+    "arc_character_english": "Bhishma — The Vow That Doomed a Dynasty",
+    "_phase18_strict_pass": false,
+    "_phase18_score": 17,
+    "_phase18_score_max": 25,
+    "_phase18_score_floor": 19,
+    "_phase18_violation": "anchors",
+    "_phase18_failing_gates": [
+      "anchors",
+      "char_names",
+      "engagement",
+      "hook",
+      "hook_title",
+      "intensity",
+      "shock_action",
+      "verb_per_frame"
+    ],
+    "_phase18_fatal_failures": [
+      "verb_per_frame"
+    ]
+  }
+}
