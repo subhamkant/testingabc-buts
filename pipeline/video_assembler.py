@@ -25,10 +25,15 @@ _XFADE_TRANSITIONS = ["dissolve", "fade", "wipeleft", "wiperight"]
 # on top of FLUX's already-warm jewel-tone palette, produced a heavy magenta/
 # pink cast across faces and backgrounds (visible in the "भीम और दुर्योधन"
 # upload). Lighter curves keep the warm cinematic feel without the wash.
+# 2026-08-02: softened (user: "dark face/look is not good"). The old grade
+# crushed shadows (contrast 1.05) and used a strong vignette (PI/4) that dimmed
+# the off-center faces the compositions deliberately place in the frame thirds.
+# New: gentler contrast, a real brightness lift, and a subtle vignette so faces
+# stay lit. Warm-skin work lives upstream in image_generator._correct_warm_cast.
 COLOR_GRADE = (
-    "curves=r='0/0.02 0.5/0.53 1/1':g='0/0.01 0.5/0.51 1/0.98':b='0/0 0.5/0.48 1/0.96',"
-    "eq=contrast=1.05:saturation=1.10:brightness=0.01,"
-    "vignette=angle=PI/4"
+    "curves=r='0/0.03 0.5/0.54 1/1':g='0/0.02 0.5/0.52 1/0.99':b='0/0.01 0.5/0.49 1/0.97',"
+    "eq=contrast=1.02:saturation=1.12:brightness=0.035,"
+    "vignette=angle=PI/6"
 )
 
 FILM_GRAIN = "noise=alls=14:allf=t+u"

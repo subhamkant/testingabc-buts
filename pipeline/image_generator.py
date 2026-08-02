@@ -1941,16 +1941,26 @@ def _correct_warm_cast(img_bytes: bytes, provider: str) -> bytes:
     if intensity <= 0:
         return img_bytes
 
-    # Scale the three filter strengths by intensity. At intensity=1.0 these
-    # match the values that produced visible improvement in local A/B testing.
-    temp_mix = max(0.0, min(1.0, 0.5 * intensity))
-    sat      = 1.0 - (0.12 * intensity)
-    gamma    = 1.0 + (0.02 * intensity)
-    sharpen  = 0.4 * intensity
+    # 2026-08-02 RETUNE (user: "dark face/look is not good"). The old values
+    # (mix=0.5 toward 5200K + sat=0.88 + gamma=1.02) cooled AND desaturated
+    # every CF/Pollinations render into cold grey skin, and barely lifted the
+    # faces — the opposite of the "warm golden-bronze luminous" skin the
+    # prompts ask for. New values: gentler cooling toward a warmer neutral
+    # (5600K, mix 0.28) so the orange-wash is tamed WITHOUT killing skin
+    # warmth; near-full saturation (0.96) so faces stay alive; and a real
+    # midtone lift (gamma 1.07) so faces come OUT of shadow. All still gated
+    # by IMAGE_COLOR_CORRECT_INTENSITY, and every knob is env-overridable for
+    # quick A/B without a code change.
+    temp_k   = float(os.environ.get("IMAGE_CC_TEMP", "5600"))
+    temp_mix = max(0.0, min(1.0, float(os.environ.get("IMAGE_CC_TEMP_MIX", "0.28")) * intensity))
+    sat      = 1.0 - (float(os.environ.get("IMAGE_CC_DESAT", "0.04")) * intensity)
+    gamma    = 1.0 + (float(os.environ.get("IMAGE_CC_GAMMA_LIFT", "0.07")) * intensity)
+    bright   = float(os.environ.get("IMAGE_CC_BRIGHTNESS", "0.02")) * intensity
+    sharpen  = 0.35 * intensity
 
     vf = (
-        f"colortemperature=temperature=5200:mix={temp_mix:.2f},"
-        f"eq=saturation={sat:.2f}:gamma={gamma:.2f},"
+        f"colortemperature=temperature={temp_k:.0f}:mix={temp_mix:.2f},"
+        f"eq=saturation={sat:.2f}:gamma={gamma:.2f}:brightness={bright:.3f},"
         f"unsharp=5:5:{sharpen:.2f}"
     )
 
