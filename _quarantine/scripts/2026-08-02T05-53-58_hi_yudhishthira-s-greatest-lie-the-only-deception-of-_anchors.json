@@ -1,0 +1,110 @@
+{
+  "ts": "2026-08-02T05-53-58",
+  "language": "hi",
+  "score": 19,
+  "score_max": 25,
+  "violation": "anchors",
+  "topic": "Yudhishthira's greatest lie — the only deception of his life, and the secret cost no one knew, the day Ashwatthama's name became his hidden sin",
+  "title": "युधिष्ठिर का सबसे बड़ा झूठ",
+  "script": {
+    "voiceover": "युधिष्ठिर का रथ उस रक्त-रंजित धरती पर ठहर जाता है। एक झूठ... एक भयानक पाप। कृष्ण कहते हैं, \"द्रोण को तोड़ने का यही उपाय है।\" भीम चिल्लाता है, \"अश्वत्थामा हतः,\" युधिष्ठिर की आँखें डोलती हैं। युद्ध का दबाव, भाइयों की हार का डर, सब उसे अंदर से तोड़ रहे थे। लेकिन जिस क्षण उसके होंठों से निकला \"नरो वा कुंजरो वा\", उस पल सिर्फ द्रोण ही नहीं टूटे, बल्कि युधिष्ठिर का अंतरात्मा भी बिखर गया। उसका सत्य... जीवन भर का धर्म, एक वाक्य में दागदार हो गया। उस क्षण ने उसे हमेशा के लिए बदल दिया, एक अदृश्य घाव दिया जो कभी नहीं भरा। यह तो सिर्फ शुरुआत थी... अगले भाग में: युधिष्ठिर का अंतिम सत्य। क्या एक झूठ पूरे जीवन के धर्म को मिटा सकता है?",
+    "broll": [
+      {
+        "image_prompt": "Action moment frozen mid-skid, a heavy war chariot's wheel sinking into blood-soaked mud, cracked spokes, reins snapped taut, dust suspended in the air, grim war-torn palette, harsh dust-choked light, dramatic shadows, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "रथ उस रक्त-रंजित धरती",
+        "mood": "gritty, despairing, war-torn",
+        "wardrobe_context": "WAR",
+        "shot_type": "ACTION"
+      },
+      {
+        "image_prompt": "Wide cinematic shot, sun-baked Kurukshetra battlefield under a smoldering red sky, Yudhishthira, tall powerfully built regal frame, warm golden-bronze skin, salt-and-pepper beard, refined golden kavacha over white-and-gold silk, jeweled gold mukut, eyes wide-eyed with internal conflict, anguish on his face, grim war-torn palette, harsh dust-choked light, dramatic shadows, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "झूठ... एक भयानक पाप",
+        "mood": "agonized, internal conflict, heavy",
+        "wardrobe_context": "WAR",
+        "shot_type": "REACTION"
+      },
+      {
+        "image_prompt": "[CONFRONTATION-WIDE] Sweeping panoramic shot, war-torn Kurukshetra battlefield with distant burning chariots, Krishna, graceful powerful divine form, luminous monsoon-cloud blue skin, dark curls with peacock feather, golden-yellow pitambara silk, crimson sash, layered gold necklaces, divine charioteer, raising his hand in a declarative gesture towards Yudhishthira, tall powerfully built regal frame, salt-and-pepper beard, refined golden kavacha, jeweled gold mukut, Yudhishthira's face filled with reluctant despair, grim war-torn palette, harsh dust-choked light, dramatic shadows, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "कृष्ण कहते हैं",
+        "mood": "intense, persuasive, reluctant",
+        "wardrobe_context": "WAR",
+        "shot_type": "ACTION"
+      },
+      {
+        "image_prompt": "[THE-FALLEN] Wide cinematic shot, dust-choked Kurukshetra battlefield, a colossal battle elephant, Ashwatthama, prone body in the foreground, blood-streaked and collapsing, Bhima, colossal mountain-of-a-warrior, massive barrel chest and tree-trunk arms, fierce dark moustache, golden kavacha straining across his chest, deep red silk dhoti, triumphantly wielding his massive iron Gada mace over the fallen elephant, grim war-torn palette, harsh dust-choked light, dramatic shadows, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "अश्वत्थामा हतः",
+        "mood": "victorious, brutal, tragic",
+        "wardrobe_context": "WAR",
+        "shot_type": "ACTION"
+      },
+      {
+        "image_prompt": "Tight close-up of Yudhishthira's tear-streaked face, kohl-rimmed eyes wide-eyed with anguished indecision, heavy sorrow, salt-and-pepper beard, jeweled gold mukut, grim war-torn palette, harsh dust-choked light, dramatic shadows, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "आँखें डोलती हैं",
+        "mood": "indecisive, sorrowful, desperate",
+        "wardrobe_context": "WAR",
+        "shot_type": "REACTION"
+      },
+      {
+        "image_prompt": "Sweeping panoramic shot, Yudhishthira, tall powerfully built regal frame, refined golden kavacha, jeweled gold mukut, clutching his chest with a white-knuckled grip, body trembling, head bowed in deep internal torment, on a desolate part of the battlefield, grim war-torn palette, harsh dust-choked light, dramatic shadows, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "अंदर से तोड़",
+        "mood": "tormented, broken, defeated",
+        "wardrobe_context": "WAR",
+        "shot_type": "ENVIRONMENT"
+      },
+      {
+        "image_prompt": "Extreme macro close-up of Yudhishthira's lips parting, a single bead of sweat-drenched on his upper lip, a whisper of a lie about to escape, his salt-and-pepper beard slightly trembling, grim war-torn palette, harsh dust-choked light, dramatic shadows, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "होंठों से निकला",
+        "mood": "tense, fateful, regretful",
+        "wardrobe_context": "WAR",
+        "shot_type": "AMBIGUOUS"
+      },
+      {
+        "image_prompt": "[WITNESS-FROM-BEHIND] Wide cinematic shot, desolate Kurukshetra battlefield at fading dusk, Drona, weathered elderly Indian face, white hair, long white beard, simple white cotton dhoti, white angavastram, sacred yajnopavita thread across bare chest, collapsing to the blood-soaked ground, shattered look on his face, abandoned bow and arrows beside him, Yudhishthira's back-of-head in foreground, walking away from the scene of devastation, grim war-torn palette, fading dusk light, dramatic shadows, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "अंतरात्मा भी बिखर",
+        "mood": "devastated, consequence, witnessing",
+        "wardrobe_context": "AFTERMATH",
+        "shot_type": "ACTION"
+      }
+    ],
+    "title": "युधिष्ठिर का सबसे बड़ा झूठ",
+    "hook_title": "युधिष्ठिर का झूठ",
+    "description": "▶️ अगला भाग: Yudhishthira's last test at heaven's gate\n\nएक झूठ जिसने धर्मराज की आत्मा को तोड़ दिया।\nकुरुक्षेत्र की रणभूमि में एक ऐसा क्षण आया जब धर्मराज युधिष्ठिर को सत्य से विचलित होना पड़ा। अश्वत्थामा की मृत्यु की घोषणा, कृष्ण की सलाह, और भीम का दबाव – इन सबने मिलकर युधिष्ठिर को उस मोड़ पर ला खड़ा किया, जहाँ उसे अपने जीवन का एकमात्र झूठ बोलना पड़ा। 'अश्वत्थामा हतः' के बाद 'नरो वा कुंजरो वा' के वे चार शब्द, जो द्रोणाचार्य के लिए मृत्युदंड बने, युधिष्ठिर के लिए एक ऐसा अदृश्य घाव बन गए जो कभी नहीं भरा। यह सिर्फ एक युद्ध रणनीति नहीं थी, बल्कि धर्मराज की आत्मा का एक टुकड़ा था जो हमेशा के लिए टूट गया। इस वीडियो में हम देखेंगे कि कैसे एक 'सत्यवादी' योद्धा भी युद्ध की क्रूरता में अपनी पवित्रता खो देता है और उस आंतरिक विनाश की कीमत चुकाता है।\n#Shorts #Mahabharata #महाभारत #Krishna #HinduMythology #PauranikKatha #MythologyShorts #HindiShorts",
+    "tags": [
+      "Yudhishthira's lie",
+      "Ashwatthama elephant",
+      "Yudhishthira",
+      "युधिष्ठिर",
+      "Mahabharata",
+      "महाभारत",
+      "Shorts",
+      "Hindu mythology"
+    ],
+    "thumbnail_prompt": "Vertical composition, dramatic high-contrast rim lighting, vibrant jewel colours, Yudhishthira, tall powerfully built regal frame, warm golden-bronze skin, salt-and-pepper beard, refined golden kavacha over white-and-gold silk, jeweled gold mukut, uttering a painful whisper, his lips slightly parted, eyes wide with anguish, while in the mid-ground, Drona, weathered elderly Indian face, long white beard, simple white cotton dhoti, collapsing, dropping his bow, a look of utter devastation on his face, the chaotic Kurukshetra battlefield behind them, dust-choked air, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+    "quotable_line": "एक झूठ ने युधिष्ठिर का जीवन भर का धर्म ख़त्म कर दिया।",
+    "pinned_question": "❓ एक झूठ ने युधिष्ठिर का जीवन भर का धर्म ख़त्म कर दिया। क्या आप ऐसा करते?",
+    "next_seed": "और यही झूठ उसे स्वर्ग के द्वार पर ले जाएगा।",
+    "language": "hi",
+    "content_type": "story",
+    "topic": "Yudhishthira's greatest lie — the only deception of his life, and the secret cost no one knew, the day Ashwatthama's name became his hidden sin",
+    "series": "mahabharata",
+    "episode_n": 53,
+    "arc_character_devanagari": "युधिष्ठिर",
+    "arc_character_english": "Yudhishthira — The Cost of Truth",
+    "_phase18_strict_pass": false,
+    "_phase18_score": 19,
+    "_phase18_score_max": 25,
+    "_phase18_score_floor": 19,
+    "_phase18_violation": "anchors",
+    "_phase18_failing_gates": [
+      "anchors",
+      "archetype",
+      "bookend",
+      "char_names",
+      "engagement",
+      "title_dna"
+    ],
+    "_phase18_fatal_failures": [
+      "title_dna"
+    ]
+  }
+}
