@@ -1,0 +1,119 @@
+{
+  "ts": "2026-08-03T11-12-13",
+  "language": "hi",
+  "score": 17,
+  "score_max": 25,
+  "violation": "length",
+  "topic": "The single grain that fed ten thousand — Durvasa's curse looming, and Krishna tasting the last speck in Draupadi's Akshaya Patra until every sage rose from the river feeling full",
+  "title": "कृष्ण का आखिरी चमत्कार",
+  "script": {
+    "voiceover": "द्रौपदी की आँखें आँसू बहाती हैं, जब दुर्वासा ऋषि अपने दस हज़ार शिष्यों के साथ उनके कुटिया पर पहुँचते हैं। वनवास का कष्ट वैसे ही बहुत था, और अब अक्षय पात्र भी खाली। 'हमें भूख लगी है,' दुर्वासा गरजते हैं, 'भोजन दो, वरना श्राप मिलेगा!' द्रौपदी का हृदय डूब जाता है, डर से काँपते हुए वे कृष्ण को पुकारती हैं। लेकिन उसी क्षण, कृष्ण मुस्कुराते हुए प्रकट होते हैं। वे अक्षय पात्र माँगते हैं, और उसमें फँसी पालक की एक नन्हीं पत्ती चखते हैं। 'मैं तृप्त हूँ,' कृष्ण कहते हैं। और तभी, नदी में स्नान कर रहे दस हज़ार ऋषि पूर्ण तृप्ति महसूस करते हैं, उनका क्रोध शांत हो जाता है। दुर्वासा बिना श्राप दिए लौट जाते हैं। क्या यह केवल भोजन था, या कृष्ण की अद्भुत कृपा थी जिसने असंभव को संभव बनाया?",
+    "broll": [
+      {
+        "image_prompt": "Extreme macro close-up of the Akshaya Patra, empty except for a tiny, shimmering green speck of spinach clinging to its inner surface, ancient weathered copper, dim ashram light, jewel-toned palette, soft cinematic lighting, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text.",
+        "anchor_phrase": "अक्षय पात्र भी खाली",
+        "mood": "Looming dread, desperate hope",
+        "wardrobe_context": "FOREST",
+        "shot_type": "AMBIGUOUS"
+      },
+      {
+        "image_prompt": "Recoiling in fear, Draupadi's radiant fair wheatish-gold complexion, large kohl-lined lotus eyes wide-eyed in terror, long untied black hair flowing loose, deep-red silk sari modestly draped over fitted blouse, red kumkum, dense forest backdrop, jewel-toned palette, soft cinematic lighting, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text.",
+        "anchor_phrase": "द्रौपदी की आँखें",
+        "mood": "Terrified, desperate",
+        "wardrobe_context": "FOREST",
+        "shot_type": "REACTION"
+      },
+      {
+        "image_prompt": "[POWER-LOOM] Looming over a distressed Draupadi, Durvasa Rishi, an imposing sage with long white beard, saffron robes, fierce glow in his eyes, holding a sturdy wooden staff, Draupadi kneeling beneath him, fear palpable, ashram exterior, jewel-toned palette, soft cinematic lighting, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text.",
+        "anchor_phrase": "दुर्वासा ऋषि",
+        "mood": "Threatening, intimidating",
+        "wardrobe_context": "FOREST",
+        "shot_type": "ACTION"
+      },
+      {
+        "image_prompt": "Charging forward, a crowd of ten thousand hungry, agitated sages with matted hair and simple robes, their eyes burning with hunger and impatience, pressing against the entrance of the ashram, Draupadi visible recoiling in the background, forest environment, jewel-toned palette, soft cinematic lighting, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text.",
+        "anchor_phrase": "भूख लगी है",
+        "mood": "Impatient, demanding",
+        "wardrobe_context": "FOREST",
+        "shot_type": "ACTION"
+      },
+      {
+        "image_prompt": "Weeping over her empty Akshaya Patra, Draupadi, tear-streaked face, clutching the ancient copper pot to her chest, head bowed in despair, long untied black hair covering her face, forest ashram interior, soft lamp light, jewel-toned palette, soft cinematic lighting, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text.",
+        "anchor_phrase": "हृदय डूब जाता है",
+        "mood": "Heartbroken, hopeless",
+        "wardrobe_context": "FOREST",
+        "shot_type": "REACTION"
+      },
+      {
+        "image_prompt": "[CONFRONTATION-WIDE] Appearing in a burst of soft golden light, Krishna, graceful powerful divine form, luminous monsoon-cloud blue skin, dark curls with peacock feather, golden-yellow pitambara silk, crimson sash, layered gold necklaces, divine charioteer, smiling gently as Draupadi left-foreground, tear-streaked face, looks up with dawning hope, forest backdrop, jewel-toned palette, soft cinematic lighting, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text.",
+        "anchor_phrase": "कृष्ण मुस्कुराते हुए प्रकट होते हैं",
+        "mood": "Hopeful, divine grace",
+        "wardrobe_context": "DIVINE",
+        "shot_type": "REACTION"
+      },
+      {
+        "image_prompt": "Gripping the Akshaya Patra gently, Krishna's long elegant fingers, luminous monsoon-cloud blue skin, carefully picking up a single, tiny, radiant speck of spinach from the inner surface of the ancient copper pot, jewel-toned palette, soft cinematic lighting, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text.",
+        "anchor_phrase": "पालक की एक नन्हीं पत्ती",
+        "mood": "Reverent, miraculous",
+        "wardrobe_context": "DIVINE",
+        "shot_type": "ACTION"
+      },
+      {
+        "image_prompt": "Exuding divine bliss, Krishna's luminous monsoon-cloud blue skin, eyes closed in serene contentment, a faint divine golden aura (tejas) emanating from him, lips curved in a blissful smile after tasting the speck, forest ashram, jewel-toned palette, soft cinematic lighting, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text.",
+        "anchor_phrase": "मैं तृप्त हूँ",
+        "mood": "Peaceful, profound satisfaction",
+        "wardrobe_context": "DIVINE",
+        "shot_type": "AMBIGUOUS"
+      },
+      {
+        "image_prompt": "Fading dusk over a calm river, a lone diya flickering on the water, a serene silhouette of Draupadi with folded hands, radiating gratitude and stillness, distant figures of sages walking away in the background, jewel-toned palette, soft cinematic lighting, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text.",
+        "anchor_phrase": "पूर्ण तृप्ति महसूस करते हैं",
+        "mood": "Grateful, peaceful, awe-struck",
+        "wardrobe_context": "AFTERMATH",
+        "shot_type": "ENVIRONMENT"
+      }
+    ],
+    "title": "कृष्ण का आखिरी चमत्कार",
+    "hook_title": "कृष्ण का आखिरी चमत्कार",
+    "description": "एक भूखी भीड़ और खाली अक्षय पात्र के सामने द्रौपदी का हृदय डूब जाता है, लेकिन तभी कृष्ण की कृपा असंभव को संभव बनाती है।\n\nवनवास के दिनों में पांडवों पर एक और संकट टूट पड़ा जब दुर्वासा ऋषि अपने दस हज़ार शिष्यों के साथ भोजन के लिए पहुँचे। अक्षय पात्र, जो भोजन देता था, उस समय खाली था। द्रौपदी कांप उठीं, क्योंकि ऋषियों को संतुष्ट न करने पर भयानक श्राप मिलना तय था। अपनी अंतिम आशा के रूप में, उन्होंने कृष्ण को पुकारा। कृष्ण आए और अक्षय पात्र में बची पालक की एक नन्हीं पत्ती चखी। उनके ऐसा करते ही, दूर नदी में स्नान कर रहे दुर्वासा और उनके सभी शिष्य पूर्ण रूप से तृप्त हो गए, और बिना श्राप दिए लौट गए। यह केवल भोजन नहीं, बल्कि कृष्ण की असीम कृपा थी जिसने एक असंभव चुनौती को प्रेम और विश्वास के चमत्कार में बदल दिया।\n\n#Shorts #Mahabharata #महाभारत #Krishna #HinduMythology #PauranikKatha #MythologyShorts #HindiShorts",
+    "tags": [
+      "Durvasa curse",
+      "Akshaya Patra",
+      "Krishna protection",
+      "Draupadi crisis",
+      "भगवान कृष्ण",
+      "द्रौपदी",
+      "Mahabharata",
+      "महाभारत",
+      "Shorts",
+      "Hindu mythology"
+    ],
+    "thumbnail_prompt": "Krishna, graceful powerful divine form, luminous monsoon-cloud blue skin, dark curls with peacock feather, golden-yellow pitambara silk, crimson sash, layered gold necklaces, divine charioteer, gently holding the ancient copper Akshaya Patra to his lips, a single shimmering green speck of spinach visible on his tongue, a radiant golden halo glowing around his head, while in the background Durvasa Rishi and ten thousand sages, their faces transformed from hunger to serene contentment, look on in awe from a riverbank, vibrant jewel-toned palette, high-contrast cinematic rim lighting, vertical composition with Krishna as the main large figure, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text.",
+    "quotable_line": "जब डर खत्म होता है, तब ही कृपा मिलती है।",
+    "pinned_question": "❓ जब डर खत्म होता है, तब ही कृपा मिलती है। क्या आप भी इस कृपा पर विश्वास करते हैं?",
+    "next_seed": "और यही कृपा धर्म की रक्षा करेगी।",
+    "language": "hi",
+    "content_type": "story",
+    "topic": "The single grain that fed ten thousand — Durvasa's curse looming, and Krishna tasting the last speck in Draupadi's Akshaya Patra until every sage rose from the river feeling full",
+    "series": "mahabharata",
+    "episode_n": 0,
+    "arc_character_devanagari": "",
+    "arc_character_english": "devotional",
+    "_phase18_strict_pass": false,
+    "_phase18_score": 17,
+    "_phase18_score_max": 25,
+    "_phase18_score_floor": 19,
+    "_phase18_violation": "length",
+    "_phase18_failing_gates": [
+      "anchors",
+      "bookend",
+      "char_names",
+      "engagement",
+      "intensity",
+      "length",
+      "monotony",
+      "repetition"
+    ],
+    "_phase18_fatal_failures": []
+  }
+}
