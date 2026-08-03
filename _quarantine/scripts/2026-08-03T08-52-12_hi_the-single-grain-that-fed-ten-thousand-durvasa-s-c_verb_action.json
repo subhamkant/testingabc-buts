@@ -1,0 +1,118 @@
+{
+  "ts": "2026-08-03T08-52-12",
+  "language": "hi",
+  "score": 19,
+  "score_max": 25,
+  "violation": "verb_action",
+  "topic": "The single grain that fed ten thousand — Durvasa's curse looming, and Krishna tasting the last speck in Draupadi's Akshaya Patra until every sage rose from the river feeling full",
+  "title": "कृष्ण की असीमित कृपा",
+  "script": {
+    "voiceover": "द्रौपदी की दिव्य कृपा टूटने लगती है, जब अक्षय पात्र खाली पड़ा है। दस हज़ार मुनि गरजते हैं, 'हमें भोजन दो, या श्राप सहो!' द्रौपदी का हृदय भय से काँप रहा है, अपमान की काली छाया घेर रही है। पांडव बेबस खड़े हैं, दुर्वासा के भयानक क्रोध से। लेकिन तभी, कृष्ण स्वयं प्रकट होते हैं, एक सूखे पत्ते से चावल का कण उठाकर मुस्कुराते हुए। 'यह मेरी भूख शांत करेगा,' वे कहते हैं। दूर नदी में स्नान करते मुनि तृप्त होकर उठते हैं। दस हज़ार आत्माओं को शांति मिली, केवल एक कण से। क्या ऐसी असीमित कृपा देखकर भी कोई अपने अहंकार पर टिका रहेगा?",
+    "broll": [
+      {
+        "image_prompt": "Extreme macro close-up of the empty golden Akshaya Patra, intricately etched with celestial designs, sitting on a patch of dry leaves in a dense forest, dim light filtering through the canopy, jewel-toned palette, soft cinematic lighting, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "अक्षय पात्र खाली पड़ा है",
+        "mood": "desperate urgency, quiet despair",
+        "wardrobe_context": "FOREST",
+        "shot_type": "AMBIGUOUS"
+      },
+      {
+        "image_prompt": "[CONFRONTATION-WIDE] Sweeping panoramic shot, dense forest clearing with ancient banyan trees, an enraged Durvasa sage with matted grey hair and long beard, standing tall and pointing a trembling finger at a group of terrified Pandavas (Yudhishthira, Bhima, Arjuna), their valkala bark-cloth robes, rudraksha malas, jewel-toned palette, soft cinematic lighting, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "दस हज़ार मुनि गरजते हैं",
+        "mood": "intense anger, rising tension",
+        "wardrobe_context": "FOREST",
+        "shot_type": "ENVIRONMENT"
+      },
+      {
+        "image_prompt": "Close-up of Draupadi's radiant tear-streaked face, large kohl-lined lotus eyes wide with anguish, long untied black hair flowing loose, deep-red silk sari modestly draped, jewel-toned palette, soft cinematic lighting, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "द्रौपदी का हृदय",
+        "mood": "heartbroken despair, profound sorrow",
+        "wardrobe_context": "FOREST",
+        "shot_type": "REACTION"
+      },
+      {
+        "image_prompt": "Wide shot of the Pandava ashram in a dense, shadow-heavy forest, an ominous dark cloud looming over the small dwelling, Draupadi and the Pandavas in the foreground, looking up with fear, jewel-toned palette, soft cinematic lighting, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "काली छाया घेर रही है",
+        "mood": "looming dread, environmental threat",
+        "wardrobe_context": "FOREST",
+        "shot_type": "ENVIRONMENT"
+      },
+      {
+        "image_prompt": "Krishna's graceful powerful divine form, luminous monsoon-cloud blue skin, dark curls with peacock feather, radiating a soft golden glow, suddenly appearing in a burst of light in the dim forest clearing, surprising Draupadi who looks up with awe, jewel-toned palette, soft cinematic lighting, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "कृष्ण स्वयं प्रकट होते हैं",
+        "mood": "divine intervention, sudden hope",
+        "wardrobe_context": "DIVINE",
+        "shot_type": "ENVIRONMENT"
+      },
+      {
+        "image_prompt": "Macro shot of a single radiant grain of rice glistening on a dry, curled leaf, held delicately by Krishna's monsoon-cloud blue fingers, soft divine light illuminating the grain, jewel-toned palette, soft cinematic lighting, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "सूखे पत्ते से",
+        "mood": "sacred detail, miraculous potential",
+        "wardrobe_context": "DIVINE",
+        "shot_type": "PROP"
+      },
+      {
+        "image_prompt": "Krishna's serene and knowing smile, monsoon-cloud blue skin, dark kohl-lined eyes twinkling with divine amusement, raising the leaf with the rice grain, a faint golden aura (tejas) emanating from his face, golden-yellow pitambara silk, jewel-toned palette, soft cinematic lighting, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "उठाकर मुस्कुराते हुए",
+        "mood": "peaceful assurance, divine wisdom",
+        "wardrobe_context": "DIVINE",
+        "shot_type": "ACTION"
+      },
+      {
+        "image_prompt": "Sweeping panoramic shot of a serene river, ten thousand sages rising from the water, their faces glowing with sudden peace and contentment, hands folded in reverence towards the sky, dense forest framing the riverbank, jewel-toned palette, soft cinematic lighting, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "मुनि तृप्त होकर उठते हैं",
+        "mood": "collective awe, profound relief",
+        "wardrobe_context": "FOREST",
+        "shot_type": "AMBIGUOUS"
+      },
+      {
+        "image_prompt": "Fading dusk over a calm river, a lone diya flickering on the water, a serene silhouette of Draupadi and Krishna, both with folded hands in gratitude, a quiet radiant glow of peace and stillness, jewel-toned palette, soft cinematic lighting, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "असीमित कृपा देखकर भी",
+        "mood": "peaceful gratitude, divine calm",
+        "wardrobe_context": "AFTERMATH",
+        "shot_type": "AMBIGUOUS"
+      }
+    ],
+    "title": "कृष्ण की असीमित कृपा",
+    "hook_title": "कृष्ण कृपा",
+    "description": "जब एक कण ने दस हज़ार को तृप्त किया, कृष्ण की कृपा से।\n\nवनवास के दौरान, पांडवों को दुर्वासा ऋषि और उनके दस हज़ार शिष्यों का अतिथि सत्कार करना पड़ा। अक्षय पात्र खाली था और द्रौपदी भयानक श्राप के डर से कांप रही थी। लेकिन तभी, भगवान कृष्ण प्रकट हुए और एक सूखे पत्ते पर चावल का एक कण खाकर सभी मुनियों को तृप्त कर दिया। यह उनकी दिव्य कृपा का अद्भुत प्रदर्शन था जिसने एक बड़ी विपत्ति को टाल दिया।\n\n#Shorts #Mahabharata #महाभारत #Krishna #HinduMythology #PauranikKatha #MythologyShorts #HindiShorts",
+    "tags": [
+      "Durvasa's curse",
+      "Akshaya Patra",
+      "Krishna",
+      "कृष्ण",
+      "Mahabharata",
+      "महाभारत",
+      "Shorts",
+      "Hindu mythology"
+    ],
+    "thumbnail_prompt": "Vertical composition, dramatic high-contrast rim lighting, vibrant jewel colours, Krishna's radiant divine form tasting a single glowing grain of rice from a dry leaf, with thousands of sages in the background rising peacefully from a river, their faces serene with contentment, a golden aura around Krishna, jewel-toned palette, soft cinematic lighting, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+    "quotable_line": "एक कण से दस हज़ार का पेट भरा — क्या यह केवल ईश्वर की असीमित कृपा थी?",
+    "pinned_question": "❓ एक कण से दस हज़ार का पेट भरा — क्या यह केवल ईश्वर की असीमित कृपा थी? अपनी राय दें।",
+    "next_seed": "यही कृपा कुरुक्षेत्र में भी कृष्ण की ढाल बनेगी।",
+    "language": "hi",
+    "content_type": "story",
+    "topic": "The single grain that fed ten thousand — Durvasa's curse looming, and Krishna tasting the last speck in Draupadi's Akshaya Patra until every sage rose from the river feeling full",
+    "series": "mahabharata",
+    "episode_n": 0,
+    "arc_character_devanagari": "",
+    "arc_character_english": "devotional",
+    "_phase18_strict_pass": false,
+    "_phase18_score": 19,
+    "_phase18_score_max": 25,
+    "_phase18_score_floor": 19,
+    "_phase18_violation": "verb_action",
+    "_phase18_failing_gates": [
+      "anti_merge_composition",
+      "char_names",
+      "engagement",
+      "intensity",
+      "verb_action",
+      "verb_per_frame"
+    ],
+    "_phase18_fatal_failures": [
+      "anti_merge_composition",
+      "verb_per_frame"
+    ]
+  }
+}
