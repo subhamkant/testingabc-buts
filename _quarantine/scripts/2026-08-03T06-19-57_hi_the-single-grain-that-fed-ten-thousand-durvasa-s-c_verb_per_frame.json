@@ -1,0 +1,112 @@
+{
+  "ts": "2026-08-03T06-19-57",
+  "language": "hi",
+  "score": 19,
+  "score_max": 25,
+  "violation": "verb_per_frame",
+  "topic": "The single grain that fed ten thousand — Durvasa's curse looming, and Krishna tasting the last speck in Draupadi's Akshaya Patra until every sage rose from the river feeling full",
+  "title": "कृष्ण की अनूठी कृपा | Krishna's Divine Grace",
+  "script": {
+    "voiceover": "द्रौपदी की रसोई में आख़िरी दाना शेष है, जब दुर्वासा ऋषि अपने हज़ारों शिष्यों संग द्वार पर आ धमकते हैं। उसका दिल डर से काँप रहा है, माथे पर ठंडे पसीने की बूँदें हैं, और अक्षय पात्र पूरी तरह ख़ाली हो चुका है। ऋषि क्रोधित होकर नदी स्नान को निकल चुके हैं, और शाप से सर्वनाश तय है। लेकिन तभी कृष्ण मुस्कुराते हुए पाँव रखते हैं, पात्र की दीवार पर चिपका चावल का वही अकेला कण उठा लेते हैं। वे उसे जीभ पर रखते ही तृप्त हो जाते हैं, और उधर नदी में खड़े हज़ारों ऋषि एक साथ पेट भरने का अद्भुत अहसास पाते हैं। क्या यह कृष्ण की वही परम कृपा है जो हर संकट को हरा देती है?",
+    "broll": [
+      {
+        "image_prompt": "Extreme macro close-up of a lone grain of rice sticking to the inner wall of a polished bronze Akshaya Patra, glowing with a soft golden light, dark wooden kitchen floor blurred behind, no hands in frame, no text.",
+        "anchor_phrase": "आख़िरी दाना शेष",
+        "mood": "tense desperate quiet foreboding",
+        "wardrobe_context": "PALACE",
+        "shot_type": "AMBIGUOUS"
+      },
+      {
+        "image_prompt": "[OVER-SHOULDER] Sweeping shot of forest riverside edge, Draupadi standing with wide tear-streaked eyes and trembling hands, a sorrowful expression on her wheatish-gold face, deep-red silk sari modestly draped, Durvasa and disciples walking away in deep-focus background.",
+        "anchor_phrase": "द्वार पर आ धमकते",
+        "mood": "anxious panicked heavy suffocating",
+        "wardrobe_context": "FOREST",
+        "shot_type": "REACTION"
+      },
+      {
+        "image_prompt": "Wide shot of a peaceful forest riverbank, Durvasa and thousands of ascetic disciples standing knee-deep in flowing water, expressions of sudden shock and overwhelming fullness on their faces, glowing morning sun reflecting off ripples.",
+        "anchor_phrase": "नदी स्नान को",
+        "mood": "surprised reverent awestruck quiet",
+        "wardrobe_context": "FOREST",
+        "shot_type": "ENVIRONMENT"
+      },
+      {
+        "image_prompt": "[CONFRONTATION-WIDE] Graceful powerful divine form of Krishna, luminous monsoon-cloud blue skin, dark curls with peacock feather, golden-yellow pitambara silk, crimson sash, stepping into the rustic forest kitchen with a warm reassuring smile, Draupadi watching with joined hands in soft focus background.",
+        "anchor_phrase": "लेकिन तभी कृष्ण",
+        "mood": "warm divine calm assuring",
+        "wardrobe_context": "DIVINE",
+        "shot_type": "AMBIGUOUS"
+      },
+      {
+        "image_prompt": "Extreme macro close-up of Krishna's fingers lifting the lone grain of rice from the bronze bowl, luminous golden divine light radiating from the fingertips, intricate gold armbands sparkling, no hands in frame other than divine silhouette.",
+        "anchor_phrase": "वही अकेला कण",
+        "mood": "delicate focused sacred radiant",
+        "wardrobe_context": "DIVINE",
+        "shot_type": "ACTION"
+      },
+      {
+        "image_prompt": "Wide cinematic shot of the forest riverbank, the thousands of ascetics floating in a trance of divine satiety, rubbing their full bellies with expressions of profound wonder, golden light cascading through banyan leaves.",
+        "anchor_phrase": "अद्भुत अहसास पाते",
+        "mood": "peaceful blissful transcendent glowing",
+        "wardrobe_context": "DIVINE",
+        "shot_type": "ENVIRONMENT"
+      },
+      {
+        "image_prompt": "Macro close-up of Krishna's radiant smiling face, kohl-lined lotus eyes filled with boundless compassion, soft glowing aura around his dark curls, warm golden cinematic rim lighting.",
+        "anchor_phrase": "परम कृपा है",
+        "mood": "warm devoted graceful reverent",
+        "wardrobe_context": "DIVINE",
+        "shot_type": "PROP"
+      },
+      {
+        "image_prompt": "Fading dusk over a calm river, a lone diya flickering on the gentle water, a serene silhouette of Krishna with folded hands, a quiet radiant glow of gratitude and stillness, no hands in frame, no text.",
+        "anchor_phrase": "संकट को हरा",
+        "mood": "peaceful still serene transcendent",
+        "wardrobe_context": "AFTERMATH",
+        "shot_type": "AMBIGUOUS"
+      }
+    ],
+    "title": "कृष्ण की अनूठी कृपा | Krishna's Divine Grace",
+    "hook_title": "कृष्ण की अनूठी कृपा",
+    "description": "When Durvasa's curse loomed over the Pandavas, Krishna's divine grace saved Draupadi through a single grain of rice.\n\nExperience the moment when boundless compassion satisfied ten thousand ascetics instantly.\n\n#Shorts #Mahabharata #महाभारत #Krishna #HinduMythology #PauranikKatha #MythologyShorts #HindiShorts",
+    "tags": [
+      "Akshaya Patra",
+      "Durvasa curse",
+      "Krishna",
+      "कृष्ण",
+      "Draupadi",
+      "द्रौपदी",
+      "Mahabharata",
+      "महाभारत",
+      "Shorts",
+      "Hindu mythology"
+    ],
+    "thumbnail_prompt": "Krishna standing beside Draupadi in a rustic forest kitchen, holding a glowing bronze Akshaya Patra with divine golden light radiating from a single grain of rice, dramatic volumetric rim lighting, vibrant jewel tones, vertical composition.",
+    "quotable_line": "कृष्ण की कृपा अहंकार को मिटाकर जीवन को तृप्त कर देती है।",
+    "pinned_question": "❓ कृष्ण की कृपा अहंकार को मिटाकर जीवन को तृप्त कर देती है। क्या आपने कभी संकट में ऐसा चमत्कार अनुभव किया है?",
+    "next_seed": "और यही दिव्य कृपा आगे चलकर हर अधर्म का अंत करेगी।",
+    "language": "hi",
+    "content_type": "story",
+    "topic": "The single grain that fed ten thousand — Durvasa's curse looming, and Krishna tasting the last speck in Draupadi's Akshaya Patra until every sage rose from the river feeling full",
+    "series": "mahabharata",
+    "episode_n": 0,
+    "arc_character_devanagari": "",
+    "arc_character_english": "devotional",
+    "_phase18_strict_pass": false,
+    "_phase18_score": 19,
+    "_phase18_score_max": 25,
+    "_phase18_score_floor": 19,
+    "_phase18_violation": "verb_per_frame",
+    "_phase18_failing_gates": [
+      "bookend",
+      "char_names",
+      "engagement",
+      "monotony",
+      "shock_action",
+      "verb_per_frame"
+    ],
+    "_phase18_fatal_failures": [
+      "verb_per_frame"
+    ]
+  }
+}
