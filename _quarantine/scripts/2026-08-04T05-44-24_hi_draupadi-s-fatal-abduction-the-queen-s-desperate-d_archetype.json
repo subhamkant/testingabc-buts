@@ -1,0 +1,109 @@
+{
+  "ts": "2026-08-04T05-44-24",
+  "language": "hi",
+  "score": 19,
+  "score_max": 25,
+  "violation": "archetype",
+  "topic": "Draupadi's fatal abduction — the queen's desperate defiance against Jayadratha, her hidden rage at the Pandavas' absence, the greatest betrayal of her royal security.",
+  "title": "द्रौपदी का सबसे बड़ा विश्वासघात",
+  "script": {
+    "voiceover": "द्रौपदी रथ के अंदर खींच ली जाती है — बलपूर्वक, सरेआम, वनवास में भी। जयद्रथ का स्पर्श, उसकी निर्लज्ज हँसी... द्रौपदी का चेहरा अपमान से लाल, आँखें आग उगल रही हैं। कहाँ हैं मेरे पति? कहाँ है धर्म? ये कैसा राजधर्म है जो एक रानी को ऐसे लाचार छोड़ देता है? उसके मन में सवाल नहीं, एक चीख थी — 'पांडवों, तुम कहाँ हो?' लेकिन जंगल की खामोशी ने सिर्फ़ उसकी ही चीख सुनी, और उसकी आत्मा भीतर ही भीतर जलकर राख हो गई। हर बंधन, हर मर्यादा टूटने लगी, और उस दिन जो अपमान की ज्वाला भड़की, वह कुरुक्षेत्र के युद्ध तक शांत नहीं हुई। उस अपमान के बाद... द्रौपदी का विश्वास कभी नहीं लौटा... क्या हर अपमान एक नया युद्ध जन्म देता है?",
+    "broll": [
+      {
+        "image_prompt": "Extreme macro close-up of chariot, caught mid-action, motion-blurred battlefield chaos behind, Wide cinematic shot of a dense, sun-dappled Kamyaka forest path, Jayadratha fiercely gripping Draupadi's arm and pulling her towards his waiting royal war chariot, his cruel face set, her radiant fair wheatish-gold complexion, large kohl-lined lotus eyes, long untied black hair flowing loose, deep-red silk sari modestly draped over fitted blouse, red kumkum, fierce proud bearing, Jayadratha's regal gold armlets, dark silk dhoti, jeweled gold mukut, firelit crimson + saffron palette, warm Indian skin tone, intense but faces clearly visible, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "रथ के अंदर खींच",
+        "mood": "desperate, humiliating struggle",
+        "wardrobe_context": "FOREST",
+        "shot_type": "ENVIRONMENT"
+      },
+      {
+        "image_prompt": "[CONFRONTATION-WIDE] Sweeping panoramic shot, Jayadratha stands triumphant with a cruel sneer, his hand still lingering near a trembling, defiant Draupadi, his charioteer in the background impassively holding the reins of the ornate chariot, her face contorted in humiliation and rage, her radiant fair wheatish-gold complexion, large kohl-lined lotus eyes, long untied black hair flowing loose, deep-red silk sari modestly draped over fitted blouse, red kumkum, fierce proud bearing, Jayadratha's proud cruel sneer, mirror-polished golden kavacha, jeweled gold war-crown with crimson plume, blood-red and black silks, firelit crimson + saffron palette, warm Indian skin tone, intense but faces clearly visible, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "जयद्रथ का स्पर्श",
+        "mood": "humiliation, hateful defiance",
+        "wardrobe_context": "FOREST",
+        "shot_type": "AMBIGUOUS"
+      },
+      {
+        "image_prompt": "Tight close-up shot of Draupadi's face, her kohl-lined lotus eyes blazing with uncontrolled fury and tear-streaked humiliation, pupils wide, fire reflecting in them, long untied black hair wind-whipped around her, her deep-red silk sari slightly torn, firelit crimson + saffron palette, warm Indian skin tone, intense but faces clearly visible, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "आँखें आग उगल",
+        "mood": "blazing fury, tearful rage",
+        "wardrobe_context": "FOREST",
+        "shot_type": "REACTION"
+      },
+      {
+        "image_prompt": "Wide-eyed close-up of Draupadi's anguished face, her brow furrowed in desperate questioning, tears welling in her large kohl-lined lotus eyes, looking out into the dense, empty forest, her long untied black hair falling around her shoulders, deep-red silk sari modestly draped over fitted blouse, red kumkum, firelit crimson + saffron palette, warm Indian skin tone, intense but faces clearly visible, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "कहाँ हैं मेरे पति",
+        "mood": "desperate, searching anguish",
+        "wardrobe_context": "FOREST",
+        "shot_type": "ACTION"
+      },
+      {
+        "image_prompt": "Sweeping aerial shot of a vast, silent Kamyaka forest, ancient trees looming, dappled sunlight filtering through the dense canopy onto an empty path, distant faint outline of Jayadratha's royal chariot disappearing into the shadows, symbolizing isolation and desertion, firelit crimson + saffron palette, warm Indian skin tone, intense but faces clearly visible, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "जंगल की खामोशी",
+        "mood": "ominous silence, isolation",
+        "wardrobe_context": "FOREST",
+        "shot_type": "AMBIGUOUS"
+      },
+      {
+        "image_prompt": "Draupadi collapsing to her knees in the dust on the forest floor, her body trembling, head bowed in overwhelming emotional wreckage, long untied black hair falling over her face, deep-red silk sari torn slightly, her radiant fair wheatish-gold complexion, firelit crimson + saffron palette, warm Indian skin tone, intense but faces clearly visible, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "जलकर राख हो गई",
+        "mood": "internal destruction, profound grief",
+        "wardrobe_context": "FOREST",
+        "shot_type": "ACTION"
+      },
+      {
+        "image_prompt": "Draupadi rising slowly, her radiant fair wheatish-gold complexion, large kohl-lined lotus eyes now hardened with an unwavering resolve and burning humiliation, a silent, internal flame of rage igniting within her, long untied black hair flowing loose, deep-red silk sari modestly draped over fitted blouse, red kumkum, fierce proud bearing, firelit crimson + saffron palette, warm Indian skin tone, intense but faces clearly visible, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "अपमान की ज्वाला",
+        "mood": "igniting rage, fierce resolve",
+        "wardrobe_context": "FOREST",
+        "shot_type": "AMBIGUOUS"
+      },
+      {
+        "image_prompt": "A lone silhouette of Draupadi walking away from the scene of her abduction, her back to the viewer, the path behind her abandoned and empty, fading dusk light filtering through the dense forest canopy, a sense of profound loss and permanent change, her deep-red silk sari, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "द्रौपदी का विश्वास",
+        "mood": "haunting loss, emotional void",
+        "wardrobe_context": "AFTERMATH",
+        "shot_type": "AMBIGUOUS"
+      }
+    ],
+    "title": "द्रौपदी का सबसे बड़ा विश्वासघात",
+    "hook_title": "द्रौपदी का अपमान",
+    "description": "▶️ अगला भाग: Draupadi's untold humiliation in Virata\n\nजयद्रथ द्वारा द्रौपदी के अपहरण ने उसकी आत्मा को तोड़ दिया, पांडवों की अनुपस्थिति में उसे मिली पीड़ा ने भीतर ही भीतर एक नई आग जलाई। यह सिर्फ एक शारीरिक अपहरण नहीं था, बल्कि एक रानी की गरिमा और सुरक्षा का सबसे बड़ा विश्वासघात था, जिसने उसके भीतर प्रतिशोध की ज्वाला प्रज्वलित कर दी।\n\nद्रौपदी के अपमान और क्रोध ने कुरुक्षेत्र के युद्ध की नींव रखी। यह घटना उसकी आत्मा पर गहरा घाव छोड़ गई, जिससे उसका विश्वास हमेशा के लिए डगमगा गया। इस क्षण ने महाभारत की कहानी में एक नया मोड़ लाया, जहां एक स्त्री की पीड़ा ने एक महायुद्ध को जन्म दिया।\n\n#Shorts #Mahabharata #महाभारत #Krishna #HinduMythology #PauranikKatha #MythologyShorts #HindiShorts",
+    "tags": [
+      "Draupadi abduction",
+      "Jayadratha",
+      "Mahabharata Draupadi",
+      "द्रौपदी",
+      "महाभारत",
+      "Shorts",
+      "Hindu mythology"
+    ],
+    "thumbnail_prompt": "Dramatic vertical shot, Draupadi standing defiantly in a dense forest, her deep-red silk sari torn slightly, her face tear-streaked and blazing with raw rage, her untied black hair flying, while Jayadratha, a cruel king with mirror-polished golden kavacha, stands behind her with a sneer, the war chariot just visible in the background, high-contrast rim lighting, firelit crimson + saffron colours, warm Indian skin tone, vertical composition with main figure large",
+    "quotable_line": "अपमान का वो क्षण, विश्वासघात की वो आग, जो एक महायुद्ध को जन्म देती है।",
+    "pinned_question": "❓ अपमान का वो क्षण, विश्वासघात की वो आग, जो एक महायुद्ध को जन्म देती है। क्या यही हर अन्याय का अंतिम परिणाम होता है?",
+    "next_seed": "और यही अपमान एक दिन विराटनगर में फिर दोहराया जाएगा।",
+    "language": "hi",
+    "content_type": "story",
+    "topic": "Draupadi's fatal abduction — the queen's desperate defiance against Jayadratha, her hidden rage at the Pandavas' absence, the greatest betrayal of her royal security.",
+    "series": "mahabharata",
+    "episode_n": 48,
+    "arc_character_devanagari": "द्रौपदी",
+    "arc_character_english": "Draupadi — The Queen Who Lit the War",
+    "_phase18_strict_pass": false,
+    "_phase18_score": 19,
+    "_phase18_score_max": 25,
+    "_phase18_score_floor": 19,
+    "_phase18_violation": "archetype",
+    "_phase18_failing_gates": [
+      "anti_merge_composition",
+      "archetype",
+      "bookend",
+      "engagement",
+      "intensity",
+      "subject_lock"
+    ],
+    "_phase18_fatal_failures": [
+      "anti_merge_composition"
+    ]
+  }
+}
