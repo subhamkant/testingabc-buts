@@ -1,0 +1,110 @@
+{
+  "ts": "2026-08-04T07-56-53",
+  "language": "hi",
+  "score": 19,
+  "score_max": 25,
+  "violation": "shock_action",
+  "topic": "Kunti's untold betrayal at the riverbank — the mother who abandoned Karna at birth begging him before the war to spare her other sons, and the bitter promise that she would still have five",
+  "title": "कुंती का छुपा विश्वासघात",
+  "script": {
+    "voiceover": "कुंती अपने जीवन का बड़ा बोझ लिए, कर्ण के सामने हाथ जोड़ती है — उसकी आँखों में अपराधबोध और युद्ध का डर। वो अपने पहले बेटे से, जिसे उसने त्याग दिया था, भीष्मपितामह के पतन के बाद, अपने पुत्रों के प्राणों की भीख माँग रही थी। कर्ण का हृदय पल को पिघला, उन शब्दों को सुनकर जो उसे माँ-बाप से कभी नहीं मिले थे। लेकिन फिर उसे याद आता है वो अपमान, वो अकेलापन, वो रातें जब उसने माँ की कल्पना की थी। ‘तुम्हारे पाँच पुत्र सुरक्षित रहेंगे,’ कुंती कहती है, पर उस आश्वासन में भी गहरा घाव था। उसका ‘प्रेम’ केवल पांडवों के लिए ही था। कर्ण की आँखें जल उठीं। क्या इस ‘बोझ’ को कम करने के लिए उसने सिर्फ मेरा ही इस्तेमाल किया?",
+    "broll": [
+      {
+        "image_prompt": "Action moment frozen mid-strike around hand, dust and sparks suspended in the air, Wide cinematic shot, sun-drenched riverbank at dawn, misty light filtering through ancient banyan trees, Kunti kneels before Karna, her hands clasped in desperation, tear-streaked dignified face, simple unadorned white silk sari modestly draped, silver-streaked dark hair, sorrowful dignified eyes, Karna standing tall, his back partially turned, towering mighty physique, golden-bronze skin, long flowing dark mane, engraved golden kavacha with blazing sun emblem on his chest, gold kundals, crimson cape over steel-blue dhoti, solar aura, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "हाथ जोड़ती है",
+        "mood": "desperate, pleading, solemn, dawn",
+        "wardrobe_context": "JOURNEY",
+        "shot_type": "REACTION"
+      },
+      {
+        "image_prompt": "[CONFRONTATION-WIDE] Sweeping shot of a quiet riverbank, serene water reflecting the early morning sky, Kunti's tear-streaked face in the foreground, kohl-lined eyes wide with anguish, sorrowful dignified expression, simple unadorned white silk sari modestly draped, silver-streaked dark hair, holding a simple earthen pot, Karna's powerful silhouette in the mid-ground, golden-bronze skin, engraved golden kavacha, his form radiating a powerful, conflicted aura, warm sunset amber + bronze, golden divine glow radiating from within bare chest skin (the kavacha), saffron-and-crimson palette, faces clearly lit, harsh golden-hour edge-light, embers in foreground, faces visible and warm, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "आँखों में",
+        "mood": "anguished, pleading, conflicted, regretful",
+        "wardrobe_context": "JOURNEY",
+        "shot_type": "REACTION"
+      },
+      {
+        "image_prompt": "Close-up shot of Karna's jawline, muscles clenching, his golden-bronze skin taut with suppressed emotion, intense dark eyes staring into the distance, long flowing dark mane, engraved golden kavacha with blazing sun emblem on his chest, gold kundals, crimson cape, solar aura, his powerful physique tense with inner conflict, warm sunset amber + bronze, golden divine glow radiating from within bare chest skin (the kavacha), saffron-and-crimson palette, faces clearly lit, harsh golden-hour edge-light, embers in foreground, faces visible and warm, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "कर्ण का हृदय",
+        "mood": "stunned, betrayed, conflicted, tense",
+        "wardrobe_context": "JOURNEY",
+        "shot_type": "AMBIGUOUS"
+      },
+      {
+        "image_prompt": "Drawing back from a moment of intense revelation, Karna's towering mighty physique, golden-bronze skin, long flowing dark mane, engraved golden kavacha with blazing sun emblem, gold kundals, crimson cape, solar aura, recoiling slightly from Kunti's words, his eyes burning with a mix of recognition and betrayal, Kunti's sorrowful face partially visible in the background, her simple unadorned white silk sari, warm sunset amber + bronze, golden divine glow radiating from within bare chest skin (the kavacha), saffron-and-crimson palette, faces clearly lit, harsh golden-hour edge-light, embers in foreground, faces visible and warm, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "याद आता है",
+        "mood": "recoiling, resentful, bitter, revealing",
+        "wardrobe_context": "JOURNEY",
+        "shot_type": "ACTION"
+      },
+      {
+        "image_prompt": "Sweeping wide shot of the riverbank, early morning mist still lingering, Karna walking away from Kunti, his back to her, leaving her kneeling alone, his figure silhouetted against the rising sun, towering mighty physique, engraved golden kavacha, solar aura, the vastness of the river and sky emphasizing his solitude, warm sunset amber + bronze, golden divine glow radiating from within bare chest skin (the kavacha), saffron-and-crimson palette, faces clearly lit, harsh golden-hour edge-light, embers in foreground, faces visible and warm, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "वो अकेलापन",
+        "mood": "abandoned, isolated, resentful, bitter",
+        "wardrobe_context": "JOURNEY",
+        "shot_type": "ACTION"
+      },
+      {
+        "image_prompt": "[WITNESS-FROM-BEHIND] Kunti's back-of-head in the foreground, silver-streaked dark hair, simple unadorned white silk sari, looking towards Karna who stands a few paces away, his face turned towards the rising sun, deep in thought, powerful physique, golden-bronze skin, engraved golden kavacha with blazing sun emblem, gold kundals, crimson cape, solar aura, the river flowing gently beside them, warm sunset amber + bronze, golden divine glow radiating from within bare chest skin (the kavacha), saffron-and-crimson palette, faces clearly lit, harsh golden-hour edge-light, embers in foreground, faces visible and warm, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "तुम्हारे पाँच पुत्र",
+        "mood": "solemn, conflicted, desperate, heavy",
+        "wardrobe_context": "JOURNEY",
+        "shot_type": "AMBIGUOUS"
+      },
+      {
+        "image_prompt": "Close-up on Karna's clenched jaw, his dark eyes burning with contained fury and sorrow, a single tear tracing a path down his golden-bronze cheek, long flowing dark mane, the intricate micro-engravings on his antique Vedic gold kavacha catching the harsh golden-hour edge-light, glistening sweat droplets on his skin, solar aura, warm sunset amber + bronze, saffron-and-crimson palette, faces clearly lit, faces visible and warm, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "गहरा घाव",
+        "mood": "burning, betrayed, resentful, wounded",
+        "wardrobe_context": "JOURNEY",
+        "shot_type": "REACTION"
+      },
+      {
+        "image_prompt": "Fading dusk over a desolate riverbank, a lone silhouette of Karna walking away, his back to the viewer, the setting sun casting long, harsh shadows, the river flowing calmly into the distance, his towering mighty physique, engraved golden kavacha barely visible, the scene is quiet and melancholic, warm sunset amber + bronze, golden divine glow fading, saffron-and-crimson palette, fading light, faces withheld, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "इस्तेमाल किया",
+        "mood": "abandoned, bitter, reflective, tragic",
+        "wardrobe_context": "AFTERMATH",
+        "shot_type": "AMBIGUOUS"
+      }
+    ],
+    "title": "कुंती का छुपा विश्वासघात",
+    "hook_title": "कुंती का विश्वासघात",
+    "description": "▶️ अगला भाग: Karna's final sacrifice as he lay dying\n\nयुद्ध से पहले, एक माँ अपने परित्यक्त पुत्र से अपने अन्य बेटों की जान बचाने की गुहार लगाती है। यह सिर्फ एक मुलाकात नहीं, बल्कि त्याग और विश्वासघात की कड़वी दास्तान थी।\nकुंती ने अपने सबसे बड़े पुत्र कर्ण को जन्म के समय त्याग दिया था। सालों बाद, जब कुरुक्षेत्र का युद्ध निकट था, वह अपनी गलती सुधारने नहीं, बल्कि अपने अन्य पांच पुत्रों की रक्षा के लिए कर्ण के पास आती है। यह मिलन कर्ण के लिए एक माँ के प्रेम का अनुभव नहीं, बल्कि अपने जीवन भर के अकेलेपन और अस्वीकृति की पुनरावृत्ति थी। उसके लिए, यह केवल एक माँ की ओर से किया गया एक और विश्वासघात था।\n#Shorts #Mahabharata #महाभारत #Krishna #HinduMythology #PauranikKatha #MythologyShorts #HindiShorts",
+    "tags": [
+      "Kunti",
+      "Karna",
+      "कर्ण",
+      "कुंती",
+      "Mahabharata",
+      "महाभारत",
+      "Shorts",
+      "Hindu mythology"
+    ],
+    "thumbnail_prompt": "Dramatic story event, [CONFRONTATION-WIDE] Kunti, with a tear-streaked face and desperate expression, kneels before a towering Karna at a misty riverbank at dawn. Karna stands with his back partially turned, his powerful physique radiating a conflicted solar aura, engraved golden kavacha with blazing sun emblem visible, gold kundals. The rising sun casts harsh golden-hour edge-light. The river flows beside them. Vertical composition with Karna large in the frame. Warm sunset amber + bronze, golden divine glow, saffron-and-crimson palette, faces clearly lit, embers in foreground.",
+    "quotable_line": "एक माँ का प्रेम भी विश्वासघात बन सकता है।",
+    "pinned_question": "❓ एक माँ का प्रेम भी विश्वासघात बन सकता है। क्या कुंती का ये कदम सही था या उसने कर्ण को फिर धोखा दिया?",
+    "next_seed": "और यही नियति उसे आखिरी बलिदान तक ले जाएगी।",
+    "language": "hi",
+    "content_type": "story",
+    "topic": "Kunti's untold betrayal at the riverbank — the mother who abandoned Karna at birth begging him before the war to spare her other sons, and the bitter promise that she would still have five",
+    "series": "mahabharata",
+    "episode_n": 21,
+    "arc_character_devanagari": "कर्ण",
+    "arc_character_english": "Karna — The Forgotten Son",
+    "_phase18_strict_pass": false,
+    "_phase18_score": 19,
+    "_phase18_score_max": 25,
+    "_phase18_score_floor": 19,
+    "_phase18_violation": "shock_action",
+    "_phase18_failing_gates": [
+      "anti_merge_composition",
+      "archetype",
+      "engagement",
+      "shock_action",
+      "subject_diversity",
+      "tha_tic"
+    ],
+    "_phase18_fatal_failures": [
+      "anti_merge_composition"
+    ]
+  }
+}
