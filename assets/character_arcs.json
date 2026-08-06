@@ -264,6 +264,46 @@
             "stage2_dedup"
           ],
           "llm_quality_tier": "fast"
+        },
+        {
+          "topic": "Ashwatthama's final madness — his twisted oath to Duryodhana's broken body, the secret promise of decapitation as the ultimate revenge.",
+          "source": "auto_expansion_v21",
+          "added_at": "2026-08-06T05:35:40.523331+00:00",
+          "validated_passes": [
+            "semantic_gate",
+            "stage2_dedup"
+          ],
+          "llm_quality_tier": "fast"
+        },
+        {
+          "topic": "Ashwatthama's destructive revenge — the untold truth of Narayanastra's fury, the secret weapon unleashed in madness after his father's fall.",
+          "source": "auto_expansion_v21",
+          "added_at": "2026-08-06T05:35:40.523462+00:00",
+          "validated_passes": [
+            "semantic_gate",
+            "stage2_dedup"
+          ],
+          "llm_quality_tier": "fast"
+        },
+        {
+          "topic": "Ashwatthama's secret sorrow — his twisted lament over Duryodhana's broken body, the untold grief that fueled his maddened oath of revenge.",
+          "source": "auto_expansion_v21",
+          "added_at": "2026-08-06T05:35:40.523776+00:00",
+          "validated_passes": [
+            "semantic_gate",
+            "stage2_dedup"
+          ],
+          "llm_quality_tier": "fast"
+        },
+        {
+          "topic": "Ashwatthama's dark inspiration — the hidden vision of the owl's massacre, the secret catalyst for his maddened, unforgivable revenge.",
+          "source": "auto_expansion_v21",
+          "added_at": "2026-08-06T05:35:40.523944+00:00",
+          "validated_passes": [
+            "semantic_gate",
+            "stage2_dedup"
+          ],
+          "llm_quality_tier": "fast"
         }
       ]
     }
