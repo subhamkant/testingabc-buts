@@ -1,0 +1,118 @@
+{
+  "ts": "2026-08-07T04-49-10",
+  "language": "hi",
+  "score": 21,
+  "score_max": 25,
+  "violation": "verb_per_frame",
+  "topic": "Bhishma's fifty-eight nights on the bed of arrows — the grandsire holding death itself at bay for Uttarayana, and Krishna granting his final darshan as he chose his moment to leave",
+  "title": "भीष्म का आखिरी दर्शन",
+  "script": {
+    "voiceover": "बाणों की शय्या पर भीष्म का शरीर टूट रहा था, पर आत्मा नहीं। सूर्य दक्षिणायन में था, भीष्म ने मृत्यु रोक रखी थी, उत्तरायण के दर्शन के लिए। हर तीर उनके रक्त को खींच रहा था, पर संकल्प अडिग था। दिनों तक पड़े रहे, पीड़ा से कराहते हुए, चेहरे पर शांति थी। लेकिन तभी, दिव्य रथ निकट आया, स्वयं कृष्ण, साक्षात ईश्वर, दर्शन देने पधारे। भीष्म की आँखों में आंसू आए, उन्होंने कहा, “प्रभु, मेरे प्राणों को अब मुक्ति दो।” कृष्ण ने मुस्कुराकर कहा, “शांत हो जाओ, पितामह, तुम्हारी प्रतीक्षा पूर्ण हुई।” भीष्म ने उन दिव्य दर्शनों समेटा, और उत्तरायण में साँस छोड़ दी। क्या ऐसी श्रद्धा ही ईश्वर के वास्तविक दर्शन कराती है?",
+    "broll": [
+      {
+        "image_prompt": "Extreme macro close-up of blood-streaked arrows piercing Bhishma's aged chest, golden-bronze skin taut with agony, his gleaming engraved silver kavacha visible, dim light from a low sun, jewel-toned palette, soft cinematic lighting, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text.",
+        "anchor_phrase": "बाणों की शय्या",
+        "mood": "Intense pain, impending doom",
+        "wardrobe_context": "WAR",
+        "shot_type": "ACTION"
+      },
+      {
+        "image_prompt": "Close-up shot of Bhishma's noble face, furrowed brow trembling with suppressed pain, his flowing silver-white beard matted with dust, his kohl-rimmed eyes conveying deep resolve despite his body breaking, jewel-toned palette, soft cinematic lighting, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text.",
+        "anchor_phrase": "शरीर टूट रहा",
+        "mood": "Resolute endurance, suffering",
+        "wardrobe_context": "WAR",
+        "shot_type": "REACTION"
+      },
+      {
+        "image_prompt": "Macro shot of a single arrow's fletching, crimson blood drawing along its shaft, embedded in Bhishma's gleaming engraved silver kavacha with sun motifs, the silver armor catching a harsh, flickering light on the battlefield, jewel-toned palette, soft cinematic lighting, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text.",
+        "anchor_phrase": "रक्त को खींच",
+        "mood": "Gritty, painful detail",
+        "wardrobe_context": "WAR",
+        "shot_type": "PROP"
+      },
+      {
+        "image_prompt": "[CONFRONTATION-WIDE] Bhishma, colossal towering muscled frame, flowing silver-white hair and thick white beard, gleaming engraved silver kavacha, ivory-white silks, silver-and-gold war diadem, lying motionlessly on the bed of arrows, enduring immense but silent agony, while a luminous, distant Krishna, graceful powerful divine form, watches from a slightly elevated position, a soft ethereal glow surrounding him, jewel-toned palette, soft cinematic lighting, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text.",
+        "anchor_phrase": "पीड़ा से कराहते",
+        "mood": "Somber, enduring pain, divine vigilance",
+        "wardrobe_context": "WAR",
+        "shot_type": "ENVIRONMENT"
+      },
+      {
+        "image_prompt": "Sweeping panoramic shot, a radiant golden divine chariot approaching slowly through ethereal mist, its jeweled wheels glowing, sunlit Kurukshetra battlefield blurred in the distance, jewel-toned palette, soft cinematic lighting, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text.",
+        "anchor_phrase": "दिव्य रथ निकट",
+        "mood": "Hope, impending wonder",
+        "wardrobe_context": "DIVINE",
+        "shot_type": "ENVIRONMENT"
+      },
+      {
+        "image_prompt": "[POWER-LOOM] Krishna's graceful powerful divine form, luminous monsoon-cloud blue skin, dark curls with peacock feather, golden-yellow pitambara silk, crimson sash, layered gold necklaces, divine charioteer, descending from his radiant chariot, towering over Bhishma, colossal towering muscled frame, who is lying on the bed of arrows, looking up with awe and reverence, jewel-toned palette, soft cinematic lighting, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text.",
+        "anchor_phrase": "स्वयं कृष्ण, साक्षात ईश्वर",
+        "mood": "Awe, divine presence",
+        "wardrobe_context": "DIVINE",
+        "shot_type": "ACTION"
+      },
+      {
+        "image_prompt": "Close-up shot of Bhishma's ancient, kohl-rimmed eyes, now welling with tears of spiritual release and profound gratitude, his expression one of profound peace, jewel-toned palette, soft cinematic lighting, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text.",
+        "anchor_phrase": "आँखों में आंसू",
+        "mood": "Emotional release, peace",
+        "wardrobe_context": "WAR",
+        "shot_type": "AMBIGUOUS"
+      },
+      {
+        "image_prompt": "[WITNESS-FROM-BEHIND] Bhishma's colossal form from behind, head slightly raised, gazing towards Krishna's radiant divine form in the distance, a luminous golden aura emanating from Krishna, the scene bathed in a soft, ethereal light, jewel-toned palette, soft cinematic lighting, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text.",
+        "anchor_phrase": "दिव्य दर्शनों",
+        "mood": "Profound wonder, spiritual connection",
+        "wardrobe_context": "DIVINE",
+        "shot_type": "ENVIRONMENT"
+      },
+      {
+        "image_prompt": "Fading dusk over a calm river, a lone diya flickering on the water, a serene silhouette of Bhishma with folded hands and a gentle smile, his spirit departing into the quiet radiant glow of Uttarayana, jewel-toned palette, soft cinematic lighting, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text.",
+        "anchor_phrase": "साँस छोड़ दी",
+        "mood": "Peaceful departure, serenity",
+        "wardrobe_context": "AFTERMATH",
+        "shot_type": "AMBIGUOUS"
+      }
+    ],
+    "title": "भीष्म का आखिरी दर्शन",
+    "hook_title": "भीष्म का आखिरी दर्शन",
+    "description": "जब भीष्म ने मृत्यु को रोका, सिर्फ कृष्ण के अंतिम दर्शन के लिए।\nमहाभारत के महान योद्धा, भीष्म पितामह, कुरुक्षेत्र के युद्ध में बाणों की शय्या पर लेटे थे। उनका शरीर टूट रहा था, पर प्राणों को उन्होंने उत्तरायण के शुभ मुहूर्त के लिए रोक रखा था। उनकी अटूट इच्छा और तपस्या ने स्वयं मृत्यु को भी बांधे रखा। इस भीषण पीड़ा के बीच, उन्हें शांति और मुक्ति का मार्ग दिखाने स्वयं भगवान कृष्ण पधारे। यह भीष्म की गहरी श्रद्धा का ही फल था कि उन्हें अपने जीवन के अंतिम क्षणों में साक्षात ईश्वर के दर्शन प्राप्त हुए।\n#Shorts #Mahabharata #महाभारत #Krishna #HinduMythology #PauranikKatha #MythologyShorts #HindiShorts",
+    "tags": [
+      "Bhishma",
+      "Krishna",
+      "Mahabharata",
+      "Bhakti",
+      "Bed of Arrows",
+      "Uttarayan",
+      "भीष्म",
+      "कृष्ण",
+      "महाभारत",
+      "Shorts",
+      "Hindu mythology"
+    ],
+    "thumbnail_prompt": "Dramatic vertical shot, Bhishma, colossal towering muscled frame, flowing silver-white hair and thick white beard, gleaming engraved silver kavacha, ivory-white silks, silver-and-gold war diadem, lying on the bed of arrows with eyes closed peacefully, a radiant golden halo glowing around his head, while Krishna, graceful powerful divine form, luminous monsoon-cloud blue skin, dark curls with peacock feather, golden-yellow pitambara silk, crimson sash, layered gold necklaces, stands by his side, gently smiling, a soft golden light illuminating the scene, jewel-toned palette, high-contrast rim lighting, vertical composition with main figures large, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text.",
+    "quotable_line": "अटूट श्रद्धा ही ईश्वर के वास्तविक दर्शन कराती है।",
+    "pinned_question": "❓ अटूट श्रद्धा ही ईश्वर के वास्तविक दर्शन कराती है। क्या आप भी इस पर विश्वास करते हैं?",
+    "next_seed": "और यही दर्शन कृष्ण ने अर्जुन को भी दिखाए।",
+    "language": "hi",
+    "content_type": "story",
+    "topic": "Bhishma's fifty-eight nights on the bed of arrows — the grandsire holding death itself at bay for Uttarayana, and Krishna granting his final darshan as he chose his moment to leave",
+    "series": "mahabharata",
+    "episode_n": 0,
+    "arc_character_devanagari": "",
+    "arc_character_english": "devotional",
+    "_phase18_strict_pass": false,
+    "_phase18_score": 21,
+    "_phase18_score_max": 25,
+    "_phase18_score_floor": 19,
+    "_phase18_violation": "verb_per_frame",
+    "_phase18_failing_gates": [
+      "bookend",
+      "char_names",
+      "tha_tic",
+      "verb_per_frame"
+    ],
+    "_phase18_fatal_failures": [
+      "verb_per_frame"
+    ]
+  }
+}
