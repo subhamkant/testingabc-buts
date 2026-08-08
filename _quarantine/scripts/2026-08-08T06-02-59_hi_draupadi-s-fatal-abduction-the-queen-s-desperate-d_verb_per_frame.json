@@ -1,0 +1,118 @@
+{
+  "ts": "2026-08-08T06-02-59",
+  "language": "hi",
+  "score": 19,
+  "score_max": 25,
+  "violation": "verb_per_frame",
+  "topic": "Draupadi's fatal abduction — the queen's desperate defiance against Jayadratha, her hidden rage at the Pandavas' absence, the greatest betrayal of her royal security.",
+  "title": "द्रौपदी की सबसे बड़ी शर्म",
+  "script": {
+    "voiceover": "द्रौपदी का अपमान उस दिन वन में गूँज उठता है, जब जयद्रथ उसे अपने रथ पर खींचता है। उसकी आँखें क्रोध से लाल हैं, चीखें गूँजती हैं। वह संघर्ष करती है, हाथों से उस बंधन को तोड़ने की कोशिश करती है, लेकिन शाही मान पल में टूट जाता है। लेकिन उसकी आत्मा का घाव जयद्रथ का स्पर्श नहीं था, बल्कि पांडवों की अनुपस्थिति थी। उसे लगा, 'क्या मैं इतनी अकेली हूँ?' यह सिर्फ अपहरण नहीं, बल्कि उसके राजशाही सुरक्षा पर सबसे बड़ा विश्वासघात था, जिसने प्रतिशोध की आग प्रज्वलित कर दी। हर आँसू में उसने भविष्य के युद्ध का बीज बो दिया। द्रौपदी का क्रोध कभी नहीं बुझा। क्या यह विनाश का ही पहला बीज था?",
+    "broll": [
+      {
+        "image_prompt": "Extreme macro close-up of draupadi, caught mid-action, motion-blurred battlefield chaos behind, Action moment frozen mid-struggle, Jayadratha's large hand gripping Draupadi's forearm, pulling her roughly towards a grand war chariot, her deep-red silk sari torn slightly, her face contorted in humiliation and rage, firelit crimson + saffron, regal red-and-gold sari, warm Indian skin tone, warm torchlight, shadow-heavy forest backdrop, intense BUT faces clearly visible, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "द्रौपदी का अपमान",
+        "mood": "Violent abduction, desperate struggle",
+        "wardrobe_context": "FOREST",
+        "shot_type": "ACTION"
+      },
+      {
+        "image_prompt": "REACTION shot, Draupadi's tear-streaked face, large kohl-lined lotus eyes blazing with furious rage, wind-whipped long untied black hair flowing loose, deep-red silk sari modestly draped over fitted blouse, red kumkum, fierce proud bearing, firelit crimson + saffron, warm Indian skin tone, warm torchlight, forest shadows, intense BUT faces clearly visible, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "आँखें क्रोध से लाल",
+        "mood": "Furious, defiant, humiliated",
+        "wardrobe_context": "FOREST",
+        "shot_type": "REACTION"
+      },
+      {
+        "image_prompt": "Close-up shot of Draupadi's trembling hands desperately pulling against a coarse rope or Jayadratha's grip, her royal gold bangles glinting, deep-red silk sari fabric torn, dust-choked forest ground beneath, firelit crimson + saffron, warm Indian skin tone, dim torchlight, claustrophobic atmosphere, intense BUT faces clearly visible, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "हाथों से उस बंधन",
+        "mood": "Desperate, trapped, struggling",
+        "wardrobe_context": "FOREST",
+        "shot_type": "ACTION"
+      },
+      {
+        "image_prompt": "[POWER-LOOM] Wide cinematic shot of a sun-dappled forest clearing, Jayadratha, colossal mountain-like physique, proud cruel sneer, mirror-polished golden kavacha, jeweled gold war-crown, blood-red and black silks, towering over a crumpled Draupadi, her deep-red silk sari dishevelled, depicting her shattered royal pride, firelit crimson + saffron, warm Indian skin tone, harsh sunlight filtering through trees, intense BUT faces clearly visible, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "शाही मान पल",
+        "mood": "Cruel victory, shattered pride",
+        "wardrobe_context": "FOREST",
+        "shot_type": "AMBIGUOUS"
+      },
+      {
+        "image_prompt": "Wide shot of a dim forest path, Draupadi, kneeling beneath a gnarled banyan tree, her face hollow-eyed with despair, gazing into the empty path, expressing the profound absence of her protectors, firelit crimson + saffron, warm Indian skin tone, fading dusk light, shadow-heavy, intense BUT faces clearly visible, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "पांडवों की अनुपस्थिति",
+        "mood": "Despair, abandonment, internal pain",
+        "wardrobe_context": "FOREST",
+        "shot_type": "ENVIRONMENT"
+      },
+      {
+        "image_prompt": "Close-up shot of a small, withered forest flower, Draupadi weeping over it, her anguished tear-streaked face, wide-eyed in silent horror, expressing profound loneliness, deep-red silk sari modestly draped, clutching a fistful of earth, dim shadow-heavy forest atmosphere, firelit crimson + saffron, warm Indian skin tone, fading light, intense BUT faces clearly visible, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "क्या मैं इतनी अकेली हूँ?",
+        "mood": "Deep despair, questioning, abandonment",
+        "wardrobe_context": "FOREST",
+        "shot_type": "REACTION"
+      },
+      {
+        "image_prompt": "[CONFRONTATION-WIDE] Sweeping panoramic shot of a dense, ancient forest clearing, Jayadratha, colossal mountain-like physique, mirror-polished golden kavacha, and his fierce, weapon-wielding soldiers standing in the foreground, a dejected Draupadi standing isolated in the mid-ground, her deep-red silk sari torn, looking toward the distant, blurred palace architecture, symbolizing her lost royal security and the betrayal, firelit crimson + saffron, warm Indian skin tone, harsh contrast between her figure and the dark forest, intense BUT faces clearly visible, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "सबसे बड़ा विश्वासघात",
+        "mood": "Betrayed, isolated, vulnerable",
+        "wardrobe_context": "FOREST",
+        "shot_type": "ACTION"
+      },
+      {
+        "image_prompt": "Dramatic close-up of a dimly lit forest clearing, Draupadi, radiant fair wheatish-gold complexion, large kohl-lined lotus eyes, face set in fierce determination, hands clenched, subtle glowing ember effect around her, a vivid fiery aura beginning to emanate from her, symbolizing the kindling of revenge, deep-red silk sari, firelit crimson + saffron, warm Indian skin tone, warm torchlight, shadow-heavy, intense BUT faces clearly visible, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "प्रतिशोध की आग",
+        "mood": "Burning rage, rising determination",
+        "wardrobe_context": "FOREST",
+        "shot_type": "AMBIGUOUS"
+      },
+      {
+        "image_prompt": "Silhouetted shot of Draupadi walking away from a smoldering campfire in a dim, silent forest, her long untied black hair trailing behind her like a dark banner, her deep-red silk sari catching the last fading dusk light, head held high but shoulders hunched with a visible burden of unresolved rage, her form a lone silhouette against a blood-red and saffron sky, firelit crimson + saffron, warm Indian skin tone, fading dusk, intense BUT faces clearly visible, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "द्रौपदी का क्रोध कभी नहीं बुझा",
+        "mood": "Lingering rage, haunting, unresolved",
+        "wardrobe_context": "AFTERMATH",
+        "shot_type": "AMBIGUOUS"
+      }
+    ],
+    "title": "द्रौपदी की सबसे बड़ी शर्म",
+    "hook_title": "द्रौपदी की शर्म",
+    "description": "▶️ अगला भाग: Draupadi's untold humiliation in Virata\n\nवन में हुए अपमान ने द्रौपदी के भीतर प्रतिशोध की ऐसी आग जलाई, जो बुझाई न जा सकी। जयद्रथ द्वारा अपहरण की घटना ने द्रौपदी को केवल शारीरिक रूप से प्रताड़ित नहीं किया, बल्कि उसकी आत्मा को भी तोड़ दिया। यह उसके राजशाही सम्मान पर सबसे बड़ा हमला था, और उससे भी बढ़कर, अपने पतियों की अनुपस्थिति ने उसे अकेला महसूस कराया। उसके हर आँसू में एक युद्ध का बीज बोया गया, जो अंततः कुरुक्षेत्र में विशाल वृक्ष बन गया।\n\n#Shorts #Mahabharata #महाभारत #Krishna #HinduMythology #PauranikKatha #MythologyShorts #HindiShorts",
+    "tags": [
+      "Draupadi Abduction",
+      "Jayadratha Story",
+      "Draupadi",
+      "द्रौपदी",
+      "Mahabharata",
+      "महाभारत",
+      "Shorts",
+      "Hindu mythology"
+    ],
+    "thumbnail_prompt": "Vertical composition, dramatic high-contrast shot of Jayadratha, colossal mountain-like physique, proud cruel sneer, mirror-polished golden kavacha, pulling a defiant Draupadi onto his grand war chariot, her deep-red silk sari torn and wind-whipped, large kohl-lined lotus eyes blazing with humiliated rage and tears, long untied black hair flowing violently, dark shadows and harsh sunlight in a dense forest, firelit crimson + saffron palette, warm Indian skin tone, intense, main figures large, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+    "quotable_line": "एक रानी का अपमान ही सबसे बड़ा विश्वासघात था।",
+    "pinned_question": "❓ एक रानी का अपमान ही सबसे बड़ा विश्वासघात था। क्या आप मानते हैं कि यही कुरुक्षेत्र की असली जड़ थी?",
+    "next_seed": "उस अपमान के बाद, द्रौपदी के लिए और बड़ी परीक्षा इंतज़ार कर रही थी।",
+    "language": "hi",
+    "content_type": "story",
+    "topic": "Draupadi's fatal abduction — the queen's desperate defiance against Jayadratha, her hidden rage at the Pandavas' absence, the greatest betrayal of her royal security.",
+    "series": "mahabharata",
+    "episode_n": 48,
+    "arc_character_devanagari": "द्रौपदी",
+    "arc_character_english": "Draupadi — The Queen Who Lit the War",
+    "_phase18_strict_pass": false,
+    "_phase18_score": 19,
+    "_phase18_score_max": 25,
+    "_phase18_score_floor": 19,
+    "_phase18_violation": "verb_per_frame",
+    "_phase18_failing_gates": [
+      "anti_merge_composition",
+      "archetype",
+      "bookend",
+      "engagement",
+      "tha_tic",
+      "verb_per_frame"
+    ],
+    "_phase18_fatal_failures": [
+      "anti_merge_composition",
+      "verb_per_frame"
+    ]
+  }
+}
