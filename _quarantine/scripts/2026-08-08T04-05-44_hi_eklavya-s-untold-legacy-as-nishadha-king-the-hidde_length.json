@@ -1,0 +1,111 @@
+{
+  "ts": "2026-08-08T04-05-44",
+  "language": "hi",
+  "score": 16,
+  "score_max": 25,
+  "violation": "length",
+  "topic": "Eklavya's untold legacy as Nishadha king — the hidden loyalty his people kept alive, the secret history the kshatriyas erased from every record",
+  "title": "एकलव्य का छुपा बलिदान",
+  "script": {
+    "voiceover": "एकलव्य अपनी कटी उंगली पर धीरे से हाथ फेरता है, अपने निषाद राज्य के सिंहासन पर बैठा। वर्षों बीत गए थे, लेकिन उस द्रोण-द्रोही गुरुदक्षिणा का दर्द उसकी रूह में गहरे तक समा चुका था। क्षत्रियों ने उसके गौरव को मिटाना चाहा, उसके लोगों को दबाना चाहा, पर वो भूल गए थे कि निष्ठा सिर्फ शस्त्रों से नहीं, दिलों से जीती जाती है। उसके लोगों की आँखों में एक अटूट विश्वास चमकता था, उनके कानों में 'राजा एकलव्य अमर रहे' की गूँज हमेशा जीवित रहती थी। लेकिन हस्तिनापुर के दरबारी कवि इस इतिहास को भला कैसे लिख सकते थे? उन्होंने हर उस निशान को मिटाया जो एकलव्य की विरासत का बखान करता था, उसे केवल एक अंगूठा देने वाले शिष्य तक सीमित कर दिया। यह तो सिर्फ शुरुआत थी... अगले भाग में: कृष्ण का छुपा घातक पाप। क्या सचमुच मिटा दिया गया था एकलव्य का असली इतिहास?",
+    "broll": [
+      {
+        "image_prompt": "Action moment frozen mid-gesture, Eklavya gently drawing his left hand across his severed right thumb, intense devoted eyes, dark mud-streaked tribal skin, bare-chested with bark-cloth lower garment, rudraksha beads, sitting on a simple wooden throne in a dense forest clearing, dappled golden sunlight, warm Indian skin tone, forest greens + earth-browns, untouched by court colors, dappled sunlight through banyan canopy, faces clearly lit, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "हाथ फेरता है",
+        "mood": "introspective pain and dignity",
+        "wardrobe_context": "FOREST",
+        "shot_type": "ACTION"
+      },
+      {
+        "image_prompt": "[POWER-LOOM] Forest clearing, Dronacharya towering over a kneeling Eklavya, his hand outstretched, demanding the thumb, Eklavya's intense devoted eyes, dark mud-streaked tribal skin, bare-chested with bark-cloth lower garment, rudraksha beads, Dronacharya's weathered elderly Indian face, white hair tied in a sage's topknot, long white beard, simple white cotton dhoti, white angavastram, sacred yajnopavita thread across bare chest, pointing an intricate wooden bow, dappled golden sunlight, warm Indian skin tone, forest greens + earth-browns, faces clearly lit, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "गुरुदक्षिणा का दर्द",
+        "mood": "intense betrayal and sacrifice",
+        "wardrobe_context": "FOREST",
+        "shot_type": "ACTION"
+      },
+      {
+        "image_prompt": "Clenching action, Eklavya's right hand, the severed thumb visibly scarred and slightly bleeding, drawing a simple bow, white-knuckled grip, dark mud-streaked tribal skin, rudraksha beads, dense forest backdrop with dappled sunlight, forest greens + earth-browns, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "कटी उंगली",
+        "mood": "visceral pain, enduring sacrifice",
+        "wardrobe_context": "FOREST",
+        "shot_type": "AMBIGUOUS"
+      },
+      {
+        "image_prompt": "A Nishadha tribal elder kneeling before Eklavya, his face etched with loyalty, a young boy clutching the elder's leg, both looking up with intense devotion at Eklavya, dark mud-streaked tribal skin, simple bark-cloth garments, rudraksha beads, Eklavya seated on a simple throne in background, dappled golden sunlight, warm Indian skin tone, forest greens + earth-browns, faces clearly lit, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "अटूट विश्वास चमकता",
+        "mood": "undying loyalty, tribal pride",
+        "wardrobe_context": "FOREST",
+        "shot_type": "ACTION"
+      },
+      {
+        "image_prompt": "Dust-choked Hastinapur palace chamber, a royal scribe with sharp angular features, hastily tearing scrolls depicting tribal histories, his face shadowed with secrecy, ornate Nagara-style palace court with carved stone columns and marigold petals on marble floor, dappled golden sunlight, warm Indian skin tone, royal silks in dark colors, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "इतिहास को भला कैसे",
+        "mood": "sinister erasure, conspiracy",
+        "wardrobe_context": "PALACE",
+        "shot_type": "ACTION"
+      },
+      {
+        "image_prompt": "Eklavya leading his Nishadha people through a thriving forest village, children playing, smoke rising from huts, Eklavya's regal posture, dark mud-streaked tribal skin, bare-chested with bark-cloth lower garment, rudraksha beads, intense devoted eyes, dappled golden sunlight, warm Indian skin tone, forest greens + earth-browns, dappled sunlight through banyan canopy, faces clearly lit, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "एकलव्य की विरासत",
+        "mood": "resilient prosperity, hidden strength",
+        "wardrobe_context": "FOREST",
+        "shot_type": "AMBIGUOUS"
+      },
+      {
+        "image_prompt": "Eklavya recoiling slightly at a distant, unseen threat, standing on a cliff edge, looking out over a vast, hidden forest kingdom, his back partially to the viewer, the glow of a setting sun behind him, casting long shadows, dark mud-streaked tribal skin, bare-chested with bark-cloth lower garment, rudraksha beads, intense devoted eyes, forest greens + earth-browns, dappled sunlight through banyan canopy, faces clearly lit, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "शुरुआत थी",
+        "mood": "anticipation, hidden power",
+        "wardrobe_context": "FOREST",
+        "shot_type": "AMBIGUOUS"
+      },
+      {
+        "image_prompt": "Fading dusk over a vast, ancient forest, a lone campfire smoldering in the distance, a subtle silhouette of Eklavya walking away into the trees, the path barely visible, symbolising a history withheld, dark mud-streaked tribal skin, bare-chested with bark-cloth lower garment, rudraksha beads, forest greens + earth-browns, dappled golden sunlight, untouched by court colors, dappled sunlight through banyan canopy, faces clearly lit, no hands in frame, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+        "anchor_phrase": "असली इतिहास",
+        "mood": "lingering mystery, erased legacy",
+        "wardrobe_context": "AFTERMATH",
+        "shot_type": "AMBIGUOUS"
+      }
+    ],
+    "title": "एकलव्य का छुपा बलिदान",
+    "hook_title": "एकलव्य का बलिदान",
+    "description": "▶️ अगला भाग: Krishna's hidden sin against Eklavya\n\nकटे अंगूठे के पीछे छिपा था एक निषाद राजा का अनकहा बलिदान और उसका अटूट राज। एकलव्य की निष्ठा और उसकी प्रजा की वफ़ादारी, जिसे क्षत्रियों ने हमेशा मिटाने की कोशिश की, पर क्या वे सचमुच सफल हुए? यह कहानी सिर्फ एक अंगूठे की नहीं, बल्कि एक भूले हुए इतिहास और एक अदृश्य साम्राज्य की है, जो हस्तिनापुर के अभिमान तले भी साँस लेता रहा। जानिए कैसे एकलाव्य ने अपने लोगों के बीच अपना असली राज्य स्थापित किया, जिसे आज भी किताबों में नहीं लिखा जाता।\n\n#Shorts #Mahabharata #महाभारत #Krishna #HinduMythology #PauranikKatha #MythologyShorts #HindiShorts",
+    "tags": [
+      "एकलव्य का इतिहास",
+      "निषाद राज",
+      "Eklavya",
+      "एकलव्य",
+      "Mahabharata",
+      "महाभारत",
+      "Shorts",
+      "Hindu mythology"
+    ],
+    "thumbnail_prompt": "Vertical composition, Eklavya kneeling, grimacing in pain as he presses the edge of a sharp knife against his right thumb, Dronacharya's shadowed face looming in the background, a silent, demanding presence, a single drop of blood glistening, intense devoted eyes, dark mud-streaked tribal skin, bare-chested with bark-cloth lower garment, rudraksha beads, Dronacharya's weathered elderly Indian face, white hair tied in a sage's topknot, long white beard, simple white cotton dhoti, forest greens + earth-browns, dappled golden sunlight, high-contrast rim lighting, vibrant jewel colours, no text, no letters, no watermarks, no signage, no captions, no banners with writing, no overlay text",
+    "quotable_line": "निष्ठा का बलिदान, या क्षत्रियों का धोखा?",
+    "pinned_question": "❓ निष्ठा का बलिदान, या क्षत्रियों का धोखा? आपका क्या कहना है?",
+    "next_seed": "और यही छुपा पाप एक नए युद्ध की नींव रखेगा।",
+    "language": "hi",
+    "content_type": "story",
+    "topic": "Eklavya's untold legacy as Nishadha king — the hidden loyalty his people kept alive, the secret history the kshatriyas erased from every record",
+    "series": "mahabharata",
+    "episode_n": 65,
+    "arc_character_devanagari": "एकलव्य",
+    "arc_character_english": "Eklavya — The Devotion That Cost a Thumb",
+    "_phase18_strict_pass": false,
+    "_phase18_score": 16,
+    "_phase18_score_max": 25,
+    "_phase18_score_floor": 19,
+    "_phase18_violation": "length",
+    "_phase18_failing_gates": [
+      "anchors",
+      "archetype",
+      "char_names",
+      "engagement",
+      "intensity",
+      "length",
+      "shock_action",
+      "subject_diversity",
+      "tha_tic"
+    ],
+    "_phase18_fatal_failures": []
+  }
+}
